@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Dissemination of Small Values</title>
 <meta name="author" content="Philip Levis and Gilman Tolle" />
 <style type="text/css">
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,8 +306,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The memo documents the interfaces, components, and semantics for
 disseminating small (smaller than a single packet payload) pieces of
 data in TinyOS 2.x.  Dissemination establishes eventual consistency
@@ -314,8 +315,8 @@ across the entire network on a shared variable and tells an
 application when the variable changes. Common uses of this mechanism
 include network reconfiguration and reprogramming.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Dissemination is a service for establishing eventual consistency on a
 shared variable. Every node in the network stores a copy of this
 variable. The dissemination service tells nodes when the value
@@ -364,8 +365,8 @@ for a dissemination service included in TinyOS 2.0. This service only
 handles small values that can fit in a single packet. Larger values
 require different interfaces and abstractions.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-interfaces" name="dissemination-interfaces">2. Dissemination interfaces</a></h1>
+<div class="section" id="dissemination-interfaces">
+<h1>2. Dissemination interfaces</h1>
 <p>Small-value dissemination has two interfaces: DisseminationValue and
 DisseminationUpdate. The former is for consumers of a disseminated
 value, the latter is for producers. They are as follows:</p>
@@ -412,8 +413,8 @@ network might reach consensus when nodes have different values. The
 dissemination protocol therefore MUST have a tie-breaking mechanism,
 so that eventually every node has the same data value.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-service" name="dissemination-service">3 Dissemination Service</a></h1>
+<div class="section" id="dissemination-service">
+<h1>3 Dissemination Service</h1>
 <p>A dissemination service MUST provide one component, DisseminatorC,
 which has the following signature:</p>
 <pre class="literal-block">
@@ -440,10 +441,10 @@ implementation {
 }
 </pre>
 <p>Two different instances of DisseminatorC MUST NOT share the same value
-for the <tt class="docutils literal"><span class="pre">key</span></tt> argument.</p>
+for the <tt class="docutils literal">key</tt> argument.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-keys" name="dissemination-keys">4 Dissemination Keys</a></h1>
+<div class="section" id="dissemination-keys">
+<h1>4 Dissemination Keys</h1>
 <p>One issue that comes up when using these interfaces is the selection
 of a key for each value. On one hand, using unique() is easy, but this
 means that the keyspaces for two different compilations of the same
@@ -485,8 +486,8 @@ protocol. The GUID enables nodes to detect versions from other
 binaries and not store them. This GUID won't be part of the external
 interface, but will be used internally.</p>
 </div>
-<div class="section">
-<h1><a id="more-complex-dissemination" name="more-complex-dissemination">5. More Complex Dissemination</a></h1>
+<div class="section" id="more-complex-dissemination">
+<h1>5. More Complex Dissemination</h1>
 <p>An application can use this low-level networking primitive to build
 more complex dissemination systems. For example, if you want have a
 dissemination that causes only nodes which satisfy a predicate to
@@ -494,8 +495,8 @@ apply a change, you can do that by making the &lt;t&gt; a struct that stores
 a predicate and data value in it, and layering the predicate
 evaluation on top of the above interfaces.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>6. Implementation</h1>
 <p>Two implementations of this TEP exist and can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net</span></tt>. The first, Drip, can be found in
 ''tinyos-2.x/tos/lib/net/drip''. The second, DIP, can be found in
@@ -507,8 +508,8 @@ especially when the dissemination service is maintaining many
 variables[3]_. This complexity, however, causes DIP to use more
 program memory.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -525,27 +526,27 @@ program memory.</p>
 <div class="line">Berkeley, CA 94704</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 981 8714</div>
-<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archedrock.com">gtolle&#64;archedrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:gtolle&#64;archedrock.com">gtolle&#64;archedrock.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>TEP 111: message_t.</td></tr>
+<tr><td class="label">[1]</td><td>TEP 111: message_t.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>Philip Levis, Neil Patel, David Culler, and Scott Shenker. &quot;Trickle: A Self-Regulating Algorithm for Code Maintenance and Propagation in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX/ACM Symposium on Networked Systems Design and Implementation (NSDI 2004).</td></tr>
+<tr><td class="label">[2]</td><td>Philip Levis, Neil Patel, David Culler, and Scott Shenker. &quot;Trickle: A Self-Regulating Algorithm for Code Maintenance and Propagation in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX/ACM Symposium on Networked Systems Design and Implementation (NSDI 2004).</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id3">[3]</a></td><td>Kaisen Lin and Philip Levis. &quot;Data Discovery and Dissemination with DIP.&quot; In Proceedings of the Proceedings of the Seventh International Conference on Information Processing in Wireless Sensor Networks (IPSN), 2008.</td></tr>
+<tr><td class="label">[3]</td><td>Kaisen Lin and Philip Levis. &quot;Data Discovery and Dissemination with DIP.&quot; In Proceedings of the Proceedings of the Seventh International Conference on Information Processing in Wireless Sensor Networks (IPSN), 2008.</td></tr>
 </tbody>
 </table>
 </div>

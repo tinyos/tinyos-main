@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Packet Protocols</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.18 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,15 +306,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The memo documents the interfaces used by packet protocol components in
 TinyOS 2.x as well as the structure and implementation of ActiveMessageC,
 the basic data-link HIL component. It also documents the virtualized
 active message interfaces AMSenderC and AMReceiverC.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Sensor nodes are network-centric devices. Much of their software
 complexity comes from network protocols and their interactions.
 In TinyOS, the basic network abstraction is an <em>active message</em>,
@@ -343,7 +344,7 @@ TinyOS tree. This command requires GenericComm to allocate a
 timer, wasting CPU cycles and RAM.</p>
 <p>Second, it does not allow a node to receive packets besides
 those destined to it.  Several network
-protocols (e.g., MintRoute <a class="footnote-reference" href="#id6" id="id1" name="id1">[1]</a>, TAG <a class="footnote-reference" href="#id7" id="id2" name="id2">[2]</a>) take advantage
+protocols (e.g., MintRoute <a class="footnote-reference" href="#id6" id="id1">[1]</a>, TAG <a class="footnote-reference" href="#id7" id="id2">[2]</a>) take advantage
 of snooping on these packets for a variety of improvements in efficiency or
 performance. This has led to the creation of GenericCommPromiscuous,
 whose Receive interface does not distinguish
@@ -360,13 +361,13 @@ a component that names a header field, for example, binds itself
 to data link layers that have a field with that name. Similarly,
 components on top of GenericComm directly access the data payload
 of a packet.</p>
-<p>TEP 111 documents the structure of a TinyOS 2.x packet buffer <a class="footnote-reference" href="#id8" id="id3" name="id3">[3]</a>.
+<p>TEP 111 documents the structure of a TinyOS 2.x packet buffer <a class="footnote-reference" href="#id8" id="id3">[3]</a>.
 This TEP documents the interfaces used to access packet buffers,
 as well as ActiveMessageC, the basic data-link packet communication
 HIL.</p>
 </div>
-<div class="section">
-<h1><a id="communication-interfaces" name="communication-interfaces">2. Communication interfaces</a></h1>
+<div class="section" id="communication-interfaces">
+<h1>2. Communication interfaces</h1>
 <p>Packet-level communication has three basic classes of interfaces.
 <em>Packet</em> interfaces are for accessing message fields and payloads.
 <em>Send</em> interfaces are for transmitting packets, and are
@@ -375,8 +376,8 @@ The <em>Receive</em> interface is for handling packet reception events.
 Finally, depending on whether the protocol has a dispatch identifier
 field, the Receive and Send interfaces may be parameterized in order
 to support multiple higher-level clients.</p>
-<div class="section">
-<h2><a id="packet-interfaces" name="packet-interfaces">2.1 Packet interfaces</a></h2>
+<div class="section" id="packet-interfaces">
+<h2>2.1 Packet interfaces</h2>
 <p>The basic TinyOS 2.x message buffer type is message_t, which is
 described in TEP 111. message_t right-justifies data-link
 headers to the data payload so that higher-level components can
@@ -400,39 +401,39 @@ interface Packet {
 }
 </pre>
 <p>A component can obtain a pointer to its data region within a packet by
-calling <tt class="docutils literal"><span class="pre">getPayload()</span></tt>. A call to this command includes the length
-the caller requires. The command <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> returns the
-maximum length the payload can be: if the <tt class="docutils literal"><span class="pre">len</span></tt> parameter to
-<tt class="docutils literal"><span class="pre">getPayload</span></tt> is greater than the value <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> would
-return, <tt class="docutils literal"><span class="pre">getPayload</span></tt> MUST return NULL.</p>
-<p>A component can set the payload length with <tt class="docutils literal"><span class="pre">setPayLoadLength.</span></tt> A
+calling <tt class="docutils literal">getPayload()</tt>. A call to this command includes the length
+the caller requires. The command <tt class="docutils literal">maxPayloadLength</tt> returns the
+maximum length the payload can be: if the <tt class="docutils literal">len</tt> parameter to
+<tt class="docutils literal">getPayload</tt> is greater than the value <tt class="docutils literal">maxPayloadLength</tt> would
+return, <tt class="docutils literal">getPayload</tt> MUST return NULL.</p>
+<p>A component can set the payload length with <tt class="docutils literal">setPayLoadLength.</tt> A
 component can obtain the size of the data region of packet in use with
-a call to <tt class="docutils literal"><span class="pre">payloadLength</span></tt>. As Send interfaces always include a
-length parameter in their send call, <tt class="docutils literal"><span class="pre">setPayLoadLength</span></tt> is not
+a call to <tt class="docutils literal">payloadLength</tt>. As Send interfaces always include a
+length parameter in their send call, <tt class="docutils literal">setPayLoadLength</tt> is not
 required for sending, and so is never called in common use
 cases. Instead, it is a way for queues and other packet buffering
 components to store the full state of a packet without requiring
 additional memory allocation.</p>
-<p>The distinction between <tt class="docutils literal"><span class="pre">payloadLength</span></tt> and <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt>
+<p>The distinction between <tt class="docutils literal">payloadLength</tt> and <tt class="docutils literal">maxPayloadLength</tt>
 comes from whether the packet is being received or sent. In the
 receive case, determining the size of the existing data payload is
 needed; in the send case, a component needs to know how much data it
 can put in the packet. By definition, the return value of
-<tt class="docutils literal"><span class="pre">payloadLength</span></tt> must be less than or equal to the return value of
-<tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt>.</p>
+<tt class="docutils literal">payloadLength</tt> must be less than or equal to the return value of
+<tt class="docutils literal">maxPayloadLength</tt>.</p>
 <p>The Packet interface assumes that headers have a fixed size. It is
 difficult to return a pointer into the data region when its position
 will only be known once the header values are bound.</p>
-<p>The <tt class="docutils literal"><span class="pre">clear</span></tt> command clears out all headers, footers, and metadata
-for lower layers. For example, calling <tt class="docutils literal"><span class="pre">clear</span></tt> on a routing
+<p>The <tt class="docutils literal">clear</tt> command clears out all headers, footers, and metadata
+for lower layers. For example, calling <tt class="docutils literal">clear</tt> on a routing
 component, such as CollectionSenderC[4]_, will clear out the
 collection headers and footers. Furthermore, CollectionSenderC will
-recursively call <tt class="docutils literal"><span class="pre">clear</span></tt> on the layer below it, clearing out the
-link layer headers and footers. Calling <tt class="docutils literal"><span class="pre">clear</span></tt> is typically
+recursively call <tt class="docutils literal">clear</tt> on the layer below it, clearing out the
+link layer headers and footers. Calling <tt class="docutils literal">clear</tt> is typically
 necessary when moving a packet across two link layers. Otherwise, the
 destination link layer may incorrectly interpret metadata from the
 source link layer, and, for example, transmit the packet on the wrong
-RF channel. Because <tt class="docutils literal"><span class="pre">clear</span></tt> prepares a packet for a particular link
+RF channel. Because <tt class="docutils literal">clear</tt> prepares a packet for a particular link
 layer, in this example correct code would call the command on the
 destination link layer, not the source link layer.</p>
 <p>Typically, an incoming call to the Packet interface of a protocol has
@@ -528,15 +529,15 @@ packet buffer itself (where the field is), but when necessary it may
 use the metadata region of message_t or other locations.</p>
 <p>The group field refers to the AM group, a logical network identifier.
 Link layers will typically only signal reception for packets whose AM
-group matches the node's, which <tt class="docutils literal"><span class="pre">localGroup</span></tt> returns.</p>
+group matches the node's, which <tt class="docutils literal">localGroup</tt> returns.</p>
 </div>
-<div class="section">
-<h2><a id="sending-interfaces" name="sending-interfaces">2.2 Sending interfaces</a></h2>
+<div class="section" id="sending-interfaces">
+<h2>2.2 Sending interfaces</h2>
 <p>There are multiple sending interfaces, corresponding to different
 addressing modes. For example, address-free protocols, such as
-collection routing, provide the basic <tt class="docutils literal"><span class="pre">Send</span></tt> interface. Active
+collection routing, provide the basic <tt class="docutils literal">Send</tt> interface. Active
 message communication has a destination of an AM address, so
-it provides the <tt class="docutils literal"><span class="pre">AMSend</span></tt> interface.  This, for example, is the
+it provides the <tt class="docutils literal">AMSend</tt> interface.  This, for example, is the
 basic, address-free Send interface:</p>
 <pre class="literal-block">
 interface Send {
@@ -561,16 +562,16 @@ interface AMSend {
 </pre>
 <p>Sending interfaces MUST include these four commands and one event.
 The duplication of some of the commands in Packet is solely for ease
-of use: <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> and <tt class="docutils literal"><span class="pre">getPayload</span></tt> MUST behave
-identically as <tt class="docutils literal"><span class="pre">Packet.maxPayloadLength</span></tt> and <tt class="docutils literal"><span class="pre">Packet.getPayload.</span></tt>
+of use: <tt class="docutils literal">maxPayloadLength</tt> and <tt class="docutils literal">getPayload</tt> MUST behave
+identically as <tt class="docutils literal">Packet.maxPayloadLength</tt> and <tt class="docutils literal">Packet.getPayload.</tt>
 Their inclusion is so that components do not have to wire to
 both Packet and the sending interface for basic use cases.</p>
 <p>When called with a length that is too long for the underlying
 maximum transfer unit (MTU), the send command MUST return ESIZE.</p>
-<p>The <tt class="docutils literal"><span class="pre">Send</span></tt> and <tt class="docutils literal"><span class="pre">AMSend</span></tt> interfaces have an explicit queue of
-depth one. A call to <tt class="docutils literal"><span class="pre">send</span></tt> on either of these interfaces MUST
-return EBUSY if a prior call to <tt class="docutils literal"><span class="pre">send</span></tt> returned SUCCESS but no
-<tt class="docutils literal"><span class="pre">sendDone</span></tt> event has been signaled yet. More explicitly:</p>
+<p>The <tt class="docutils literal">Send</tt> and <tt class="docutils literal">AMSend</tt> interfaces have an explicit queue of
+depth one. A call to <tt class="docutils literal">send</tt> on either of these interfaces MUST
+return EBUSY if a prior call to <tt class="docutils literal">send</tt> returned SUCCESS but no
+<tt class="docutils literal">sendDone</tt> event has been signaled yet. More explicitly:</p>
 <pre class="literal-block">
 if (call Send.send(...) == SUCCESS &amp;&amp;
     call Send.send(...) == SUCCESS) {
@@ -589,21 +590,21 @@ signal sendDone with ECANCEL as its error code. If there is a pending
 sendDone event and cancel returns FAIL, then sendDone MUST occur as if
 the cancel was not called.</p>
 </div>
-<div class="section">
-<h2><a id="receive-interface" name="receive-interface">2.3 Receive interface</a></h2>
+<div class="section" id="receive-interface">
+<h2>2.3 Receive interface</h2>
 <p>Receive is the interface for receiving packets. It has this signature:</p>
 <pre class="literal-block">
 interface Receive {
   event message_t* receive(message_t* msg, void* payload, uint8_t len);
 }
 </pre>
-<p>The <tt class="docutils literal"><span class="pre">receive()</span></tt> event's <tt class="docutils literal"><span class="pre">payload</span></tt> parameter MUST be identical to
-what a call to the corresponding <tt class="docutils literal"><span class="pre">Packet.getPayload()</span></tt> would return,
-and the <tt class="docutils literal"><span class="pre">len</span></tt> parameter MUST be identical to the length that a call
-to <tt class="docutils literal"><span class="pre">Packet.getPayload</span></tt> would return. These parameters are for
+<p>The <tt class="docutils literal">receive()</tt> event's <tt class="docutils literal">payload</tt> parameter MUST be identical to
+what a call to the corresponding <tt class="docutils literal">Packet.getPayload()</tt> would return,
+and the <tt class="docutils literal">len</tt> parameter MUST be identical to the length that a call
+to <tt class="docutils literal">Packet.getPayload</tt> would return. These parameters are for
 convenience, as they are commonly used by receive handlers, and their
-presence removes the need for a call to <tt class="docutils literal"><span class="pre">getPayload()</span></tt>. Unlike Send,
-Receive does not have a convenience <tt class="docutils literal"><span class="pre">getPayload</span></tt> call, because doing
+presence removes the need for a call to <tt class="docutils literal">getPayload()</tt>. Unlike Send,
+Receive does not have a convenience <tt class="docutils literal">getPayload</tt> call, because doing
 so prevents fan-in. As Receive has only a single event, users of
 Receive can be wired multiple times.</p>
 <p>Receive has a <em>buffer-swap</em> policy. The handler of the event MUST
@@ -611,7 +612,7 @@ return a pointer to a valid message buffer for the signaler to
 use. This approach enforces an equilibrium between upper and lower
 packet layers. If an upper layer cannot handle packets as quickly as
 they are arriving, it still has to return a valid buffer to the lower
-layer. This buffer could be the <tt class="docutils literal"><span class="pre">msg</span></tt> parameter passed to it: it
+layer. This buffer could be the <tt class="docutils literal">msg</tt> parameter passed to it: it
 just returns the buffer it was given without looking at it. Following
 this policy means that a data-rate mismatch in an upper-level
 component will be isolated to that component. It will drop packets,
@@ -624,9 +625,9 @@ packet reception.</p>
 handles a receive event:</p>
 <blockquote>
 <ol class="arabic simple">
-<li>Return <tt class="docutils literal"><span class="pre">msg</span></tt> without touching it.</li>
-<li>Copy some data out of <tt class="docutils literal"><span class="pre">payload</span></tt> and return <tt class="docutils literal"><span class="pre">msg</span></tt>.</li>
-<li>Store <tt class="docutils literal"><span class="pre">msg</span></tt> in its local frame and return a different <tt class="docutils literal"><span class="pre">message_t*</span></tt> for the lower layer to use.</li>
+<li>Return <tt class="docutils literal">msg</tt> without touching it.</li>
+<li>Copy some data out of <tt class="docutils literal">payload</tt> and return <tt class="docutils literal">msg</tt>.</li>
+<li>Store <tt class="docutils literal">msg</tt> in its local frame and return a different <tt class="docutils literal">message_t*</tt> for the lower layer to use.</li>
 </ol>
 </blockquote>
 <p>These are simple code examples of the three cases:</p>
@@ -657,12 +658,12 @@ message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
 }
 </pre>
 <p>Because of case 3), a lower layer MUST respect the buffer swap semantics
-and use the pointer returned from <tt class="docutils literal"><span class="pre">receive</span></tt>. The pointer passed as
-a parameter to <tt class="docutils literal"><span class="pre">receive</span></tt> MUST NOT be touched, used, or stored after
-the signaling of <tt class="docutils literal"><span class="pre">receive.</span></tt></p>
+and use the pointer returned from <tt class="docutils literal">receive</tt>. The pointer passed as
+a parameter to <tt class="docutils literal">receive</tt> MUST NOT be touched, used, or stored after
+the signaling of <tt class="docutils literal">receive.</tt></p>
 </div>
-<div class="section">
-<h2><a id="dispatch" name="dispatch">2.4 Dispatch</a></h2>
+<div class="section" id="dispatch">
+<h2>2.4 Dispatch</h2>
 <p>A packet protocol MAY have a dispatch identifier. This generally manifests
 as the protocol component providing parameterized interfaces (rather than
 a single interface instance). A dispatch identifier allows multiple
@@ -675,14 +676,14 @@ a packet that has a control field which indicates which optional fields
 are present) do not pose such problems.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="hil-activemessagec" name="hil-activemessagec">3. HIL: ActiveMessageC</a></h1>
+<div class="section" id="hil-activemessagec">
+<h1>3. HIL: ActiveMessageC</h1>
 <p>A platform MUST provide ActiveMessageC as a basic HIL to
 packet-level communication.  ActiveMessageC provides a best-effort,
 single-hop communication abstraction.  Every active message has a
 16-bit destination address and an 8-bit type. There is one reserved
-destination address, <tt class="docutils literal"><span class="pre">AM_BROADCAST_ADDR</span></tt>, which has the value
-of <tt class="docutils literal"><span class="pre">0xffff</span></tt>. ActiveMessageC has the following signature:</p>
+destination address, <tt class="docutils literal">AM_BROADCAST_ADDR</tt>, which has the value
+of <tt class="docutils literal">0xffff</tt>. ActiveMessageC has the following signature:</p>
 <pre class="literal-block">
 configuration ActiveMessageC {
   provides {
@@ -718,15 +719,15 @@ basic packet abstraction to the hardware underneath. Approaches
 include choosing one radio or having some form of address-based
 dispatch.</p>
 </div>
-<div class="section">
-<h1><a id="am-services-amsenderc-amreceiverc-amsnooperc-amsnoopingreceiverc" name="am-services-amsenderc-amreceiverc-amsnooperc-amsnoopingreceiverc">4. AM Services: AMSenderC, AMReceiverC, AMSnooperC, AMSnoopingReceiverC</a></h1>
+<div class="section" id="am-services-amsenderc-amreceiverc-amsnooperc-amsnoopingreceiverc">
+<h1>4. AM Services: AMSenderC, AMReceiverC, AMSnooperC, AMSnoopingReceiverC</h1>
 <p>TinyOS 2.x provides four component single-hop communication
 virtualizations to applications:
 AMReceiverC, AMSnooperC, AMSnoopingReceiverC, and AMSenderC. Each is a
 generic component that takes an active message ID as a
 parameter. These components assume the existence of ActiveMessageC.</p>
-<div class="section">
-<h2><a id="dispatch-am-id-t" name="dispatch-am-id-t">4.1 Dispatch: <tt class="docutils literal"><span class="pre">am_id_t</span></tt></a></h2>
+<div class="section" id="dispatch-am-id-t">
+<h2>4.1 Dispatch: <tt class="docutils literal">am_id_t</tt></h2>
 <p>Active messages have an 8-bit type field, which allows multiple
 protocols to all use AM communication without conflicting. Following
 the guidelines for protocol dispatch identifiers, each
@@ -734,8 +735,8 @@ am_id_t used in a network SHOULD have a single packet format, so
 that the am_id_t, combined with the packet contents, are sufficient
 to determine the exact packet format.</p>
 </div>
-<div class="section">
-<h2><a id="amreceiverc" name="amreceiverc">4.2 AMReceiverC</a></h2>
+<div class="section" id="amreceiverc">
+<h2>4.2 AMReceiverC</h2>
 <p>AMReceiverC has the following signature:</p>
 <pre class="literal-block">
 generic configuration AMReceiverC(am_id_t t) {
@@ -754,8 +755,8 @@ NOT instantiate two AMReceivers with the same am_id_t and MUST NOT
 instantiate an AMReceiver and an AMSnoopingReceiver with the same
 am_id_t.</p>
 </div>
-<div class="section">
-<h2><a id="amsnooperc" name="amsnooperc">4.3 AMSnooperC</a></h2>
+<div class="section" id="amsnooperc">
+<h2>4.3 AMSnooperC</h2>
 <p>AMSnooper has an identical signature to AMReceiver:</p>
 <pre class="literal-block">
 generic configuration AMSnooperC(am_id_t t) {
@@ -774,8 +775,8 @@ NOT instantiate two AMSnoopers with the same am_id_t and MUST NOT
 instantiate an AMSnooper and an AMSnoopingReceiver with the same
 am_id_t.</p>
 </div>
-<div class="section">
-<h2><a id="amsnoopingreceiverc" name="amsnoopingreceiverc">4.4 AMSnoopingReceiverC</a></h2>
+<div class="section" id="amsnoopingreceiverc">
+<h2>4.4 AMSnoopingReceiverC</h2>
 <p>AMSnoopingReceiverC has an identical signature to AMReceiverC:</p>
 <pre class="literal-block">
 generic configuration AMSnoopingReceiverC(am_id_t t) {
@@ -793,8 +794,8 @@ swaps buffers, a program that instantiates an AMSnoopingReceiverC with
 a certain am_id_t MUST NOT instantiate another AMSnoopingReceiverC,
 AMSnooperC, or AMReceiverC with the same am_id_t.</p>
 </div>
-<div class="section">
-<h2><a id="amsenderc" name="amsenderc">4.5 AMSenderC</a></h2>
+<div class="section" id="amsenderc">
+<h2>4.5 AMSenderC</h2>
 <p>AMSenderC has the following signature:</p>
 <pre class="literal-block">
 generic configuration AMSenderC(am_id_t AMId) {
@@ -815,12 +816,12 @@ packets receives a reasonable approximation of an equal share of the
 available transmission bandwidth.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="power-management-and-local-address" name="power-management-and-local-address">5. Power Management and Local Address</a></h1>
+<div class="section" id="power-management-and-local-address">
+<h1>5. Power Management and Local Address</h1>
 <p>In addition to standard datapath interfaces for sending and
 receiving packets, an active message layer also has control interfaces.</p>
-<div class="section">
-<h2><a id="power-management" name="power-management">5.1 Power Management</a></h2>
+<div class="section" id="power-management">
+<h2>5.1 Power Management</h2>
 <p>The communication virtualizations do not support power management.
 ActiveMessageC provides SplitControl for explicit power control.
 For packet communication to operate properly, a component in an
@@ -829,20 +830,20 @@ The HAL underneath ActiveMessageC  MAY employ power management
 techniques, such as TDMA scheduling or low power listening, when
 &quot;on.&quot;</p>
 </div>
-<div class="section">
-<h2><a id="local-active-message-address" name="local-active-message-address">5.2 Local Active Message Address</a></h2>
+<div class="section" id="local-active-message-address">
+<h2>5.2 Local Active Message Address</h2>
 <p>An application can change ActiveMessageC's local AM address
 at runtime. This will change which packets a node receives and
 the source address it embeds in packets. To change the local AM
 address at runtime, a component can wire to the component
-<tt class="docutils literal"><span class="pre">ActiveMessageAddressC</span></tt>. This component only changes the
+<tt class="docutils literal">ActiveMessageAddressC</tt>. This component only changes the
 AM address of the default radio stack (AMSenderC, etc.); if
 a radio has multiple stacks those may have other components
 for changing their addresses in a stack-specific fashion.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="hal-requirements" name="hal-requirements">5. HAL Requirements</a></h1>
+<div class="section" id="hal-requirements">
+<h1>5. HAL Requirements</h1>
 <p>A radio chip <em>X</em> MUST have a packet abstraction with the following
 signature:</p>
 <pre class="literal-block">
@@ -859,14 +860,14 @@ provides interface PacketAcknowledgments;
 the name of the radio chip. The component MAY have additional interfaces.
 These interfaces can either be chip-specific or chip-independent.</p>
 </div>
-<div class="section">
-<h1><a id="message-t" name="message-t">6. message_t</a></h1>
+<div class="section" id="message-t">
+<h1>6. message_t</h1>
 <p>Active messages are a basic single-hop packet abstraction. Therefore,
-following TEP 111 <a class="footnote-reference" href="#id8" id="id4" name="id4">[3]</a>, all data link and active message headers
-MUST be in the <tt class="docutils literal"><span class="pre">message_header_t</span></tt> structure of message_t. This ensures
+following TEP 111 <a class="footnote-reference" href="#id8" id="id4">[3]</a>, all data link and active message headers
+MUST be in the <tt class="docutils literal">message_header_t</tt> structure of message_t. This ensures
 that an active message received from one data link layer (e.g., the radio)
 can be passed to another data link layer (e.g., the UART) without
-shifting the data payload. This means that the <tt class="docutils literal"><span class="pre">message_header_t</span></tt> must
+shifting the data payload. This means that the <tt class="docutils literal">message_header_t</tt> must
 include all data needed for AM fields, which might introduce headers
 in addition to those of the data link. For example, this is an example
 structure for a CC2420 (802.15.4) header:</p>
@@ -885,56 +886,56 @@ typedef nx_struct cc2420_header_t {
 type field, however, has been added to the header structure in order
 to support AM dispatch.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">7. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>7. Implementation</h1>
 <p>The following files in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/system</span></tt> provide reference
 implementations of the abstractions described in this TEP.</p>
 <blockquote>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">AMSenderC.nc</span></tt>, <tt class="docutils literal"><span class="pre">AMReceiverC.nc</span></tt>, <tt class="docutils literal"><span class="pre">AMSnooperC.nc</span></tt>,
-and <tt class="docutils literal"><span class="pre">AMSnoopingReceiverC.nc</span></tt> are implementations of
+<li><tt class="docutils literal">AMSenderC.nc</tt>, <tt class="docutils literal">AMReceiverC.nc</tt>, <tt class="docutils literal">AMSnooperC.nc</tt>,
+and <tt class="docutils literal">AMSnoopingReceiverC.nc</tt> are implementations of
 virtualized AM services.</li>
-<li><tt class="docutils literal"><span class="pre">AMQueueP</span></tt> provides a send queue of <em>n</em> entries for <em>n</em>
+<li><tt class="docutils literal">AMQueueP</tt> provides a send queue of <em>n</em> entries for <em>n</em>
 AMSenderC clients, such that each client has a dedicated entry.</li>
-<li><tt class="docutils literal"><span class="pre">AMQueueImplP</span></tt> is the underlying queue implementation,
+<li><tt class="docutils literal">AMQueueImplP</tt> is the underlying queue implementation,
 which is reusable for different clients (it is also used
-in the serial stack <a class="footnote-reference" href="#id9" id="id5" name="id5">[4]</a>).</li>
-<li><tt class="docutils literal"><span class="pre">AMQueueEntryP</span></tt> sits on top of <tt class="docutils literal"><span class="pre">AMQueueP</span></tt> and stores
-the parameters to <tt class="docutils literal"><span class="pre">AMSend.send</span></tt> in an outstanding
-packet with the <tt class="docutils literal"><span class="pre">AMPacket</span></tt> interface.</li>
+in the serial stack <a class="footnote-reference" href="#id9" id="id5">[4]</a>).</li>
+<li><tt class="docutils literal">AMQueueEntryP</tt> sits on top of <tt class="docutils literal">AMQueueP</tt> and stores
+the parameters to <tt class="docutils literal">AMSend.send</tt> in an outstanding
+packet with the <tt class="docutils literal">AMPacket</tt> interface.</li>
 </ul>
 </blockquote>
 <p>The following files in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/interfaces</span></tt> contain
 example implementations of packet protocol interfaces:</p>
 <blockquote>
 <ul>
-<li><p class="first"><tt class="docutils literal"><span class="pre">Packet.nc</span></tt> is the basic interface that almost all
+<li><p class="first"><tt class="docutils literal">Packet.nc</tt> is the basic interface that almost all
 packet protocols provide.</p>
 </li>
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">Send.nc</span></tt> is the transmission interface for address-free</dt>
+<dt><tt class="docutils literal">Send.nc</tt> is the transmission interface for address-free</dt>
 <dd><p class="first last">protocols.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">AMSend.nc</span></tt> is the transmission interface for AM address</dt>
+<dt><tt class="docutils literal">AMSend.nc</tt> is the transmission interface for AM address</dt>
 <dd><p class="first last">send protocols.</p>
 </dd>
 </dl>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">AMPacket.nc</span></tt> is the packet interface for AM-specific
+<li><p class="first"><tt class="docutils literal">AMPacket.nc</tt> is the packet interface for AM-specific
 fields.</p>
 </li>
 </ul>
 </blockquote>
 <p>An active messaging implementation for the CC2420 radio chip
-can be found in <tt class="docutils literal"><span class="pre">tos/chips/CC2420/CC2420ActiveMessageC.nc</span></tt>.
-The micaz platform and telos family have an <tt class="docutils literal"><span class="pre">ActiveMessageC.nc</span></tt>
-which exports the interfaces of <tt class="docutils literal"><span class="pre">CC2420ActiveMessageC</span></tt>.</p>
+can be found in <tt class="docutils literal">tos/chips/CC2420/CC2420ActiveMessageC.nc</tt>.
+The micaz platform and telos family have an <tt class="docutils literal">ActiveMessageC.nc</tt>
+which exports the interfaces of <tt class="docutils literal">CC2420ActiveMessageC</tt>.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">8. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>8. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -945,30 +946,30 @@ which exports the interfaces of <tt class="docutils literal"><span class="pre">C
 <div class="line">phone - +1 650 725 9046</div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">9. Citations</a></h1>
+<div class="section" id="citations">
+<h1>9. Citations</h1>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id6">[1]</a></td><td>The MintRoute protocol. <tt class="docutils literal"><span class="pre">tinyos-1.x/tos/lib/MintRoute</span></tt>. Also, A. Woo, T. Tong, and D. Culler. &quot;Taming the Underlying Challenges of Reliable Multihop Routing in Sensor Networks.&quot; SenSys 2003.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The MintRoute protocol. <tt class="docutils literal"><span class="pre">tinyos-1.x/tos/lib/MintRoute</span></tt>. Also, A. Woo, T. Tong, and D. Culler. &quot;Taming the Underlying Challenges of Reliable Multihop Routing in Sensor Networks.&quot; SenSys 2003.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id7">[2]</a></td><td>Tiny AGgregation, one protocol of the TinyDB system.  <tt class="docutils literal"><span class="pre">tinyos-1.x/tos/lib/TinyDB</span></tt>. Also, S. Madden and M. Franklin and J. Hellerstein and W. Hong. &quot;TinyDB: An Acquisitional Query Processing System for Sensor Networks.&quot; Transactions on Database Systems (TODS) 2005.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Tiny AGgregation, one protocol of the TinyDB system.  <tt class="docutils literal"><span class="pre">tinyos-1.x/tos/lib/TinyDB</span></tt>. Also, S. Madden and M. Franklin and J. Hellerstein and W. Hong. &quot;TinyDB: An Acquisitional Query Processing System for Sensor Networks.&quot; Transactions on Database Systems (TODS) 2005.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id8">[3]</a></td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 111: message_t.</td></tr>
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 111: message_t.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id9" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5" name="id9">[4]</a></td><td>TEP 113: Serial Communication.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[4]</a></td><td>TEP 113: Serial Communication.</td></tr>
 </tbody>
 </table>
 </div>

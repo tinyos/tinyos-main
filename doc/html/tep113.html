@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Serial Communication</title>
 <meta name="author" content="Ben Greenstein and Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.13 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,8 +306,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo describes the structure and standard implementation of the
 TinyOS 2.x serial communication system for mote-to-PC data
 exchange. The system is broken into three levels (encoding, framing,
@@ -316,8 +317,8 @@ are not bound to the mote's radio packet format. Additionally, one of
 the supported packet formats is platform independent, so PC-side
 applications can communicate with arbitrary motes.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Users need to read data out of a TinyOS network. The most common
 approach is to attach a mote to a PC or laptop with a wired
 connection. While the interface on the PC side can vary from a serial
@@ -332,8 +333,8 @@ parallel with platform-independent communication, which simplifies the
 PC toolchain. This memo documents the protocols and structure of the
 TinyOS 2.x serial communication stack.</p>
 </div>
-<div class="section">
-<h1><a id="serial-stack-structure" name="serial-stack-structure">2. Serial Stack Structure</a></h1>
+<div class="section" id="serial-stack-structure">
+<h1>2. Serial Stack Structure</h1>
 <p>The TinyOS 2.x serial communication stack is broken up into four
 functional components. From bottom to top, they are</p>
 <blockquote>
@@ -383,23 +384,23 @@ protocol-level CRC.</p>
 is responsible for reading data bytes into a message_t and signaling
 packet reception to components above it. The dispatcher can support
 multiple packet formats. Based on how message_t works (see TEP
-111[<a class="reference" href="#tep111">tep111</a>]), this boils down to knowing where in a message_t a
+111[<a class="reference internal" href="#tep111">tep111</a>]), this boils down to knowing where in a message_t a
 particular packet format begins (based on its header size). Section
 3.4 describes how the default TinyOS 2.x implementation,
-<tt class="docutils literal"><span class="pre">SerialDispatcherC</span></tt> does this.</p>
+<tt class="docutils literal">SerialDispatcherC</tt> does this.</p>
 </div>
-<div class="section">
-<h1><a id="the-2-x-serial-stack-implementation" name="the-2-x-serial-stack-implementation">3. The 2.x Serial Stack Implementation</a></h1>
+<div class="section" id="the-2-x-serial-stack-implementation">
+<h1>3. The 2.x Serial Stack Implementation</h1>
 <p>Section 2 describes the basic structure of the TinyOS 2.x serial
 stack. This section describes its actual implementation,
 including SerialActiveMessageC, which sits on top of the Dispatcher.
 All of the components except for UartC are part of the serial
-library that lives in <tt class="docutils literal"><span class="pre">tos/lib/serial</span></tt>.</p>
-<div class="section">
-<h2><a id="raw-uart-uartc" name="raw-uart-uartc">3.1 Raw UART: UartC</a></h2>
-<p>The UART HIL[<a class="reference" href="#tep2">TEP2</a>] is <tt class="docutils literal"><span class="pre">UartC</span></tt>, which provides a byte-level
+library that lives in <tt class="docutils literal">tos/lib/serial</tt>.</p>
+<div class="section" id="raw-uart-uartc">
+<h2>3.1 Raw UART: UartC</h2>
+<p>The UART HIL[<a class="reference internal" href="#tep2">TEP2</a>] is <tt class="docutils literal">UartC</tt>, which provides a byte-level
 interface to the underlying serial communication. It provides the
-<tt class="docutils literal"><span class="pre">SerialByteComm</span></tt> interface:</p>
+<tt class="docutils literal">SerialByteComm</tt> interface:</p>
 <pre class="literal-block">
 interface SerialByteComm {
   async command error_t put(uint8_t data);
@@ -407,8 +408,8 @@ interface SerialByteComm {
   async event void putDone();
 }
 </pre>
-<p>Alternatively, <tt class="docutils literal"><span class="pre">UartC</span></tt> may provide the UartStream multi-byte level
-interface. See the Low-Level I/O TEP [<a class="reference" href="#tep117">TEP117</a>] for details.</p>
+<p>Alternatively, <tt class="docutils literal">UartC</tt> may provide the UartStream multi-byte level
+interface. See the Low-Level I/O TEP [<a class="reference internal" href="#tep117">TEP117</a>] for details.</p>
 <p>Additionally, UartC provides a split-phase interface to signal when
 the UART is idle. There are situations (such as when powering down the
 usart, when switching from TX to RX on a radio with a UART data line,
@@ -426,10 +427,10 @@ interface SerialFlush {
 <p>It may provide additional interfaces for configuring the serial
 port. This TEP does not consider this topic.</p>
 </div>
-<div class="section">
-<h2><a id="encoder-framer-hdlctranslatec" name="encoder-framer-hdlctranslatec">3.2 Encoder/Framer: HdlcTranslateC</a></h2>
+<div class="section" id="encoder-framer-hdlctranslatec">
+<h2>3.2 Encoder/Framer: HdlcTranslateC</h2>
 <p>HdlcTranslateC is the serial encoder/framer. It uses the
-<tt class="docutils literal"><span class="pre">SerialByteComm</span></tt> interface and provides the <tt class="docutils literal"><span class="pre">SerialFrameComm</span></tt>
+<tt class="docutils literal">SerialByteComm</tt> interface and provides the <tt class="docutils literal">SerialFrameComm</tt>
 interface:</p>
 <pre class="literal-block">
 interface SerialFrameComm {
@@ -442,8 +443,8 @@ interface SerialFrameComm {
   async event void putDone();
 }
 </pre>
-<p>As its name suggests, it uses the same encoding as the HDLC[<a class="reference" href="#hdlc">HDLC</a>]
-protocol. <tt class="docutils literal"><span class="pre">0x7e</span></tt> is reserved as a frame delimiter byte, and <tt class="docutils literal"><span class="pre">0x7d</span></tt>
+<p>As its name suggests, it uses the same encoding as the HDLC[<a class="reference internal" href="#hdlc">HDLC</a>]
+protocol. <tt class="docutils literal">0x7e</tt> is reserved as a frame delimiter byte, and <tt class="docutils literal">0x7d</tt>
 is reserved as an escape byte. HdlcTranslateC maintains ten bits of
 state. The receive and send paths each have one bit to store whether
 they are using an escape byte, and the transmit path has a byte for
@@ -452,20 +453,20 @@ when it sends an escaped byte.</p>
 delimiterReceived(). When HdlcTranslateC receives an escape byte, it
 sets the receiveEscape flag to true. When it receives any other byte,
 it tests to see if the receiveEscape flag is set; if so, it XORs the
-data byte with <tt class="docutils literal"><span class="pre">0x20</span></tt> and clears the flag. It signals dataReceived()
+data byte with <tt class="docutils literal">0x20</tt> and clears the flag. It signals dataReceived()
 with the byte. The most common use of escape byte is to transmit data
 bytes corresponding to the delimiter byte or escape byte. For example,
-<tt class="docutils literal"><span class="pre">0x7e</span></tt> becomes <tt class="docutils literal"><span class="pre">0x7d</span> <span class="pre">0x5e</span></tt>.</p>
+<tt class="docutils literal">0x7e</tt> becomes <tt class="docutils literal">0x7d 0x5e</tt>.</p>
 <p>HdlcTranslateC performs similar actions on the transmit side. When
 told to transmit the delimiter or escape byte as a data byte, it sets
-the transmitEscape flag to true, stores the data byte XOR <tt class="docutils literal"><span class="pre">0x20</span></tt>,
+the transmitEscape flag to true, stores the data byte XOR <tt class="docutils literal">0x20</tt>,
 and sends an escape byte. When the escape byte is sent, it sends the
 stored data byte.</p>
 </div>
-<div class="section">
-<h2><a id="protocol-serialp" name="protocol-serialp">3.3 Protocol: SerialP</a></h2>
+<div class="section" id="protocol-serialp">
+<h2>3.3 Protocol: SerialP</h2>
 <p>The SerialP component implements the serial protocol using PPP/HDLC-
-like framing (See RFC 1662[<a class="reference" href="#rfc1662">RFC1662</a>]). Type dispatch and buffer
+like framing (See RFC 1662[<a class="reference internal" href="#rfc1662">RFC1662</a>]). Type dispatch and buffer
 management are left to higher layers in the serial stack. The protocol
 is currently stop-and-wait in the host-to-mote direction and best
 effort in the mote-to-host direction.</p>
@@ -539,12 +540,12 @@ the mote side. This is considered more important on memory constrained
 devices than increased throughput in the PC-to-mote direction, which
 most applications only use for occasional control transmissions.</p>
 </div>
-<div class="section">
-<h2><a id="dispatcher-serialdispatcherc" name="dispatcher-serialdispatcherc">3.4 Dispatcher: SerialDispatcherC</a></h2>
+<div class="section" id="dispatcher-serialdispatcherc">
+<h2>3.4 Dispatcher: SerialDispatcherC</h2>
 <p>SerialDispatcherC handles the data packets that the Protocol component
 receives. It uses the SendBytePacket and ReceiveBytePacket interfaces,
 and provides parameterized Send and Receive interfaces. The parameter
-in the Send and Receive interfaces (<tt class="docutils literal"><span class="pre">uart_id_t</span></tt>) determines the
+in the Send and Receive interfaces (<tt class="docutils literal">uart_id_t</tt>) determines the
 packet format contained in the message_t.</p>
 <p>SerialDispatcherC places a one-byte header, the packet format
 identifier, on the packets sent and received through SerialP.
@@ -569,17 +570,17 @@ of packet length: above, length refers to the payload excluding
 header, while below it refers to the payload plus header.</p>
 <p>A component that provides communication over the serial port with
 uart_id_t <em>U</em> MUST wire a component implementing SerialPacketInfo to
-SerialDispatcherC with uart_id_t <em>U</em>. The file <tt class="docutils literal"><span class="pre">Serial.h</span></tt> contains
+SerialDispatcherC with uart_id_t <em>U</em>. The file <tt class="docutils literal">Serial.h</tt> contains
 reserved uart_id_t's for supported packet formats. Currently, only
 platform independent active messages
-(<tt class="docutils literal"><span class="pre">TOS_SERIAL_ACTIVE_MESSAGE_ID</span></tt>, described in Section 3.5), 802.15.4
-active messages (<tt class="docutils literal"><span class="pre">TOS_SERIAL_802_15_4_ID</span></tt>), mica2 CC1000 packets
-(<tt class="docutils literal"><span class="pre">TOS_SERIAL_CC1000_ID</span></tt>) and the error code
-<tt class="docutils literal"><span class="pre">TOS_SERIAL_UNKNOWN_ID</span></tt> are reserved. New packet formats MUST NOT
+(<tt class="docutils literal">TOS_SERIAL_ACTIVE_MESSAGE_ID</tt>, described in Section 3.5), 802.15.4
+active messages (<tt class="docutils literal">TOS_SERIAL_802_15_4_ID</tt>), mica2 CC1000 packets
+(<tt class="docutils literal">TOS_SERIAL_CC1000_ID</tt>) and the error code
+<tt class="docutils literal">TOS_SERIAL_UNKNOWN_ID</tt> are reserved. New packet formats MUST NOT
 reuse any reserved identifiers.</p>
 </div>
-<div class="section">
-<h2><a id="serialactivemessagec" name="serialactivemessagec">3.5 SerialActiveMessageC</a></h2>
+<div class="section" id="serialactivemessagec">
+<h2>3.5 SerialActiveMessageC</h2>
 <p>SerialActiveMessageC is a platform-independent active message layer
 that operates on top of the serial communication
 stack. SerialActiveMessageC is a configuration that wires
@@ -633,8 +634,8 @@ typedef nx_struct SerialAMHeader {
 } SerialAMHeader;
 </pre>
 </div>
-<div class="section">
-<h2><a id="packet-format" name="packet-format">3.6 Packet Format</a></h2>
+<div class="section" id="packet-format">
+<h2>3.6 Packet Format</h2>
 <p>A data packet in the TinyOS 2.x serial stack has the following format
 over the wire. Each protocol field is associated with a specific component:</p>
 <pre class="literal-block">
@@ -657,13 +658,13 @@ that any data bytes (P - CR) equal to 0x7e or 0x7d will be escaped to
 0x7d 0x5e or 0x7d 0x5d accordingly. For example, a platform
 independent AM packet of type 6, group 0x7d, and length 5 to
 destination 0xbeef with a payload of 1 2 3 4 5 would look like this:</p>
-<p><tt class="docutils literal"><span class="pre">7e</span> <span class="pre">40</span> <span class="pre">09</span> <span class="pre">00</span> <span class="pre">be</span> <span class="pre">ef</span> <span class="pre">05</span> <span class="pre">7d</span> <span class="pre">5d</span> <span class="pre">06</span> <span class="pre">01</span> <span class="pre">02</span> <span class="pre">03</span> <span class="pre">04</span> <span class="pre">05</span> <span class="pre">7e</span></tt></p>
+<p><tt class="docutils literal">7e 40 09 00 be ef 05 7d 5d 06 01 02 03 04 05 7e</tt></p>
 <p>Note that the group 0x7d is escaped to 0x7d 0x5d. The protocol field
-(P) is 0x40 (64), corresponding to <tt class="docutils literal"><span class="pre">SERIAL_PROTO_ACK</span></tt> (in Serial.h).</p>
+(P) is 0x40 (64), corresponding to <tt class="docutils literal">SERIAL_PROTO_ACK</tt> (in Serial.h).</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="access-abstractions" name="access-abstractions">4. Access Abstractions</a></h1>
+<div class="section" id="access-abstractions">
+<h1>4. Access Abstractions</h1>
 <p>Two generic components: SerialAMSenderC and SerialAMReceiverC connect
 to SerialActiveMessageC to provide virtualized access to the serial
 stack. Each instantiation of SerialAMSenderC has its own queue of
@@ -673,12 +674,12 @@ implementation schedulers the packets in these queues using some form
 of fair-share queueing. SerialAMReceiverC provides the virtualized
 abstraction for reception. These abstractions are very similar to
 TinyOS's radio abstractions, namely, AMSenderC and AMReceiverC. See
-Section 4 of TEP 116[<a class="reference" href="#tep116">TEP116</a>] for more information. Unlike the
+Section 4 of TEP 116[<a class="reference internal" href="#tep116">TEP116</a>] for more information. Unlike the
 services in the TEP 116, the serial component virtualizations provide
 no snooping capabilities.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>5. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates</div>
@@ -687,7 +688,7 @@ no snooping capabilities.</p>
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Ben Greenstein</div>
@@ -696,45 +697,45 @@ no snooping capabilities.</p>
 <div class="line">Seattle, WA 98105</div>
 <div class="line"><br /></div>
 <div class="line">phone -  +1 206 206 545 2501</div>
-<div class="line">email - <a class="reference" href="mailto:benjamin.m.greenstein&#64;intel.com">benjamin.m.greenstein&#64;intel.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:benjamin.m.greenstein&#64;intel.com">benjamin.m.greenstein&#64;intel.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep2">[TEP2]</a></td><td>TEP 2: Hardware Abstraction Architecture. tinyos-2.x/doc/txt/tep2.txt</td></tr>
+<tr><td class="label">[TEP2]</td><td>TEP 2: Hardware Abstraction Architecture. tinyos-2.x/doc/txt/tep2.txt</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep111" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep111">[TEP111]</a></td><td>TEP 111: message_t. tinyos-2.x/doc/txt/tep111.txt</td></tr>
+<tr><td class="label">[TEP111]</td><td>TEP 111: message_t. tinyos-2.x/doc/txt/tep111.txt</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep116" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep116">[TEP116]</a></td><td>TEP 116: Packet Protocols. tinyos-2.x/doc/txt/tep116.txt</td></tr>
+<tr><td class="label">[TEP116]</td><td>TEP 116: Packet Protocols. tinyos-2.x/doc/txt/tep116.txt</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep117" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep117">[TEP117]</a></td><td>TEP 117: Low-Level I/O. tinyos-2.x/doc/txt/tep117.txt</td></tr>
+<tr><td class="label">[TEP117]</td><td>TEP 117: Low-Level I/O. tinyos-2.x/doc/txt/tep117.txt</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="hdlc" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="hdlc">[HDLC]</a></td><td>International Organization For Standardization, ISO Standard 3309-1979, &quot;Data communication - High-level data link control procedures - Frame structure&quot;, 1979.</td></tr>
+<tr><td class="label">[HDLC]</td><td>International Organization For Standardization, ISO Standard 3309-1979, &quot;Data communication - High-level data link control procedures - Frame structure&quot;, 1979.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="rfc1662" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="rfc1662">[RFC1662]</a></td><td>PPP in HDLC-like Framing, Internet Engineering Task Force (IETF), 1994</td></tr>
+<tr><td class="label">[RFC1662]</td><td>PPP in HDLC-like Framing, Internet Engineering Task Force (IETF), 1994</td></tr>
 </tbody>
 </table>
 </div>

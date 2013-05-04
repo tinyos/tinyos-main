@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Schedulers and Tasks</title>
 <meta name="author" content="Philip Levis and Cory Sharp" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.11 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,13 +306,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents the structure and implementation of tasks
 and task schedulers in TinyOS 2.x.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>TinyOS has two basic computational abstractions: asynchronous events
 and tasks. Early versions of TinyOS provided a single type of task --
 parameter free -- and only a FIFO scheduling policy. While changing
@@ -323,16 +324,16 @@ available. TinyOS 2.0 takes both approaches, and this memo documents
 the structure of how it does so as well as a simple mechanism that
 greatly increases system dependability.</p>
 </div>
-<div class="section">
-<h1><a id="tasks-and-the-scheduler-in-tinyos-1-x" name="tasks-and-the-scheduler-in-tinyos-1-x">2. Tasks and the Scheduler in TinyOS 1.x</a></h1>
-<p>Tasks in TinyOS are a form of deferred procedure call (DPC) <a class="footnote-reference" href="#id5" id="id1" name="id1">[1]</a>, which
+<div class="section" id="tasks-and-the-scheduler-in-tinyos-1-x">
+<h1>2. Tasks and the Scheduler in TinyOS 1.x</h1>
+<p>Tasks in TinyOS are a form of deferred procedure call (DPC) <a class="footnote-reference" href="#id5" id="id1">[1]</a>, which
 enable a program to defer a computation or operation until a later
 time. TinyOS tasks run to completion and do not pre-empt one
 another.  These two constraints mean that code called from tasks
 runs synchonously with respect to other tasks. Put another way, tasks
-are atomic with respect to other tasks <a class="footnote-reference" href="#id6" id="id2" name="id2">[2]</a>.</p>
+are atomic with respect to other tasks <a class="footnote-reference" href="#id6" id="id2">[2]</a>.</p>
 <p>In TinyOS 1.x, the nesC language supports tasks through two
-mechanisms, <tt class="docutils literal"><span class="pre">task</span></tt> declarations and <tt class="docutils literal"><span class="pre">post</span></tt> expressions:</p>
+mechanisms, <tt class="docutils literal">task</tt> declarations and <tt class="docutils literal">post</tt> expressions:</p>
 <pre class="literal-block">
 task void computeTask() {
   // Code here
@@ -343,22 +344,22 @@ task void computeTask() {
 result_t rval = post computeTask();
 </pre>
 <p>TinyOS 1.x provides a single kind of task, a parameter-free function,
-and a single scheduling policy, FIFO. <tt class="docutils literal"><span class="pre">post</span></tt> expressions can return
+and a single scheduling policy, FIFO. <tt class="docutils literal">post</tt> expressions can return
 FAIL, to denote that TinyOS was unable to post the task.  Tasks can be
 posted multiple times. For example, if a task is posted twice in quick
 succession and the first succeeds while the second fails, then the
-task will be run once in the future; for this reason, even if a <tt class="docutils literal"><span class="pre">post</span></tt>
+task will be run once in the future; for this reason, even if a <tt class="docutils literal">post</tt>
 fails, the task may run.</p>
 <p>The TinyOS 1.x scheduler is implemented as a set of C functions in the
-file <tt class="docutils literal"><span class="pre">sched.c</span></tt>. Modifying the scheduler requires replacing or
+file <tt class="docutils literal">sched.c</tt>. Modifying the scheduler requires replacing or
 changing this file. Additionally, as tasks are supported solely through
-nesC <tt class="docutils literal"><span class="pre">task</span></tt> declarations and <tt class="docutils literal"><span class="pre">post</span></tt> expressions, which assume
+nesC <tt class="docutils literal">task</tt> declarations and <tt class="docutils literal">post</tt> expressions, which assume
 a parameter-free function, modifying the syntax or capabilities of
 tasks is not possible.</p>
 <p>The task queue in TinyOS 1.x is implemented as a fixed size circular
 buffer of function pointers. Posting a task puts the task's function
 pointer in the next free element of the buffer; if there are no free
-elements, the <tt class="docutils literal"><span class="pre">post</span></tt> returns fail. This model has several issues:</p>
+elements, the <tt class="docutils literal">post</tt> returns fail. This model has several issues:</p>
 <blockquote>
 <ol class="arabic simple">
 <li>Some components do not have a reasonable response to a failed   post</li>
@@ -378,8 +379,8 @@ scenario (a real and encountered problem on the Telos platform):</p>
 <blockquote>
 <ul class="simple">
 <li>A packet-based hardware radio, which issues an interrupt only when it finishes sending a packet</li>
-<li>A networking component that handles the interrupt to post a task to signal <tt class="docutils literal"><span class="pre">SendMsg.sendDone</span></tt>.</li>
-<li>A sensing component that posts a task when it handles an <tt class="docutils literal"><span class="pre">ADC.dataReady</span></tt> event</li>
+<li>A networking component that handles the interrupt to post a task to signal <tt class="docutils literal">SendMsg.sendDone</tt>.</li>
+<li>A sensing component that posts a task when it handles an <tt class="docutils literal">ADC.dataReady</tt> event</li>
 <li>An application component that sends a packet and then sets its ADC sampling rate too high</li>
 </ul>
 </blockquote>
@@ -388,10 +389,10 @@ a faster rate than it can process them. It will start posting tasks to
 handle the data it receives, until it fills the task queue. At some
 point later, the radio finishes sending a packet and signals its
 interrupt. The networking component, however, is unable to post its
-task that signals <tt class="docutils literal"><span class="pre">SendMsg.sendDone()</span></tt>, losing the event. The
+task that signals <tt class="docutils literal">SendMsg.sendDone()</tt>, losing the event. The
 application component does not try to send another packet until it
 knows the one it is sending completes (so it can re-use the
-buffer). As the <tt class="docutils literal"><span class="pre">sendDone()</span></tt> event was lost, this does not occur,
+buffer). As the <tt class="docutils literal">sendDone()</tt> event was lost, this does not occur,
 and the application stops sending network traffic.</p>
 <p>The solution to this particular problem in TinyOS 1.x is to signal
 sendDone() in the radio send complete interrupt if the post fails:
@@ -402,8 +403,8 @@ retry posting the task; while this does not break the sync/async
 boundary, until the post succeeds the system cannot send packets.
 The TinyOS 1.x model prevents it from doing any better.</p>
 </div>
-<div class="section">
-<h1><a id="tasks-in-tinyos-2-x" name="tasks-in-tinyos-2-x">3. Tasks in TinyOS 2.x</a></h1>
+<div class="section" id="tasks-in-tinyos-2-x">
+<h1>3. Tasks in TinyOS 2.x</h1>
 <p>The semantics of tasks in TinyOS 2.x are different than those in 1.x.
 This change is based on experiences with the limitations and run time
 errors that the 1.x model introduces. <strong>In TinyOS 2.x, a basic post will
@@ -434,11 +435,11 @@ allocation by components that post a task many times.</p>
 <p>TinyOS 2.x takes the position that the basic use case of tasks should
 remain simple and easy to use, but that it should be possible to
 introduce new kinds of tasks beyond the basic use case. TinyOS
-achieves this by keeping <tt class="docutils literal"><span class="pre">post</span></tt> and <tt class="docutils literal"><span class="pre">task</span></tt> for the basic case,
+achieves this by keeping <tt class="docutils literal">post</tt> and <tt class="docutils literal">task</tt> for the basic case,
 and introducing task interfaces for additional ones.</p>
 <p>Task interfaces allow users to extend the syntax and semantics of
-tasks. Generally, a task interface has an <tt class="docutils literal"><span class="pre">async</span></tt> command,   post  ,
-and an event, <tt class="docutils literal"><span class="pre">run</span></tt>. The exact signature of these functions are
+tasks. Generally, a task interface has an <tt class="docutils literal">async</tt> command,   post  ,
+and an event, <tt class="docutils literal">run</tt>. The exact signature of these functions are
 up to the interface. For example, a task interface that allows a task
 to take an integer parameter could look like this:</p>
 <pre class="literal-block">
@@ -448,8 +449,8 @@ interface TaskParameter {
 }
 </pre>
 <p>Using this task interface, a component could post a task with a
-<tt class="docutils literal"><span class="pre">uint16_t</span></tt> parameter. When the scheduler runs the task, it will
-signal the <tt class="docutils literal"><span class="pre">runTask</span></tt> event with the passed parameter, which contains
+<tt class="docutils literal">uint16_t</tt> parameter. When the scheduler runs the task, it will
+signal the <tt class="docutils literal">runTask</tt> event with the passed parameter, which contains
 the task's logic. Note, however, that this does not save any RAM:
 the scheduler must have RAM allocated for the parameter.  Furthermore, as
 there can only be one copy of a task outstanding at any time, it
@@ -485,8 +486,8 @@ if (post myTask() == SUCCESS) {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="the-scheduler-in-tinyos-2-x" name="the-scheduler-in-tinyos-2-x">4. The Scheduler in TinyOS 2.x</a></h1>
+<div class="section" id="the-scheduler-in-tinyos-2-x">
+<h1>4. The Scheduler in TinyOS 2.x</h1>
 <p>In TinyOS 2.x, the scheduler is a TinyOS component. Every scheduler
 MUST support nesC tasks. It MAY also support any number of
 additional task interfaces. The scheduler component is resonsible for
@@ -515,7 +516,7 @@ return SUCCESS to a TaskBasic.postTask()
 operation unless it is not the first call to TaskBasic.postTask() since
 that task's TaskBasic.runTask() event has been signaled. The
 McuSleep interface is used for microcontroller power management;
-its workings are explained in TEP 112 <a class="footnote-reference" href="#id7" id="id3" name="id3">[3]</a>.</p>
+its workings are explained in TEP 112 <a class="footnote-reference" href="#id7" id="id3">[3]</a>.</p>
 <p>A scheduler MUST provide the Scheduler interface.
 The Scheduler interface has commands for initialization and running
 tasks, and is used by TinyOS to execute tasks:</p>
@@ -549,14 +550,14 @@ interface TaskBasic {
   void event runTask();
 }
 </pre>
-<p>When a component declares a task with the <tt class="docutils literal"><span class="pre">task</span></tt> keyword in nesC, it
+<p>When a component declares a task with the <tt class="docutils literal">task</tt> keyword in nesC, it
 is implicitly declaring that it uses an instance of the TaskBasic
 interface: the task body is the runTask event. When a component uses the
-<tt class="docutils literal"><span class="pre">post</span></tt> keyword, it calls the postTask command. Each TaskBasic MUST be
+<tt class="docutils literal">post</tt> keyword, it calls the postTask command. Each TaskBasic MUST be
 wired to the scheduler with a unique identifier as its parameter.
-The parameter MUST be obtained with the <tt class="docutils literal"><span class="pre">unique</span></tt> function in nesC,
-with a key of <tt class="docutils literal"><span class="pre">&quot;TinySchedulerC.TaskBasic&quot;</span></tt>. The nesC compiler
-automatically does this wiring when the <tt class="docutils literal"><span class="pre">task</span></tt> and <tt class="docutils literal"><span class="pre">post</span></tt>
+The parameter MUST be obtained with the <tt class="docutils literal">unique</tt> function in nesC,
+with a key of <tt class="docutils literal">&quot;TinySchedulerC.TaskBasic&quot;</tt>. The nesC compiler
+automatically does this wiring when the <tt class="docutils literal">task</tt> and <tt class="docutils literal">post</tt>
 keywords are used.</p>
 <p>The SchedulerBasicP implementation uses these identifiers as its queue
 entries. When TinyOS tells the scheduler to run a task, it pulls the
@@ -567,8 +568,8 @@ components MUST NOT assume a FIFO policy. If two tasks must run
 in a particular temporal order, this order should be enforced by
 the earlier task posting the later task.</p>
 </div>
-<div class="section">
-<h1><a id="replacing-the-scheduler" name="replacing-the-scheduler">5. Replacing the Scheduler</a></h1>
+<div class="section" id="replacing-the-scheduler">
+<h1>5. Replacing the Scheduler</h1>
 <p>The TinyOS scheduler is presented as a component named TinySchedulerC.
 The default TinyOS scheduler implementation is a module named
 SchedulerBasicP; the default scheduler component is a configuration
@@ -641,7 +642,7 @@ implementation {
 <p>The module SomethingP also has a basic task. The nesC compiler
 automatically transforms task keywords into BasicTask interfaces and
 wires them appropriately. Therefore, for basic tasks, a component
-author can either use the <tt class="docutils literal"><span class="pre">task</span></tt> and <tt class="docutils literal"><span class="pre">post</span></tt> keywords or use a TaskBasic
+author can either use the <tt class="docutils literal">task</tt> and <tt class="docutils literal">post</tt> keywords or use a TaskBasic
 interface. A component SHOULD use the keywords whenever possible, and it
 MUST NOT mix the two syntaxes for a given task.  This is an example
 implementation of SomethingP that uses keywords for basic tasks:</p>
@@ -693,23 +694,23 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>6. Implementation</h1>
 <p>The following files in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/system</span></tt> contain the reference
 implementations of the scheduler:</p>
 <blockquote>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">SchedulerBasicP.nc</span></tt> is the basic TinyOS scheduler, providing
+<li><tt class="docutils literal">SchedulerBasicP.nc</tt> is the basic TinyOS scheduler, providing
 a parameterized TaskBasic interface.</li>
-<li><tt class="docutils literal"><span class="pre">TinySchedulerC.nc</span></tt> is the default scheduler configuration
-that wires SchedulerBasicP to McuSleepC <a class="footnote-reference" href="#id7" id="id4" name="id4">[3]</a>.</li>
+<li><tt class="docutils literal">TinySchedulerC.nc</tt> is the default scheduler configuration
+that wires SchedulerBasicP to McuSleepC <a class="footnote-reference" href="#id7" id="id4">[3]</a>.</li>
 </ul>
 </blockquote>
 <p>A prototype of a scheduler that supports EDF tasks can be obtained
 at the URL <tt class="docutils literal"><span class="pre">http://csl.stanford.edu/~pal/tinyos/edf-sched.tgz.</span></tt></p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">7. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>7. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -717,22 +718,22 @@ at the URL <tt class="docutils literal"><span class="pre">http://csl.stanford.ed
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Cory Sharp</div>
 <div class="line">410 Soda Hall</div>
 <div class="line">UC Berkeley</div>
 <div class="line">Berkeley, CA 94720</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:cssharp&#64;eecs.berkeley.edu">cssharp&#64;eecs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:cssharp&#64;eecs.berkeley.edu">cssharp&#64;eecs.berkeley.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">8. Citations</a></h1>
+<div class="section" id="citations">
+<h1>8. Citations</h1>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id5">[1]</a></td><td>Erik Cota-Robles and James P. Held.  &quot;A Comparison of Windows
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Erik Cota-Robles and James P. Held.  &quot;A Comparison of Windows
 Driver Model Latency Performance on Windows NT and Windows 98.&quot; In
 <em>Proceedings of the Third Symposium on Operating System Design
 and Implementation (OSDI).</em></td></tr>
@@ -741,7 +742,7 @@ and Implementation (OSDI).</em></td></tr>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id6">[2]</a></td><td>David Gay, Philip Levis, Rob von Behren, Matt Welsh, Eric Brewer
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>David Gay, Philip Levis, Rob von Behren, Matt Welsh, Eric Brewer
 and David Culler. &quot;The <em>nesC</em> Language: A Holistic Approach to Networked
 Embedded Systems.&quot; In <em>Proceedings of the ACM SIGPLAN 2003 Conference on
 Programming Language Design and Implementation (PLDI).</em></td></tr>
@@ -750,12 +751,12 @@ Programming Language Design and Implementation (PLDI).</em></td></tr>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id7">[3]</a></td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 112: Microcontroller Power Management.</td></tr>
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 112: Microcontroller Power Management.</td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-changing-the-scheduler" name="appendix-a-changing-the-scheduler">Appendix A: Changing the Scheduler</a></h1>
+<div class="section" id="appendix-a-changing-the-scheduler">
+<h1>Appendix A: Changing the Scheduler</h1>
 <p>The nesC compiler transforms the   post   and   task   keywords into
 nesC interfaces, wirings, and calls. By default, the statement:</p>
 <pre class="literal-block">

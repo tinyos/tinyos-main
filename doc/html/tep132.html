@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Packet timestamping</title>
 <meta name="author" content="Miklos Maroti, Janos Sallai" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -312,15 +313,15 @@ ul.auto-toc {
 discussion and suggestions for improvements.  Distribution of this memo is
 unlimited. This memo is in full compliance with TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This TEP describes a mechanism that provides access to the time of transmission
 and time of reception of a packet. The local clocks of the sender and recipient
 are used to timestamp the transmission and reception of the packet,
 respectively.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Time of packet sending and reception is often of interest in sensor network
 applications. Typically, neither the time of invocation of the send command, nor
 the time of signaling of the sendDone event can be used to estimate, without
@@ -340,13 +341,13 @@ hardware-specific events. Also, this TEP does not prescribe how packet
 timestamping should be implemented: it only describes the interfaces and the
 required functionality (semantics).</p>
 </div>
-<div class="section">
-<h1><a id="the-packettimestamp-interface" name="the-packettimestamp-interface">2. The <tt class="docutils literal"><span class="pre">PacketTimeStamp</span></tt> interface</a></h1>
-<p>This TEP specifies a standard interface (<tt class="docutils literal"><span class="pre">PacketTimeStamp</span></tt>) to access the
+<div class="section" id="the-packettimestamp-interface">
+<h1>2. The <tt class="docutils literal">PacketTimeStamp</tt> interface</h1>
+<p>This TEP specifies a standard interface (<tt class="docutils literal">PacketTimeStamp</tt>) to access the
 packet transmission and packet reception times. The sender and the receiver use
 unsynchronized clocks to timestamp packets. The precision and width of
-timestamps is specified as interface parameters <tt class="docutils literal"><span class="pre">precision_tag</span></tt> and
-<tt class="docutils literal"><span class="pre">size_type</span></tt>:</p>
+timestamps is specified as interface parameters <tt class="docutils literal">precision_tag</tt> and
+<tt class="docutils literal">size_type</tt>:</p>
 <pre class="literal-block">
 interface PacketTimeStamp&lt;precision_tag, size_type&gt;
 {
@@ -356,30 +357,30 @@ interface PacketTimeStamp&lt;precision_tag, size_type&gt;
         async command void set(message_t* msg, size_type value);
 }
 </pre>
-<p>The <tt class="docutils literal"><span class="pre">timestamp</span></tt> command of the <tt class="docutils literal"><span class="pre">PacketTimeStamp</span></tt> interface is an accessor to the
-the timestamp. The <tt class="docutils literal"><span class="pre">timestamp</span></tt> command returns the time
+<p>The <tt class="docutils literal">timestamp</tt> command of the <tt class="docutils literal">PacketTimeStamp</tt> interface is an accessor to the
+the timestamp. The <tt class="docutils literal">timestamp</tt> command returns the time
 of transmission after a sendDone event, and the time of reception after a
 receive event.</p>
 <p>In some cases, it is not possible to timestamp certain packets (e.g. under very
 heavy traffic multiple interrupts can occur before they could be serviced, and
 even if capture registers are used, it is not possible to get the time stamp for
-the first or last unserviced event). The <tt class="docutils literal"><span class="pre">PacketTimeStamp</span></tt> interface contains
-the <tt class="docutils literal"><span class="pre">isValid</span></tt> command to query if the packet timestamp is valid.</p>
-<p>The communications stack MUST guarantee that if the <tt class="docutils literal"><span class="pre">isValid</span></tt> command called
-from within the <tt class="docutils literal"><span class="pre">sendDone</span></tt> or <tt class="docutils literal"><span class="pre">receive</span></tt> event handler returns <tt class="docutils literal"><span class="pre">TRUE</span></tt>, then
-the value returned by the <tt class="docutils literal"><span class="pre">timestamp</span></tt> command can be trusted. However, it
+the first or last unserviced event). The <tt class="docutils literal">PacketTimeStamp</tt> interface contains
+the <tt class="docutils literal">isValid</tt> command to query if the packet timestamp is valid.</p>
+<p>The communications stack MUST guarantee that if the <tt class="docutils literal">isValid</tt> command called
+from within the <tt class="docutils literal">sendDone</tt> or <tt class="docutils literal">receive</tt> event handler returns <tt class="docutils literal">TRUE</tt>, then
+the value returned by the <tt class="docutils literal">timestamp</tt> command can be trusted. However, it
 might be possible that the local clock overflowed more than once or that is was
 stopped or reset since the packet was timestamped, which causes the value
-returned by the <tt class="docutils literal"><span class="pre">timestamp</span></tt> command invalid. The <tt class="docutils literal"><span class="pre">isValid</span></tt> command MAY
+returned by the <tt class="docutils literal">timestamp</tt> command invalid. The <tt class="docutils literal">isValid</tt> command MAY
 return TRUE in such situations, and it is the responsibility of the user of the
 interface to ensure that the clock runs freely from the time of message
-reception to the time when <tt class="docutils literal"><span class="pre">timestamp</span></tt> is called. To avoid this issue, it is
-recommended that <tt class="docutils literal"><span class="pre">isValid</span></tt> and <tt class="docutils literal"><span class="pre">timestamp</span></tt> are called from the <tt class="docutils literal"><span class="pre">receive</span></tt>
-or <tt class="docutils literal"><span class="pre">sendDone</span></tt> event handler.</p>
-<p>The clear command invalidates the timestamp: after clear is called, <tt class="docutils literal"><span class="pre">isValid</span></tt>
-will return <tt class="docutils literal"><span class="pre">FALSE</span></tt>. A <tt class="docutils literal"><span class="pre">set</span></tt> command is also included to allow for changing
-the timestamp associated with the message. After the <tt class="docutils literal"><span class="pre">set</span></tt> command is called,
-<tt class="docutils literal"><span class="pre">isValid</span></tt> will return TRUE.</p>
+reception to the time when <tt class="docutils literal">timestamp</tt> is called. To avoid this issue, it is
+recommended that <tt class="docutils literal">isValid</tt> and <tt class="docutils literal">timestamp</tt> are called from the <tt class="docutils literal">receive</tt>
+or <tt class="docutils literal">sendDone</tt> event handler.</p>
+<p>The clear command invalidates the timestamp: after clear is called, <tt class="docutils literal">isValid</tt>
+will return <tt class="docutils literal">FALSE</tt>. A <tt class="docutils literal">set</tt> command is also included to allow for changing
+the timestamp associated with the message. After the <tt class="docutils literal">set</tt> command is called,
+<tt class="docutils literal">isValid</tt> will return TRUE.</p>
 <p>The communications stack guarantees that the transmission timestamp and the
 reception timestamp that belong to the same packet transmission always
 correspond to the same physical phenomenon, i.e. to the same instance of
@@ -390,28 +391,28 @@ transmission/reception of the packet, signaled a start-of-frame delimiter (SFD)
 interrupt. The SFD interrupt occurs at the same time on the transmitter and the
 receiver (assuming that the signal propagation delay is negligible).
 Alternatively, on a byte oriented radio, the timestamp may correspond to the
-average of the transmission times of bytes, as described in <a class="footnote-reference" href="#id5" id="id1" name="id1">[2]</a>.</p>
+average of the transmission times of bytes, as described in <a class="footnote-reference" href="#id5" id="id1">[2]</a>.</p>
 </div>
-<div class="section">
-<h1><a id="hil-requirements" name="hil-requirements">3. HIL requirements</a></h1>
-<p>The signature of the platform's ActiveMessageC <a class="footnote-reference" href="#id6" id="id2" name="id2">[3]</a> MUST include:</p>
+<div class="section" id="hil-requirements">
+<h1>3. HIL requirements</h1>
+<p>The signature of the platform's ActiveMessageC <a class="footnote-reference" href="#id6" id="id2">[3]</a> MUST include:</p>
 <pre class="literal-block">
 provides interface PacketTimeStamp&lt;TMilli,uint32_t&gt;;
 </pre>
 <p>where timestamps are given in the node's local time, which is available through
-<tt class="docutils literal"><span class="pre">HILTimerMilliC.LocalTime</span></tt> <a class="footnote-reference" href="#id7" id="id3" name="id3">[4]</a>.</p>
+<tt class="docutils literal">HILTimerMilliC.LocalTime</tt> <a class="footnote-reference" href="#id7" id="id3">[4]</a>.</p>
 <p>The communications stack MAY support timestamp precisions and widths other than
-<tt class="docutils literal"><span class="pre">TMilli</span></tt> and <tt class="docutils literal"><span class="pre">uint32_t</span></tt>, respectively. Also, alternative
-<tt class="docutils literal"><span class="pre">TimesyncedPacket</span></tt> implementations MAY use clock sources other than
-<tt class="docutils literal"><span class="pre">HILTimerMilliC.LocalTime</span></tt>.</p>
+<tt class="docutils literal">TMilli</tt> and <tt class="docutils literal">uint32_t</tt>, respectively. Also, alternative
+<tt class="docutils literal">TimesyncedPacket</tt> implementations MAY use clock sources other than
+<tt class="docutils literal">HILTimerMilliC.LocalTime</tt>.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>4. Implementation</h1>
 <p>A reference implementation of the packet timestamping mechanism described in
 this TEP can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/rf230</span></tt>.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>5. Author's Address</h1>
 <div class="line-block">
 <div class="line">Miklos Maroti</div>
 <div class="line">Janos Sallai</div>
@@ -422,30 +423,30 @@ this TEP can be found in <tt class="docutils literal"><span class="pre">tinyos-2
 <div class="line">phone: +1 (615) 343-7555</div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id4">[1]</a></td><td>TEP 111: message_t</td></tr>
+<tr><td class="label">[1]</td><td>TEP 111: message_t</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id5">[2]</a></td><td>Maroti, M., Kusy, B., Simon, G., and Ledeczi, A. 2004. The flooding time synchronization protocol. In Proceedings of the 2nd international Conference on Embedded Networked Sensor Systems (Baltimore, MD, USA, November 03 - 05, 2004). ACM SenSys '04.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[2]</a></td><td>Maroti, M., Kusy, B., Simon, G., and Ledeczi, A. 2004. The flooding time synchronization protocol. In Proceedings of the 2nd international Conference on Embedded Networked Sensor Systems (Baltimore, MD, USA, November 03 - 05, 2004). ACM SenSys '04.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id6">[3]</a></td><td>TEP 116: Packet protocols</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[3]</a></td><td>TEP 116: Packet protocols</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id7">[4]</a></td><td>TEP 102: Timers</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[4]</a></td><td>TEP 102: Timers</td></tr>
 </tbody>
 </table>
 </div>

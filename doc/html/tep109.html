@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Sensors and Sensor Boards</title>
 <meta name="author" content="David Gay, Philip Levis, Wei Hong, Joe Polastre, and Gilman Tolle" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.13 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,15 +306,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents how sensor drivers are organized in TinyOS and how
 sets of sensor drivers are combined into sensor boards and sensor
 platforms, along with general principles followed by the components
 that provide access to sensors.</p>
 </div>
-<div class="section">
-<h1><a id="principles" name="principles">1. Principles</a></h1>
+<div class="section" id="principles">
+<h1>1. Principles</h1>
 <p>This section describes the basic organization principles for sensor
 drivers in TinyOS.</p>
 <p>For background, a sensor can be attached to the microcontroller on a
@@ -332,7 +333,7 @@ sensors to a <cite>sensor board</cite>, which can be removed from the TinyOS
 platform, and could attach to multiple different TinyOS platforms.</p>
 <p>The capabilities of a physical sensor are made available to a TinyOS
 application through a <cite>sensor driver</cite>.</p>
-<p>According to the HAA <a class="citation-reference" href="#tep2" id="id1" name="id1">[TEP2]</a>, TinyOS devices SHOULD provide both
+<p>According to the HAA <a class="citation-reference" href="#tep2" id="id1">[TEP2]</a>, TinyOS devices SHOULD provide both
 simple hardware-independent interfaces for common-case use (HIL) and
 rich hardware-dependent interfaces for special-case use (HAL). Sensor
 drivers SHOULD follow this spirit as well.</p>
@@ -366,15 +367,15 @@ values, the driver MAY provide additional interfaces that would allow
 higher-level clients to obtain information (e.g. calibration
 coefficients) needed to properly interpret the value.</p>
 </div>
-<div class="section">
-<h1><a id="sensor-hil-components" name="sensor-hil-components">2. Sensor HIL Components</a></h1>
+<div class="section" id="sensor-hil-components">
+<h1>2. Sensor HIL Components</h1>
 <p>A sensor HIL component MUST provide:</p>
 <ul class="simple">
-<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id2" name="id2">[TEP114]</a>, for reading data.</li>
+<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id2">[TEP114]</a>, for reading data.</li>
 </ul>
 <p>A sensor HIL component MAY provide:</p>
 <ul class="simple">
-<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id3" name="id3">[TEP114]</a>, for reading or
+<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id3">[TEP114]</a>, for reading or
 writing calibration coefficients or control registers.</li>
 </ul>
 <p>A sensor device driver SHOULD be a generic component that virtualizes
@@ -409,7 +410,7 @@ MAY be started once at boot time by wiring to the <cite>MainC.Boot</cite>
 interface. Sensors that draw appreciable power MUST be started in
 response to a call to one of the top-level SID interfaces, and stopped
 some time after that call completes. Using one of the power-management
-components described in <a class="citation-reference" href="#tep115" id="id4" name="id4">[TEP115]</a> can make this implementation easier.</p>
+components described in <a class="citation-reference" href="#tep115" id="id4">[TEP115]</a> can make this implementation easier.</p>
 <p>Generally, simple types are made up of octets. However, sensor values
 often have levels of precision besides a multiple of 8. To account for
 such cases, each device MUST specify the precision of each one of its
@@ -460,8 +461,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="sensor-hal-components" name="sensor-hal-components">3. Sensor HAL Components</a></h1>
+<div class="section" id="sensor-hal-components">
+<h1>3. Sensor HAL Components</h1>
 <p>Sensors with a richer interface than would be supported by the SID
 interfaces MAY provide a HAL component in addition to a HIL
 component.</p>
@@ -474,10 +475,10 @@ with commands for sampling and controlling the sensor device.</li>
 <ul class="simple">
 <li>A <cite>StdControl</cite> or <cite>SplitControl</cite> interface for manual power
 management by the user, following the conventions described in
-<a class="citation-reference" href="#tep115" id="id5" name="id5">[TEP115]</a>.</li>
+<a class="citation-reference" href="#tep115" id="id5">[TEP115]</a>.</li>
 <li>A <cite>Resource</cite> interface for requesting access to the device and
 possibly performing automated power management, following
-the conventions described in <a class="citation-reference" href="#tep108" id="id6" name="id6">[TEP108]</a> and <a class="citation-reference" href="#tep115" id="id7" name="id7">[TEP115]</a>.</li>
+the conventions described in <a class="citation-reference" href="#tep108" id="id6">[TEP108]</a> and <a class="citation-reference" href="#tep115" id="id7">[TEP115]</a>.</li>
 <li>Any other interfaces needed to control the device, e.g., to
 read or write calibration coefficients.</li>
 </ul>
@@ -492,8 +493,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="sensor-component-organization-and-compiler-interaction-guidelines" name="sensor-component-organization-and-compiler-interaction-guidelines">4. Sensor Component Organization and Compiler Interaction Guidelines</a></h1>
+<div class="section" id="sensor-component-organization-and-compiler-interaction-guidelines">
+<h1>4. Sensor Component Organization and Compiler Interaction Guidelines</h1>
 <p>Sensors are associated either with a particular sensor board or with a
 particular platform. Both sensors and sensor boards MUST have unique
 names. Case is significant, but two sensor (or sensor board) names
@@ -505,7 +506,7 @@ section). Default TinyOS 2.x sensor boards are placed in
 <tt class="docutils literal"><span class="pre">tos/sensorboards/&lt;sensorboard&gt;</span></tt>, but sensor board directories can be
 placed anywhere as long as the nesC compiler receives a <tt class="docutils literal"><span class="pre">-I</span></tt> directive
 pointing to the sensor board's directory. Each sensor board directory
-MUST contain a <tt class="docutils literal"><span class="pre">.sensor</span></tt> file (described below). If the
+MUST contain a <tt class="docutils literal">.sensor</tt> file (described below). If the
 sensor board wishes to define any C types or constants, it SHOULD
 place these in a file named <tt class="docutils literal"><span class="pre">&lt;sensorboard&gt;.h</span></tt> in the sensor board's
 directory.</p>
@@ -514,62 +515,62 @@ directory.</p>
 TinyOS sample applications that use the demo sensors. If a sensor
 board wishes to override the default demo sensor:</p>
 <ul>
-<li><p class="first">It MUST provide a generic component named <tt class="docutils literal"><span class="pre">DemoSensorC</span></tt> with the
+<li><p class="first">It MUST provide a generic component named <tt class="docutils literal">DemoSensorC</tt> with the
 following signature:</p>
 <pre class="literal-block">
 provides interface Read&lt;uint16_t&gt;;
 provides interface DeviceMetadata;
 </pre>
 </li>
-<li><p class="first">It MAY provide a generic component named <tt class="docutils literal"><span class="pre">DemoSensorNowC</span></tt> with the
+<li><p class="first">It MAY provide a generic component named <tt class="docutils literal">DemoSensorNowC</tt> with the
 following signature:</p>
 <pre class="literal-block">
 provides interface ReadNow&lt;uint16_t&gt;;
 provides interface DeviceMetadata;
 </pre>
-<p>This component SHOULD sample the same sensor as <tt class="docutils literal"><span class="pre">DemoSensorC</span></tt>.</p>
+<p>This component SHOULD sample the same sensor as <tt class="docutils literal">DemoSensorC</tt>.</p>
 </li>
-<li><p class="first">It MAY provide a generic component named <tt class="docutils literal"><span class="pre">DemoSensorStreamC</span></tt> with the
+<li><p class="first">It MAY provide a generic component named <tt class="docutils literal">DemoSensorStreamC</tt> with the
 following signature:</p>
 <pre class="literal-block">
 provides interface ReadStream&lt;uint16_t&gt;;
 provides interface DeviceMetadata;
 </pre>
-<p>This component SHOULD sample the same sensor as <tt class="docutils literal"><span class="pre">DemoSensorC</span></tt>.</p>
+<p>This component SHOULD sample the same sensor as <tt class="docutils literal">DemoSensorC</tt>.</p>
 </li>
 </ul>
 <p>These components MUST be an alias for one of the sensor board's usual
 sensors, though they change the precision of the sensor if necessary.
-For instance, if <tt class="docutils literal"><span class="pre">DemoSensorC</span></tt> is an alias for a 20-bit sensor that
-provides a <tt class="docutils literal"><span class="pre">Read&lt;uint32_t&gt;</span></tt> interface, <tt class="docutils literal"><span class="pre">DemoSensorC</span></tt> would still
-provide <tt class="docutils literal"><span class="pre">Read&lt;uint16_t&gt;</span></tt> and would include code to reduce the
+For instance, if <tt class="docutils literal">DemoSensorC</tt> is an alias for a 20-bit sensor that
+provides a <tt class="docutils literal">Read&lt;uint32_t&gt;</tt> interface, <tt class="docutils literal">DemoSensorC</tt> would still
+provide <tt class="docutils literal">Read&lt;uint16_t&gt;</tt> and would include code to reduce the
 precision of the aliased sensor.</p>
-<div class="section">
-<h2><a id="compiler-interaction" name="compiler-interaction">4.1 Compiler Interaction</a></h2>
-<p>When the <tt class="docutils literal"><span class="pre">ncc</span></tt> nesC compiler frontend is passed a <tt class="docutils literal"><span class="pre">-board=X</span></tt> option,
-it executes the <tt class="docutils literal"><span class="pre">.sensor</span></tt> file found in the sensor board directory
-<tt class="docutils literal"><span class="pre">X</span></tt>.  This file is a perl script which can add or modify any
+<div class="section" id="compiler-interaction">
+<h2>4.1 Compiler Interaction</h2>
+<p>When the <tt class="docutils literal">ncc</tt> nesC compiler frontend is passed a <tt class="docutils literal"><span class="pre">-board=X</span></tt> option,
+it executes the <tt class="docutils literal">.sensor</tt> file found in the sensor board directory
+<tt class="docutils literal">X</tt>.  This file is a perl script which can add or modify any
 compile-time options necessary for the sensor board. It MAY modify the
 following perl variables, and MUST NOT modify any others:</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">&#64;includes</span></tt>: This array contains the TinyOS search path, i.e., the
+<li><tt class="docutils literal">&#64;includes</tt>: This array contains the TinyOS search path, i.e., the
 directories which will be passed to nescc (the TinyOS-agnostic nesC
-compiler) as <tt class="docutils literal"><span class="pre">-I</span></tt> arguments. You MUST add to <tt class="docutils literal"><span class="pre">&#64;includes</span></tt> any
+compiler) as <tt class="docutils literal"><span class="pre">-I</span></tt> arguments. You MUST add to <tt class="docutils literal">&#64;includes</tt> any
 directories needed to compile this sensor board's components.  For
 instance, if your sensor boards depends on support code found in
-<tt class="docutils literal"><span class="pre">tos/chips/sht11</span></tt>, you would add <tt class="docutils literal"><span class="pre">&quot;%T/chips/sht11&quot;</span></tt> to <tt class="docutils literal"><span class="pre">&#64;includes</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">&#64;new_args</span></tt>: This is the array of arguments which will be passed to
+<tt class="docutils literal">tos/chips/sht11</tt>, you would add <tt class="docutils literal">&quot;%T/chips/sht11&quot;</tt> to <tt class="docutils literal">&#64;includes</tt>.</li>
+<li><tt class="docutils literal">&#64;new_args</tt>: This is the array of arguments which will be passed to
 nescc. You MUST add any arguments other than <tt class="docutils literal"><span class="pre">-I</span></tt> that are necessary
-to compile your sensor board components to <tt class="docutils literal"><span class="pre">&#64;new_args</span></tt>.</li>
+to compile your sensor board components to <tt class="docutils literal">&#64;new_args</tt>.</li>
 </ul>
 <p>If a sensor is associated with a platform <cite>P</cite> rather than a sensor
 board, then that platform MUST ensure that, when compiling for
 platform <cite>P</cite>, all directories needed to compile that sensor's
-component are added to the TinyOS search path (see <a class="citation-reference" href="#tep131" id="id8" name="id8">[TEP131]</a> for
+component are added to the TinyOS search path (see <a class="citation-reference" href="#tep131" id="id8">[TEP131]</a> for
 information on how to set up a TinyOS platform).</p>
 </div>
-<div class="section">
-<h2><a id="sensor-components" name="sensor-components">4.2 Sensor Components</a></h2>
+<div class="section" id="sensor-components">
+<h2>4.2 Sensor Components</h2>
 <p>A particular sensor is typically supported by many components,
 including the HIL and HAL components from Sections 2 and 3, A/D
 conversion components (for analog sensors), digital bus components
@@ -591,7 +592,7 @@ justify creating platform-independent components.</p>
 <p>The following guidelines specify how to organize sensor and sensor
 interconnect components within TinyOS's directory hierarchy. These
 guidelines are only relevant to components that are part of the core
-source tree. The string <tt class="docutils literal"><span class="pre">&lt;sensor&gt;</span></tt> SHOULD reflect the make and model
+source tree. The string <tt class="docutils literal">&lt;sensor&gt;</tt> SHOULD reflect the make and model
 of the sensor device.</p>
 <ul class="simple">
 <li>Platform-independent sensor components that exist as part of a
@@ -601,15 +602,15 @@ a subdirectory of the chip's directory
 <li>Other platform-independent sensor components SHOULD be placed
 in <tt class="docutils literal"><span class="pre">tos/chips/&lt;sensor&gt;</span></tt>.</li>
 <li>Sensorboard-dependent sensor and sensor interconnect components
-SHOULD be placed either in the <tt class="docutils literal"><span class="pre">&lt;sensorboard&gt;</span></tt> directory or in a
+SHOULD be placed either in the <tt class="docutils literal">&lt;sensorboard&gt;</tt> directory or in a
 <tt class="docutils literal"><span class="pre">&lt;sensorboard&gt;/chips/&lt;sensor&gt;</span></tt> directory.</li>
 <li>Platform-dependent sensor and sensor interconnect components SHOULD
 be placed in <tt class="docutils literal"><span class="pre">tos/&lt;platform&gt;/chips/&lt;sensor&gt;</span></tt>.</li>
 </ul>
 </div>
 </div>
-<div class="section">
-<h1><a id="authors-addresses" name="authors-addresses">5. Authors' Addresses</a></h1>
+<div class="section" id="authors-addresses">
+<h1>5. Authors' Addresses</h1>
 <div class="line-block">
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -618,14 +619,14 @@ be placed in <tt class="docutils literal"><span class="pre">tos/&lt;platform&gt;
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 495 3055</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Wei Hong</div>
 <div class="line">Arch Rock</div>
 <div class="line">657 Mission St. Suite 600</div>
 <div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:wei.hong&#64;gmail.com">wei.hong&#64;gmail.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:wei.hong&#64;gmail.com">wei.hong&#64;gmail.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -635,60 +636,60 @@ be placed in <tt class="docutils literal"><span class="pre">tos/&lt;platform&gt;
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Joe Polastre</div>
 <div class="line">467 Soda Hall</div>
 <div class="line">UC Berkeley</div>
 <div class="line">Berkeley, CA 94720</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:polastre&#64;cs.berkeley.edu">polastre&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:polastre&#64;cs.berkeley.edu">polastre&#64;cs.berkeley.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Gilman Tolle</div>
 <div class="line">Arch Rock</div>
 <div class="line">657 Mission St. Suite 600</div>
 <div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="tep2">[TEP2]</a></td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[TEP2]</a></td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep108" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id6" name="tep108">[TEP108]</a></td><td>TEP 108: Resource Arbitration</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id6">[TEP108]</a></td><td>TEP 108: Resource Arbitration</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep114" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep114">[TEP114]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> TEP 114: SIDs: Source and Sink Indepedent Drivers</td></tr>
+<tr><td class="label">[TEP114]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> TEP 114: SIDs: Source and Sink Indepedent Drivers</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep115" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep115">[TEP115]</a></td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>, <a class="fn-backref" href="#id7">3</a>)</em> TEP 115: Power Management of Non-Virtualized Devices</td></tr>
+<tr><td class="label">[TEP115]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>, <a class="fn-backref" href="#id7">3</a>)</em> TEP 115: Power Management of Non-Virtualized Devices</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep131" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id8" name="tep131">[TEP131]</a></td><td>TEP 131: Creating a New Platform for TinyOS 2.x</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id8">[TEP131]</a></td><td>TEP 131: Creating a New Platform for TinyOS 2.x</td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-sensor-driver-examples" name="appendix-a-sensor-driver-examples">Appendix A: Sensor Driver Examples</a></h1>
-<div class="section">
-<h2><a id="analog-adc-connected-sensor" name="analog-adc-connected-sensor">1. Analog ADC-Connected Sensor</a></h2>
+<div class="section" id="appendix-a-sensor-driver-examples">
+<h1>Appendix A: Sensor Driver Examples</h1>
+<div class="section" id="analog-adc-connected-sensor">
+<h2>1. Analog ADC-Connected Sensor</h2>
 <p>The Analog sensor requires two components</p>
 <ul class="simple">
 <li>a component to present the sensor itself (HamamatsuS1087ParC)</li>
@@ -755,8 +756,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="binary-pin-connected-sensor" name="binary-pin-connected-sensor">2. Binary Pin-Connected Sensor</a></h2>
+<div class="section" id="binary-pin-connected-sensor">
+<h2>2. Binary Pin-Connected Sensor</h2>
 <p>The Binary sensor gets a bit more complex, because it has three
 components:</p>
 <ul class="simple">
@@ -878,8 +879,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="digital-bus-connected-sensor" name="digital-bus-connected-sensor">3. Digital Bus-Connected Sensor</a></h2>
+<div class="section" id="digital-bus-connected-sensor">
+<h2>3. Digital Bus-Connected Sensor</h2>
 <p>The Digital sensor is the most complex out of the set, and includes
 six components:</p>
 <ul class="simple">
@@ -1162,12 +1163,12 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="mda100-sensor-board-directory-organization" name="mda100-sensor-board-directory-organization">4. MDA100 Sensor Board Directory Organization</a></h2>
+<div class="section" id="mda100-sensor-board-directory-organization">
+<h2>4. MDA100 Sensor Board Directory Organization</h2>
 <p>Here we show the organization of the sensor board directory for the
 mica-family Xbow MDA100CA and MDA100CB sensor boards, which have
 temperature and light sensors. It is found in
-<tt class="docutils literal"><span class="pre">tos/sensorboards/mda100</span></tt>:</p>
+<tt class="docutils literal">tos/sensorboards/mda100</tt>:</p>
 <pre class="literal-block">
 ./tos/sensorboards/mda100:
 .sensor                                       # Compiler configuration
@@ -1193,7 +1194,7 @@ TinyOS demo sensor (DemoSensorC). The demo sensor is an alias for PhotoC.</p>
 temperature sensor.  The user has to specify which form of the sensor
 board is in use by providing a <tt class="docutils literal"><span class="pre">-I%T/sensorboards/mda100/ca</span></tt> or
 <tt class="docutils literal"><span class="pre">-I%T/sensorboards/mda100/cb</span></tt> compiler option.</p>
-<p>This sensor board relies on a platform-provided <tt class="docutils literal"><span class="pre">MicaBusC</span></tt> component
+<p>This sensor board relies on a platform-provided <tt class="docutils literal">MicaBusC</tt> component
 that specifies how the mica-family sensor board bus is connected to
 the microcontroller.</p>
 </div>

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Porting TinyOS 1.x Code to TinyOS 2.0</title>
 <meta name="author" content="Tahir Azim and Philip Levis" />
 <meta name="date" content="October 26 2006" />
@@ -13,7 +13,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.8 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -214,7 +214,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -276,6 +276,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -296,12 +297,12 @@ ul.auto-toc {
 <p class="last">This document provides a few important points that describe
 major steps required for porting TinyOS 1.x code to TinyOS 2.0.
 It is based on Tahir Azim's experience porting Beacon Vector
-Routing (BVR[<a class="reference" href="#id1">1</a>]) from TinyOS 1.x to T2. This document is not
+Routing (BVR[<a class="reference internal" href="#id1">1</a>]) from TinyOS 1.x to T2. This document is not
 a complete porting guide, but the hope is that it will provide
 some help or guidance.</p>
 </div>
-<div class="section">
-<h1><a id="porting-points" name="porting-points">1. Porting Points</a></h1>
+<div class="section" id="porting-points">
+<h1>1. Porting Points</h1>
 <p>As these observations come from porting a network protocol, they are
 rather protocol-centric and do not consider other abstractions such
 as storage. We hope to add such points in the future.</p>
@@ -337,8 +338,8 @@ if (call Packet... () == SUCCESS ) {
 </ol>
 </blockquote>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">2. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>2. Author's Address</h1>
 <div class="line-block">
 <div class="line">Tahir Azim</div>
 <div class="line">358 Gates Hall</div>
@@ -346,7 +347,7 @@ if (call Packet... () == SUCCESS ) {
 <div class="line">Stanford University</div>
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:tazim&#64;cs.stanford.edu">tazim&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:tazim&#64;cs.stanford.edu">tazim&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -356,15 +357,15 @@ if (call Packet... () == SUCCESS ) {
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">3. Citations</a></h1>
+<div class="section" id="citations">
+<h1>3. Citations</h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>Rodrigo Fonseca, David Culler, Sylvia Ratnasamy, Scott Shenker, and Ion Stoica. &quot;Beacon Vector Routing: Scalable Point-to-Point Routing in Wireless Sensornets.&quot; In Proceedings of the Second USENIX/ACM Symposium on Network Systems Design and Implementation (NSDI 2005).</td></tr>
+<tr><td class="label">[1]</td><td>Rodrigo Fonseca, David Culler, Sylvia Ratnasamy, Scott Shenker, and Ion Stoica. &quot;Beacon Vector Routing: Scalable Point-to-Point Routing in Wireless Sensornets.&quot; In Proceedings of the Second USENIX/ACM Symposium on Network Systems Design and Implementation (NSDI 2005).</td></tr>
 </tbody>
 </table>
 </div>

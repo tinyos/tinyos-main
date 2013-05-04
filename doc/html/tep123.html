@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>The Collection Tree Protocol (CTP)</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.11 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -313,20 +314,20 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents the Collection Tree Protocol (CTP), which
 provides best-effort anycast datagram communication to one of the
 collection roots in a network.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>A collection protocol delivers data to one of possibly several data
 sinks, providing a many-to-one network layer. Collection is a
 fundamental component of most sensor network applications. The
 Collection Tree Protocol (CTP) is a reference Collection protocol in
 TinyOS 2.x. The users use Collection interfaces described in TEP 119
-<a class="footnote-reference" href="#id8" id="id1" name="id1">[3]</a> to use CTP in their applications.</p>
+<a class="footnote-reference" href="#id8" id="id1">[3]</a> to use CTP in their applications.</p>
 <p>In this TEP, after a brief discussion of Collection and CTP, we
 specify the CTP routing and data frames. CTP uses routing frames to
 update and build collection tree in the network. CTP uses data frames
@@ -334,8 +335,8 @@ to deliver application payload to the sink and to probe topology
 inconsistencies.</p>
 <p>All fields in this specification are in network byte order.</p>
 </div>
-<div class="section">
-<h1><a id="assumptions-and-limitations" name="assumptions-and-limitations">2. Assumptions and Limitations</a></h1>
+<div class="section" id="assumptions-and-limitations">
+<h1>2. Assumptions and Limitations</h1>
 <p>CTP is a tree-based collection protocol. Some number of nodes in a
 network advertise themselves as tree roots. Nodes form a set of routing
 trees to these roots. CTP is <strong>address-free</strong> in that a node does not
@@ -367,8 +368,8 @@ benefit from a different protocol, which can, for example, pack
 multiple small frames into a single data-link packet or employ rate
 control mechanisms.</p>
 </div>
-<div class="section">
-<h1><a id="collection-and-ctp" name="collection-and-ctp">3. Collection and CTP</a></h1>
+<div class="section" id="collection-and-ctp">
+<h1>3. Collection and CTP</h1>
 <p>CTP uses expected transmissions (ETX) as its routing gradient. A root
 has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
 ETX of its link to its parent. This additive measure assumes that
@@ -413,8 +414,8 @@ routing layer increments on each hop. A link-level retransmission has
 the same THL value, while a looped version of the packet is unlikely
 to do so.</p>
 </div>
-<div class="section">
-<h1><a id="ctp-data-frame" name="ctp-data-frame">4. CTP Data Frame</a></h1>
+<div class="section" id="ctp-data-frame">
+<h1>4. CTP Data Frame</h1>
 <p>The CTP data frame format is as follows:</p>
 <pre class="literal-block">
                      1
@@ -456,8 +457,8 @@ THL happens to wrap around to a forwarded packet instance.</p>
 <p>A node MUST send CTP data frames as unicast messages with link-layer
 acknowledgments enabled.</p>
 </div>
-<div class="section">
-<h1><a id="ctp-routing-frame" name="ctp-routing-frame">5. CTP Routing Frame</a></h1>
+<div class="section" id="ctp-routing-frame">
+<h1>5. CTP Routing Frame</h1>
 <p>The CTP routing frame format is as follows:</p>
 <pre class="literal-block">
                      1
@@ -490,8 +491,8 @@ own, it MUST schedule a routing frame for transmission in the near
 future.</p>
 <p>A node MUST send CTP routing frames as broadcast messages.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>6. Implementation</h1>
 <p>An implementation of CTP can be found in the tos/lib/net/ctp directory
 of TinyOS 2.0. This section describes the structure of that implementation
 and is not in any way part of the specification of CTP.</p>
@@ -505,14 +506,14 @@ routing hop.</p>
 to send. It decides when and if to send them. The name is a little
 misleading: the forwarding engine is responsible for forwarded traffic
 as well as traffic generated on the node.</p>
-<div class="section">
-<h2><a id="link-estimation" name="link-estimation">6.1 Link Estimation</a></h2>
+<div class="section" id="link-estimation">
+<h2>6.1 Link Estimation</h2>
 <p>The implementation uses two mechanisms to estimate the quality of a link:
-periodic LEEP <a class="footnote-reference" href="#id6" id="id2" name="id2">[1]</a> packets and data packets. The implementation sends
+periodic LEEP <a class="footnote-reference" href="#id6" id="id2">[1]</a> packets and data packets. The implementation sends
 routing beacons as LEEP packets. These packets seed the neighbor table
 with bidirectional ETX values. The implementation adapts its beaconing
 rate based on network dynamics using an algorithm similar to the
-trickle dissemination protocol <a class="footnote-reference" href="#id7" id="id3" name="id3">[2]</a>. Beacons are sent on an exponentially
+trickle dissemination protocol <a class="footnote-reference" href="#id7" id="id3">[2]</a>. Beacons are sent on an exponentially
 increasing randomized timer. The implementation resets the timer to a
 small value when one or more of the following conditions are met:</p>
 <blockquote>
@@ -536,23 +537,23 @@ data estimates will outweigh beacon estimates. Additionally, as
 the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
 switch to another candidate neighbor.</p>
-<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/4bitle/LinkEstimatorP</span></tt> implements the
+<p>The component <tt class="docutils literal">tos/lib/net/4bitle/LinkEstimatorP</tt> implements the
 link estimator. It couples LEEP-based and data-based estimates as
-described in <a class="footnote-reference" href="#id9" id="id4" name="id4">[4]</a>.</p>
+described in <a class="footnote-reference" href="#id9" id="id4">[4]</a>.</p>
 </div>
-<div class="section">
-<h2><a id="routing-engine" name="routing-engine">6.2 Routing Engine</a></h2>
+<div class="section" id="routing-engine">
+<h2>6.2 Routing Engine</h2>
 <p>The implementation's routing engine is responsible for picking the next
 hop for a data transmission. It keeps track of the path ETX values of
 a subset of the nodes maintained by the link estimation table. The minimum
 cost route has the smallest sum the path ETX from that node and the link
 ETX of that node. The path ETX is therefore the sum of link ETX values
-along the entire route. The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpRoutingEngineP</span></tt>
+along the entire route. The component <tt class="docutils literal">tos/lib/net/ctp/CtpRoutingEngineP</tt>
 implements the routing engine.</p>
 </div>
-<div class="section">
-<h2><a id="forwarding-engine" name="forwarding-engine">6.3 Forwarding Engine</a></h2>
-<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpForwardingEngineP</span></tt> implements the
+<div class="section" id="forwarding-engine">
+<h2>6.3 Forwarding Engine</h2>
+<p>The component <tt class="docutils literal">tos/lib/net/ctp/CtpForwardingEngineP</tt> implements the
 forwarding engine. It has five responsibilities:</p>
 <blockquote>
 <ol class="arabic simple">
@@ -566,9 +567,9 @@ generated and forwarded packets</li>
 </ol>
 </blockquote>
 <p>The four key functions of the forwading engine are packet reception
-(<tt class="docutils literal"><span class="pre">SubReceive.receive()</span></tt>), packet forwarding (<tt class="docutils literal"><span class="pre">forward()</span></tt>), packet
-transmission (<tt class="docutils literal"><span class="pre">sendTask()</span></tt>) and deciding what to do after a packet
-transmission (<tt class="docutils literal"><span class="pre">SubSend.sendDone()</span></tt>).</p>
+(<tt class="docutils literal">SubReceive.receive()</tt>), packet forwarding (<tt class="docutils literal">forward()</tt>), packet
+transmission (<tt class="docutils literal">sendTask()</tt>) and deciding what to do after a packet
+transmission (<tt class="docutils literal">SubSend.sendDone()</tt>).</p>
 <p>The receive function decides whether or not the node should forward a
 packet. It checks for duplicates using a small cache of recently received
 packets. If it decides a packet is not a duplicate, it calls the
@@ -592,15 +593,15 @@ stream packets as quickly as possible, in order to prevent self-collisions
 along the path.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <div class="line-block">
 <div class="line">Rodrigo Fonseca</div>
 <div class="line">473 Soda Hall</div>
 <div class="line">Berkeley, CA 94720-1776</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 642-8919</div>
-<div class="line">email - <a class="reference" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Omprakash Gnawali</div>
@@ -609,7 +610,7 @@ along the path.</p>
 <div class="line">Los Angeles, CA 90089</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 213 821-5627</div>
-<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Kyle Jamieson</div>
@@ -617,7 +618,7 @@ along the path.</p>
 <div class="line">32 Vassar St.</div>
 <div class="line">Cambridge, MA 02139</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
@@ -627,7 +628,7 @@ along the path.</p>
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Alec Woo</div>
@@ -635,7 +636,7 @@ along the path.</p>
 <div class="line">501 2nd St. Ste 410</div>
 <div class="line">San Francisco, CA 94107-4132</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:awoo&#64;archrock.com">awoo&#64;archrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:awoo&#64;archrock.com">awoo&#64;archrock.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Sukun Kim</div>
@@ -645,21 +646,21 @@ along the path.</p>
 <div class="line">Korea, Republic of</div>
 <div class="line"><br /></div>
 <div class="line">phone - +82 10 3065 6836</div>
-<div class="line">email - <a class="reference" href="mailto:sukun.kim&#64;samsung.com">sukun.kim&#64;samsung.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:sukun.kim&#64;samsung.com">sukun.kim&#64;samsung.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="id5" name="id5">8. Citations</a></h1>
+<div class="section" id="id5">
+<h1>8. Citations</h1>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id6">[1]</a></td><td>TEP 124: Link Estimation Extension Protocol</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>TEP 124: Link Estimation Extension Protocol</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id7">[2]</a></td><td>Philip Levis, Neil Patel, David Culler and Scott Shenker. &quot;A
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>Philip Levis, Neil Patel, David Culler and Scott Shenker. &quot;A
 Self-Regulating Algorithm for Code Maintenance and Propagation
 in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX
 Conference on Networked Systems Design and Implementation (NSDI), 2004.</td></tr>
@@ -668,13 +669,13 @@ Conference on Networked Systems Design and Implementation (NSDI), 2004.</td></tr
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id8">[3]</a></td><td>TEP 119: Collection.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[3]</a></td><td>TEP 119: Collection.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id9" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4" name="id9">[4]</a></td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
 &quot;Four Bit Wireless Link Estimation.&quot; In Proceedings of the Sixth Workshop
 on Hot Topics in Networks (HotNets VI), November 2007.</td></tr>
 </tbody>

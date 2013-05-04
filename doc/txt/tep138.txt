@@ -38,7 +38,7 @@ receives a source-routed packet, it looks up the next hop in the
 source routing packet header and forwards the packet to that node.
 
 A complete source routing system is comprised of two sets of
-functionality: the first deals with reading and writing source routes 
+functionality: the first deals with reading and writing source routes
 and the second handles forwarding based on source routes.
 
 A source routing system can be used in many ways. This can be useful
@@ -69,12 +69,14 @@ A node can perform three different roles in source routing:
 
   * Receiver: Receive a source routed packet at the destination
 
-Multiple sender applications can use the source routing system. These senders 
+Multiple sender applications can use the source routing system. These senders
 are uniquely identified by sourceroute identifiers. These identifiers work
-like collection identifiers in collection protocols[1_]. 
+like collection identifiers in collection protocols[1_].
 
 The sender uses the SourceRouteSend interface to set the contents of a packet.
 The sender uses the SourceRouteSend interface to introduce a packet into the network.
+
+::
 
   interface SourceRouteSend {
     command error_t send(am_addr_t *path, uint8_t pathLen, message_t* msg, uint8_t len);
@@ -85,27 +87,29 @@ The sender uses the SourceRouteSend interface to introduce a packet into the net
   }
 
 
-The forwarder uses the SourceRoutePacket interface to update the header as it 
+The forwarder uses the SourceRoutePacket interface to update the header as it
 forwards the packet:
+
+::
 
   interface SourceRoutePacket
   {
     command am_addr_t address();
-  
+
     command error_t clearRoute(message_t *msg);
 
     command error_t setRoute(message_t *msg, nx_am_addr_t *path, uint8_t len);
     command nx_am_addr_t* getRoute(message_t *msg);
-    
+
     command uint8_t getRouteLen(message_t *msg);
     command error_t setRouteLen(message_t *msg, uint8_t len);
-    
+
     command am_addr_t getNextHop(message_t *msg);
     command am_addr_t getDest(message_t *msg);
-     
+
     command uint8_t getCurHop(message_t *msg);
     command error_t setCurHop(message_t *msg, uint8_t hop);
-    
+
   }
 
 
@@ -114,6 +118,8 @@ forwards the packet:
 
 A source routing service MUST provide one SourceRoutingC,
 which has the following signature:
+
+::
 
   configuration SourceRoutingC {
     provides {
@@ -127,7 +133,7 @@ which has the following signature:
     }
   }
 
-  
+
 4. Implementation
 ====================================================================
 

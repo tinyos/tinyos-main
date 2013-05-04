@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Active Message ID Allocation in TinyOS 2.1</title>
 <meta name="author" content="Omprakash Gnawali" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -298,9 +299,9 @@ ul.auto-toc {
 <td>Omprakash Gnawali</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-June-2008</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.3</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-24</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-12-08</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -311,25 +312,25 @@ ul.auto-toc {
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
 requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
-<a class="citation-reference" href="#tep-1" id="id1" name="id1">[TEP_1]</a> and <a class="citation-reference" href="#tep-4" id="id2" name="id2">[TEP_4]</a>.</p>
+<a class="citation-reference" href="#tep-1" id="id1">[TEP_1]</a> and <a class="citation-reference" href="#tep-4" id="id2">[TEP_4]</a>.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>TinyOS network protocols use allocated Active Message Type <a class="citation-reference" href="#tep-116" id="id3" name="id3">[TEP_116]</a>
-to prevent AM ID conflict between different protocols. <a class="citation-reference" href="#tep-4" id="id4" name="id4">[TEP_4]</a>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
+<p>TinyOS network protocols use allocated Active Message Type <a class="citation-reference" href="#tep-116" id="id3">[TEP_116]</a>
+to prevent AM ID conflict between different protocols. <a class="citation-reference" href="#tep-4" id="id4">[TEP_4]</a>
 describes how AM IDs are allocated for a TinyOS network protocol. In
 this TEP, we document the AM ID allocations in TinyOS 2.1.</p>
 </div>
-<div class="section">
-<h1><a id="unreserved-pool-128-255-0x80-0xff" name="unreserved-pool-128-255-0x80-0xff">2. Unreserved pool 128-255 (0x80 - 0xFF)</a></h1>
+<div class="section" id="unreserved-pool-128-255-0x80-0xff">
+<h1>2. Unreserved pool 128-255 (0x80 - 0xFF)</h1>
 <p>The unreserved pool is in the range 128-255 (0x80-0xFF). Applications
 distributed with TinyOS use AM IDs in this range. Protocols and
 applications in contrib as well as those developed by the community
 but not included in the distribution or contrib SHOULD use AM IDs in
 this range.</p>
 </div>
-<div class="section">
-<h1><a id="reserved-pool-0-127-0x00-0x7f" name="reserved-pool-0-127-0x00-0x7f">3. Reserved pool 0-127 (0x00 - 0x7F)</a></h1>
+<div class="section" id="reserved-pool-0-127-0x00-0x7f">
+<h1>3. Reserved pool 0-127 (0x00 - 0x7F)</h1>
 <p>The reserved pool is in the range 0-127 (0x00-0x7F). The AM IDs in
 this range are used by protocols distributed with TinyOS.</p>
 <p>Here is a list of allocations for TinyOS 2.1:</p>
@@ -347,7 +348,10 @@ this range are used by protocols distributed with TinyOS.</p>
   0x74 - AM_LQI_DATA_MSG MultiHopLQI (Data packets)
   0x75 - AM_LQI_DEBUG MultiHopLQI (Debug messages)
 
-* 0x60 - 0x62 are reserved for dissemination protocols [TEP_118]_
+  For SRP(''tos/lib/net/srp'')
+  0x76 - AM_SRP (Data packets)
+
+* 0x60 - 0x63 are reserved for dissemination protocols [TEP_118]_
   maintained by the Network Protocol Working Group.
 
   For Drip (''tos/lib/net/drip'')
@@ -356,6 +360,9 @@ this range are used by protocols distributed with TinyOS.</p>
 
   For DIP (''tos/lib/net/dip'')
   0x62 - AM_DIP
+
+  For DHV (''tos/lib/net/dhv'')
+  0x63 - AM_DHV
 
 * 0x50 - 0x54 are reserved for Deluge (''tos/lib/net/Deluge'')
   maintained by the Network Protocol Working Group.
@@ -366,6 +373,9 @@ this range are used by protocols distributed with TinyOS.</p>
   0x53 - DELUGE_AM_FLASH_VOL_MANAGER (Flash volume manager)
   0x54 - DELUGE_AM_DELUGE_MANAGER (Deluge manger)
 
+* 0x3D - TIMESYNC_AMTYPE for Packet Level Time Synchronization
+  (''TimeSyncMessageC'') reserved by the Core Working Group.
+
 * 0x3E - AM_TIMESYNCMSG for FTSP (''tos/lib/ftsp'') reserved by the
   Core Working Group.
 
@@ -373,66 +383,67 @@ this range are used by protocols distributed with TinyOS.</p>
   Group.
 </pre>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>4. Author's Address</h1>
 <div class="line-block">
 <div class="line">Omprakash Gnawali</div>
-<div class="line">Ronald Tutor Hall (RTH) 418</div>
-<div class="line">3710 S. McClintock Avenue</div>
-<div class="line">Los Angeles, CA 90089</div>
+<div class="line">318 Campus Drive, S255</div>
+<div class="line">Computer Science Department</div>
+<div class="line">Stanford University</div>
+<div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
-<div class="line">phone - +1 213 821-5627</div>
-<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+<div class="line">phone - +1 650 725 6086</div>
+<div class="line">email - <a class="reference external" href="mailto:gnawali&#64;cs.stanford.edu">gnawali&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">5. Citations</a></h1>
+<div class="section" id="citations">
+<h1>5. Citations</h1>
 <table class="docutils citation" frame="void" id="tep-1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="tep-1">[TEP_1]</a></td><td>TEP 1: TEP Structure and Keywords</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[TEP_1]</a></td><td>TEP 1: TEP Structure and Keywords</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-4">[TEP_4]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 4: Active Message ID Allocation for Network Protocols and Applications</td></tr>
+<tr><td class="label">[TEP_4]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 4: Active Message ID Allocation for Network Protocols and Applications</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-116" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="tep-116">[TEP_116]</a></td><td>TEP 116: Packet Protocols</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[TEP_116]</a></td><td>TEP 116: Packet Protocols</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-118" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-118">[TEP_118]</a></td><td>TEP 118: Dissemination of Small Values</td></tr>
+<tr><td class="label">[TEP_118]</td><td>TEP 118: Dissemination of Small Values</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-119" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-119">[TEP_119]</a></td><td>TEP 119: Collection</td></tr>
+<tr><td class="label">[TEP_119]</td><td>TEP 119: Collection</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-123" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-123">[TEP_123]</a></td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
+<tr><td class="label">[TEP_123]</td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-124" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-124">[TEP_124]</a></td><td>TEP 124: The Link Estimation Exchange Protocol (LEEP)</td></tr>
+<tr><td class="label">[TEP_124]</td><td>TEP 124: The Link Estimation Exchange Protocol (LEEP)</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep-125" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep-125">[TEP_125]</a></td><td>TEP 125: TinyOS 802.15.4 Frames</td></tr>
+<tr><td class="label">[TEP_125]</td><td>TEP 125: TinyOS 802.15.4 Frames</td></tr>
 </tbody>
 </table>
 </div>

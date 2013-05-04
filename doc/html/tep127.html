@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Packet Link Layer</title>
 <meta name="author" content="David Moss, Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,16 +306,16 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This TEP describes the behavior and interfaces of the TinyOS 2.x
 Packet Link Layer.  The Packet Link Layer is an optional radio stack
 layer responsible for the reliable delivery of a packet from node to
 node.  Packet Link provides error correction functionality found in
-Layer 2 of the OSI model <a class="footnote-reference" href="#id2" id="id1" name="id1">[1]</a>.</p>
+Layer 2 of the OSI model <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>In wireless networks, packets are regularly dropped between point to point
 communications due to interference or RF range.  Correcting these dropped
 packets requires the transmitter to first recognize that the packet was
@@ -329,10 +330,10 @@ keep retrying until it gets an acknowledgement and the ability
 for a receiver to accept only a single copy of the packet, a Packet Link Layer
 can be formed to reliably deliver a single packet from point to point.</p>
 </div>
-<div class="section">
-<h1><a id="design-considerations" name="design-considerations">2. Design Considerations</a></h1>
-<div class="section">
-<h2><a id="time-spent-retrying-a-delivery" name="time-spent-retrying-a-delivery">2.1 Time spent retrying a delivery</a></h2>
+<div class="section" id="design-considerations">
+<h1>2. Design Considerations</h1>
+<div class="section" id="time-spent-retrying-a-delivery">
+<h2>2.1 Time spent retrying a delivery</h2>
 <p>Some networks have different timing characteristics than others.
 Consider a person carrying a wireless device while walking in and out
 of RF range of another node.  In this case, the device may want to
@@ -341,8 +342,8 @@ declaring the delivery unsuccessful.  A robust Packet Link Layer should
 allow the developer to specify the amount of time spent retrying as well
 as the number of retries to send.</p>
 </div>
-<div class="section">
-<h2><a id="setting-the-packet-sequence-number" name="setting-the-packet-sequence-number">2.2 Setting the packet sequence number</a></h2>
+<div class="section" id="setting-the-packet-sequence-number">
+<h2>2.2 Setting the packet sequence number</h2>
 <p>To detect duplicate packets, a sequence number byte can be used
 within the packet to verify against previously received
 packets.  If the source address and sequence number of a newly received
@@ -351,8 +352,8 @@ packet is a duplicate and may be dumped.  To prevent the packet sequence
 number byte from changing on each retransmission, the byte should be set
 at or above the Packet Link Layer and never changed below.</p>
 </div>
-<div class="section">
-<h2><a id="false-acknowledgements" name="false-acknowledgements">2.3 False Acknowledgements</a></h2>
+<div class="section" id="false-acknowledgements">
+<h2>2.3 False Acknowledgements</h2>
 <p>The low levels of a radio stack or the radio chip itself are typically
 responsible for generating packet acknowledgements.  It has been
 observed in some platforms that the radio chip will generate false
@@ -365,10 +366,10 @@ acknowledgements prevent this issue by removing the possibility of
 false acknowledgements.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="interface" name="interface">3. Interface</a></h1>
-<div class="section">
-<h2><a id="packetlink-interface" name="packetlink-interface">3.1 PacketLink Interface</a></h2>
+<div class="section" id="interface">
+<h1>3. Interface</h1>
+<div class="section" id="packetlink-interface">
+<h2>3.1 PacketLink Interface</h2>
 <p>The TEP proposes this PacketLink interface::</p>
 <pre class="literal-block">
 interface PacketLink {
@@ -381,29 +382,29 @@ interface PacketLink {
 </pre>
 <p>PacketLinks interface functions:</p>
 <blockquote>
-<tt class="docutils literal"><span class="pre">setRetries(message_t</span> <span class="pre">*msg,</span> <span class="pre">uint16_t</span> <span class="pre">maxRetries)</span></tt></blockquote>
+<tt class="docutils literal">setRetries(message_t *msg, uint16_t maxRetries)</tt></blockquote>
 <ul>
 <li><p class="first">Sets the maximum number of times to retry the transmission of the message</p>
-<p><tt class="docutils literal"><span class="pre">setRetryDelay(message_t</span> <span class="pre">*msg,</span> <span class="pre">uint16_t</span> <span class="pre">retryDelay)</span></tt></p>
+<p><tt class="docutils literal">setRetryDelay(message_t *msg, uint16_t retryDelay)</tt></p>
 </li>
 <li><p class="first">Set the delay, in milliseconds, between each retransmission</p>
-<p><tt class="docutils literal"><span class="pre">getRetries(message_t</span> <span class="pre">*msg)</span></tt></p>
+<p><tt class="docutils literal">getRetries(message_t *msg)</tt></p>
 </li>
 <li><p class="first">Returns the maximum number of retries configured for the given message</p>
-<p><tt class="docutils literal"><span class="pre">getRetryDelay(message_t</span> <span class="pre">*msg)</span></tt></p>
+<p><tt class="docutils literal">getRetryDelay(message_t *msg)</tt></p>
 </li>
 <li><p class="first">Returns the delay, in milliseconds, between each retransmission for the given
 message</p>
-<p><tt class="docutils literal"><span class="pre">wasDelivered(message_t</span> <span class="pre">*msg)</span></tt></p>
+<p><tt class="docutils literal">wasDelivered(message_t *msg)</tt></p>
 </li>
 <li><p class="first">This command may be called after the sendDone() event is signaled. It is the
-equivalent of <tt class="docutils literal"><span class="pre">PacketAcknowledgements.wasAcked(message_t</span> <span class="pre">*msg)</span></tt>, so is only
+equivalent of <tt class="docutils literal">PacketAcknowledgements.wasAcked(message_t *msg)</tt>, so is only
 a helper function to make the PacketLink interface easier to use.</p>
 </li>
 </ul>
 </div>
-<div class="section">
-<h2><a id="expected-behavior" name="expected-behavior">3.2 Expected Behavior</a></h2>
+<div class="section" id="expected-behavior">
+<h2>3.2 Expected Behavior</h2>
 <p>The PacketLink interface is accessed by the application layer before
 the packet is passed to the radio stack for transmission.  The application
 layer will call setRetries(...) and setRetryDelay(...), passing in the
@@ -428,8 +429,8 @@ retried.  This will let the transmitter know that at least one node
 received the message.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>4. Author's Address</h1>
 <div class="line-block">
 <div class="line">David Moss</div>
 <div class="line">Rincon Research Corporation</div>
@@ -437,7 +438,7 @@ received the message.</p>
 <div class="line">Tucson, AZ  85750</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 520 519 3138</div>
-<div class="line">email ? <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
+<div class="line">email ? <a class="reference external" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
@@ -446,16 +447,16 @@ received the message.</p>
 <div class="line">Stanford, CA 94305-9030</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">5. Citations</a></h1>
+<div class="section" id="citations">
+<h1>5. Citations</h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id2">[1]</a></td><td>&quot;OSI model&quot; <a class="reference" href="http://en.wikipedia.org/wiki/OSI_model">http://en.wikipedia.org/wiki/OSI_model</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>&quot;OSI model&quot; <a class="reference external" href="http://en.wikipedia.org/wiki/OSI_model">http://en.wikipedia.org/wiki/OSI_model</a></td></tr>
 </tbody>
 </table>
 </div>

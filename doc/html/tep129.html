@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
 <title>Basic Platform Independent Non-Volatile Storage Layers</title>
 <meta name="authors" content="David Moss  Junzhao Du  Prabal Dutta  Deepak Ganesan  Kevin Klues  Manju  Ajay Martin  and Gaurav Mathur" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -312,8 +313,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The storage abstractions proposed by TEP 103 are implemented on a
 platform-dependent basis.  A version of BlockStorage, ConfigStorage,
 and LogStorage were created from the ground up for both the
@@ -328,15 +329,15 @@ Platform-independent implementation concepts are discussed
 along with recommended solutions, and changes are proposed to the
 interfaces defined by TEP 103.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>The implementations of the BlockStorage, ConfigStorage, and LogStorage
-layers described in TEP 103 <a class="footnote-reference" href="#id6" id="id1" name="id1">[1]</a> are platform-dependent.  Platform-
+layers described in TEP 103 <a class="footnote-reference" href="#id6" id="id1">[1]</a> are platform-dependent.  Platform-
 dependent implementations can cause behavioral and usage differences
 as well as compiling problems when attempting to port an application
 written on one platform to another.</p>
 <p>Building upon the DirectStorage, DirectModify, and VolumeSettings
-abstraction layers defined in TEP128 <a class="footnote-reference" href="#id7" id="id2" name="id2">[2]</a>, the three basic storage
+abstraction layers defined in TEP128 <a class="footnote-reference" href="#id7" id="id2">[2]</a>, the three basic storage
 solutions can be implemented in a platform-independent manner.
 This requires combining all properties of various memory types,
 which aids in the creation of platform-independent storage solutions.
@@ -344,8 +345,8 @@ Behavioral differences are minimized, and applications using
 the platform-independent storage layers can expect to work the
 same way on different types of non-volatile memory.</p>
 </div>
-<div class="section">
-<h1><a id="implementing-a-platform-independent-blockstorage" name="implementing-a-platform-independent-blockstorage">2. Implementing a platform-independent BlockStorage</a></h1>
+<div class="section" id="implementing-a-platform-independent-blockstorage">
+<h1>2. Implementing a platform-independent BlockStorage</h1>
 <p>The DirectStorage interface initially stemmed from the BlockStorage
 interface with differences in interfaces, organization, and
 erase behavior, as well as the additional VolumeSettings interface.
@@ -355,8 +356,8 @@ be extended to erase the entire volume instead of an individual erase unit.</p>
 units in the currently mounted volume.  Looping through these erase units,
 DirectStorage is accessed to erase() each one.  At the end of the erase
 operation, the entire volume is set back to fill bytes (0xFF).</p>
-<div class="section">
-<h2><a id="improved-blockstorage-interface" name="improved-blockstorage-interface">2.1 Improved BlockStorage interface</a></h2>
+<div class="section" id="improved-blockstorage-interface">
+<h2>2.1 Improved BlockStorage interface</h2>
 <p>Previous BlockStorage interfaces were divided into BlockRead and
 BlockWrite.  This was found to be cumbersome because applications
 typically required access to both interfaces.  The getSize() is
@@ -392,16 +393,16 @@ interface BlockStorage {
 }
 </pre>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">read(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">uint32_t</span> <span class="pre">len);</span></tt></dt>
+<dt><tt class="docutils literal">read(uint32_t addr, void *buf, uint32_t len);</tt></dt>
 <dd><ul class="first last simple">
-<li>Read 'len' bytes into <tt class="docutils literal"><span class="pre">*buf</span></tt> from the given address</li>
+<li>Read 'len' bytes into <tt class="docutils literal">*buf</tt> from the given address</li>
 <li>Returns FAIL if the request cannot be handled</li>
 <li>Signals readDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">write(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">uint32_t</span> <span class="pre">len);</span></tt></dt>
+<dt><tt class="docutils literal">write(uint32_t addr, void *buf, uint32_t len);</tt></dt>
 <dd><ul class="first last simple">
-<li>Write 'len' bytes from <tt class="docutils literal"><span class="pre">*buf</span></tt> starting at the given address</li>
+<li>Write 'len' bytes from <tt class="docutils literal">*buf</tt> starting at the given address</li>
 <li>Returns FAIL if the request cannot be handled</li>
 <li>Signals writeDone(...) when complete.</li>
 </ul>
@@ -432,8 +433,8 @@ the given baseCrc as a seed.</li>
 </dl>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementing-a-platform-independent-logstorage" name="implementing-a-platform-independent-logstorage">3. Implementing a platform-independent LogStorage</a></h1>
+<div class="section" id="implementing-a-platform-independent-logstorage">
+<h1>3. Implementing a platform-independent LogStorage</h1>
 <p>As described in TEP 103, logging can be implemented using two
 different methods: linear and circular.  A linear log fills up
 its volume and stops when it comes to the end.  A circular log allows
@@ -445,10 +446,10 @@ A flag for linear log behavior prevents the logger from
 freeing up an erase unit in which to continue writing.</p>
 <p>It should also be noted that the use of a circular log mandates
 the use of at least two erase units on the volume.  As discussed
-in TEP128 <a class="footnote-reference" href="#id7" id="id3" name="id3">[2]</a>, forcing volumes to contain at least two erase
+in TEP128 <a class="footnote-reference" href="#id7" id="id3">[2]</a>, forcing volumes to contain at least two erase
 units solves this issue.</p>
-<div class="section">
-<h2><a id="logstorage-boot-behavior" name="logstorage-boot-behavior">3.1 LogStorage Boot Behavior</a></h2>
+<div class="section" id="logstorage-boot-behavior">
+<h2>3.1 LogStorage Boot Behavior</h2>
 <p>In the previous LogStorage implementations, reboots cause data to be
 lost or overwritten because the beginning and ends of the log were
 never located. Preventing previously stored data from being lost
@@ -488,8 +489,8 @@ of the log.</p>
 <p>The first entry to read from and last address to write to MUST be
 located on platform boot.</p>
 </div>
-<div class="section">
-<h2><a id="appending-log-entries" name="appending-log-entries">3.2 Appending log entries</a></h2>
+<div class="section" id="appending-log-entries">
+<h2>3.2 Appending log entries</h2>
 <p>The previous M25P80 log storage implementation is a good place to start.
 In it, each write consists of a 32-bit header &quot;cookie&quot; and the data to
 be appended to the log.  Locating the beginning of the log is therefore
@@ -519,8 +520,8 @@ beginning of the volume and continue writing.  Again, this is performed
 in conjunction with the VolumeStorage interface to determine erase unit
 properties.</p>
 </div>
-<div class="section">
-<h2><a id="reading-log-entries" name="reading-log-entries">3.3 Reading log entries</a></h2>
+<div class="section" id="reading-log-entries">
+<h2>3.3 Reading log entries</h2>
 <p>After the first log entry is located, entries are extracted by first
 reading the header of a single entry, and using the information from
 the header to pull out the subsequent log information.  After each read,
@@ -530,8 +531,8 @@ invalid and the read process has reached the end of the log. As with
 the ST M25P80 implementation, entries may be randomly seeked by
 providing the 32-bit &quot;cookie&quot; identifier to locate.</p>
 </div>
-<div class="section">
-<h2><a id="logging-conclusions" name="logging-conclusions">3.5 Logging conclusions</a></h2>
+<div class="section" id="logging-conclusions">
+<h2>3.5 Logging conclusions</h2>
 <p>This proposed logging storage solution will provide the
 ability to maintain and locate previously logged data as well as
 support truly circular logs by mandating more than one erase unit per
@@ -539,12 +540,12 @@ volume.  Behavioral differences between flash chip implementations
 are eliminated so one application can access logging storage across
 all platforms.  Furthermore, reboots will not cause logged information
 to be lost or overwritten.</p>
-<p>Existing LogRead and LogWrite interfaces defined in TEP 103 <a class="footnote-reference" href="#id7" id="id4" name="id4">[2]</a> are
+<p>Existing LogRead and LogWrite interfaces defined in TEP 103 <a class="footnote-reference" href="#id7" id="id4">[2]</a> are
 sufficient to implement cross-platform logging abilities.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementing-a-platform-independent-configstorage" name="implementing-a-platform-independent-configstorage">4. Implementing a platform-independent ConfigStorage</a></h1>
+<div class="section" id="implementing-a-platform-independent-configstorage">
+<h1>4. Implementing a platform-independent ConfigStorage</h1>
 <p>The previous interface to ConfigStorage looks very similar to that
 of BlockStorage.  The ConfigStorage interface allows reads and
 writes to arbitrary addresses, which is not optimal.  One critical
@@ -559,8 +560,8 @@ In essence, the solution should handle the allocation of memory and
 take the burden of determining valid addresses off of the application
 layer.  This will allow it to support multiple components written by
 different authors on the same system.</p>
-<div class="section">
-<h2><a id="hash-based-configuration-storage" name="hash-based-configuration-storage">4.1 Hash-based configuration storage</a></h2>
+<div class="section" id="hash-based-configuration-storage">
+<h2>4.1 Hash-based configuration storage</h2>
 <p>Several practical deployments have demonstrated the effectiveness of
 a hash-based configuration storage solution.  In it, any module
 in a system can store and update any type of data of any size without
@@ -590,7 +591,7 @@ enum {
 };
 </pre>
 <p>Configuration data can be stored and retrieved by indexing it with
-a hash key. Like AM types in the radio stack <a class="footnote-reference" href="#id8" id="id5" name="id5">[3]</a>, each key is uniquely
+a hash key. Like AM types in the radio stack <a class="footnote-reference" href="#id8" id="id5">[3]</a>, each key is uniquely
 defined by the developer.</p>
 <p>Each new update to the configuration storage should create an entirely
 new entry while invalidating any previous entry containing the same hash key.
@@ -603,8 +604,8 @@ then be erased.  This allows parameters and configuration data to be
 infinitely updated so long as the amount of valid data plus supporting
 headers is less than half the volume's total erase unit size.</p>
 </div>
-<div class="section">
-<h2><a id="improved-configstorage-interface" name="improved-configstorage-interface">4.2 Improved ConfigStorage interface</a></h2>
+<div class="section" id="improved-configstorage-interface">
+<h2>4.2 Improved ConfigStorage interface</h2>
 <p>The interface to access the configuration storage mechanism is proposed
 as follows, allowing the application layer to continually update
 previously stored parameters while preventing it from accessing
@@ -646,18 +647,18 @@ interface ConfigStorage {
 <li>Signals totalKeys(...) when complete</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">insert(uint32_t</span> <span class="pre">key,</span> <span class="pre">void</span> <span class="pre">*value,</span> <span class="pre">uint16_t</span> <span class="pre">valueSize)</span></tt></dt>
+<dt><tt class="docutils literal">insert(uint32_t key, void *value, uint16_t valueSize)</tt></dt>
 <dd><ul class="first last simple">
 <li>Insert some data into the configuration storage associated with the
 given key</li>
 <li>Signals inserted(...) when complete</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">retrieve(uint32_t</span> <span class="pre">key,</span> <span class="pre">void</span> <span class="pre">*valueHolder,</span> <span class="pre">uint16_t</span> <span class="pre">maxValueSize)</span></tt></dt>
+<dt><tt class="docutils literal">retrieve(uint32_t key, void *valueHolder, uint16_t maxValueSize)</tt></dt>
 <dd><ul class="first last simple">
 <li>Retrieve the value associated with the given key.  The maximum value
 size is the maximum amount of data that can be loaded into the
-<tt class="docutils literal"><span class="pre">*valueHolder</span></tt> location, to avoid overflow</li>
+<tt class="docutils literal">*valueHolder</tt> location, to avoid overflow</li>
 <li>Signals retrieved(...) when complete</li>
 </ul>
 </dd>
@@ -691,8 +692,8 @@ return immediately</li>
 </dl>
 </div>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>5. Author's Address</h1>
 <div class="line-block">
 <div class="line">David Moss</div>
 <div class="line">Rincon Research Corporation</div>
@@ -701,7 +702,7 @@ return immediately</li>
 <div class="line"><br /></div>
 <div class="line">phone - +1 520 519 3138</div>
 <div class="line">phone - +1 520 519 3146</div>
-<div class="line">email ? <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
+<div class="line">email ? <a class="reference external" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Junzhao Du</div>
 <div class="line">Contact -</div>
@@ -725,42 +726,42 @@ return immediately</li>
 <div class="line">Contact -</div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id6">[1]</a></td><td>TEP 103: Permanent Data Storage (Flash).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>TEP 103: Permanent Data Storage (Flash).</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id7">[2]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id4">3</a>)</em> TEP 128: Platform independent Non-Volatile Storage Abstraction Layers</td></tr>
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id4">3</a>)</em> TEP 128: Platform independent Non-Volatile Storage Abstraction Layers</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5" name="id8">[3]</a></td><td>TEP 116: Packet Protocols</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>TEP 116: Packet Protocols</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id9" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id9">[4]</a></td><td>Atmel AT45DB041B datasheet. <a class="reference" href="http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF">http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF</a></td></tr>
+<tr><td class="label">[4]</td><td>Atmel AT45DB041B datasheet. <a class="reference external" href="http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF">http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF</a></td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id10" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id10">[5]</a></td><td>ST M25P80 datasheet. <a class="reference" href="http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf">http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf</a></td></tr>
+<tr><td class="label">[5]</td><td>ST M25P80 datasheet. <a class="reference external" href="http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf">http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf</a></td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id11" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id11">[6]</a></td><td>K9K1G08R0B datasheet. <a class="reference" href="http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf">http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf</a></td></tr>
+<tr><td class="label">[6]</td><td>K9K1G08R0B datasheet. <a class="reference external" href="http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf">http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf</a></td></tr>
 </tbody>
 </table>
 </div>

@@ -3,7 +3,7 @@ The Source Routing Protocol (SRP)
 ==============================================================================
 
 :TEP: 139
-:Group: Network Working Group 
+:Group: Network Working Group
 :Type: Documentary
 :Status: Draft
 :TinyOS-Version: > 2.1
@@ -102,12 +102,14 @@ SR Entries SHOULD NOT repeat as this can cause unwanted loops.
 3.1 SRP header
 --------------------------------------------------------------------
 
-                           1            
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+::
+
+                           1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |     sr_len    |   hops_left   |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     seqno     |   payload_id  |    
+      |     seqno     |   payload_id  |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 
@@ -115,7 +117,7 @@ Field definitions are as follows:
 
   * sr_len: (n) The length of the path in hops. This is equal to the number
     of source route entries following the SRC header.
-  
+
   * hops_left: The remaining distance (in hops) towards the
     destination. Each node MUST decrement this field when it forwards the
     packet. It is 0 at the destination. Must be less than sr_len (0..n-1).
