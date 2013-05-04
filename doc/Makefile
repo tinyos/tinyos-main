@@ -23,22 +23,25 @@ pdf: $(TEPS_TEX)
 
 
 $(OVERVIEW_HTML): $(OVERVIEW) $(STYLESHEET)
-	$(RST2HTML) --stylesheet-path=$(STYLESHEET) --embed-stylesheet $< > html/$@
+	@mkdir -p html/tep/
+	$(RST2HTML) --stylesheet-path=$(STYLESHEET) --embed-stylesheet $< > html/tep/$@
 
 %.html: txt/%.txt $(TEP_STYLESHEET)
-	$(RST2HTML) --stylesheet-path=$(TEP_STYLESHEET) --embed-stylesheet $< > html/$@
+	@mkdir -p html/tep/
+	$(RST2HTML) --stylesheet-path=$(TEP_STYLESHEET) --embed-stylesheet $< > html/tep/$@
 
 %.tex: txt/%.txt 
-	$(RST2LATEX) $< > pdf/$@
-	pdflatex -interaction=batchmode -output-directory pdf $@
+	@mkdir -p pdf/tep
+	$(RST2LATEX) $< > pdf/tep/$@
+	pdflatex -interaction=batchmode -output-directory pdf/tep $@
 
 overview: $(OVERVIEW_HTML)
 
 teps: $(TEPS_HTML)
 
 clean:
-	rm -f html/*.html txt/*~ pdf/*.log pdf/*.out pdf/*.tex pdf/*.aux
+	rm -f html/tep/*.html txt/*~ pdf/tep/*.log pdf/tep/*.out pdf/tep/*.tex pdf/tep/*.aux
 
 cleanpdf:
-	rm -f pdf/*.log pdf/*.out pdf/*.tex pdf/*.aux
+	rm -f pdf/tep/*.log pdf/tep/*.out pdf/tep/*.tex pdf/tep/*.aux
 
