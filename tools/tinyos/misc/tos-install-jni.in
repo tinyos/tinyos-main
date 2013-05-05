@@ -15,7 +15,7 @@ if [ -x /bin/cygwin1.dll ]; then
   bits=32
   if [ $? -ne 0 ]; then
     echo "java command not found - assuming 32 bits"
-  elif file -L $java/java | grep -qe '64-bit|x86-64'; then #java7 on windows7 only prints x86-64
+  elif file -L "$java/java" | grep -qe '64-bit\|x86-64'; then #java7 on windows7 only prints x86-64
     bits=64
   fi
   echo "Installing $bits-bit Java JNI code in $jni ... "
