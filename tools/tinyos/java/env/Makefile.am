@@ -20,10 +20,10 @@ libgetenv.so$(EXEEXT): $(libgetenv_so_SOURCES)
 	$(CC) $(SOFLAGS) $< -o $@
 
 getenv-64.dll$(EXEEXT): $(libgetenv_so_SOURCES)
-	x86_64-w64-mingw32-gcc $(DLLFLAGS) $< -o $@
+	$(GCC64) -m64 $(DLLFLAGS) $< -o $@
 
 getenv-32.dll$(EXEEXT): $(libgetenv_so_SOURCES)
-	i686-w64-mingw32-gcc $(DLLFLAGS) $< -o $@
+	$(GCC32) $(DLLFLAGS) $< -o $@
 
 libgetenv.jnilib$(EXEEXT): $(libgetenv_so_SOURCES)
 	$(CC) $(JNILIBFLAGS) $< -o $@

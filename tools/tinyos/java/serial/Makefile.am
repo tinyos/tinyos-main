@@ -41,7 +41,7 @@ libtoscomm.so$(EXEEXT): $(libtoscomm_so_SOURCES)
 	$(CXX) $(SOFLAGS) $< -o $@
 
 toscomm-64.dll$(EXEEXT): $(toscomm_dll_SOURCES)
-	x86_64-w64-mingw32-g++ $(DLLFLAGS) $< -o $@
+	$(GCXX64) -m64 $(DLLFLAGS) -static-libstdc++ $< -o $@
 
 toscomm-32.dll$(EXEEXT): $(toscomm_dll_SOURCES)
-	i686-w64-mingw32-g++ $(DLLFLAGS) $< -o $@
+	$(GCXX32) $(DLLFLAGS) $< -o $@
