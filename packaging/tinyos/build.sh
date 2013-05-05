@@ -20,53 +20,40 @@
 #		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
 #
 
-COMMON_FUNCTIONS_SCRIPT=../../functions-build.sh
+COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
 
 
-SOURCENAME=avr-libc
-SOURCEVERSION=1.8.0
+SOURCENAME=tinyos
+SOURCEVERSION=2.1.3
 SOURCEDIRNAME=${SOURCENAME}-${SOURCEVERSION}
-SOURCEFILENAME=${SOURCEDIRNAME}.tar.bz2
 #PACKAGE_RELEASE=1
-PREFIX=/usr
+PREFIX=/opt
 MAKE="make -j8"
 
 download()
 {
-	check_download ${SOURCEFILENAME}
-	if [ "$?" -eq "1" ]; then
-		wget http://download.savannah.gnu.org/releases/${SOURCENAME}/${SOURCEFILENAME}
-	fi
-}
-
-unpack()
-{
-  tar -xjf ${SOURCEFILENAME}
-}
-
-build()
-{
-  set -e
-  (
-    cd ${SOURCEDIRNAME}
-    ./configure --prefix=${PREFIX} --host=avr
-    ${MAKE}
-  )
+  mkdir -p ${SOURCEDIRNAME}
+	cp -R ${TOSROOT}/apps ${SOURCEDIRNAME}/apps
+	cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}/licenses
+	cp -R ${TOSROOT}/support ${SOURCEDIRNAME}/support
+	cp -R ${TOSROOT}/tos ${SOURCEDIRNAME}/tos
+	cp ${TOSROOT}/README.tinyos ${SOURCEDIRNAME}
+	cp ${TOSROOT}/release-notes.txt ${SOURCEDIRNAME}
 }
 
 installto()
 {
-	cd ${SOURCEDIRNAME}
-  ${MAKE} tooldir=/usr DESTDIR=${INSTALLDIR} install
+  mkdir -p ${INSTALLDIR}/opt
+  cp -R ${SOURCEDIRNAME} ${INSTALLDIR}/opt/
 }
 
 package_deb(){
-  package_deb_from ${INSTALLDIR} ${SOURCEVERSION}-${PACKAGE_RELEASE} libc.control
+  package_deb_from ${INSTALLDIR} ${SOURCEVERSION}-${PACKAGE_RELEASE} tinyos.control nopostinst noprerm all
 }
 
 package_rpm(){
-  package_rpm_from ${INSTALLDIR} ${SOURCEVERSION} ${PACKAGE_RELEASE} ${PREFIX} libc.spec
+  package_rpm_from ${INSTALLDIR} ${SOURCEVERSION} ${PACKAGE_RELEASE} ${PREFIX} tinyos.spec
 }
 
 cleanbuild(){
@@ -106,13 +93,9 @@ case $1 in
     ;;
 
   deb)
-		setup_package_target ${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
-    unpack
-    cd ${BUILD_ROOT}
-    build
     cd ${BUILD_ROOT}
     installto
     cd ${BUILD_ROOT}
@@ -122,13 +105,9 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target ${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
-    unpack
-    cd ${BUILD_ROOT}
-    build
     cd ${BUILD_ROOT}
     installto
     cd ${BUILD_ROOT}
@@ -142,15 +121,17 @@ case $1 in
     cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
-    unpack
-    cd ${BUILD_ROOT}
-    build
-    cd ${BUILD_ROOT}
     installto
+    ;;
+    
+  tarball)
+    cd ${BUILD_ROOT}
+    download
+    tar -cjf ${SOURCEDIRNAME}.tar.bz2 ${SOURCEDIRNAME}
     ;;
 
   *)
     echo -e "\n./build.sh <target>"
-    echo -e "    local | rpm | deb | clean | veryclean | download"
+    echo -e "    local | rpm | deb | clean | veryclean | download | tarball"
 esac
 

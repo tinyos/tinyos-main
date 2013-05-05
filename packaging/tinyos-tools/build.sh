@@ -20,71 +20,47 @@
 #		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
 #
 
-COMMON_FUNCTIONS_SCRIPT=../../functions-build.sh
+COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
 
 
-SOURCENAME=gcc
-SOURCEVERSION=4.6.2
-BUILDDIR=build
+SOURCENAME=tinyos-tools
+SOURCEVERSION=1.4.3
 SOURCEDIRNAME=${SOURCENAME}-${SOURCEVERSION}
-SOURCEFILENAME=${SOURCEDIRNAME}.tar.bz2
 #PACKAGE_RELEASE=1
-PATCHZIP="avr8-gnu-toolchain-3.4.0.663-source.zip"
 PREFIX=/usr
 MAKE="make -j8"
 
 download()
 {
-	check_download ${SOURCEFILENAME}
-	if [ "$?" -eq "1" ]; then
-		wget ftp://ftp.gnu.org/gnu/${SOURCENAME}/${SOURCEDIRNAME}/${SOURCEFILENAME}
-	fi
-	check_download ${PATCHZIP}
-	if [ "$?" -eq "1" ]; then
-		wget http://www.atmel.com/Images/${PATCHZIP}
-	fi
-}
-
-unpack()
-{
-  tar -xjf ${SOURCEFILENAME}
-	unzip ${PATCHZIP}
-	cp source/avr/gcc/* ${SOURCEDIRNAME}
-	cp gcc-47.patch ${SOURCEDIRNAME}
-	rm -rf source
-	cd ${SOURCEDIRNAME}
-	cat *.patch|patch -p0
+  mkdir -p ${SOURCEDIRNAME}
+	cp -R ${TOSROOT}/tools ${SOURCEDIRNAME}
+	cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}
 }
 
 build()
 {
   set -e
   (
-    mkdir -p ${BUILDDIR}
-    cd ${BUILDDIR}
-    ../${SOURCEDIRNAME}/configure --prefix=${PREFIX} --disable-libssp --disable-nls --enable-languages=c,c++ --infodir=${PREFIX}/share/info --libdir=${PREFIX}/lib --libexecdir=${PREFIX}/lib --mandir=${PREFIX}/share/man --target=avr --with-ld=/usr/bin/avr-ld --with-as=/usr/bin/avr-as
+    cd ${SOURCEDIRNAME}/tools
+    ./Bootstrap
+    ./configure --prefix=${PREFIX}
     ${MAKE}
   )
 }
 
 installto()
 {
-	cd ${BUILDDIR}
-  ${MAKE} tooldir=/usr DESTDIR=${INSTALLDIR} install
-  #cleanup
-  rm -f ${INSTALLDIR}/usr/lib/libiberty.a
-  rm -f ${INSTALLDIR}/usr/lib64/libiberty.a
-  rm -rf ${INSTALLDIR}/usr/share/info
-  rm -rf ${INSTALLDIR}/usr/share/man/man7
+	cd ${SOURCEDIRNAME}/tools
+  ${MAKE} DESTDIR=${INSTALLDIR} install
 }
 
 package_deb(){
-  package_deb_from ${INSTALLDIR} ${SOURCEVERSION}-${PACKAGE_RELEASE} gcc.control
+  package_deb_from ${INSTALLDIR} ${SOURCEVERSION}-${PACKAGE_RELEASE} tinyos-tools.control tinyos-tools.postinst
 }
 
 package_rpm(){
-  package_rpm_from ${INSTALLDIR} ${SOURCEVERSION} ${PACKAGE_RELEASE} ${PREFIX} gcc.spec
+  package_rpm_from ${INSTALLDIR} ${SOURCEVERSION} ${PACKAGE_RELEASE} ${PREFIX} tinyos-tools.spec
 }
 
 cleanbuild(){
@@ -92,11 +68,10 @@ cleanbuild(){
 }
 
 cleandownloaded(){
-  remove ${SOURCEFILENAME} ${PATCHZIP}
+  remove ${SOURCEFILENAME} ${PATCHES}
 }
 
 cleaninstall(){
-  remove ${BUILDDIR}
   remove ${INSTALLDIR}
 }
 
@@ -104,8 +79,9 @@ cleaninstall(){
 BUILD_ROOT=$(pwd)
 case $1 in
   test)
-		download
-		unpack
+		installto
+# 		cd ${BUILD_ROOT}
+#		package_deb
     ;;
 
   download)
@@ -124,11 +100,9 @@ case $1 in
     ;;
 
   deb)
-		setup_package_target avr-${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
-    unpack
     cd ${BUILD_ROOT}
     build
     cd ${BUILD_ROOT}
@@ -140,11 +114,9 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target avr-${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
-    unpack
     cd ${BUILD_ROOT}
     build
     cd ${BUILD_ROOT}
@@ -160,15 +132,19 @@ case $1 in
     cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
-    unpack
-    cd ${BUILD_ROOT}
     build
     cd ${BUILD_ROOT}
     installto
     ;;
+    
+  tarball)
+    cd ${BUILD_ROOT}
+    download
+    tar -cjf ${SOURCEDIRNAME}.tar.bz2 ${SOURCEDIRNAME}
+    ;;
 
   *)
     echo -e "\n./build.sh <target>"
-    echo -e "    local | rpm | deb | clean | veryclean | download"
+    echo -e "    local | rpm | deb | clean | veryclean | download | tarball"
 esac
 

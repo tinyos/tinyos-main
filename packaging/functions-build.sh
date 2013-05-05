@@ -67,9 +67,14 @@ check_download()
 #$3: control file (default: debcontrol)
 #$4: postinst file (default: debpostinst)
 #$5: prerm file (default: debprerm)
+#$6: force architecture
 package_deb_from()
 {
-	ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
+	if [ $6 ]; then
+		ARCH_TYPE=$6
+	else
+		ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
+	fi
 	install -d $1/DEBIAN
 	#set up package control files
 	if [ $3 ]; then 
