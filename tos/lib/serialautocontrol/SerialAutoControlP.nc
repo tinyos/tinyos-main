@@ -31,6 +31,7 @@
 * Author: Andras Biro
 */
 module SerialAutoControlP{
+  provides interface SplitControl as SerialControl;
   uses interface SplitControl;
   uses interface GpioInterrupt as ControlInt;
   uses interface GeneralIO as ControlPin;
@@ -43,13 +44,34 @@ implementation{
   
   bool isSerialOn;
   
+  command error_t SerialControl.start() {
+    if(call ControlPin.get()) {
+      error_t err = call SplitControl.start();
+      
+      if(err == SUCCESS)
+       isSerialOn = TRUE;
+
+      return err;
+    } else
+      return FAIL;
+  }
+  
+  command error_t SerialControl.stop() {
+    error_t err = call SplitControl.stop();
+     
+    if(err == SUCCESS)
+      isSerialOn = FALSE;
+    
+    return err;
+  }
+  
   task void turnOn(){
     error_t err=call SplitControl.start();  
     if(err!=SUCCESS&&err!=EALREADY)
       post turnOn();
     else{
       #ifdef SERIAL_AUTO_DEBUG
-      call Leds.led3On();
+      call Leds.led1On();
       #endif
     }
   }
@@ -60,7 +82,7 @@ implementation{
       post turnOff();
     else{
       #ifdef SERIAL_AUTO_DEBUG
-      call Leds.led3Off();
+      call Leds.led1Off();
       #endif
     }
   }
