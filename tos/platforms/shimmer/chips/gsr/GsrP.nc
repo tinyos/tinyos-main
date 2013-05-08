@@ -45,8 +45,8 @@ module GsrP
 implementation 
 {
 
-#define HW_RES_40K_MIN_ADC_VAL    1140 //10k to 56k..1159->1140
-#define HW_RES_287K_MAX_ADC_VAL   3800 //56k to 220k was 4000 but was 3948 on shimer so changed to 3800
+#define HW_RES_40K_MIN_ADC_VAL    1120 //10k to 56k..1159->1140 // nom: changed to 1120 for linear conversion
+#define HW_RES_287K_MAX_ADC_VAL   3960 //56k to 220k was 4000 but was 3948 on shimer so changed to 3800 // nom: changed to 3960 for linear conversion
 #define HW_RES_287K_MIN_ADC_VAL   1490 //56k to 220k..1510->1490
 #define HW_RES_1M_MAX_ADC_VAL     3700 //220k to 680k
 #define HW_RES_1M_MIN_ADC_VAL     1630 //220k to 680k..1650->1630
@@ -54,30 +54,18 @@ implementation
 #define HW_RES_3M3_MIN_ADC_VAL    1125 //680k to 4M7
 
 // These constants were calculated by measuring against precision resistors
-// and then using polynomial curve fitting 
-#define HW_RES_40K_CONSTANT_1      0.0000000065995
-#define HW_RES_40K_CONSTANT_2      (-0.000068950)
-#define HW_RES_40K_CONSTANT_3      0.2699
-#define HW_RES_40K_CONSTANT_4      (-476.9835)
-#define HW_RES_40K_CONSTANT_5      340351.3341
+// and then using a linear fit to give CONDUCTANCE values 
+#define HW_RES_40K_CONSTANT_A      0.0373
+#define HW_RES_40K_CONSTANT_B      (-24.9915)
 
-#define HW_RES_287K_CONSTANT_1     0.000000013569627
-#define HW_RES_287K_CONSTANT_2     (-0.0001650399)
-#define HW_RES_287K_CONSTANT_3     0.7541990
-#define HW_RES_287K_CONSTANT_4     (-1572.6287856)
-#define HW_RES_287K_CONSTANT_5     1367507.9270
+#define HW_RES_287K_CONSTANT_A     0.0054
+#define HW_RES_287K_CONSTANT_B     (-3.5194)
 
-#define HW_RES_1M_CONSTANT_1       0.00000002550036498
-#define HW_RES_1M_CONSTANT_2       (-0.00033136)
-#define HW_RES_1M_CONSTANT_3       1.6509426597
-#define HW_RES_1M_CONSTANT_4       (-3833.348044)
-#define HW_RES_1M_CONSTANT_5       3806317.6947
+#define HW_RES_1M_CONSTANT_A       0.0015
+#define HW_RES_1M_CONSTANT_B       (-1.0163)
 
-#define HW_RES_3M3_CONSTANT_1      0.00000037153627
-#define HW_RES_3M3_CONSTANT_2      (-0.004239437)
-#define HW_RES_3M3_CONSTANT_3      17.905709
-#define HW_RES_3M3_CONSTANT_4      (-33723.8657)
-#define HW_RES_3M3_CONSTANT_5      25368044.6279
+#define HW_RES_3M3_CONSTANT_A      0.00045580
+#define HW_RES_3M3_CONSTANT_B      (-0.3014)
 
 
 /* when we switch resistors with the ADG658 it takes a few samples for the 
@@ -90,9 +78,10 @@ implementation
 /* ignore these samples after a resistor switch - instead send special code */
 #define NUM_SAMPLES_TO_IGNORE 6
 #define STARTING_RESISTANCE 10000000
+/* Settling time for a hardware resistor change (80 ms)*/
+#define SETTLING_TIME 80
 
-
-   uint8_t last_active_resistor, got_first_sample;
+   uint8_t last_active_resistor, transient_active_resistor, got_first_sample;
    uint16_t transient_sample, transient_smoothing_samples, max_resistance_step;
    uint32_t last_resistance;
 
@@ -107,6 +96,7 @@ implementation
 
       // by default set to use 40kohm resistor 
       call Gsr.setRange(HW_RES_40K);
+      last_active_resistor = HW_RES_40K;
 
       call Gsr.initSmoothing(HW_RES_40K);
 
@@ -143,51 +133,26 @@ implementation
       return no1*no2;
    }
 
-
    command uint32_t Gsr.calcResistance(uint16_t ADC_val, uint8_t active_resistor) {
-      uint32_t resistance=0;
-      uint64_t adc_pow1, adc_pow2, adc_pow3, adc_pow4;
+      uint32_t conductance=0;
 
-      adc_pow1 = ADC_val;
-      adc_pow2 = multiply(adc_pow1, ADC_val);
-      adc_pow3 = multiply(adc_pow2, ADC_val);
-      adc_pow4 = multiply(adc_pow3, ADC_val);
-
+      // Conductance measured in uS
       switch ( active_resistor ) {
       case HW_RES_40K:
-         resistance = (
-               ( (HW_RES_40K_CONSTANT_1)* adc_pow4) + //(powf(ADC_val,4)) ) + 
-               ( (HW_RES_40K_CONSTANT_2)* adc_pow3) + //(powf(ADC_val,3)) ) + 
-               ( (HW_RES_40K_CONSTANT_3)* adc_pow2) + //(powf(ADC_val,2)) ) + 
-               ( (HW_RES_40K_CONSTANT_4)* adc_pow1) + //(powf(ADC_val,1)) ) + 
-               (HW_RES_40K_CONSTANT_5) );
+         conductance = ( ( (HW_RES_40K_CONSTANT_A)* ADC_val) + (HW_RES_40K_CONSTANT_B) );
          break;
       case HW_RES_287K:
-         resistance = (
-               ( (HW_RES_287K_CONSTANT_1)* adc_pow4) + //(powf(ADC_val,4)) ) + 
-               ( (HW_RES_287K_CONSTANT_2)* adc_pow3) + //(powf(ADC_val,3)) ) + 
-               ( (HW_RES_287K_CONSTANT_3)* adc_pow2) + //(powf(ADC_val,2)) ) + 
-               ( (HW_RES_287K_CONSTANT_4)* adc_pow1) + //(powf(ADC_val,1)) ) + 
-               (HW_RES_287K_CONSTANT_5) );
+         conductance = ( ( (HW_RES_287K_CONSTANT_A)* ADC_val) + (HW_RES_287K_CONSTANT_B) );
          break;
       case HW_RES_1M:
-         resistance = (
-               ( (HW_RES_1M_CONSTANT_1)* adc_pow4) + //(powf(ADC_val,4)) ) + 
-               ( (HW_RES_1M_CONSTANT_2)* adc_pow3) + //(powf(ADC_val,3)) ) + 
-               ( (HW_RES_1M_CONSTANT_3)* adc_pow2) + //(powf(ADC_val,2)) ) + 
-               ( (HW_RES_1M_CONSTANT_4)* adc_pow1) + //(powf(ADC_val,1)) ) + 
-               (HW_RES_1M_CONSTANT_5) );
+         conductance = ( ( (HW_RES_1M_CONSTANT_A)* ADC_val) + (HW_RES_1M_CONSTANT_B) );
          break;
       case HW_RES_3M3:
-         resistance = (
-               ( (HW_RES_3M3_CONSTANT_1)* adc_pow4) + //(powf(ADC_val,4)) ) + 
-               ( (HW_RES_3M3_CONSTANT_2)* adc_pow3) + //(powf(ADC_val,3)) ) + 
-               ( (HW_RES_3M3_CONSTANT_3)* adc_pow2) + //(powf(ADC_val,2)) ) + 
-               ( (HW_RES_3M3_CONSTANT_4)* adc_pow1) + //(powf(ADC_val,1)) ) + 
-               (HW_RES_3M3_CONSTANT_5) );
+         conductance = ( ( (HW_RES_3M3_CONSTANT_A)* ADC_val) + (HW_RES_3M3_CONSTANT_B) );
       default:
       }
-      return resistance;
+      // Resistance = 1e6/Conductance (in ohms)
+      return 1000000/conductance;
    }
 
 
@@ -245,6 +210,28 @@ implementation
       transient_smoothing_samples = 0;
       max_resistance_step = MAX_RESISTANCE_STEP;
       last_resistance = STARTING_RESISTANCE;
+   }
+
+   /* Smooth the transition without converting ADC value to resistance: 
+      Repeat the last 'valid' ADC value for each sample during the settling period,
+      then step to the next valid ADC value after settling. This will not be seen 
+      by most GSR applications as the settling time (approx 40 ms) is smaller than 
+      typical GSR 'event' frequencies. If sampling at a high rate (e.g. due to other
+      active sensors, this function will prevent large spikes in the GSR due to settling. */
+   command bool Gsr.smoothTransition(uint8_t *dummy_active_resistor, uint32_t sampling_period){
+       // Number of 'transient' samples proportional to sampling rate.
+       if(*dummy_active_resistor != last_active_resistor) {
+           transient_sample = ceil(SETTLING_TIME/sampling_period);
+           transient_active_resistor = last_active_resistor;
+       }
+       last_active_resistor = *dummy_active_resistor;
+       if(transient_sample) {
+           transient_sample --;
+           // keep the previous active resistor in the buffer during transition settling time
+           *dummy_active_resistor = transient_active_resistor;
+           return TRUE;
+       }
+       return FALSE;
    }
 
    command uint32_t Gsr.smoothSample(uint32_t resistance, uint8_t active_resistor) {

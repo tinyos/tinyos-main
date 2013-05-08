@@ -46,7 +46,7 @@ interface Gsr
    command void setRange(uint8_t range);
 
    /**
-    * Calculates resistance from a raw ADC value
+    * Calculates resistance from a raw ADC value using linear fit to conductance
     *
     * @param ADC_val: the ADC value to be used in the calculation
     * @param active_resistor: the currently active resistor on the GSR board 
@@ -71,6 +71,14 @@ interface Gsr
     * @param active_resistor: the currently active resistor on the GSR board 
     */
    command void initSmoothing(uint8_t active_resistor);
+
+   /** 
+    * Smooths ADC values during autorange transition settling time.
+    * @param active_resistor: currently selected HW resistor
+    * @param sampling_period: sampling period of shimmer. Determines number of transient samples
+    * @return true if transient and false otherwise.
+    **/
+   command bool smoothTransition(uint8_t *dummy_active_resistor, uint32_t sampling_period);
 
    /**
     * Smooths the GSR values
