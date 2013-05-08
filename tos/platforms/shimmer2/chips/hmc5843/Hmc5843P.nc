@@ -93,7 +93,7 @@ implementation {
     TOSH_SEL_PROG_OUT_IOFUNC();
     TOSH_CLR_PROG_OUT_PIN();    // on
 
-    TOSH_uwait(5000); // 5 ms for mag
+    TOSH_uwait(10000); // 10ms to allow mag power up (datasheet says 8.3ms)
 
     atomic enabled = FALSE;
 
@@ -118,12 +118,11 @@ implementation {
   }
 
   error_t writeRegValue(uint8_t reg_addr, uint8_t val) {
-    //    uint8_t packet[2];
-
     // pack the packet with address of reg target, then register value
     packet[0] = reg_addr;
     packet[1] = val;
 
+    call I2CInit.init();
     call I2CPacket.write(I2C_START | I2C_STOP, 0x1e, 2, packet);
     return SUCCESS;
   }
@@ -226,17 +225,17 @@ implementation {
     case 2:
       bitmask = 0x40;
       break;
-    case 5:
-      bitmask = 0x50;
+    case 3:
+      bitmask = 0x60;
       break;
-    case 10:
+    case 4:
       bitmask = 0x80;
       break;
-    case 20:
-      bitmask = 0x90;
+    case 5:
+      bitmask = 0xA0;
       break;
-    case 50:
-      bitmask = 0xc0;
+    case 6:
+      bitmask = 0xC0;
       break;
     default:
       ret = FAIL;  // input value unknown, using default
