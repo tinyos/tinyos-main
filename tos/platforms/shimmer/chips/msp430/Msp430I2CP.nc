@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.6 $ $Date: 2012-05-25 19:29:48 $
+ * @version $Revision: 1.7 $ $Date: 2013/04/09 14:28:58 $
  */
 
 #include <I2C.h>
@@ -48,11 +48,6 @@ module Msp430I2CP {
 }
 
 implementation {
-
-#ifndef I2CDR_
-#define I2CDR I2CDRW
-#endif
-
   MSP430REG_NORACE(I2CIE);
   
   enum {
@@ -171,11 +166,11 @@ implementation {
     // figure out where we are in the transmission
     // should only occur when I2CNDAT > 0
     if (I2CTCTL & I2CWORD) {
-      _data16[(int)ptr >> 1] = I2CDR;
+      _data16[(int)ptr >> 1] = I2CDRB;
       ptr = ptr + 2;
     }
     else {
-      data[(int)ptr] = I2CDR & 0xFF;
+      data[(int)ptr] = I2CDRB & 0xFF;
       ptr++;
     }
 
@@ -248,11 +243,11 @@ implementation {
     // figure out where we are in the transmission
     // should only occur when I2CNDAT > 0
     if (I2CTCTL & I2CWORD) {
-      I2CDR = _data16[(int)ptr >> 1];
+      I2CDRB = _data16[(int)ptr >> 1];
       ptr = ptr + 2;
     }
     else {
-      I2CDR = data[(int)ptr];
+      I2CDRB = data[(int)ptr];
       ptr++;
     }
 
