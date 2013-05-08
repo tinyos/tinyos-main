@@ -134,7 +134,7 @@ implementation
    }
 
    command uint32_t Gsr.calcResistance(uint16_t ADC_val, uint8_t active_resistor) {
-      uint32_t conductance=0;
+      float conductance=0;
 
       // Conductance measured in uS
       switch ( active_resistor ) {
@@ -152,7 +152,7 @@ implementation
       default:
       }
       // Resistance = 1e6/Conductance (in ohms)
-      return 1000000/conductance;
+      return (uint32_t)(1000000.0/conductance);
    }
 
 
