@@ -31,17 +31,14 @@
  * @author Steve Ayer
  * @date   September, 2011
  *
+ * @author Mike Healy
+ * @date   February, 2013
+ * Simplified interface
  */
 
 interface DigitalHeartRate { 
-  // number_of_samples is the number of beats to use in rate calculation, max 256
-  command void enableRate(uint8_t number_of_samples);
-
-  command void disableRate();
-  
-  command error_t getRate(uint8_t * rate);
-
+  //timestamp of when the heart beat is detected is passed in the event's argument 
+  //Dealing with timer rollover is left to the higher level application (will only 
+  //happen every 36.4 hours approx)
   async event void beat(uint32_t time_32k);
-  
-  event void newConnectionState(bool up);
 }
