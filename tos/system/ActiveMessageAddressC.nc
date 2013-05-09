@@ -54,6 +54,7 @@ module ActiveMessageAddressC @safe() {
     interface ActiveMessageAddress;
     async command am_addr_t amAddress();
     async command void setAmAddress(am_addr_t a);
+    async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr);
   }
 }
 implementation {
@@ -96,6 +97,19 @@ implementation {
     return myGroup;
   }
   
+
+  /***************** Other Commands ****************/
+  /**
+   * Init the active message address of this node, without signaling of change
+   * @param group The node's group ID
+   * @param addr The node's active message address
+   */
+  async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr) {
+    atomic {
+      addr = myAddr;
+      group = myGroup;
+    }
+  }
 
   /***************** Deprecated Commands ****************/
   /**
