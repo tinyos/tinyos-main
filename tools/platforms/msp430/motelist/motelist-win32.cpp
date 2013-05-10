@@ -38,6 +38,7 @@
 #include <vector>
 #include <stdexcept>
 #include <list>
+#include <cstdio>
 
 #include <windows.h>
 
@@ -338,6 +339,7 @@ ListDevice getDevices()
   RegKey dclass( HKEY_LOCAL_MACHINE, ccs+"Control\\DeviceClasses" );
   RegKey ftdibus( HKEY_LOCAL_MACHINE, ccs+"Enum\\FTDIBUS" );
   RegKey usb6001( HKEY_LOCAL_MACHINE, ccs+"Enum\\USB\\Vid_0403&Pid_6001" );
+  RegKey usb6010( HKEY_LOCAL_MACHINE, ccs+"Enum\\USB\\Vid_0403&Pid_6010" );
 
   VecString fdev = ftdibus.getSubkeyNames();
   for( VecString::const_iterator i=fdev.begin(); i!=fdev.end(); i++ )
@@ -362,6 +364,34 @@ ListDevice getDevices()
       catch( std::runtime_error e ) { }
 
       try { d.refcount = getRefCount( dclass, usb6001[d.id] ); }
+      catch( std::runtime_error e ) { }
+
+      String::size_type ncomm = d.comm.find_first_of("0123456789");
+      if( ncomm != String::npos )
+	d.sortnum = atoi( d.comm.substr(ncomm).c_str() );
+
+      devs.push_back(d);
+    }
+    else if( i->substr(0,18) == String("VID_0403+PID_6010+") )
+    {
+      Device d;
+      d.id = i->substr(18,8);
+
+      try
+      {
+	RegKey devkey = ftdibus[*i];
+	VecString devsub = devkey.getSubkeyNames();
+	d.comm = devkey[devsub[0]+"\\Device Parameters"]("PortName").data;
+      }
+      catch( std::runtime_error e )
+      {
+	d.comm = "no_comm";
+      }
+
+      try { d.info = usb6010[d.id]("LocationInformation").data; }
+      catch( std::runtime_error e ) { }
+
+      try { d.refcount = getRefCount( dclass, usb6010[d.id] ); }
       catch( std::runtime_error e ) { }
 
       String::size_type ncomm = d.comm.find_first_of("0123456789");
@@ -419,7 +449,7 @@ void usage()
 {
   cout << "usage: motelist [-l] [-c]\n"
        << "\n"
-       << "  $Revision: 1.5 $ $Date: 2010-06-29 22:07:42 $\n"
+       << "  $Revision: 1.6 $ $Date: 2013-05-09 11:43:25 $\n"
        << "\n"
        << "options:\n"
        << "  -h  display this help\n"
