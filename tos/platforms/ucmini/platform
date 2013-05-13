@@ -23,7 +23,6 @@
   %T/chips/atm128/spi
   %T/chips/atm128/i2c
   %T/chips/atm128/timer
-  %T/chips/cp2102
   %T/chips/stm25p
   %T/chips/sht21
   %T/chips/bh1750fvi
@@ -31,6 +30,7 @@
   %T/chips/bma180
   %T/lib/timer
   %T/lib/serial
+  %T/lib/serialautocontrol
   %T/lib/power
   %T/lib/rfxlink/layers
   %T/lib/rfxlink/util
