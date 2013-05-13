@@ -21,11 +21,6 @@ ifeq ($(PROGRAMMER),avrdude)
     PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
 
-program: FORCE
-	$(RESET_LINE)
+program: FORCE reset
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
-
-program_bl: FORCE
-	java org.szte.wsn.zigbit.Programmer -port $(AVR109) -baudrate $(BOOTLOADER_BAUDRATE) -reset -askforreset -sleep $(AVR109_SLEEP)
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS) 
 

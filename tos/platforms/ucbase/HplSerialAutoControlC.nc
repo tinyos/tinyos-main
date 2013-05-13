@@ -31,19 +31,12 @@
 * Author: Andras Biro
 */
 
-// just to make sure that fastserial can get its include file
-#include "Serial.h"
-
-configuration SerialAutoControlC{
+configuration HplSerialAutoControlC {
+  provides interface GpioInterrupt;
+  provides interface GeneralIO;
 }
-implementation{
-  components SerialAutoControlP, HplSerialAutoControlC, SerialActiveMessageC, MainC;
-  SerialAutoControlP.ControlInt->HplSerialAutoControlC.GpioInterrupt;
-  SerialAutoControlP.ControlPin->HplSerialAutoControlC.GeneralIO;
-  SerialAutoControlP.SplitControl->SerialActiveMessageC;
-  MainC.SoftwareInit -> SerialAutoControlP;
-  #ifdef SERIAL_AUTO_DEBUG
-    components LedsC;
-    SerialAutoControlP.Leds->LedsC;
-  #endif
+implementation {
+  components AtmegaPinChange0C, HplAtm128GeneralIOC as IO;
+  GpioInterrupt = AtmegaPinChange0C.GpioInterrupt[5];
+  GeneralIO = IO.PortB5;
 }
