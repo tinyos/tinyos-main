@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>The TOSThreads Thread Library</title>
 <meta name="author" content="Kevin Klues, Chieh-Jan Liang, Jeongyeup Paek, Razvan Musaloiu-E, Ramesh Govindan, Andreas Terzis, Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -313,12 +314,12 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents the TOSThreads thread library for TinyOS</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>TOSThreads is an attempt to combine the ease of a threaded programming model
 with the efficiency of a fully event-based OS. Unlike earlier threads packages
 designed for TinyOS, TOSThreads supports fully-preemptive application level
@@ -334,16 +335,16 @@ to the existing TinyOS concurrency model, adding support for long-running
 computations while preserving the timing-sensitive nature of TinyOS itself.</p>
 <p>In this model, application threads access underlying TinyOS services using a
 kernel API of blocking system calls. The kernel API defines the set of TinyOS
-services provided to applications (e.g. time-sync <a class="citation-reference" href="#tep133" id="id1" name="id1">[TEP133]</a>, collection <a class="citation-reference" href="#tep119" id="id2" name="id2">[TEP119]</a>,
-and dissemination <a class="citation-reference" href="#tep118" id="id3" name="id3">[TEP118]</a>). Each system call in the API is comprised
+services provided to applications (e.g. time-sync <a class="citation-reference" href="#tep133" id="id1">[TEP133]</a>, collection <a class="citation-reference" href="#tep119" id="id2">[TEP119]</a>,
+and dissemination <a class="citation-reference" href="#tep118" id="id3">[TEP118]</a>). Each system call in the API is comprised
 of a thin blocking wrapper built on top of one of these services.  TOSThreads
 allows systems developers to re-define the kernel API by appropriately
 selecting (or implementing their own) custom set of blocking system call wrappers.</p>
 <p>The following section describes the details of how TOSThreads interacts with
 TinyOS to provide each of the features described above.</p>
 </div>
-<div class="section">
-<h1><a id="basic-architecture" name="basic-architecture">2. Basic Architecture</a></h1>
+<div class="section" id="basic-architecture">
+<h1>2. Basic Architecture</h1>
 <p>The existing TinyOS concurrency model has two execution contexts: synchronous
 (tasks) and asynchronous (interrupts). These two contexts follow a strict
 priority scheme: asynchronous code can preempt synchronous code but not
@@ -354,7 +355,7 @@ preemptable at any time by either synchronous code or asynchronous code, and
 synchronize amongst each other using standard synchronization primitives
 such as mutexes, semaphores, barriers, condition variables, and blocking
 reference counters (a custom mechanism we have developed ourselves).  Take a look
-in <tt class="docutils literal"><span class="pre">tos/lib/tosthreads/interfaces</span></tt> to see the interfaces providing these
+in <tt class="docutils literal">tos/lib/tosthreads/interfaces</tt> to see the interfaces providing these
 primitives.</p>
 <p>The basic TOSThreads architecture, consists of five key elements: the TinyOS
 task scheduler, a single kernel-level TinyOS thread, a thread scheduler, a
@@ -384,17 +385,17 @@ a context switch with an interrupted application thread. Control eventually
 returns to the application thread after the TinyOS thread has emptied the
 task queue.</p>
 </div>
-<div class="section">
-<h1><a id="modifications-to-the-standard-tinyos-code-base" name="modifications-to-the-standard-tinyos-code-base">3. Modifications to the Standard TinyOS Code Base</a></h1>
+<div class="section" id="modifications-to-the-standard-tinyos-code-base">
+<h1>3. Modifications to the Standard TinyOS Code Base</h1>
 <p>Only two changes to the existing TinyOS code base are required to support
 TOSThreads: a modification to the boot sequence and the addition of a post-amble
 for every interrupt handler.  Changes to the boot sequence only need to be made
 once and are independent of any platforms supported by TinyOS. Changes to the
 interrupt handlers MUST be handled on a microcontroller to microntroller basis.
-Additionally, a custom <tt class="docutils literal"><span class="pre">chip_thread.h</span></tt> file MUST be created for each
-microcontroller and place in its top level directory, e.g. <tt class="docutils literal"><span class="pre">tos/chips/msp430</span></tt></p>
-<div class="section">
-<h2><a id="changes-to-the-boot-sequence" name="changes-to-the-boot-sequence">3.1 Changes to the Boot Sequence</a></h2>
+Additionally, a custom <tt class="docutils literal">chip_thread.h</tt> file MUST be created for each
+microcontroller and place in its top level directory, e.g. <tt class="docutils literal">tos/chips/msp430</tt></p>
+<div class="section" id="changes-to-the-boot-sequence">
+<h2>3.1 Changes to the Boot Sequence</h2>
 <p>Instead of directly running the TinyOS boot sequence inside of main() as
 done previously, main() now calls out to a Boot.booted() event
 associated with booting up the thread scheduler.:</p>
@@ -424,7 +425,7 @@ TinyOSBoot.booted() event.</p>
 loop that continuously checks the TinyOS task scheduler to see if it
 has any tasks to run.  If it does, it runs the next task in its queue.
 If it does not, it puts the microcontroller into its lowest possible power
-state and goes to sleep <a class="citation-reference" href="#tep112" id="id4" name="id4">[TEP112]</a>.:</p>
+state and goes to sleep <a class="citation-reference" href="#tep112" id="id4">[TEP112]</a>.:</p>
 <pre class="literal-block">
 command void Scheduler.taskLoop() {
   for (;;) {
@@ -463,8 +464,8 @@ command void TaskScheduler.taskLoop() {
 <p>Once the TinyOS thread has been suspended, the thread scheduler is free to
 begin scheduling application level threads however it sees fit.</p>
 </div>
-<div class="section">
-<h2><a id="interrupt-handler-post-ambles" name="interrupt-handler-post-ambles">3.2 Interrupt Handler Post-Ambles</a></h2>
+<div class="section" id="interrupt-handler-post-ambles">
+<h2>3.2 Interrupt Handler Post-Ambles</h2>
 <p>With the changes described above, the only other <em>non-self-contained</em>
 TinyOS code necessary to support TOSThreads is the addition of a post-amble
 at the bottom of every interrupt handler.  Since the number and type
@@ -472,7 +473,7 @@ of interrupt handlers, as well as the semantics required for implementing
 them, differ from platform to platform, the way in which this post-amble is
 is added is highly dependent on the microcontroller in use.  The post-amble
 itself, however, is completely platform-independent, and is provided via a
-<tt class="docutils literal"><span class="pre">postAmble()</span></tt> command included in the <tt class="docutils literal"><span class="pre">PlatformInterrupt</span></tt> interface.:</p>
+<tt class="docutils literal">postAmble()</tt> command included in the <tt class="docutils literal">PlatformInterrupt</tt> interface.:</p>
 <pre class="literal-block">
 command void PlatformInterrupt.postAmble() {
   atomic {
@@ -482,7 +483,7 @@ command void PlatformInterrupt.postAmble() {
   }
 }
 </pre>
-<p>As described in the following section, the call to <tt class="docutils literal"><span class="pre">wakeupThread()</span></tt> returns
+<p>As described in the following section, the call to <tt class="docutils literal">wakeupThread()</tt> returns
 SUCCESS iff the TinyOS task queue has any tasks to process (i.e. the interrupt
 handler posted some tasks), otherwise it returns FAIL.  Upon FAIL, we simply
 return from this function, and continue execution from the point at which the
@@ -490,10 +491,10 @@ currently running thread was interrupted.  Upon SUCCESS, we preempt the current
 thread, immediately scheduling the TinyOS thread for execution.  The check to
 make sure that the current thread isn't already the TinyOS thread is simply an
 optimization used to bypass ''rescheduling'' the already running thread.</p>
-<p>This <tt class="docutils literal"><span class="pre">postAmble()</span></tt> command MUST be called at the bottom of EVERY interrupt
+<p>This <tt class="docutils literal">postAmble()</tt> command MUST be called at the bottom of EVERY interrupt
 handler provided by a platform.  This interface is provided by the
-<tt class="docutils literal"><span class="pre">PlatformInterruptC</span></tt> component, and MUST be wired into every component which
-implements an interrupt handler.  Calls to <tt class="docutils literal"><span class="pre">postAmble()</span></tt> MUST then be made
+<tt class="docutils literal">PlatformInterruptC</tt> component, and MUST be wired into every component which
+implements an interrupt handler.  Calls to <tt class="docutils literal">postAmble()</tt> MUST then be made
 just before any return points in the given interrupt handler.</p>
 <div class="note">
 <p class="first admonition-title">Note</p>
@@ -524,12 +525,12 @@ TOSH_SIGNAL(ADC_VECTOR) {
 }
 </pre>
 <p>The component in which each of these handlers is defined MUST wire in
-the <tt class="docutils literal"><span class="pre">PlatformInterrupt</span></tt> interface provided by <tt class="docutils literal"><span class="pre">PlatformInterruptC</span></tt>
-and call <tt class="docutils literal"><span class="pre">postAmble()</span></tt> at the bottom of their interrupt handlers.</p>
+the <tt class="docutils literal">PlatformInterrupt</tt> interface provided by <tt class="docutils literal">PlatformInterruptC</tt>
+and call <tt class="docutils literal">postAmble()</tt> at the bottom of their interrupt handlers.</p>
 </div>
-<div class="section">
-<h2><a id="the-chip-thread-h-file" name="the-chip-thread-h-file">3.3 The <tt class="docutils literal"><span class="pre">chip_thread.h</span></tt> file</a></h2>
-<p>A <tt class="docutils literal"><span class="pre">chip_thread.h</span></tt> MUST be created in the chips directory for each
+<div class="section" id="the-chip-thread-h-file">
+<h2>3.3 The <tt class="docutils literal">chip_thread.h</tt> file</h2>
+<p>A <tt class="docutils literal">chip_thread.h</tt> MUST be created in the chips directory for each
 microcontroller supporting the TOSThreads library.  This file MUST contain
 definitions of the following:</p>
 <p>(1) A structure containing space for saving any microcontroller specific
@@ -539,8 +540,8 @@ typedef struct thread_regs {
   ...
 } thread_regs_t;
 </pre>
-<p>(2) A typedef of a <tt class="docutils literal"><span class="pre">stack_ptr_t</span></tt> type.  For example, the msp430 microconroller
-has 16 bit memory addresses, so <tt class="docutils literal"><span class="pre">stack_prt_t</span></tt> is typedefed as follows.:</p>
+<p>(2) A typedef of a <tt class="docutils literal">stack_ptr_t</tt> type.  For example, the msp430 microconroller
+has 16 bit memory addresses, so <tt class="docutils literal">stack_prt_t</tt> is typedefed as follows.:</p>
 <pre class="literal-block">
 typedef uint16_t* stack_ptr_t;
 </pre>
@@ -555,14 +556,14 @@ STACK_TOP(stack, size)
 <p>As explained in Section 4.2, state manipulated by these MACROS is
 carried around by a thread as part of its <em>Thread Control Block (TCB)</em>, defined
 as type 'thread_t'.</p>
-<p><tt class="docutils literal"><span class="pre">PREPARE_THREAD()</span></tt> takes two parameters: 'thread' and 'start_function'.  The
-'thread' parameter MUST be of type <tt class="docutils literal"><span class="pre">thread_t</span></tt>, and 'start_function' MUST be of
-type <tt class="docutils literal"><span class="pre">void</span> <span class="pre">(*start_function)(void)</span></tt>.  The purpose of <tt class="docutils literal"><span class="pre">PREPARE_THREAD()</span></tt> is
+<p><tt class="docutils literal">PREPARE_THREAD()</tt> takes two parameters: 'thread' and 'start_function'.  The
+'thread' parameter MUST be of type <tt class="docutils literal">thread_t</tt>, and 'start_function' MUST be of
+type <tt class="docutils literal">void <span class="pre">(*start_function)(void)</span></tt>.  The purpose of <tt class="docutils literal">PREPARE_THREAD()</tt> is
 to get a thread ready for the first time it starts to execute.  Primarily, it is
 used to set the top of the stack associated with 'thread' to its
 'start_function'.  When it comes time for the thread to begin executing, the
 address pointed to by 'start_function' will be popped off and it will start executing.</p>
-<p>As an example, consider the definition of <tt class="docutils literal"><span class="pre">PREPARE_THREAD()</span></tt> for the msp430
+<p>As an example, consider the definition of <tt class="docutils literal">PREPARE_THREAD()</tt> for the msp430
 microcontroller:</p>
 <pre class="literal-block">
 #define PREPARE_THREAD(t, thread_ptr)         \
@@ -571,26 +572,26 @@ microcontroller:</p>
 </pre>
 <p>In this case, the status register is also saved with its initial setup, but this
 may not be necessary for all microcontrollers.</p>
-<p><tt class="docutils literal"><span class="pre">SWITCH_CONTEXTS()</span></tt> takes two parameters: current_thread and next_thread. Both
-parameters MUST be of type 'thread_t'.The purpose of <tt class="docutils literal"><span class="pre">SWITCH_CONTEXTS()</span></tt> is to
+<p><tt class="docutils literal">SWITCH_CONTEXTS()</tt> takes two parameters: current_thread and next_thread. Both
+parameters MUST be of type 'thread_t'.The purpose of <tt class="docutils literal">SWITCH_CONTEXTS()</tt> is to
 store the state of the thread associated with the 'current_thread', and swap it
 out with the state of the 'next_thread'.  The amount and type of state saved,
 and how it is actually swapped out varies from microcontroller to microcontroller.</p>
-<p><tt class="docutils literal"><span class="pre">RESTORE_TCB()</span></tt> takes just one parameter: next_thread.  This parameter MUST be
-of type 'thread_t'. <tt class="docutils literal"><span class="pre">RESTORE_TCB()</span></tt> is similar to <tt class="docutils literal"><span class="pre">SWITCH_CONTEXTS()</span></tt> except
+<p><tt class="docutils literal">RESTORE_TCB()</tt> takes just one parameter: next_thread.  This parameter MUST be
+of type 'thread_t'. <tt class="docutils literal">RESTORE_TCB()</tt> is similar to <tt class="docutils literal">SWITCH_CONTEXTS()</tt> except
 that no state is stored about the current thread before swapping in the state
 associated with 'next_thread'.  This MACRO is primarily called at the time a
 thread is either killed or has run to completion.</p>
-<p><tt class="docutils literal"><span class="pre">STACK_TOP()</span></tt> takes two parameters: 'stack' and 'size'.  The 'stack' parameter
-MUST be of type <tt class="docutils literal"><span class="pre">stack_ptr_t</span></tt> and 'size' MUST be an integer type (i.e.
+<p><tt class="docutils literal">STACK_TOP()</tt> takes two parameters: 'stack' and 'size'.  The 'stack' parameter
+MUST be of type <tt class="docutils literal">stack_ptr_t</tt> and 'size' MUST be an integer type (i.e.
 uint8_t, uint16_t, etc).  As explained in Section 4.2, whenever a thread is
 created, it is allocated its own stack space with a given size.  As a thread
 executes, local variables, register values, and the return address of procedure
 calls are pushed onto this stack. Depending on the microcontroller in use, the
 <em>top</em> of a thread's stack might exist at either the highest address (stack grows
 down) or lowest address (stack grows up) of the data structure allocated to the
-stack.  The purpose of <tt class="docutils literal"><span class="pre">STACK_TOP()</span></tt> is to return a pointer of type
-<tt class="docutils literal"><span class="pre">uint8_t*</span></tt> to the location of the <em>top</em> of the stack.  <tt class="docutils literal"><span class="pre">STACK_TOP()</span></tt> is only
+stack.  The purpose of <tt class="docutils literal">STACK_TOP()</tt> is to return a pointer of type
+<tt class="docutils literal">uint8_t*</tt> to the location of the <em>top</em> of the stack.  <tt class="docutils literal">STACK_TOP()</tt> is only
 called once at the time a thread is first initialized.</p>
 <p>There are only two choices for the definition of this MACRO, and both are shown
 below.:</p>
@@ -606,16 +607,16 @@ below.:</p>
 </pre>
 <p>As an example, consider the msp430 and atmega128 microcontrollers. On both of
 these microcontrollers, a thread's stack grows down as it executes, so
-<tt class="docutils literal"><span class="pre">STACK_TOP()</span></tt> is defined using the first macro.</p>
+<tt class="docutils literal">STACK_TOP()</tt> is defined using the first macro.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="the-tosthreads-library-implementation" name="the-tosthreads-library-implementation">4. The TOSThreads Library Implementation</a></h1>
+<div class="section" id="the-tosthreads-library-implementation">
+<h1>4. The TOSThreads Library Implementation</h1>
 <p>This section describes the implementation of TOSThreads, including the
 internals of the thread scheduler, the thread and system call
 data structures, and their corresponding interfaces.</p>
-<div class="section">
-<h2><a id="the-thread-scheduler" name="the-thread-scheduler">4.1 The Thread Scheduler</a></h2>
+<div class="section" id="the-thread-scheduler">
+<h2>4.1 The Thread Scheduler</h2>
 <p>The thread scheduler is the first component to take control of the
 microcontroller during the boot process. As mentioned previously, its job is to
 encapsulate TinyOS inside a thread and trigger the normal TinyOS boot sequence.
@@ -630,9 +631,9 @@ threads currently run with the same priority, one can easily modify the
 scheduler to support other policies.</p>
 <p>As explained in the following section, TOSThreads exposes a relatively
 standard API for creating and manipulating threads: <tt class="docutils literal"><span class="pre">create(),</span>
-<span class="pre">destroy(),</span> <span class="pre">pause()</span> <span class="pre">and</span> <span class="pre">resume()</span></tt>. These functions form part of the system
+<span class="pre">destroy(),</span> pause() and resume()</tt>. These functions form part of the system
 call API, and can be invoked by any application program.</p>
-<p>Internally, TOSThreads library components use the following <tt class="docutils literal"><span class="pre">ThreadScheduler</span></tt>
+<p>Internally, TOSThreads library components use the following <tt class="docutils literal">ThreadScheduler</tt>
 interface to interact with a thread.:</p>
 <pre class="literal-block">
 interface ThreadScheduler {
@@ -657,52 +658,52 @@ the context of the calling thread. Due to the sensitive nature of these
 commands, ONLY the interrupt handler post-ambles and blocking system call API
 wrappers invoke them directly.</p>
 <p>The first three commands are used to get information associated with an instance
-of a thread.  Calling <tt class="docutils literal"><span class="pre">currentThreadId()</span></tt> returns a unique identifier
-associated with the currently running thread.  Calling <tt class="docutils literal"><span class="pre">currentThreadInfo()</span></tt>
-or <tt class="docutils literal"><span class="pre">threadInfo()</span></tt> on a particular thread returns a pointer to the complete
+of a thread.  Calling <tt class="docutils literal">currentThreadId()</tt> returns a unique identifier
+associated with the currently running thread.  Calling <tt class="docutils literal">currentThreadInfo()</tt>
+or <tt class="docutils literal">threadInfo()</tt> on a particular thread returns a pointer to the complete
 <em>Thread Control Block (TCB)</em> associated with a thread.  Details about the TCB
 structure returned by these comamnds are given in section 4.2.</p>
 <p>The rest of the commands in this interface are used to manipulate the state of a
 thread, putting it into one of 4 distinct states and starting / stopping its
 execution as necessary.  At any given time, a thread may exist in one of the
 following states (INACTIVE, ACTIVE, READY, SUSPENDED).</p>
-<p>Threads are initialized into the INACTIVE state via a call to <tt class="docutils literal"><span class="pre">initThread()</span></tt>.
+<p>Threads are initialized into the INACTIVE state via a call to <tt class="docutils literal">initThread()</tt>.
 This command MUST only be called once at the time a thread is first created.  A
-call to <tt class="docutils literal"><span class="pre">initThread()</span></tt> MUST be followed by a call to <tt class="docutils literal"><span class="pre">startThread()</span></tt> at some
+call to <tt class="docutils literal">initThread()</tt> MUST be followed by a call to <tt class="docutils literal">startThread()</tt> at some
 point later in order to start the actual execution of the thread.  Calls to
-<tt class="docutils literal"><span class="pre">initThread()</span></tt> always return SUCCESS;</p>
-<p>Calls to <tt class="docutils literal"><span class="pre">startThread()</span></tt> return either SUCCESS or FAIL, depending on the state
+<tt class="docutils literal">initThread()</tt> always return SUCCESS;</p>
+<p>Calls to <tt class="docutils literal">startThread()</tt> return either SUCCESS or FAIL, depending on the state
 a thread is in when it is called.  If a thread is in the INACTIVE state, calling
 this command puts a thread into the READY state and places it on a ready queue.
 Threads are scheduled for execution by puling threads off this ready queue in
 FCFS order.  If a thread is in any state other than INACTIVE, FAIL is returned,
 and no other side effects occur.</p>
-<p>Calls to <tt class="docutils literal"><span class="pre">stopThread()</span></tt> only return SUCCESS if called on a thread that is in
+<p>Calls to <tt class="docutils literal">stopThread()</tt> only return SUCCESS if called on a thread that is in
 the READY state (and thereby implicitly on the ready queue) and currently holds
-no mutexes.  The <tt class="docutils literal"><span class="pre">mutex_count</span></tt> field in a thread's TCB is used to determine if
+no mutexes.  The <tt class="docutils literal">mutex_count</tt> field in a thread's TCB is used to determine if
 any mutexes are currently held.  If both of these conditions are met, a thread
 is removed from the READY queue and its state is set to INACTIVE.  If either of
-these conditions are not met, calling <tt class="docutils literal"><span class="pre">stopThread()</span></tt> returns FAIL and no other
+these conditions are not met, calling <tt class="docutils literal">stopThread()</tt> returns FAIL and no other
 side effects occur.</p>
-<p>Calls to <tt class="docutils literal"><span class="pre">interruptCurrentThread()</span></tt> are made in order to preempt a currently
-running thread. Calling <tt class="docutils literal"><span class="pre">interruptCurrentThread()</span></tt> returns SUCCESS if the
+<p>Calls to <tt class="docutils literal">interruptCurrentThread()</tt> are made in order to preempt a currently
+running thread. Calling <tt class="docutils literal">interruptCurrentThread()</tt> returns SUCCESS if the
 currently running thread is in the ACTIVE state (SHOULD always be true),
 otherwise it returns FAIL.  Upon FAIL no side effects occur.  Upon SUCCESS, the
 currently running thread is put into the READY state and placed on the thread
 scheduler's ready queue.  Threads in the READY state are not blocked, and will
 be scheduled for execution again the next time their turn comes up.  The
-<tt class="docutils literal"><span class="pre">interruptCurrentThread()</span></tt> function is currently only called in two places.
-At the bottom of the interrupt <tt class="docutils literal"><span class="pre">postAmble()</span></tt> (as shown before), and in the
+<tt class="docutils literal">interruptCurrentThread()</tt> function is currently only called in two places.
+At the bottom of the interrupt <tt class="docutils literal">postAmble()</tt> (as shown before), and in the
 code implementing the round-robin preemption scheme.</p>
-<p>Calls to <tt class="docutils literal"><span class="pre">suspendCurrentThread()</span></tt> return SUCCESS if the currently running
+<p>Calls to <tt class="docutils literal">suspendCurrentThread()</tt> return SUCCESS if the currently running
 thread is in the ACTIVE state (SHOULD always be true), otherwise they return
 FAIL.  Upon SUCCESS, the currently running thread is put into the SUSPEND state
 and its execution is stopped.  A thread in the SUSPEND state will not be
-scheduled for execution again until a call to <tt class="docutils literal"><span class="pre">wakeupThread()</span></tt> is made at some
-later point in time. Calls to <tt class="docutils literal"><span class="pre">suspendCurrentThread()</span></tt> SHOULD only be made
+scheduled for execution again until a call to <tt class="docutils literal">wakeupThread()</tt> is made at some
+later point in time. Calls to <tt class="docutils literal">suspendCurrentThread()</tt> SHOULD only be made
 from within the body of blocking system call API wrappers or synchronization
 primitives.</p>
-<p>Calls to <tt class="docutils literal"><span class="pre">wakeupThread()</span></tt> take one parameter: 'thread_id'. <tt class="docutils literal"><span class="pre">wakeupThread()</span></tt>
+<p>Calls to <tt class="docutils literal">wakeupThread()</tt> take one parameter: 'thread_id'. <tt class="docutils literal">wakeupThread()</tt>
 returns SUCCESS if the thread associated with 'thread_id' is successfully woken up
 and returns FAIL otherwise.  For all threads other than the TinyOS thread, SUCCESS
 will only be returned if the thread being woken up is in the SUSPEND state.  For the
@@ -712,18 +713,18 @@ queue.  Upon FAIL, no side effects occur.</p>
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">Most times calls to <cite>suspendCurrentThread()`</cite> are paired with placing the
-suspended thread on a queue.  Calls to <tt class="docutils literal"><span class="pre">wakeupThread()</span></tt> are then paired with
+suspended thread on a queue.  Calls to <tt class="docutils literal">wakeupThread()</tt> are then paired with
 removing a thread from that queue.  The queue used is matianed externally by
 the component issuing the suspend and wakeup.  For example, every mutex
 variable has its own queue associated with it. Everytime a thread calls the
-<tt class="docutils literal"><span class="pre">lock()</span></tt> function associated with a mutex, it is placed onto the queue
+<tt class="docutils literal">lock()</tt> function associated with a mutex, it is placed onto the queue
 associated with that mutex if someone already holds the lock.  When the owner
-of the lock eventually calls <tt class="docutils literal"><span class="pre">unlock()</span></tt> this queue is then checked and
+of the lock eventually calls <tt class="docutils literal">unlock()</tt> this queue is then checked and
 requesters are removed from the queue in FCFS order.</p>
 </div>
 </div>
-<div class="section">
-<h2><a id="threads" name="threads">4.2 Threads</a></h2>
+<div class="section" id="threads">
+<h2>4.2 Threads</h2>
 <p>Section 4 discusses the API provided to an application that allows it to create
 and destroy theads, as well as invoke blocking system calls.  This section
 details the internals of the thread implementation itself, focusing on the data
@@ -775,7 +776,7 @@ SUSPENDED, or ACTIVE); and a set of variables that store a processor's register
 state whenever a context switch occurs.</p>
 <p><strong>stack_pointer</strong> This field points to the top of a thread's stack. Whenever a
 context switch is about to occur, the thread scheduler calls a
-<tt class="docutils literal"><span class="pre">switch_threads()</span></tt> function, pushing the return address onto the current
+<tt class="docutils literal">switch_threads()</tt> function, pushing the return address onto the current
 thread's stack. This function stores the current thread's register state,
 replaces the processor's stack pointer with that of a new thread, and finally
 restores the register state of the new thread. Once this function returns, the
@@ -783,15 +784,15 @@ new thread resumes its execution from the point it was interrupted.</p>
 <p><strong>start_function</strong> This field points to a thread's start function along with a
 pointer to a single argument. The application developer must ensure that the
 structure the argument points to is not deallocated before the thread's start
-function executes. These semantics are similar to those that Unix <tt class="docutils literal"><span class="pre">pthreads</span></tt>
+function executes. These semantics are similar to those that Unix <tt class="docutils literal">pthreads</tt>
 define.</p>
 <p><strong>system_call_block</strong> This field contains a pointer to a structure used when
 making system calls into a TOSThreads kernel. This structure is readable by both a
 system call wrapper implementation and the TinyOS kernel thread. The section
 that follows explains how this structure is used.</p>
 </div>
-<div class="section">
-<h2><a id="blocking-system-calls" name="blocking-system-calls">4.3 Blocking System Calls</a></h2>
+<div class="section" id="blocking-system-calls">
+<h2>4.3 Blocking System Calls</h2>
 <p>TOSThreads implements blocking system calls by wrapping existing TinyOS services
 inside blocking APIs. These wrappers are responsible for maintaining state
 across the non-blocking <em>split-phase</em> operations associated with the
@@ -832,22 +833,22 @@ time. Thus, only a <em>single</em> TinyOS task is necessary to perform an
 applications' system calls. The body of this task simply invokes the function
 the 'system_call_block' points to.</p>
 <p>The important interfaces and components that implement the functionality
-described in this section can be found in <tt class="docutils literal"><span class="pre">tos/lib/tosthreads/system</span></tt> and
-<tt class="docutils literal"><span class="pre">tos/lib/tosthreads/interfaces</span></tt>.  The important ones to look at are the
-<tt class="docutils literal"><span class="pre">SystemCall</span></tt> interface, and the <tt class="docutils literal"><span class="pre">SystemCallC</span></tt> and <tt class="docutils literal"><span class="pre">SystemCallP</span></tt>
+described in this section can be found in <tt class="docutils literal">tos/lib/tosthreads/system</tt> and
+<tt class="docutils literal">tos/lib/tosthreads/interfaces</tt>.  The important ones to look at are the
+<tt class="docutils literal">SystemCall</tt> interface, and the <tt class="docutils literal">SystemCallC</tt> and <tt class="docutils literal">SystemCallP</tt>
 components.  Example system call wrappers themselves include
-<tt class="docutils literal"><span class="pre">BlockingStdControlC</span></tt>, <tt class="docutils literal"><span class="pre">BlockingAMSenderC</span></tt>, etc.</p>
+<tt class="docutils literal">BlockingStdControlC</tt>, <tt class="docutils literal">BlockingAMSenderC</tt>, etc.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="programming-applications" name="programming-applications">5. Programming Applications</a></h1>
+<div class="section" id="programming-applications">
+<h1>5. Programming Applications</h1>
 <p>Application written using TOSThreads can be programmed in either nesC or
 standard C.  In nesC, threads can either be created <em>statically</em> or
 <em>dynamically</em> as a TOSThreads application executes.  The primary difference
 between the two is that statically allocated threads have their TCB allocated
 for them at compile time while dynamic threads have them allocated at run time.</p>
-<div class="section">
-<h2><a id="static-threads" name="static-threads">5.1 Static Threads</a></h2>
+<div class="section" id="static-threads">
+<h2>5.1 Static Threads</h2>
 <p>Static threads are created by wiring in an instance of a ThreadC component as shown
 below.  As a parameter to ThreadC, we pass in the desired stack size for the thread.</p>
 <pre class="literal-block">
@@ -861,7 +862,7 @@ implementation {
   ExampleC.Thread -&gt; ThreadC;
 }
 </pre>
-<p>The ThreadC component provides a <tt class="docutils literal"><span class="pre">Thread</span></tt> interface for creating and
+<p>The ThreadC component provides a <tt class="docutils literal">Thread</tt> interface for creating and
 manipulating static threads from within a nesC module.:</p>
 <pre class="literal-block">
  interface Thread {
@@ -873,38 +874,38 @@ manipulating static threads from within a nesC module.:</p>
    event void run(void* arg);
 }
 </pre>
-<p>Calling <tt class="docutils literal"><span class="pre">start()</span></tt> on a thread signals to the TOSThreads thread scheduler that
-that thread should begin executing.  <tt class="docutils literal"><span class="pre">start()</span></tt> takes as an argument a pointer
+<p>Calling <tt class="docutils literal">start()</tt> on a thread signals to the TOSThreads thread scheduler that
+that thread should begin executing.  <tt class="docutils literal">start()</tt> takes as an argument a pointer
 to a data structure to pass to a thread once it starts executing.  Calls to
-<tt class="docutils literal"><span class="pre">start()</span></tt> return either SUCCESS or FAIL.  Upon SUCCESS, the thread is
-scheduled for execution, and at some point later the <tt class="docutils literal"><span class="pre">run()</span></tt> event is
+<tt class="docutils literal">start()</tt> return either SUCCESS or FAIL.  Upon SUCCESS, the thread is
+scheduled for execution, and at some point later the <tt class="docutils literal">run()</tt> event is
 signaled.  The body of the run event implements the logic of the thread.</p>
-<p>Calling <tt class="docutils literal"><span class="pre">stop()</span></tt> on a thread signals to the TOSThreads thread scheduler that
+<p>Calling <tt class="docutils literal">stop()</tt> on a thread signals to the TOSThreads thread scheduler that
 that thread should stop executing.  Once a thread is stopped it cannot be
-restarted. Calls to <tt class="docutils literal"><span class="pre">stop()</span></tt> return SUCESS if a thread was successfully
-stopped, and FAIL otherwise. <tt class="docutils literal"><span class="pre">stop()</span></tt> MUST NOT be called from within the
+restarted. Calls to <tt class="docutils literal">stop()</tt> return SUCESS if a thread was successfully
+stopped, and FAIL otherwise. <tt class="docutils literal">stop()</tt> MUST NOT be called from within the
 thread being stopped; it MUST be called from either the TinyOS thread or another
 application thread.</p>
-<p>Calling <tt class="docutils literal"><span class="pre">pause()</span></tt> on a thread signals to the TOSThreads thread scheduler that
+<p>Calling <tt class="docutils literal">pause()</tt> on a thread signals to the TOSThreads thread scheduler that
 that thread should be paused.  Pausing a thread is different than stopping it in
-that a <em>paused</em> thread can be restarted again later by calling <tt class="docutils literal"><span class="pre">resume()</span></tt> on
-it.  Underneath, the <tt class="docutils literal"><span class="pre">pause()</span></tt> command is implemented by calling the thread
-scheduler's <tt class="docutils literal"><span class="pre">suspendCurrentThread()</span></tt> command.  Calls to <tt class="docutils literal"><span class="pre">pause()</span></tt> return
-SUCCESS if a thread is paused, and FAIL otherwise.  Essentially, <tt class="docutils literal"><span class="pre">pause()</span></tt> is
+that a <em>paused</em> thread can be restarted again later by calling <tt class="docutils literal">resume()</tt> on
+it.  Underneath, the <tt class="docutils literal">pause()</tt> command is implemented by calling the thread
+scheduler's <tt class="docutils literal">suspendCurrentThread()</tt> command.  Calls to <tt class="docutils literal">pause()</tt> return
+SUCCESS if a thread is paused, and FAIL otherwise.  Essentially, <tt class="docutils literal">pause()</tt> is
 used to perform an explicit suspension of the currently running thread.
-<tt class="docutils literal"><span class="pre">pause()</span></tt> MUST ONLY be called from within the thread itself that is being
+<tt class="docutils literal">pause()</tt> MUST ONLY be called from within the thread itself that is being
 paused.  Note that these are exactly the opposite semantics than those used for
-<tt class="docutils literal"><span class="pre">stop()</span></tt>.</p>
-<p>Calling <tt class="docutils literal"><span class="pre">resume()</span></tt> wakes up a thread previously suspended via the <tt class="docutils literal"><span class="pre">pause()</span></tt>
+<tt class="docutils literal">stop()</tt>.</p>
+<p>Calling <tt class="docutils literal">resume()</tt> wakes up a thread previously suspended via the <tt class="docutils literal">pause()</tt>
 command. SUCCESS is returned if the thread was successfully resumed, FAIL
 otherwise.</p>
-<p>Calling <tt class="docutils literal"><span class="pre">sleep()</span></tt> puts a thread to sleep for the interval specified in its
-single 'milli' parameter. <tt class="docutils literal"><span class="pre">sleep()</span></tt> MUST ONLY be called from within the thread
+<p>Calling <tt class="docutils literal">sleep()</tt> puts a thread to sleep for the interval specified in its
+single 'milli' parameter. <tt class="docutils literal">sleep()</tt> MUST ONLY be called from within the thread
 itself that is being put to sleep.  SUCCESS is returned if the thread was
 successfully put to sleep, FAIL otherwise.</p>
 </div>
-<div class="section">
-<h2><a id="dynamic-threads" name="dynamic-threads">5.2 Dynamic Threads</a></h2>
+<div class="section" id="dynamic-threads">
+<h2>5.2 Dynamic Threads</h2>
 <p>Dynamic threads are created by wiring in an instance of a DynamicThreadC
 component as shown below.:</p>
 <pre class="literal-block">
@@ -928,113 +929,113 @@ interface DynamicThread {
   command error_t resume(tosthread_t* t);
 }
 </pre>
-<p><tt class="docutils literal"><span class="pre">create()</span></tt> is used to create a new dynamic thread.  It takes 4 parameters:
+<p><tt class="docutils literal">create()</tt> is used to create a new dynamic thread.  It takes 4 parameters:
 't', 'start_routine', 'arg', and 'stack_size'.  't' is pointer to a unique
 handler associated with the thread being created. 'start_routine' is the start
 function associated with the thread.  'arg' is a pointer to a structure passed
 to the start function once the thread has begun executing.  'stack_size' is the
 size of the stack to be dynamicaly allocated for the thread.  Calls to
-<tt class="docutils literal"><span class="pre">create()</span></tt> return either SUCCESS, FAIL, or EALREADY.  SUCCESS indiactes that
+<tt class="docutils literal">create()</tt> return either SUCCESS, FAIL, or EALREADY.  SUCCESS indiactes that
 the thread has been successfully created, FAIL means it could not be created,
 and EALREADY indicates that the handler assocaited with the 't' parameter is
 associated with an already running thread.  Upon SUCCESS, a dynamic thread's TCB
 and stack memory are dynamically allocated, and the thread is scheduled for
 execution.  Its 'start_routine' whill be called once it begins running.  UPON
 FAIL or EALREADY, no side effects occur.</p>
-<p>''destroy()`` is similar to <tt class="docutils literal"><span class="pre">stop()</span></tt> from a static thread's <tt class="docutils literal"><span class="pre">Thread</span></tt>
+<p>''destroy()`` is similar to <tt class="docutils literal">stop()</tt> from a static thread's <tt class="docutils literal">Thread</tt>
 interface.  It follows all the same semantics as this command, except that it
 deallocates the TCB and stack memory associated with a thread before returning.</p>
-<p><tt class="docutils literal"><span class="pre">pause()</span></tt> and <tt class="docutils literal"><span class="pre">resume()</span></tt> are identical to their counterparts in the
-<tt class="docutils literal"><span class="pre">Thread</span></tt> interface.</p>
+<p><tt class="docutils literal">pause()</tt> and <tt class="docutils literal">resume()</tt> are identical to their counterparts in the
+<tt class="docutils literal">Thread</tt> interface.</p>
 <p>The API allowing TOSThreads applications to be written in standard C includes a
 set of functions that simply wrap the commands provided by the
-<tt class="docutils literal"><span class="pre">DynamicThread</span></tt> interface.  The following section shows an example of how
+<tt class="docutils literal">DynamicThread</tt> interface.  The following section shows an example of how
 these functions are used.</p>
 </div>
-<div class="section">
-<h2><a id="the-full-tosthreads-api" name="the-full-tosthreads-api">5.3 The Full TOSThreads API</a></h2>
+<div class="section" id="the-full-tosthreads-api">
+<h2>5.3 The Full TOSThreads API</h2>
 <p>As mentioned previously, TinyOS services are presented to TOSThreads applications
 by wrapping their functionality inside blocking system calls.  The number and type
 of standard services provided is constantly growing so it doesn't make sense to
-try and list them all out.  Browse through <tt class="docutils literal"><span class="pre">tos/lib/tosthreads/system/</span></tt> and
-<tt class="docutils literal"><span class="pre">tos/lib/tosthreads/lib</span></tt> to see what services are currently available.
-Also, take a look at the various applications found in <tt class="docutils literal"><span class="pre">apps/tosthreads</span></tt> to see
+try and list them all out.  Browse through <tt class="docutils literal">tos/lib/tosthreads/system/</tt> and
+<tt class="docutils literal">tos/lib/tosthreads/lib</tt> to see what services are currently available.
+Also, take a look at the various applications found in <tt class="docutils literal">apps/tosthreads</tt> to see
 how these services are used.  There are applications written in nesC using both
 static and dynamic threads, as well as applications written in standard C.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="author-addresses" name="author-addresses">6. Author Addresses</a></h1>
+<div class="section" id="author-addresses">
+<h1>6. Author Addresses</h1>
 <div class="line-block">
 <div class="line"><br /></div>
 <div class="line">Kevin Klues</div>
 <div class="line">284 Gates Hall</div>
 <div class="line">Stanford University</div>
 <div class="line">Stanford, CA 94305-9030</div>
-<div class="line">email - <a class="reference" href="mailto:klueska&#64;cs.stanford.edu">klueska&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:klueska&#64;cs.stanford.edu">klueska&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Chieh-Jan Liang</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
-<div class="line">email - <a class="reference" href="mailto:cliang4&#64;cs.jhu.edu">cliang4&#64;cs.jhu.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:cliang4&#64;cs.jhu.edu">cliang4&#64;cs.jhu.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Jeongyeup Paek</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
-<div class="line">email - <a class="reference" href="mailto:jpaek&#64;enl.usc.edu">jpaek&#64;enl.usc.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:jpaek&#64;enl.usc.edu">jpaek&#64;enl.usc.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Razvan Musaloiu-E</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
-<div class="line">email - <a class="reference" href="mailto:razvanm&#64;cs.jhu.edu">razvanm&#64;cs.jhu.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:razvanm&#64;cs.jhu.edu">razvanm&#64;cs.jhu.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Ramesh Govindan</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
-<div class="line">email - <a class="reference" href="mailto:ramesh&#64;enl.usc.edu">ramesh&#64;enl.usc.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:ramesh&#64;enl.usc.edu">ramesh&#64;enl.usc.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Andreas Terzis</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
 <div class="line">XXX</div>
-<div class="line">email - <a class="reference" href="mailto:terzis&#64;cs.jhu.edu">terzis&#64;cs.jhu.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:terzis&#64;cs.jhu.edu">terzis&#64;cs.jhu.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
 <div class="line">Stanford University</div>
 <div class="line">Stanford, CA 94305-9030</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils citation" frame="void" id="tep112" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4" name="tep112">[TEP112]</a></td><td>TEP 112: Microcontroller Power Management.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id4">[TEP112]</a></td><td>TEP 112: Microcontroller Power Management.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep118" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="tep118">[TEP118]</a></td><td>TEP 118: Dissemination.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[TEP118]</a></td><td>TEP 118: Dissemination.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep119" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="tep119">[TEP119]</a></td><td>TEP 119: Collection.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[TEP119]</a></td><td>TEP 119: Collection.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep133" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="tep133">[TEP133]</a></td><td>TEP 133: Packet Level Time Synchronization.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[TEP133]</a></td><td>TEP 133: Packet Level Time Synchronization.</td></tr>
 </tbody>
 </table>
 </div>

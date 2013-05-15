@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Collection</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.15 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -309,8 +310,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The memo documents the interfaces, components, and semantics used by
 the collection protocols in TinyOS 2.x. Collection provides
 best-effort, multihop delivery of packets to one of a set of
@@ -322,8 +323,8 @@ union of the paths from each node to one or more of the collection
 points forms a set of trees, and in this document we assume that
 collection points are the roots of these trees.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Collecting data at a base station is a common requirement of sensor
 network applications. The general approach used is to build one or
 more collection trees, each of which is rooted at a base station. When
@@ -365,8 +366,8 @@ address these challenges, the programming interface they provide is
 typically independent of these details. The rest of this document
 describes a set of components and interfaces for collection services.</p>
 </div>
-<div class="section">
-<h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
+<div class="section" id="collection-interfaces">
+<h1>2. Collection interfaces</h1>
 <p>A node can perform four different roles in collection: sender (or
 source), snooper, in-network processor, and receiver (or
 root). Depending on their role, the nodes use different interfaces to
@@ -378,11 +379,11 @@ intermediate-nodes, or the receiver, much like port number in TCP. All
 data traffic, regardless of the collection identifier, use the same
 routing topology.</p>
 <p>The nodes that generate data to be sent to the root are <em>senders</em>.
-Senders use the Send interface [<a class="reference" href="#id1">1</a>] to send data to the root of
+Senders use the Send interface [<a class="reference internal" href="#id1">1</a>] to send data to the root of
 the collection tree.  The collection identifier is specified as a
 parameter to Send during instantiation.</p>
 <p>The nodes that overhear messages in transit are <em>snoopers</em>. The
-snoopers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped
+snoopers use the Receive interface [<a class="reference internal" href="#id1">1</a>] to receive a snooped
 message. The collection identifier is specified as a parameter
 to Receive during instantiation.</p>
 <p>The nodes can process a packet that is in transit. These in-network
@@ -406,7 +407,7 @@ does not receive ownership of the packet, it MUST NOT modify the
 packet and MUST copy data out of the packet which it wishes to use
 after the event returns.</p>
 <p>Root nodes that receive data from the network are <em>receivers</em>. Roots
-use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message delivered by
+use the Receive interface [<a class="reference internal" href="#id1">1</a>] to receive a message delivered by
 collection. The collection identifier is specified as a parameter to
 Receive during instantiation.</p>
 <p>The set of all roots and the paths that lead to them form the
@@ -430,8 +431,8 @@ return SUCCESS. If setRoot() returns SUCCESS, then a subsequent call
 to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then a
 subsequent call to isRoot() MUST return FALSE.</p>
 </div>
-<div class="section">
-<h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
+<div class="section" id="collection-services">
+<h1>3 Collection Services</h1>
 <p>A collection service MUST provide one component, CollectionC,
 which has the following signature:</p>
 <pre class="literal-block">
@@ -483,9 +484,9 @@ and Intercept.forward events.</p>
 <p>RootControl allows a node to be made a collection tree root.
 CollectionC SHOULD NOT configure a node as a root by default.</p>
 <p>Packet and CollectionPacket allow components to access collection
-data packet fields [<a class="reference" href="#id1">1</a>].</p>
-<div class="section">
-<h2><a id="collectionsenderc" name="collectionsenderc">3.1 CollectionSenderC</a></h2>
+data packet fields [<a class="reference internal" href="#id1">1</a>].</p>
+<div class="section" id="collectionsenderc">
+<h2>3.1 CollectionSenderC</h2>
 <p>Collection has a virtualized sending abstraction, the generic
 component CollectionSenderC:</p>
 <pre class="literal-block">
@@ -497,29 +498,29 @@ generic configuration CollectionSenderC(collection_id_t collectid) {
 }
 </pre>
 <p>This abstraction follows a similar virtualization approach to
-AMSenderC [<a class="reference" href="#id1">1</a>], except that it is parameterized by a collection_id_t
+AMSenderC [<a class="reference internal" href="#id1">1</a>], except that it is parameterized by a collection_id_t
 rather than an am_id_t. As with am_id_t, every collection_id_t SHOULD
 have a single packet format, so that receivers can parse a packet
 based on its collection ID and contents.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>4. Implementation</h1>
 <p>Implementations of collection can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/lqi</span></tt>.
 The former is the Collection Tree Protocol (CTP), described in TEP 123
-[<a class="reference" href="#id2">2</a>]. The latter is a TinyOS 2.x port of MultihopLqi, a
+[<a class="reference internal" href="#id2">2</a>]. The latter is a TinyOS 2.x port of MultihopLqi, a
 CC2420-specific collection protocol in TinyOS 1.x.</p>
 </div>
-<div class="section">
-<h1><a id="author-addresses" name="author-addresses">5. Author Addresses</a></h1>
+<div class="section" id="author-addresses">
+<h1>5. Author Addresses</h1>
 <div class="line-block">
 <div class="line">Rodrigo Fonseca</div>
 <div class="line">473 Soda Hall</div>
 <div class="line">Berkeley, CA 94720-1776</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 642-8919</div>
-<div class="line">email - <a class="reference" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Omprakash Gnawali</div>
@@ -528,7 +529,7 @@ CC2420-specific collection protocol in TinyOS 1.x.</p>
 <div class="line">Los Angeles, CA 90089</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 213 821-5627</div>
-<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Kyle Jamieson</div>
@@ -536,7 +537,7 @@ CC2420-specific collection protocol in TinyOS 1.x.</p>
 <div class="line">32 Vassar St.</div>
 <div class="line">Cambridge, MA 02139</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
@@ -546,21 +547,21 @@ CC2420-specific collection protocol in TinyOS 1.x.</p>
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>TEP 116: Packet Protocols.</td></tr>
+<tr><td class="label">[1]</td><td>TEP 116: Packet Protocols.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 123: The Collection Tree Protocol (CTP).</td></tr>
+<tr><td class="label">[2]</td><td>TEP 123: The Collection Tree Protocol (CTP).</td></tr>
 </tbody>
 </table>
 </div>

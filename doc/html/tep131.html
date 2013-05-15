@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Creating a New Platform for TinyOS 2.x</title>
 <meta name="author" content="Martin Leopold" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -312,8 +313,8 @@ ul.auto-toc {
 discussions and suggestions for improvements.  Distribution of this
 memo is unlimited.  This memo is in full compliance with TEP 1.</p>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id4" id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a class="toc-backref" href="#id4">Abstract</a></h1>
 <p>The purpose of this TEP is to provide on overview of how to build a
 new TinyOS 2 platform. While the purpose of most TEPs is to describe
 TinyOS 2 entities, we will present concrete suggestions on how to
@@ -332,110 +333,110 @@ elements that make up a platform: the tool chain (Section 3) the
 platform definitions (Section 4) and the chips definitions (Section
 5).</p>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id5" id="table-of-content" name="table-of-content">Table of Content</a></h1>
-<div class="contents topic">
-<p class="topic-title first"><a id="contents" name="contents">Contents</a></p>
+<div class="section" id="table-of-content">
+<h1><a class="toc-backref" href="#id5">Table of Content</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference" href="#abstract" id="id4" name="id4">Abstract</a></li>
-<li><a class="reference" href="#table-of-content" id="id5" name="id5">Table of Content</a></li>
-<li><a class="reference" href="#tinyos-overview" id="id6" name="id6">1. TinyOS Overview</a><ul>
-<li><a class="reference" href="#tinyos-2-architecture" id="id7" name="id7">1.1 TinyOS 2 architecture</a></li>
-<li><a class="reference" href="#tinyos-contrib" id="id8" name="id8">1.2 TinyOS Contrib</a></li>
+<li><a class="reference internal" href="#abstract" id="id4">Abstract</a></li>
+<li><a class="reference internal" href="#table-of-content" id="id5">Table of Content</a></li>
+<li><a class="reference internal" href="#tinyos-overview" id="id6">1. TinyOS Overview</a><ul>
+<li><a class="reference internal" href="#tinyos-2-architecture" id="id7">1.1 TinyOS 2 architecture</a></li>
+<li><a class="reference internal" href="#tinyos-contrib" id="id8">1.2 TinyOS Contrib</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#a-tinyos-platform" id="id9" name="id9">2. A TinyOS Platform</a><ul>
-<li><a class="reference" href="#a-new-platform" id="id10" name="id10">2.1 A New Platform</a></li>
-<li><a class="reference" href="#the-chips" id="id11" name="id11">2.2 The Chips</a></li>
-<li><a class="reference" href="#the-platform-directory" id="id12" name="id12">2.3 The Platform Directory</a></li>
-<li><a class="reference" href="#the-tool-chain-make-system" id="id13" name="id13">2.4 The Tool-Chain (Make System)</a></li>
-<li><a class="reference" href="#the-minimal-platform" id="id14" name="id14">2.5 The Minimal Platform</a></li>
+<li><a class="reference internal" href="#a-tinyos-platform" id="id9">2. A TinyOS Platform</a><ul>
+<li><a class="reference internal" href="#a-new-platform" id="id10">2.1 A New Platform</a></li>
+<li><a class="reference internal" href="#the-chips" id="id11">2.2 The Chips</a></li>
+<li><a class="reference internal" href="#the-platform-directory" id="id12">2.3 The Platform Directory</a></li>
+<li><a class="reference internal" href="#the-tool-chain-make-system" id="id13">2.4 The Tool-Chain (Make System)</a></li>
+<li><a class="reference internal" href="#the-minimal-platform" id="id14">2.5 The Minimal Platform</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#tool-chain" id="id15" name="id15">3. Tool Chain</a><ul>
-<li><a class="reference" href="#compiling-using-nesc" id="id16" name="id16">3.1 Compiling using nesC</a></li>
-<li><a class="reference" href="#the-make-system" id="id17" name="id17">3.2 The Make System</a><ul>
-<li><a class="reference" href="#the-target-file" id="id18" name="id18">3.2.1 The .target file</a></li>
-<li><a class="reference" href="#the-rules-file" id="id19" name="id19">3.2.2 The .rules file</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference" href="#the-platform" id="id20" name="id20">4. The Platform</a><ul>
-<li><a class="reference" href="#platform-file" id="id21" name="id21">4.1 .platform file</a></li>
-<li><a class="reference" href="#platformp-and-platformc" id="id22" name="id22">4.2 PlatformP and PlatformC</a><ul>
-<li><a class="reference" href="#platformc" id="id23" name="id23">4.2.1 PlatformC</a></li>
-<li><a class="reference" href="#platformp" id="id24" name="id24">4.2.1 PlatformP</a></li>
-<li><a class="reference" href="#init-example-platformledsc" id="id25" name="id25">4.2.3 Init example: PlatformLedsC</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#platform-specific-code" id="id26" name="id26">3.3 Platform Specific Code</a><ul>
-<li><a class="reference" href="#platform-headers" id="id27" name="id27">4.3.1 Platform Headers</a><ul>
-<li><a class="reference" href="#hardware-h" id="id28" name="id28">hardware.h</a></li>
-<li><a class="reference" href="#platform-message-h" id="id29" name="id29">platform_message.h</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#platform-specific-components" id="id30" name="id30">4.3.2 Platform Specific Components</a></li>
+<li><a class="reference internal" href="#tool-chain" id="id15">3. Tool Chain</a><ul>
+<li><a class="reference internal" href="#compiling-using-nesc" id="id16">3.1 Compiling using nesC</a></li>
+<li><a class="reference internal" href="#the-make-system" id="id17">3.2 The Make System</a><ul>
+<li><a class="reference internal" href="#the-target-file" id="id18">3.2.1 The .target file</a></li>
+<li><a class="reference internal" href="#the-rules-file" id="id19">3.2.2 The .rules file</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference" href="#id2" id="id31" name="id31">5. The chips</a><ul>
-<li><a class="reference" href="#mcu-internals" id="id32" name="id32">5.1 MCU Internals</a><ul>
-<li><a class="reference" href="#mcuxardware-h" id="id33" name="id33">5.1.1 mcuXardware.h</a></li>
-<li><a class="reference" href="#mcusleepc" id="id34" name="id34">5.1.2 MCUSleepC</a></li>
+<li><a class="reference internal" href="#the-platform" id="id20">4. The Platform</a><ul>
+<li><a class="reference internal" href="#platform-file" id="id21">4.1 .platform file</a></li>
+<li><a class="reference internal" href="#platformp-and-platformc" id="id22">4.2 PlatformP and PlatformC</a><ul>
+<li><a class="reference internal" href="#platformc" id="id23">4.2.1 PlatformC</a></li>
+<li><a class="reference internal" href="#platformp" id="id24">4.2.1 PlatformP</a></li>
+<li><a class="reference internal" href="#init-example-platformledsc" id="id25">4.2.3 Init example: PlatformLedsC</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#generalio" id="id35" name="id35">5.2 GeneralIO</a><ul>
-<li><a class="reference" href="#example-msp430" id="id36" name="id36">5.2.1 Example MSP430</a></li>
+<li><a class="reference internal" href="#platform-specific-code" id="id26">3.3 Platform Specific Code</a><ul>
+<li><a class="reference internal" href="#platform-headers" id="id27">4.3.1 Platform Headers</a><ul>
+<li><a class="reference internal" href="#hardware-h" id="id28">hardware.h</a></li>
+<li><a class="reference internal" href="#platform-message-h" id="id29">platform_message.h</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#leds" id="id37" name="id37">5.3 LEDs</a><ul>
-<li><a class="reference" href="#example-mica2dot" id="id38" name="id38">5.3.1 Example Mica2dot</a></li>
-<li><a class="reference" href="#leds-implementation-discussion" id="id39" name="id39">5.3.2 LEDs implementation discussion</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#timers" id="id40" name="id40">5.4 Timers</a><ul>
-<li><a class="reference" href="#timer-layers" id="id41" name="id41">5.4.1 Timer Layers</a><ul>
-<li><a class="reference" href="#hpl" id="id42" name="id42">HPL</a></li>
-<li><a class="reference" href="#hal" id="id43" name="id43">HAL</a></li>
-<li><a class="reference" href="#hil" id="id44" name="id44">HIL</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#timer-implementation" id="id45" name="id45">5.4.2 Timer Implementation</a></li>
-<li><a class="reference" href="#example-atmega128l" id="id46" name="id46">5.4.3 Example: ATMega128l</a></li>
-<li><a class="reference" href="#id3" id="id47" name="id47">5.4.4 Example: MSP430</a></li>
-<li><a class="reference" href="#example-pxa27x" id="id48" name="id48">5.4.5 Example: PXA27x</a></li>
-<li><a class="reference" href="#timer-discussion" id="id49" name="id49">5.4.6 Timer Discussion</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#i-o-buses-uart-spi-i2c" id="id50" name="id50">5.5 I/O buses (UART, SPI, I2C)</a><ul>
-<li><a class="reference" href="#serial-communication" id="id51" name="id51">5.5.1 Serial Communication</a></li>
-<li><a class="reference" href="#i2c-spi" id="id52" name="id52">5.5.2 I2C, SPI</a><ul>
-<li><a class="reference" href="#spibyte-spipacket" id="id53" name="id53">SpiByte, SpiPacket</a></li>
-<li><a class="reference" href="#i2cpacket" id="id54" name="id54">I2CPacket</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#example" id="id55" name="id55">5.5.3 Example</a></li>
+<li><a class="reference internal" href="#platform-specific-components" id="id30">4.3.2 Platform Specific Components</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference" href="#authors" id="id56" name="id56">6. Authors</a></li>
-<li><a class="reference" href="#citations" id="id57" name="id57">7. Citations</a></li>
+<li><a class="reference internal" href="#id2" id="id31">5. The chips</a><ul>
+<li><a class="reference internal" href="#mcu-internals" id="id32">5.1 MCU Internals</a><ul>
+<li><a class="reference internal" href="#mcuxardware-h" id="id33">5.1.1 mcuXardware.h</a></li>
+<li><a class="reference internal" href="#mcusleepc" id="id34">5.1.2 MCUSleepC</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generalio" id="id35">5.2 GeneralIO</a><ul>
+<li><a class="reference internal" href="#example-msp430" id="id36">5.2.1 Example MSP430</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#leds" id="id37">5.3 LEDs</a><ul>
+<li><a class="reference internal" href="#example-mica2dot" id="id38">5.3.1 Example Mica2dot</a></li>
+<li><a class="reference internal" href="#leds-implementation-discussion" id="id39">5.3.2 LEDs implementation discussion</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#timers" id="id40">5.4 Timers</a><ul>
+<li><a class="reference internal" href="#timer-layers" id="id41">5.4.1 Timer Layers</a><ul>
+<li><a class="reference internal" href="#hpl" id="id42">HPL</a></li>
+<li><a class="reference internal" href="#hal" id="id43">HAL</a></li>
+<li><a class="reference internal" href="#hil" id="id44">HIL</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#timer-implementation" id="id45">5.4.2 Timer Implementation</a></li>
+<li><a class="reference internal" href="#example-atmega128l" id="id46">5.4.3 Example: ATMega128l</a></li>
+<li><a class="reference internal" href="#id3" id="id47">5.4.4 Example: MSP430</a></li>
+<li><a class="reference internal" href="#example-pxa27x" id="id48">5.4.5 Example: PXA27x</a></li>
+<li><a class="reference internal" href="#timer-discussion" id="id49">5.4.6 Timer Discussion</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#i-o-buses-uart-spi-i2c" id="id50">5.5 I/O buses (UART, SPI, I2C)</a><ul>
+<li><a class="reference internal" href="#serial-communication" id="id51">5.5.1 Serial Communication</a></li>
+<li><a class="reference internal" href="#i2c-spi" id="id52">5.5.2 I2C, SPI</a><ul>
+<li><a class="reference internal" href="#spibyte-spipacket" id="id53">SpiByte, SpiPacket</a></li>
+<li><a class="reference internal" href="#i2cpacket" id="id54">I2CPacket</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#example" id="id55">5.5.3 Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#authors" id="id56">6. Authors</a></li>
+<li><a class="reference internal" href="#citations" id="id57">7. Citations</a></li>
 </ul>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id6" id="tinyos-overview" name="tinyos-overview">1. TinyOS Overview</a></h1>
+<div class="section" id="tinyos-overview">
+<h1><a class="toc-backref" href="#id6">1. TinyOS Overview</a></h1>
 <p>Before describing the process of writing TinyOS platforms we will
 briefly sum up the TinyOS ecosystem and the terminology required in
-this TEP. To learn more visit the TinyOS website <a class="reference" href="http://www.tinyos.net">http://www.tinyos.net</a>.</p>
+this TEP. To learn more visit the TinyOS website <a class="reference external" href="http://www.tinyos.net">http://www.tinyos.net</a>.</p>
 <p>A systems overview is depicted below. In this TEP we will primarily
 concern our selves with the platform portion of figure and briefly
 cover the tool chain. This involves writing the necessary drivers and
 writing rules to pass the code to the TinyOS tool chain. We will not
-cover sensor boards in this TEP refer to, see [<a class="reference" href="#tep109">TEP109</a>] for details.</p>
+cover sensor boards in this TEP refer to, see [<a class="reference internal" href="#tep109">TEP109</a>] for details.</p>
 <pre class="literal-block">
 +------------------------------------------+
 |              Application                 |
@@ -456,10 +457,10 @@ cover sensor boards in this TEP refer to, see [<a class="reference" href="#tep10
   |  +-------+    +-----+    +-------+  |
   +-------------------------------------+
 </pre>
-<div class="section">
-<h2><a class="toc-backref" href="#id7" id="tinyos-2-architecture" name="tinyos-2-architecture">1.1 TinyOS 2 architecture</a></h2>
+<div class="section" id="tinyos-2-architecture">
+<h2><a class="toc-backref" href="#id7">1.1 TinyOS 2 architecture</a></h2>
 <p>TinyOS 2.x is built on a tree-layered hardware abstraction
-architecture (HAA)[<a class="reference" href="#tep2">TEP2</a>]. This architecture separates the code for
+architecture (HAA)[<a class="reference internal" href="#tep2">TEP2</a>]. This architecture separates the code for
 each platform into distinct layers:</p>
 <blockquote>
 <ol class="arabic simple">
@@ -475,23 +476,23 @@ from platform to platform. While applications can target a platform
 specific HAL layer for finer control of hardware specific features,
 this will could prohibit such an application from being easily
 portable. An overview of the TinyOS 2 architecture is given in
-[<a class="reference" href="#tos2-0view">tos2.0view</a>].</p>
+[<a class="reference internal" href="#tos2-0view">tos2.0view</a>].</p>
 <p>The requirements for the platform implementation is described in
 TinyOS Enhancement Proposals (TEP). Each TEP covers a particular area
 and specifies the recommendations within that area, some of which are
 relevant for platforms. While no specific label or designation is
-given to platforms adhering to the set of TEPs, [<a class="reference" href="#tep1">TEP1</a>] states:
+given to platforms adhering to the set of TEPs, [<a class="reference internal" href="#tep1">TEP1</a>] states:
 &quot;Developers desiring to add code (or TEPs) to TinyOS SHOULD follow all
 current BCPs (Best Current Practice)&quot;. At the time of writing no TEP
 has been awarded this designation or been finalized and we will refer
 to the drafts as they are.</p>
 <p>This document will not go through each of the requirements, but merely
 outline how to build a basic functional platform. For further
-information see &quot;TinyOS 2.0 Overview&quot; [<a class="reference" href="#tos2-0view">tos2.0view</a>] or the TEP list on
-the TinyOS website <a class="reference" href="http://www.tinyos.net">http://www.tinyos.net</a>.</p>
+information see &quot;TinyOS 2.0 Overview&quot; [<a class="reference internal" href="#tos2-0view">tos2.0view</a>] or the TEP list on
+the TinyOS website <a class="reference external" href="http://www.tinyos.net">http://www.tinyos.net</a>.</p>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id8" id="tinyos-contrib" name="tinyos-contrib">1.2 TinyOS Contrib</a></h2>
+<div class="section" id="tinyos-contrib">
+<h2><a class="toc-backref" href="#id8">1.2 TinyOS Contrib</a></h2>
 <p>The core of TinyOS is maintained by a set of working groups that
 govern specific parts of the source code. New project can benefit from
 the <em>contrib</em> section of TinyOS. This is a separate section of the
@@ -499,13 +500,13 @@ website and source repository maintained more loosely than the core of
 TinyOS. It is intended for sharing code at an early stage or code that
 may not gain the same popularity as the core.</p>
 <p>New projects request a directory in this repository by following a
-simple procedure on the <a class="reference" href="http://tinyos.cvs.sourceforge.net/*checkout*/tinyos/tinyos-2.x-contrib/contrib.html">TinyOS contrib web page</a></p>
+simple procedure on the <a class="reference external" href="http://tinyos.cvs.sourceforge.net/*checkout*/tinyos/tinyos-2.x-contrib/contrib.html">TinyOS contrib web page</a></p>
 <p>In contrib is a skeleton project <em>skel</em> that provides the most basic
 framework for setting up a new platform, MCU, etc.</p>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id9" id="a-tinyos-platform" name="a-tinyos-platform">2. A TinyOS Platform</a></h1>
+<div class="section" id="a-tinyos-platform">
+<h1><a class="toc-backref" href="#id9">2. A TinyOS Platform</a></h1>
 <p>A TinyOS platform provides the code and tool chain definitions that
 enable an application writer to implement an application for a mote. A
 platform in TinyOS exposes some or all of the features of a particular
@@ -520,12 +521,12 @@ components in a new way. If the chips that make up the platform are
 not supported by TinyOS implementing the new platform consists if
 implementing components for those chips (much like implementing
 drivers).</p>
-<div class="section">
-<h2><a class="toc-backref" href="#id10" id="a-new-platform" name="a-new-platform">2.1 A New Platform</a></h2>
+<div class="section" id="a-new-platform">
+<h2><a class="toc-backref" href="#id10">2.1 A New Platform</a></h2>
 <p>Platforms are discovered at compile time by the TinyOS tool
 chain and a new platform placed in the search path will be discovered
 automatically. In addition sensor boards can be defined in a very
-similar manner, however we will not cover sensor boards, see [<a class="reference" href="#tep109">TEP109</a>]
+similar manner, however we will not cover sensor boards, see [<a class="reference internal" href="#tep109">TEP109</a>]
 for details. Defining a new platform boils down to 3 things:</p>
 <blockquote>
 <ol class="arabic simple">
@@ -538,7 +539,7 @@ for details. Defining a new platform boils down to 3 things:</p>
 TinyOS tree depending based on those 3 categories. Below is an
 overview of the locations and some of the files we will be needing in
 the following (for further information see see &quot;Coding Conventions&quot;
-[<a class="reference" href="#tep3">TEP3</a>] and the &quot;README&quot; files in each directory).</p>
+[<a class="reference internal" href="#tep3">TEP3</a>] and the &quot;README&quot; files in each directory).</p>
 <p>Through this TEP we will use the terms PlatformX and MCUX to denote
 the new generic platform and MCU being created:</p>
 <pre class="literal-block">
@@ -567,12 +568,12 @@ tos
 <p>In the following we will briefly introduce each of the parts and
 describe them in more detail in sections 2 through 4.</p>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id11" id="the-chips" name="the-chips">2.2 The Chips</a></h2>
+<div class="section" id="the-chips">
+<h2><a class="toc-backref" href="#id11">2.2 The Chips</a></h2>
 <p>Each of the chips that provide software accessible functionality must
 have definitions present in the chips directory sensors, radios,
 micro controllers (MCU) alike. Each chip is assigned a separate
-directory under <tt class="docutils literal"><span class="pre">tos/chips</span></tt>. This directory contains chip specific
+directory under <tt class="docutils literal">tos/chips</tt>. This directory contains chip specific
 interfaces (HPL and HAL interfaces) and their implementations as well
 as implementations of the hardware independent interface (HIL).</p>
 <p>Some chips, MCUs in particular, contain distinct subsystems, such as
@@ -583,10 +584,10 @@ directory.</p>
 platform, the platform directory can contain code that is specific to
 this combination of chip and platform, say pin assignments, interrupt
 assignments, etc. For example such additions would be placed in
-<tt class="docutils literal"><span class="pre">tos/platforms/platformX/chips/chipX</span></tt> for PlatformX.</p>
+<tt class="docutils literal">tos/platforms/platformX/chips/chipX</tt> for PlatformX.</p>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id12" id="the-platform-directory" name="the-platform-directory">2.3 The Platform Directory</a></h2>
+<div class="section" id="the-platform-directory">
+<h2><a class="toc-backref" href="#id12">2.3 The Platform Directory</a></h2>
 <p>The platform is the piece of the puzzle that ties the components
 corresponding to physical chips (drivers) together to form a
 platform. The platform ties together the code that exposes the
@@ -594,43 +595,43 @@ features of the platform to TinyOS programs. In practise this is done
 by i) including code for each of the chips and ii) by providing any
 additional code that is specific to this particular platform.</p>
 <p>A platform <em>PlatformX</em> would be placed in the directory
-<tt class="docutils literal"><span class="pre">tos/platforms/platformX/</span></tt> and code for subsystems reside in further
-sub directories. Also in this directory is the <tt class="docutils literal"><span class="pre">.platform</span></tt> file that
+<tt class="docutils literal">tos/platforms/platformX/</tt> and code for subsystems reside in further
+sub directories. Also in this directory is the <tt class="docutils literal">.platform</tt> file that
 sets up include paths and more (see Section 3).</p>
 <p>An empty platform with no code (null) is provided and serves as an
 example for other platforms.</p>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id13" id="the-tool-chain-make-system" name="the-tool-chain-make-system">2.4 The Tool-Chain (Make System)</a></h2>
-<p>The build system for TinyOS is written using GNU Make <a class="footnote-reference" href="#make" id="id1" name="id1">[1]</a>. The
+<div class="section" id="the-tool-chain-make-system">
+<h2><a class="toc-backref" href="#id13">2.4 The Tool-Chain (Make System)</a></h2>
+<p>The build system for TinyOS is written using GNU Make <a class="footnote-reference" href="#make" id="id1">[1]</a>. The
 build system controls the process from pre-processing a TinyOS
 application into a single C file and to pass this file to the
 appropriate compiler and other tools. The make system is documented in
-<tt class="docutils literal"><span class="pre">support/make/README</span></tt> and in TinyOS 2 Tutorial Lesson 10[<a class="reference" href="#tut10">TUT10</a>].</p>
-<p>The make system is located in the <tt class="docutils literal"><span class="pre">support</span></tt> directory. This
+<tt class="docutils literal">support/make/README</tt> and in TinyOS 2 Tutorial Lesson 10[<a class="reference internal" href="#tut10">TUT10</a>].</p>
+<p>The make system is located in the <tt class="docutils literal">support</tt> directory. This
 directory contains a platform definition and Make rules to build an
 application for this platform (see Section 2).</p>
 <table class="docutils footnote" frame="void" id="make" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="make">[1]</a></td><td><a class="reference" href="http://www.gnu.org/software/make/">http://www.gnu.org/software/make/</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://www.gnu.org/software/make/">http://www.gnu.org/software/make/</a></td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id14" id="the-minimal-platform" name="the-minimal-platform">2.5 The Minimal Platform</a></h2>
+<div class="section" id="the-minimal-platform">
+<h2><a class="toc-backref" href="#id14">2.5 The Minimal Platform</a></h2>
 <p>Before describing each of the subsystems, we will show a simple check
 list. The absolute minimal TinyOS platform would have to provide the
 following resources, given a <em>PlatformX</em> with <em>MCUX</em>:</p>
 <ul class="simple">
-<li>a platform directory <tt class="docutils literal"><span class="pre">tos/platform/PlatformX/</span></tt> with the following<ul>
+<li>a platform directory <tt class="docutils literal">tos/platform/PlatformX/</tt> with the following<ul>
 <li>a platform definition (<em>.platform</em> file)</li>
 <li>a <em>hardware.h</em> header</li>
 </ul>
 </li>
-<li>a <em>platformX.target</em> in <tt class="docutils literal"><span class="pre">tos/support/make</span></tt></li>
-<li>a <em>MCUX.rules</em> in <tt class="docutils literal"><span class="pre">tos/support/make/MCUX</span></tt></li>
-<li>a <em>MCUX</em> directory in <tt class="docutils literal"><span class="pre">tos/chips/MCUX</span></tt>, containing<ul>
+<li>a <em>platformX.target</em> in <tt class="docutils literal">tos/support/make</tt></li>
+<li>a <em>MCUX.rules</em> in <tt class="docutils literal">tos/support/make/MCUX</tt></li>
+<li>a <em>MCUX</em> directory in <tt class="docutils literal">tos/chips/MCUX</tt>, containing<ul>
 <li>a <em>McuSleepC</em> (must enable interrupts)</li>
 <li>a <em>mcuxhardware.h</em> (defines <em>nesc_atomic_start</em>/<em>nesc_atomic_end</em>)</li>
 </ul>
@@ -638,8 +639,8 @@ following resources, given a <em>PlatformX</em> with <em>MCUX</em>:</p>
 </ul>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id15" id="tool-chain" name="tool-chain">3. Tool Chain</a></h1>
+<div class="section" id="tool-chain">
+<h1><a class="toc-backref" href="#id15">3. Tool Chain</a></h1>
 <p>The major components in the tool chain of TinyOS are i) the compiler
 and ii) the build system that uses the compiler to produce an
 executable binary or hex file. The first is installed separately,
@@ -652,8 +653,8 @@ detailed description is beyond the scope of this TEP.</p>
 specific part. Section 3.1 will introduce the general mechanism and
 Section 3.2 will cover how to introduce a new platform in the tool
 chain.</p>
-<div class="section">
-<h2><a class="toc-backref" href="#id16" id="compiling-using-nesc" name="compiling-using-nesc">3.1 Compiling using nesC</a></h2>
+<div class="section" id="compiling-using-nesc">
+<h2><a class="toc-backref" href="#id16">3.1 Compiling using nesC</a></h2>
 <p>The process of the build system is depicted below. This system feeds
 the source code through the tools to produce an executable or hex file
 for uploading to the platform. The nesC pre-compiler is split in two
@@ -690,8 +691,8 @@ effort. A straight forward solution adopted for these platforms is to
 post-process the C files produced by nesC to fit the needs of a
 specific compiler, see TEP121 for an example of such a solution.</p>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id17" id="the-make-system" name="the-make-system">3.2 The Make System</a></h2>
+<div class="section" id="the-make-system">
+<h2><a class="toc-backref" href="#id17">3.2 The Make System</a></h2>
 <p>TinyOS controls the build process using make. The global make file
 searches certain locations to find make definitions for all available
 platforms. In order to make a new platform available to the TinyOS
@@ -701,9 +702,9 @@ by make targets. Often the required rules are tied to a particular MCU
 that is shared among several platforms and TinyOS leverages this fact
 by creating a light-weight <em>.target</em> file pointing to the appropriate
 rules in a <em>.rules</em> file. The make system is documented in
-<tt class="docutils literal"><span class="pre">support/make/README</span></tt> and in TinyOS 2 Tutorial Lesson 10[<a class="reference" href="#tut10">TUT10</a>].</p>
-<p>The make system looks for <em>.target</em> files in <tt class="docutils literal"><span class="pre">support/make</span></tt> and the
-directories listed in the environment variable <tt class="docutils literal"><span class="pre">TOSMAKE_PATH</span></tt>. Each
+<tt class="docutils literal">support/make/README</tt> and in TinyOS 2 Tutorial Lesson 10[<a class="reference internal" href="#tut10">TUT10</a>].</p>
+<p>The make system looks for <em>.target</em> files in <tt class="docutils literal">support/make</tt> and the
+directories listed in the environment variable <tt class="docutils literal">TOSMAKE_PATH</tt>. Each
 of the files found contain make targets for one TinyOS platform. The
 target files usually do not contain the rules to build the binary
 files, but include the appropriate rules from a <em>.rules</em> file, located
@@ -718,26 +719,26 @@ example):</p>
 <li>Creating a <em>platformX.target</em> file that allows the make system to
 discover the new platform. This file must contain a make rule with
 the name of the platform. Further this target must depend on the
-targets given in the variable <tt class="docutils literal"><span class="pre">BUILD_DEPS</span></tt> - this variable
+targets given in the variable <tt class="docutils literal">BUILD_DEPS</tt> - this variable
 contains the remainder of targets to be build during the build
 process.</li>
 <li>Creating a <em>.rules</em> file in a sub diretory of
-<tt class="docutils literal"><span class="pre">support/make</span></tt>. Each file contain the actual target for
+<tt class="docutils literal">support/make</tt>. Each file contain the actual target for
 producing the binaries, hex files, etc. for one platform. They are
-assembled in the <tt class="docutils literal"><span class="pre">BUILD_DEPS</span></tt> variable.</li>
+assembled in the <tt class="docutils literal">BUILD_DEPS</tt> variable.</li>
 </ol>
 </blockquote>
 <p>We will cover these two files next.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id18" id="the-target-file" name="the-target-file">3.2.1 The .target file</a></h3>
-<p>As mentioned above TinyOS searches for targets in the <tt class="docutils literal"><span class="pre">support/make</span></tt>
+<div class="section" id="the-target-file">
+<h3><a class="toc-backref" href="#id18">3.2.1 The .target file</a></h3>
+<p>As mentioned above TinyOS searches for targets in the <tt class="docutils literal">support/make</tt>
 directory of the TinyOS source code and in the directories listed in
-the environment variable <tt class="docutils literal"><span class="pre">TOSMAKE_PATH</span></tt>. A <em>.target</em> file for the
+the environment variable <tt class="docutils literal">TOSMAKE_PATH</tt>. A <em>.target</em> file for the
 platform must exist in one of these locations. The <em>.target</em> usually
 only sets up variables related to this platform and provide a target
 named after the platform, this target depend on other rules to build
 the binaries. These rules are included by calling
-<em>TOSMake_include_platform</em>. As an example the <tt class="docutils literal"><span class="pre">mica2.target</span></tt> is
+<em>TOSMake_include_platform</em>. As an example the <tt class="docutils literal">mica2.target</tt> is
 listed below:</p>
 <pre class="literal-block">
 PLATFORM = mica2
@@ -753,20 +754,20 @@ mica2: $(BUILD_DEPS)
         &#64;:
 </pre>
 <p>Pay attention to the call to <em>TOSMake_include_platform,avr</em> this call
-includes <tt class="docutils literal"><span class="pre">.rules</span></tt> files in <tt class="docutils literal"><span class="pre">support/make</span></tt> or any sub directory of
-<tt class="docutils literal"><span class="pre">TOSHMAKE_PATH</span></tt> named <em>avr</em>.</p>
+includes <tt class="docutils literal">.rules</tt> files in <tt class="docutils literal">support/make</tt> or any sub directory of
+<tt class="docutils literal">TOSHMAKE_PATH</tt> named <em>avr</em>.</p>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id19" id="the-rules-file" name="the-rules-file">3.2.2 The .rules file</a></h3>
+<div class="section" id="the-rules-file">
+<h3><a class="toc-backref" href="#id19">3.2.2 The .rules file</a></h3>
 <p>The <em>.rules</em> file contain the make rules for building the target
 binary. If a MCU implementation already exists for a new platform,
 simply pointing to this <em>.rules</em> from the corresponding <em>.target</em> is
 sufficient. If not the <em>.rules</em> file must be built for a new MCU
 architecture.</p>
-<p><tt class="docutils literal"><span class="pre">TOSMake_include_platform</span></tt> expects a sub directory with a rule file
-of the form <tt class="docutils literal"><span class="pre">avr/avr.rules</span></tt>. The call also includes additional
+<p><tt class="docutils literal">TOSMake_include_platform</tt> expects a sub directory with a rule file
+of the form <tt class="docutils literal">avr/avr.rules</tt>. The call also includes additional
 <em>.rules</em> and <em>.extra</em> files present in that sub directory.  See
-<tt class="docutils literal"><span class="pre">support/make/README</span></tt> for details.</p>
+<tt class="docutils literal">support/make/README</tt> for details.</p>
 <p>For example a simplified .rules file could look like this (from
 <em>avr/avr.rules</em>):</p>
 <pre class="literal-block">
@@ -789,8 +790,8 @@ exe: builddir $(BUILD_EXTRA_DEPS) FORCE
 </div>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id20" id="the-platform" name="the-platform">4. The Platform</a></h1>
+<div class="section" id="the-platform">
+<h1><a class="toc-backref" href="#id20">4. The Platform</a></h1>
 <p>A TinyOS platform is a collection of components corresponding to a
 physical devices (a collection of drivers). A platform is constructed
 by defining which components make up the platform and by providing any
@@ -798,7 +799,7 @@ additional platform specific components. The content of a platform is
 not covered by a TEP at the time of writing and the following is based
 on the available tutorials, <em>READMEs</em> and the current consensus.</p>
 <p>The platform definitions for a <em>PlatformX</em> are located in
-<tt class="docutils literal"><span class="pre">tos/platforms/platformX</span></tt> and contain 3 major elements:</p>
+<tt class="docutils literal">tos/platforms/platformX</tt> and contain 3 major elements:</p>
 <blockquote>
 <ol class="arabic simple">
 <li>The <em>.platform</em> file containing include paths and other arguments
@@ -832,27 +833,27 @@ Platform:                           .platform
 <p>All the files we describe here must be found in a common directory
 named after the platform; we call this a platform directory. This
 directory must be found in the TinyOS tool chain search path for
-example <tt class="docutils literal"><span class="pre">tos/platforms</span></tt> (or found in <tt class="docutils literal"><span class="pre">TOSHMAKE_PATH</span></tt> see Section
+example <tt class="docutils literal">tos/platforms</tt> (or found in <tt class="docutils literal">TOSHMAKE_PATH</tt> see Section
 3.2.1). For example a platform named PlatformX could be placed in the
-directory <tt class="docutils literal"><span class="pre">tos/platforms/platformX</span></tt>.</p>
-<div class="section">
-<h2><a class="toc-backref" href="#id21" id="platform-file" name="platform-file">4.1 .platform file</a></h2>
-<p>All platform directories must carry a <tt class="docutils literal"><span class="pre">.platform</span></tt> file, this file
+directory <tt class="docutils literal">tos/platforms/platformX</tt>.</p>
+<div class="section" id="platform-file">
+<h2><a class="toc-backref" href="#id21">4.1 .platform file</a></h2>
+<p>All platform directories must carry a <tt class="docutils literal">.platform</tt> file, this file
 defines what makes up the platform. This file carries instructions for
 the make system on where to locate the drivers for each of the
 components of the platform. The definitions are read in a two step
 process: the file is read by the ncc script that passes the
-appropriate arguments to the nesC pre-processor[<a class="reference" href="#nescman">nescman</a>]. The
+appropriate arguments to the nesC pre-processor[<a class="reference internal" href="#nescman">nescman</a>]. The
 .platform file is written as a Perl script interpreted by ncc.</p>
 <p>The file is documented in form of the README file in the platforms
 directory (<em>tos/platforms</em>), and the source code of the ncc script
 found in the TinyOS distribution. Valuable information can also be
-found in [<a class="reference" href="#tep106">TEP106</a>], [<a class="reference" href="#tep109">TEP109</a>], TinyOS 2 Tutorial Lesson 10[<a class="reference" href="#tut10">TUT10</a>].</p>
+found in [<a class="reference internal" href="#tep106">TEP106</a>], [<a class="reference internal" href="#tep109">TEP109</a>], TinyOS 2 Tutorial Lesson 10[<a class="reference internal" href="#tut10">TUT10</a>].</p>
 <p>In addition to setting up include paths for nesC other arguments can
 be passed on. In particular the components to be used for the
 scheduler are selected with the '-fnesc-scheduler' command line
-argument (see [<a class="reference" href="#tep106">TEP106</a>]). The include paths are passed on using the
-'-I' command line argument covered in [<a class="reference" href="#tep109">TEP109</a>].</p>
+argument (see [<a class="reference internal" href="#tep106">TEP106</a>]). The include paths are passed on using the
+'-I' command line argument covered in [<a class="reference internal" href="#tep109">TEP109</a>].</p>
 <p>As an example, an abbreviated <em>.platform</em> file for the mica2 platform
 looks like this:</p>
 <pre class="literal-block">
@@ -879,14 +880,14 @@ push( &#64;includes, qw(
 );
 </pre>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id22" id="platformp-and-platformc" name="platformp-and-platformc">4.2 PlatformP and PlatformC</a></h2>
+<div class="section" id="platformp-and-platformc">
+<h2><a class="toc-backref" href="#id22">4.2 PlatformP and PlatformC</a></h2>
 <p>The PlatformP and PlatformC components are responsible for booting
 this platform to a usable state. In general this usually means things
 like calibrating clock and initializing I/O pins. If this platform
 requires that some devices are initialized in a particular order this
 can be implemented in a platform dependent way here. The boot process
-covered in [<a class="reference" href="#tep107">TEP107</a>].</p>
+covered in [<a class="reference internal" href="#tep107">TEP107</a>].</p>
 <p>Most hardware peripherals require an initialization procedure of some
 sort. For most peripheral devices this procedure is only required when
 the device is in use and can be left out if the device is
@@ -894,15 +895,15 @@ unused. TinyOS accomplishes this by providing a few initialization
 call backs interfaces. When a given component is included it wires an
 initialization procedure to one of these interfaces. In this way the
 procedure will only be included when the component is included, this
-process is known as auto wiring[<a class="reference" href="#tosprg">TOSPRG</a>].</p>
+process is known as auto wiring[<a class="reference internal" href="#tosprg">TOSPRG</a>].</p>
 <p>The boot sequence calls two initialization interfaces in the following
-order: <tt class="docutils literal"><span class="pre">PlatformC.Init</span></tt> and <tt class="docutils literal"><span class="pre">MainC.SoftwareInit</span></tt>.
-<tt class="docutils literal"><span class="pre">PlatformC.Init</span></tt> must take care of initializing the hardware to an
+order: <tt class="docutils literal">PlatformC.Init</tt> and <tt class="docutils literal">MainC.SoftwareInit</tt>.
+<tt class="docutils literal">PlatformC.Init</tt> must take care of initializing the hardware to an
 operable state and initialization that has hidden dependencies must
 occur here. Other components are initialized as part of
-<tt class="docutils literal"><span class="pre">SoftwareInit</span></tt> and the orderign is determined at compile
+<tt class="docutils literal">SoftwareInit</tt> and the orderign is determined at compile
 time.</p>
-<p>Common tasks in <tt class="docutils literal"><span class="pre">PlatformC.Init</span></tt> include clock calibration and IO
+<p>Common tasks in <tt class="docutils literal">PlatformC.Init</tt> include clock calibration and IO
 pins. However this component can be used to provide greater control of
 the boot process if required. Consider for example that some component
 which is initialized in SoftwareInit requires that some other
@@ -912,14 +913,14 @@ prints a message to the UART during boot. How can this order be
 ensured? One solution is to provide an additional initialization
 handle prior to SoftwareInit and wire such procedures to this
 handle. Below is an example from the Mica mote family using the
-<tt class="docutils literal"><span class="pre">MoteInit</span></tt> interface.  Components that must be initialized early in
+<tt class="docutils literal">MoteInit</tt> interface.  Components that must be initialized early in
 the boot process is wired to this interface. If greater level of
 control is required this strategy can be trivially be expanded to
 further levels of interfaces for example MoteInit1 being initialized
 prior to MoteInit2, this strategy is chosen by the MSP430
 implementation.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id23" id="platformc" name="platformc">4.2.1 PlatformC</a></h3>
+<div class="section" id="platformc">
+<h3><a class="toc-backref" href="#id23">4.2.1 PlatformC</a></h3>
 <p>Below is depicted the PlatformC component from the Mica family of platforms.</p>
 <pre class="literal-block">
 #include &quot;hardware.h&quot;
@@ -945,8 +946,8 @@ configuration PlatformC {
 }
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id24" id="platformp" name="platformp">4.2.1 PlatformP</a></h3>
+<div class="section" id="platformp">
+<h3><a class="toc-backref" href="#id24">4.2.1 PlatformP</a></h3>
 <p>Below is depicted the PlatformP component from the Mica family of platforms.</p>
 <pre class="literal-block">
 module PlatformP
@@ -973,8 +974,8 @@ implementation
 }
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id25" id="init-example-platformledsc" name="init-example-platformledsc">4.2.3 Init example: PlatformLedsC</a></h3>
+<div class="section" id="init-example-platformledsc">
+<h3><a class="toc-backref" href="#id25">4.2.3 Init example: PlatformLedsC</a></h3>
 <p>Below is an example from mica/PlatformLedsC.nc wiring to the platform
 specific <em>MoteInit</em> interface.</p>
 <pre class="literal-block">
@@ -991,8 +992,8 @@ configuration PlatformLedsC {
 </pre>
 </div>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id26" id="platform-specific-code" name="platform-specific-code">3.3 Platform Specific Code</a></h2>
+<div class="section" id="platform-specific-code">
+<h2><a class="toc-backref" href="#id26">3.3 Platform Specific Code</a></h2>
 <p>In addition to PlatformP/PlatformC the platform directory contain
 additional code that is specific to this platform. First this could be
 code that ties platform independent resources to particular instances
@@ -1001,24 +1002,24 @@ this particular platform (e.g. the clock rate of this platform). For
 example the LEDs are a an example of the first: most platform have a
 few LEDs, and the particular pin on this platform is tied to the
 platform independent implementation using PlatformLedsC.</p>
-<p>TinyOS requires that the header <tt class="docutils literal"><span class="pre">hardware.h</span></tt> is present while other
+<p>TinyOS requires that the header <tt class="docutils literal">hardware.h</tt> is present while other
 component can be named freely.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id27" id="platform-headers" name="platform-headers">4.3.1 Platform Headers</a></h3>
+<div class="section" id="platform-headers">
+<h3><a class="toc-backref" href="#id27">4.3.1 Platform Headers</a></h3>
 <p>TinyOS relies on a few C-header files being present for each
 platform. These headers are then automatically included from the
 respective parts of the TinyOS system. TinyOS expects that the
 following files are present and that certain properties are defined in
 them.</p>
-<div class="section">
-<h4><a class="toc-backref" href="#id28" id="hardware-h" name="hardware-h">hardware.h</a></h4>
-<p>The <tt class="docutils literal"><span class="pre">hardware.h</span></tt> header file is included by <tt class="docutils literal"><span class="pre">tos/system/MainC.nc</span></tt>
+<div class="section" id="hardware-h">
+<h4><a class="toc-backref" href="#id28">hardware.h</a></h4>
+<p>The <tt class="docutils literal">hardware.h</tt> header file is included by <tt class="docutils literal">tos/system/MainC.nc</tt>
 and usually in turn includes a MCU specific header file, with a few
 required macros (such as avr128hardware.h, see Section 5.1.1). The
-header is documented in TinyOS 2 Tutorial Lesson 10[<a class="reference" href="#tut10">TUT10</a>]</p>
+header is documented in TinyOS 2 Tutorial Lesson 10[<a class="reference internal" href="#tut10">TUT10</a>]</p>
 <p>In addition the hardware.h file can set flags that are not related to
 the hardware in general, but to this platform (e.g. clock rate). Below
-is a snippet from <tt class="docutils literal"><span class="pre">mica2/hardware.h</span></tt></p>
+is a snippet from <tt class="docutils literal">mica2/hardware.h</tt></p>
 <pre class="literal-block">
 #ifndef MHZ
 /* Clock rate is ~8MHz except if specified by user
@@ -1034,17 +1035,17 @@ enum {
 ...
 </pre>
 </div>
-<div class="section">
-<h4><a class="toc-backref" href="#id29" id="platform-message-h" name="platform-message-h">platform_message.h</a></h4>
-<p>As part of the TinyOS 2 message buffer abstraction[<a class="reference" href="#tep111">TEP111</a>], TinyOS
+<div class="section" id="platform-message-h">
+<h4><a class="toc-backref" href="#id29">platform_message.h</a></h4>
+<p>As part of the TinyOS 2 message buffer abstraction[<a class="reference internal" href="#tep111">TEP111</a>], TinyOS
 includes the header <em>platform_message.h</em> from the internal TinyOS
 header <em>message.h</em>. This header is only strictly required for
 platforms wishing to use the message_t abstraction - this is not
 described further in this TEP, but is used widely throughout TinyOS
-(See [<a class="reference" href="#tep111">TEP111</a>] for details). The is expected to define the structures:
+(See [<a class="reference internal" href="#tep111">TEP111</a>] for details). The is expected to define the structures:
 <em>message_header_t</em>, <em>message_footer_t</em>, and <em>message_metadata_t</em> which
 are used to fill out the generic <em>message_t</em> structure.</p>
-<p>Below is an example from the <tt class="docutils literal"><span class="pre">mica2</span></tt> <em>platform_message.h</em></p>
+<p>Below is an example from the <tt class="docutils literal">mica2</tt> <em>platform_message.h</em></p>
 <pre class="literal-block">
 typedef union message_header {
   cc1000_header_t cc1k;
@@ -1061,13 +1062,13 @@ typedef union message_metadata {
 </pre>
 </div>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id30" id="platform-specific-components" name="platform-specific-components">4.3.2 Platform Specific Components</a></h3>
+<div class="section" id="platform-specific-components">
+<h3><a class="toc-backref" href="#id30">4.3.2 Platform Specific Components</a></h3>
 <p>The code for platform dependent features also resides in the platform
 directory. If the code can be tied to a particular chip it can be
-placed in a separate directory below the <tt class="docutils literal"><span class="pre">chips</span></tt> directory. As an
+placed in a separate directory below the <tt class="docutils literal">chips</tt> directory. As an
 example the following section of
-<tt class="docutils literal"><span class="pre">micaz/chips/cc2420/HplCC2420PinsC.nc</span></tt> ties specific pins to general
+<tt class="docutils literal">micaz/chips/cc2420/HplCC2420PinsC.nc</tt> ties specific pins to general
 names on the MicaZ platform.</p>
 <pre class="literal-block">
 configuration HplCC2420PinsC {
@@ -1099,27 +1100,27 @@ implementation {
 </div>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id31" id="id2" name="id2">5. The chips</a></h1>
+<div class="section" id="id2">
+<h1><a class="toc-backref" href="#id31">5. The chips</a></h1>
 <p>The functionality of each chip is provided by a set of one or more
 interfaces and one or more components, in traditional terms this makes
 up a driver. Each chip is assigned a sub directory in the the
-<tt class="docutils literal"><span class="pre">tos/chips</span></tt> directory. All code that define the functionality of a
+<tt class="docutils literal">tos/chips</tt> directory. All code that define the functionality of a
 chip is located here regardless of the type of chip (MCU, radio,
 etc.). In addition MCU's group the code related to separate sub
-systems into further sub directories (e.g. <tt class="docutils literal"><span class="pre">tos/chips/atm128/timer</span></tt>).</p>
+systems into further sub directories (e.g. <tt class="docutils literal">tos/chips/atm128/timer</tt>).</p>
 <p>In this section we will go trough some of the peripherals commonly
 built into MCUs, but we will not go trough other chips such as sensors
 or radio.</p>
-<div class="section">
-<h2><a class="toc-backref" href="#id32" id="mcu-internals" name="mcu-internals">5.1 MCU Internals</a></h2>
+<div class="section" id="mcu-internals">
+<h2><a class="toc-backref" href="#id32">5.1 MCU Internals</a></h2>
 <p>Apart from the drivers for each of the peripheral units, a few
 additional definitions are required for the internals of the MCU. This
 includes i) atomic begin/end and ii) low power mode. The first is
 defined in the header <em>hardware.h</em> and the latter component
 <em>MCUSleepC</em>.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id33" id="mcuxardware-h" name="mcuxardware-h">5.1.1 mcuXardware.h</a></h3>
+<div class="section" id="mcuxardware-h">
+<h3><a class="toc-backref" href="#id33">5.1.1 mcuXardware.h</a></h3>
 <p>Each architecture defines a set of required and useful macros in a
 header filed named after the architecture (for example
 <em>atm128hardware.h</em> for ATMega128). This header is then in turn
@@ -1167,8 +1168,8 @@ __nesc_atomic_end(__nesc_atomic_t original_SREG) &#64;spontaneous() {
 }
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id34" id="mcusleepc" name="mcusleepc">5.1.2 MCUSleepC</a></h3>
+<div class="section" id="mcusleepc">
+<h3><a class="toc-backref" href="#id34">5.1.2 MCUSleepC</a></h3>
 <p>TinyOS manages the power state of the MCU through a few
 interfaces. These interfaces allow components to signal how and when
 this platform should enter low power mode. Each new MCU in TinyOS must
@@ -1202,12 +1203,12 @@ module McuSleepC {
 </pre>
 </div>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id35" id="generalio" name="generalio">5.2 GeneralIO</a></h2>
+<div class="section" id="generalio">
+<h2><a class="toc-backref" href="#id35">5.2 GeneralIO</a></h2>
 <p>Virtually all micro controllers feature a set of input output (I/O)
 pins.  The features of these pins is often configurable and often some
 pins only support a subset of features. The HIL level interface for
-TinyOS is described in [<a class="reference" href="#tep117">TEP117</a>] and uses two interface to describe
+TinyOS is described in [<a class="reference internal" href="#tep117">TEP117</a>] and uses two interface to describe
 general purpose I/O pins common to many MCUs:</p>
 <ul class="simple">
 <li><strong>GeneralIO</strong>: Digital input/output. The GeneralIO interface
@@ -1228,7 +1229,7 @@ triggering on one edge is not supported.</li>
 the GeneralIO and GpioInterrupt interface to represent the HPL level
 (atm128 for example) and others platforms define their own interface
 to capture the entire functionality (msp430, pxa27x for example).</p>
-<p>[<a class="reference" href="#tep117">TEP117</a>] states that each platform must provide the general IO pins of
+<p>[<a class="reference internal" href="#tep117">TEP117</a>] states that each platform must provide the general IO pins of
 that platform through the <em>GeneralIO</em> interface and should do this
 though the component <em>GeneralIOC</em>. It is however not clear how the
 entire set of pins should be provided - this could be in the form of a
@@ -1236,8 +1237,8 @@ list of pins, group of pins, a generic component, etc.</p>
 <p>The pin implementations are usually found in the <em>pins</em> sub directory
 for a particular MCU (e.g. <em>msp430/pins</em> for MSP430 pin
 implementation).</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id36" id="example-msp430" name="example-msp430">5.2.1 Example MSP430</a></h3>
+<div class="section" id="example-msp430">
+<h3><a class="toc-backref" href="#id36">5.2.1 Example MSP430</a></h3>
 <p>The MSP430 implementation builds the platform independent pin
 implementation as a stack of components starting with a platform
 specific component for each pin.</p>
@@ -1255,10 +1256,10 @@ specific component for each pin.</p>
 | HplMsp430GeneralIOP |
 +---------------------+
 </pre>
-<p>At the bottom the component <tt class="docutils literal"><span class="pre">HplMsp430GeneralIOP</span></tt> provides a general
-implementation of one Msp430 pin using the <tt class="docutils literal"><span class="pre">HplMsp430GeneralIO</span></tt>
-interface. The generic component <tt class="docutils literal"><span class="pre">HplMsp430GeneralIOP</span></tt> is then
-instantiated for each pin by <tt class="docutils literal"><span class="pre">HplMsp430GeneralIOC</span></tt>.</p>
+<p>At the bottom the component <tt class="docutils literal">HplMsp430GeneralIOP</tt> provides a general
+implementation of one Msp430 pin using the <tt class="docutils literal">HplMsp430GeneralIO</tt>
+interface. The generic component <tt class="docutils literal">HplMsp430GeneralIOP</tt> is then
+instantiated for each pin by <tt class="docutils literal">HplMsp430GeneralIOC</tt>.</p>
 <pre class="literal-block">
 interface HplMsp430GeneralIO {
   async command void set();
@@ -1320,8 +1321,8 @@ generic module Msp430GpioC() {
 </pre>
 </div>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id37" id="leds" name="leds">5.3 LEDs</a></h2>
+<div class="section" id="leds">
+<h2><a class="toc-backref" href="#id37">5.3 LEDs</a></h2>
 <p>Having a few leds on a platform is quite common and TinyOS supports
 three leds in a platform independent manner. Three leds are provided
 through the <em>LedsC</em> component regardless of the amount of leds
@@ -1329,7 +1330,7 @@ available on the platform. The LED implementation is not covered by a
 TEP at the time of writing, but the general consensus between most
 platforms seems to be to provide access to 3 LEDs through the
 component <em>PlatformLedsC</em>. This component is then used by <em>LedC</em> and
-<em>LedP</em> (from <tt class="docutils literal"><span class="pre">tos/system</span></tt>) to provide a platform independent Led
+<em>LedP</em> (from <tt class="docutils literal">tos/system</tt>) to provide a platform independent Led
 interface.</p>
 <p>The PlatformLedsC implementation is found in the platform directory of
 each platform (e.g. <em>tos/platforms/mica2</em> for mica2). The consensus is
@@ -1344,8 +1345,8 @@ an initialization in PlatformP - this way when LedC is included in
 an application it will be initialized when PlatformP call this
 interface</li>
 </ul>
-<div class="section">
-<h3><a class="toc-backref" href="#id38" id="example-mica2dot" name="example-mica2dot">5.3.1 Example Mica2dot</a></h3>
+<div class="section" id="example-mica2dot">
+<h3><a class="toc-backref" href="#id38">5.3.1 Example Mica2dot</a></h3>
 <pre class="literal-block">
 configuration PlatformLedsC
 {
@@ -1367,8 +1368,8 @@ implementation  {
 }
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id39" id="leds-implementation-discussion" name="leds-implementation-discussion">5.3.2 LEDs implementation discussion</a></h3>
+<div class="section" id="leds-implementation-discussion">
+<h3><a class="toc-backref" href="#id39">5.3.2 LEDs implementation discussion</a></h3>
 <p>The Led interface described above is not specified in a TEP, though at
 the time of writing most platforms seem to follow this pattern. Not
 being covered by a TEP leads to a few uncertainties:</p>
@@ -1397,9 +1398,9 @@ program requiring say 4 leds could be compiled if 4 leds are available.</li>
 </ul>
 </div>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id40" id="timers" name="timers">5.4 Timers</a></h2>
-<p>The timer subsystem in TinyOS 2 is described in [<a class="reference" href="#tep102">TEP102</a>] the TEP
+<div class="section" id="timers">
+<h2><a class="toc-backref" href="#id40">5.4 Timers</a></h2>
+<p>The timer subsystem in TinyOS 2 is described in [<a class="reference internal" href="#tep102">TEP102</a>] the TEP
 specifies interfaces at HAL and HIL levels that a platform must adhere
 to. The timer does not cover the possible design choices at the HPL
 level. The timers defined in this TEP are described in terms of
@@ -1412,27 +1413,27 @@ device independent manner.</p>
 <p>The functionality commonly seen in MCU timer units is often split in 3
 parts: control, timer/counter, capture/compare(trigger). Timer control
 in is inherently platform specific and is not covered by a TEP. The
-timer [<a class="reference" href="#tep102">TEP102</a>] covers timer/counter while capture/compare is covered
-by [<a class="reference" href="#tep117">TEP117</a>]. From the TEPs it is not clear how capture/compare and
+timer [<a class="reference internal" href="#tep102">TEP102</a>] covers timer/counter while capture/compare is covered
+by [<a class="reference internal" href="#tep117">TEP117</a>]. From the TEPs it is not clear how capture/compare and
 timer/counter relate to each other even though they are likely to
 refer to the same time base. The calibration of the system clock is
 often connected with the timer system and lives in the timer
-directory, but it is not covered in [<a class="reference" href="#tep102">TEP102</a>].</p>
+directory, but it is not covered in [<a class="reference internal" href="#tep102">TEP102</a>].</p>
 <p>The timer implementation for a given MCU is placed in the <em>timer</em> sub
 directory of the directory for a given MCU
 (e.g. <em>tos/chips/avr/timer</em>). Often clock initialization components
 are placed in the same directory, but these are not covered by the
 TEPs.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id41" id="timer-layers" name="timer-layers">5.4.1 Timer Layers</a></h3>
-<p><a class="reference" href="#tep117">TEP117</a> follows the 3 layer architecture and separates the platform
+<div class="section" id="timer-layers">
+<h3><a class="toc-backref" href="#id41">5.4.1 Timer Layers</a></h3>
+<p><a class="reference internal" href="#tep117">TEP117</a> follows the 3 layer architecture and separates the platform
 dependent and independent abstractions. It poses not restrictions on
 the HPL layer, but provides a suggested HAL layer and requirements at
 the HIL level. It defines a set of interfaces and precisions that are
 used at the HAL and HIL levels.</p>
 <p>The common features of a timer are separated into a set of interfaces,
 corresponding roughly to common features in MCU timer units. The
-interfaces covered by the [<a class="reference" href="#tep102">TEP102</a>] are (capture from [<a class="reference" href="#tep117">TEP117</a>]):</p>
+interfaces covered by the [<a class="reference internal" href="#tep102">TEP102</a>] are (capture from [<a class="reference internal" href="#tep117">TEP117</a>]):</p>
 <ul class="simple">
 <li><strong>BusyWait&lt;precision_tag,size_type&gt;</strong> Short synchronous delays</li>
 <li><strong>Counter&lt;precision_tag, size_type&gt;</strong> Current time, and overflow events</li>
@@ -1441,7 +1442,7 @@ interfaces covered by the [<a class="reference" href="#tep102">TEP102</a>] are (
 <li><strong>LocalTime&lt;precision_tag&gt;</strong> 32 bit current time without overflow</li>
 <li><strong>GpioCapture</strong> 16 bit time value on an external event (precision unspecified)</li>
 </ul>
-<p>The precisions defined in [<a class="reference" href="#tep117">TEP117</a>] are defined as &quot;binary&quot; meaning
+<p>The precisions defined in [<a class="reference internal" href="#tep117">TEP117</a>] are defined as &quot;binary&quot; meaning
 1024 parts of a second. Platforms must provide these precisions (if
 possible) regardless of the underlying system frequency (i.e. this
 could be a power of 10).</p>
@@ -1450,8 +1451,8 @@ could be a power of 10).</p>
 <li><strong>TMicro</strong> 1048576 Hz (period 0.95 us)</li>
 <li><strong>T32khz</strong> 32.768 kHz (period 30.5 us)</li>
 </ul>
-<div class="section">
-<h4><a class="toc-backref" href="#id42" id="hpl" name="hpl">HPL</a></h4>
+<div class="section" id="hpl">
+<h4><a class="toc-backref" href="#id42">HPL</a></h4>
 <p>The features of the underlying hardware timers are generally exposed
 using one or more hardware specific interfaces. Many MCU provide a
 rich a set of different timer units varying in timer width, frequency
@@ -1465,8 +1466,8 @@ timer unit has a single counter and a few compare registers that
 generate interrupts. The counter and compare registers often translate
 relative straightforward to Counter and Alarm interfaces.</p>
 </div>
-<div class="section">
-<h4><a class="toc-backref" href="#id43" id="hal" name="hal">HAL</a></h4>
+<div class="section" id="hal">
+<h4><a class="toc-backref" href="#id43">HAL</a></h4>
 <p>Each platform should expose a hardware timer of precision P and width W
 as Counter${P}${W}C, Alarm${P}${W}C(). For example an 8 bit, 32.768 kHz
 timer should be exposed as Counter32khz8C and Alarm32khz8C</p>
@@ -1476,8 +1477,8 @@ registers. Alarm is a generic component and each instantiation must
 provide an independent alarm allocating more Alarm components than
 available compare register should provide a compile time error.</p>
 </div>
-<div class="section">
-<h4><a class="toc-backref" href="#id44" id="hil" name="hil">HIL</a></h4>
+<div class="section" id="hil">
+<h4><a class="toc-backref" href="#id44">HIL</a></h4>
 <p>Each platform must expose the following components that provide
 specific width and precision that are guaranteed to exist on TEP
 compliant platforms.</p>
@@ -1489,8 +1490,8 @@ compliant platforms.</p>
 </blockquote>
 </div>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id45" id="timer-implementation" name="timer-implementation">5.4.2 Timer Implementation</a></h3>
+<div class="section" id="timer-implementation">
+<h3><a class="toc-backref" href="#id45">5.4.2 Timer Implementation</a></h3>
 <p>Implementing the timers for TinyOS in short consists of utilizing the
 available HW timer features to provide TinyOS style timers
 interfaces. In general the approach taken by existing platforms is to
@@ -1504,17 +1505,17 @@ control features this could be provided with the timer interfaces or
 kept as a separate interface. In the following we will go through a
 few examples and point out their differences.</p>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id46" id="example-atmega128l" name="example-atmega128l">5.4.3 Example: ATMega128l</a></h3>
+<div class="section" id="example-atmega128l">
+<h3><a class="toc-backref" href="#id46">5.4.3 Example: ATMega128l</a></h3>
 <p>The ATMega128l implementation (atm128) exports the system timers one
 component each. Each component provide 4 interfaces - one for each of
 the functions of the unit: timer, capture, compare and control. The
 timer, capture, and compare interfaces are generic based on the width
 (either 8 or 16 bit) while two separate control interfaces are
 provided.</p>
-<p>Depicted below is a diagram of how <tt class="docutils literal"><span class="pre">HplAtm128Timer1C</span></tt> could be stacked
+<p>Depicted below is a diagram of how <tt class="docutils literal">HplAtm128Timer1C</tt> could be stacked
 to provide platform independent interfaces (not shown are
-<tt class="docutils literal"><span class="pre">HplAtm128Timer0Async</span></tt>, <tt class="docutils literal"><span class="pre">HplAtm128Timer2</span></tt>, <tt class="docutils literal"><span class="pre">HplAtm128Timer3</span></tt>):</p>
+<tt class="docutils literal">HplAtm128Timer0Async</tt>, <tt class="docutils literal">HplAtm128Timer2</tt>, <tt class="docutils literal">HplAtm128Timer3</tt>):</p>
 <pre class="literal-block">
           +------------------------------------------------+
           |              HplAtm128Timer1C                  |
@@ -1530,7 +1531,7 @@ HplAtm128Capture|     HplAtm128Timer| HplAtm128Compare|
                 |                       Alarm|
 </pre>
 <p>The hardware features is exported using 3 interfaces:
-<tt class="docutils literal"><span class="pre">HplAtm128Timer</span></tt>, <tt class="docutils literal"><span class="pre">HplAtm128Compare</span></tt> and <tt class="docutils literal"><span class="pre">HplAtm128Capture</span></tt>.</p>
+<tt class="docutils literal">HplAtm128Timer</tt>, <tt class="docutils literal">HplAtm128Compare</tt> and <tt class="docutils literal">HplAtm128Capture</tt>.</p>
 <pre class="literal-block">
 interface HplAtm128Timer&lt;timer_size&gt;
 {
@@ -1606,14 +1607,14 @@ implementation
 ...
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id47" id="id3" name="id3">5.4.4 Example: MSP430</a></h3>
+<div class="section" id="id3">
+<h3><a class="toc-backref" href="#id47">5.4.4 Example: MSP430</a></h3>
 <p>The MSP430 features two very similar (but not identical) timers. Both
 timers are provided through the same interfaces in a way similar to
 ATMega128l: 'Msp430Timer', 'Msp430Capture' 'Msp430Compare',
 'Msp430TimerControl'. All timer interfaces (for both timers) are
 accessed through the component Msp430TimerC.</p>
-<p>The <tt class="docutils literal"><span class="pre">Msp430TimerControl</span></tt> is show below. It is slightly different
+<p>The <tt class="docutils literal">Msp430TimerControl</tt> is show below. It is slightly different
 than the ATMega equivalent - notice that 'setControl' accepts a struct
 with configuration parameters instead of setting these with a command
 each.</p>
@@ -1664,8 +1665,8 @@ implementation
 ...
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id48" id="example-pxa27x" name="example-pxa27x">5.4.5 Example: PXA27x</a></h3>
+<div class="section" id="example-pxa27x">
+<h3><a class="toc-backref" href="#id48">5.4.5 Example: PXA27x</a></h3>
 <p>The PXA27x (XScale) platform provides a component for each of the
 timers classes on the system. Each component provides a few interfaces
 that exposes all features of that unit. Each interface combines timer
@@ -1725,12 +1726,12 @@ configuration HalPXA27xOSTimerMapC {
  ...
 </pre>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id49" id="timer-discussion" name="timer-discussion">5.4.6 Timer Discussion</a></h3>
+<div class="section" id="timer-discussion">
+<h3><a class="toc-backref" href="#id49">5.4.6 Timer Discussion</a></h3>
 <p>While the TEP is clear on many points there are few that are left up
 to the implementer.  The relation between timers and capture events is
-unclear and covered in two TEPs. Capture refers to timers[<a class="reference" href="#tep102">TEP102</a>] but
-the reverse is not clear[<a class="reference" href="#tep102">TEP102</a>]. This has a few implications for the
+unclear and covered in two TEPs. Capture refers to timers[<a class="reference internal" href="#tep102">TEP102</a>] but
+the reverse is not clear[<a class="reference internal" href="#tep102">TEP102</a>]. This has a few implications for the
 timer/capture relationship:</p>
 <ul class="simple">
 <li>Many devices feature multiple timers of the same width and
@@ -1744,8 +1745,8 @@ a 32 bit interface. However this is not the case for capture events.</li>
 </ul>
 </div>
 </div>
-<div class="section">
-<h2><a class="toc-backref" href="#id50" id="i-o-buses-uart-spi-i2c" name="i-o-buses-uart-spi-i2c">5.5 I/O buses (UART, SPI, I2C)</a></h2>
+<div class="section" id="i-o-buses-uart-spi-i2c">
+<h2><a class="toc-backref" href="#id50">5.5 I/O buses (UART, SPI, I2C)</a></h2>
 <p>Most modern microprocessors provide a selection of standard I/O bus
 units such as serial (UART or USART), I2C, SPI, etc. The drivers for
 the available buses are usually put in a sub directory for the MCU
@@ -1753,18 +1754,18 @@ the available buses are usually put in a sub directory for the MCU
 <p>There are a few TEP that cover different buses in TinyOS, and low
 level serial communication:</p>
 <ul class="simple">
-<li><a class="reference" href="#tep113">TEP113</a> Serial Communication: Serial</li>
-<li><a class="reference" href="#tep117">TEP117</a> Low-Level I/O: Serial, SPI, I2C</li>
+<li><a class="reference internal" href="#tep113">TEP113</a> Serial Communication: Serial</li>
+<li><a class="reference internal" href="#tep117">TEP117</a> Low-Level I/O: Serial, SPI, I2C</li>
 </ul>
 <p>On some hardware platforms a single I/O unit is shared among a number
 of buses. The MSP430 for example implements SPI, I2C and USART in a
 single USART unit that can only operate in one mode at a time. In such
 cases the single hardware unit must be shared among the drivers.</p>
-<div class="section">
-<h3><a class="toc-backref" href="#id51" id="serial-communication" name="serial-communication">5.5.1 Serial Communication</a></h3>
+<div class="section" id="serial-communication">
+<h3><a class="toc-backref" href="#id51">5.5.1 Serial Communication</a></h3>
 <p>Serial communication in TinyOS 2.x is implemented as a serial
 communications stack with a UART or USART at the bottom. The bottom
-layer is covered in [<a class="reference" href="#tep113">TEP113</a>] and [<a class="reference" href="#tep117">TEP117</a>]. TEP117 states that each
+layer is covered in [<a class="reference internal" href="#tep113">TEP113</a>] and [<a class="reference internal" href="#tep117">TEP117</a>]. TEP117 states that each
 platform must provide access to a serial port through the
 'SerialByteComm' interface from the component UartC. However UartC is
 not provided by any platforms at the time of writing. There seems to
@@ -1773,17 +1774,17 @@ be a consensus to build the component 'PlatformSerialC' providing the
 placed in the platform directory (e.g. <em>tos/platforms/mica2</em> for
 mica2). The serial stack is built upon 'PlatformSerialC' and this
 component will be required to take advantage of the serial stack.</p>
-<p>[<a class="reference" href="#tep117">TEP117</a>] defines 'UartStream' and 'UartByte' to access the a UART
+<p>[<a class="reference internal" href="#tep117">TEP117</a>] defines 'UartStream' and 'UartByte' to access the a UART
 multiple bytes at a time and one byte at a time (synchronously), while
-[<a class="reference" href="#tep113">TEP113</a>] defines 'UartByte' to send and receive one byte at a time
+[<a class="reference internal" href="#tep113">TEP113</a>] defines 'UartByte' to send and receive one byte at a time
 (asynchronously).</p>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id52" id="i2c-spi" name="i2c-spi">5.5.2 I2C, SPI</a></h3>
+<div class="section" id="i2c-spi">
+<h3><a class="toc-backref" href="#id52">5.5.2 I2C, SPI</a></h3>
 <p>SPI and I2C buses are provided through straightforward interfaces that
 match the functionality of the buses closely.</p>
-<div class="section">
-<h4><a class="toc-backref" href="#id53" id="spibyte-spipacket" name="spibyte-spipacket">SpiByte, SpiPacket</a></h4>
+<div class="section" id="spibyte-spipacket">
+<h4><a class="toc-backref" href="#id53">SpiByte, SpiPacket</a></h4>
 <pre class="literal-block">
 interface SpiByte {
   async command uint8_t write( uint8_t tx );
@@ -1797,8 +1798,8 @@ interface SpiPacket {
 }
 </pre>
 </div>
-<div class="section">
-<h4><a class="toc-backref" href="#id54" id="i2cpacket" name="i2cpacket">I2CPacket</a></h4>
+<div class="section" id="i2cpacket">
+<h4><a class="toc-backref" href="#id54">I2CPacket</a></h4>
 <pre class="literal-block">
 interface I2CPacket&lt;addr_size&gt; {
   async command error_t read(i2c_flags_t flags, uint16_t addr,
@@ -1813,8 +1814,8 @@ interface I2CPacket&lt;addr_size&gt; {
 </pre>
 </div>
 </div>
-<div class="section">
-<h3><a class="toc-backref" href="#id55" id="example" name="example">5.5.3 Example</a></h3>
+<div class="section" id="example">
+<h3><a class="toc-backref" href="#id55">5.5.3 Example</a></h3>
 <dl class="docutils">
 <dt>..ATMega128</dt>
 <dd>-&gt; does not provide SerialByteComm</dd>
@@ -1827,131 +1828,131 @@ Msp430Uart0C
 -&gt; Sender videre til HplMsp430Usart1C-&gt;HplMsp430Usart1P</dd>
 <dt>..PXA27</dt>
 <dd>Parametriseret m. HplPXA27xUARTP (Init &amp;&amp; HplPXA27xUART)
--&gt; init sÊtter en masse registre og enabler interrupt
+-&gt; init sætter en masse registre og enabler interrupt
 HalPXA27xSerialP: HplPXA27xUART, Init, noget DMA noget</dd>
 </dl>
 </div>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id56" id="authors" name="authors">6. Authors</a></h1>
+<div class="section" id="authors">
+<h1><a class="toc-backref" href="#id56">6. Authors</a></h1>
 <div class="line-block">
 <div class="line">Martin Leoold</div>
 <div class="line">University of Copenhagen, Dept. of Computer Science</div>
 <div class="line">Universitetsparken 1</div>
-<div class="line">DK-2100 K¯benhavn ÿ</div>
+<div class="line">DK-2100 København Ø</div>
 <div class="line">Denmark</div>
 <div class="line"><br /></div>
 <div class="line">Phone +45 3532 1464</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:leopold&#64;diku.dk">leopold&#64;diku.dk</a></div>
+<div class="line">email - <a class="reference external" href="mailto:leopold&#64;diku.dk">leopold&#64;diku.dk</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a class="toc-backref" href="#id57" id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a class="toc-backref" href="#id57">7. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep1">[TEP1]</a></td><td>TEP 1: TEP Structure and Keywords
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep1.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep1.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP1]</td><td>TEP 1: TEP Structure and Keywords
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep1.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep1.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep2">[TEP2]</a></td><td>TEP 2: Hardware Abstraction Architecture
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep2.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep2.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP2]</td><td>TEP 2: Hardware Abstraction Architecture
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep2.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep2.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep3">[TEP3]</a></td><td>TEP 3: Coding Standard
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep3.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep3.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP3]</td><td>TEP 3: Coding Standard
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep3.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep3.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep102" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep102">[TEP102]</a></td><td>TEP 102: Timers
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep102.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep102.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP102]</td><td>TEP 102: Timers
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep102.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep102.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep106" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep106">[TEP106]</a></td><td>TEP 106: Schedulers and Tasks
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep106.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep106.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP106]</td><td>TEP 106: Schedulers and Tasks
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep106.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep106.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep107" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep107">[TEP107]</a></td><td>TEP 107: TinyOS 2.x Boot Sequence
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep107.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep107.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP107]</td><td>TEP 107: TinyOS 2.x Boot Sequence
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep107.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep107.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep109" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep109">[TEP109]</a></td><td>TEP 109: Sensors and Sensor Boards
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep109.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep109.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP109]</td><td>TEP 109: Sensors and Sensor Boards
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep109.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep109.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep111" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep111">[TEP111]</a></td><td>TEP 111: message_t
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep111.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep111.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP111]</td><td>TEP 111: message_t
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep111.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep111.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep113" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep113">[TEP113]</a></td><td>TEP 113: Serial Communication
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep113.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep113.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP113]</td><td>TEP 113: Serial Communication
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep113.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep113.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep117" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep117">[TEP117]</a></td><td>TEP 117: Low-Level I/O
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep117.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep117.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP117]</td><td>TEP 117: Low-Level I/O
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep117.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep117.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep121" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep121">[TEP121]</a></td><td>TEP 121: Towards TinyOS for 8051
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep121.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep121.html</a>&gt;</td></tr>
+<tr><td class="label">[TEP121]</td><td>TEP 121: Towards TinyOS for 8051
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tep121.html">http://www.tinyos.net/tinyos-2.x/doc/html/tep121.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tosprg" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tosprg">[TOSPRG]</a></td><td>Philip Levis: TinyOS Programming
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/pdf/tinyos-programming.pdf">http://www.tinyos.net/tinyos-2.x/doc/pdf/tinyos-programming.pdf</a>&gt;</td></tr>
+<tr><td class="label">[TOSPRG]</td><td>Philip Levis: TinyOS Programming
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/pdf/tinyos-programming.pdf">http://www.tinyos.net/tinyos-2.x/doc/pdf/tinyos-programming.pdf</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tos2-0view" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tos2-0view">[tos2.0view]</a></td><td>Philip Levis. &quot;TinyOS 2.0 Overview&quot; <em>Feb 8 2006</em>
-&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/overview.html">http://www.tinyos.net/tinyos-2.x/doc/html/overview.html</a>&gt;</td></tr>
+<tr><td class="label">[tos2.0view]</td><td>Philip Levis. &quot;TinyOS 2.0 Overview&quot; <em>Feb 8 2006</em>
+&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/overview.html">http://www.tinyos.net/tinyos-2.x/doc/html/overview.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="nescman" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="nescman">[nescman]</a></td><td>David Gay, Philip Levis, David Culler, Eric Brewer. &quot;NesC 1.2 Language Reference Manual&quot; <em>August 2005</em></td></tr>
+<tr><td class="label">[nescman]</td><td>David Gay, Philip Levis, David Culler, Eric Brewer. &quot;NesC 1.2 Language Reference Manual&quot; <em>August 2005</em></td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tut10" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tut10">[TUT10]</a></td><td><dl class="first docutils">
+<tr><td class="label">[TUT10]</td><td><dl class="first docutils">
 <dt>TinyOS 2 Tutorial Lesson 10</dt>
-<dd>&lt;<a class="reference" href="http://www.tinyos.net/tinyos-2.x/doc/html/tutorial/lesson10.html">http://www.tinyos.net/tinyos-2.x/doc/html/tutorial/lesson10.html</a>&gt;</dd>
+<dd>&lt;<a class="reference external" href="http://www.tinyos.net/tinyos-2.x/doc/html/tutorial/lesson10.html">http://www.tinyos.net/tinyos-2.x/doc/html/tutorial/lesson10.html</a>&gt;</dd>
 </dl>
 <p class="last">LocalWords:  TinyOS TEP TEPs nesC</p>
 </td></tr>

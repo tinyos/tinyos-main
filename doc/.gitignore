@@ -1,0 +1,6 @@
+nesdoc
+pdf/*.tex
+pdf/*.aux
+pdf/*.log
+pdf/*.out
+pdf/*.toc

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>TinyOS 2.x Boot Sequence</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.15 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,13 +306,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents the structure and implementation of the mote
 boot sequence in TinyOS 2.x.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>TinyOS has a set of calling conventions and semantics in its boot
 sequence. Earlier versions of TinyOS used an interface named
 &quot;StdControl&quot; to take care of system initialization and starting
@@ -325,8 +326,8 @@ initialization, one for starting and stopping components, and one for
 notification that the mote has booted. This memo describes the TinyOS
 boot sequence and reasons for its semantics.</p>
 </div>
-<div class="section">
-<h1><a id="tinyos-1-x-boot-sequence" name="tinyos-1-x-boot-sequence">2. TinyOS 1.x Boot Sequence</a></h1>
+<div class="section" id="tinyos-1-x-boot-sequence">
+<h1>2. TinyOS 1.x Boot Sequence</h1>
 <p>The TinyOS 1.x boot sequence is uniform across most mote platforms
 (TOSSIM has a very different boot sequence, as it is a PC
 program). The module RealMain implements main(), and has the following
@@ -381,8 +382,8 @@ start/stop model. In this case, some components can't operate properly
 until the radio starts, but main has no mechanism for waiting for the
 radio start completion event.</p>
 </div>
-<div class="section">
-<h1><a id="tinyos-2-x-boot-interfaces" name="tinyos-2-x-boot-interfaces">3. TinyOS 2.x Boot Interfaces</a></h1>
+<div class="section" id="tinyos-2-x-boot-interfaces">
+<h1>3. TinyOS 2.x Boot Interfaces</h1>
 <p>The TinyOS 2.x boot sequence uses three interfaces:</p>
 <blockquote>
 <ul class="simple">
@@ -407,7 +408,7 @@ events, then it must explicitly wait for them (e.g.,
 with a spin loop), MUST NOT return until complete. Otherwise the system
 may start before initialization is complete.</p>
 <p>The Scheduler interface is for initializing and controlling task
-execution. It is detailed in TEP 106 <a class="footnote-reference" href="#id7" id="id1" name="id1">[1]</a>.</p>
+execution. It is detailed in TEP 106 <a class="footnote-reference" href="#id7" id="id1">[1]</a>.</p>
 <p>The Boot interface has a single event, booted(), which the boot
 sequence signals when it has completed:</p>
 <pre class="literal-block">
@@ -416,8 +417,8 @@ interface Boot {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="id2" name="id2">4. TinyOS 2.x Boot Sequence</a></h1>
+<div class="section" id="id2">
+<h1>4. TinyOS 2.x Boot Sequence</h1>
 <p>The module RealMainP implements the standard TinyOS 2.x boot sequence.
 The configuration MainC wires some of RealMainP's interfaces to
 components that implement standard abstractions and exports the others
@@ -452,8 +453,8 @@ implementation {
   default event void Boot.booted() { }
 }
 </pre>
-<div class="section">
-<h2><a id="initialization" name="initialization">4.1 Initialization</a></h2>
+<div class="section" id="initialization">
+<h2>4.1 Initialization</h2>
 <p>The first step in the boot sequence is initializing the system:</p>
 <pre class="literal-block">
 atomic {
@@ -471,10 +472,10 @@ operations besides those which are absolutely necessary for further code,
 such as scheduler initialization, to execute.
 Examples of platform_bootstrap() operations are configuring the memory
 system and setting the processor mode. Generally, platform_bootstrap()
-is an empty function. TinyOS's top-level include file, <tt class="docutils literal"><span class="pre">tos.h</span></tt>, includes
+is an empty function. TinyOS's top-level include file, <tt class="docutils literal">tos.h</tt>, includes
 a default implementation of this function which does nothing. If a platform
 needs to replace the default, it SHOULD put it in a platform's
-<tt class="docutils literal"><span class="pre">platform.h</span></tt> file as a #define. The implementation of <tt class="docutils literal"><span class="pre">tos.h</span></tt>
+<tt class="docutils literal">platform.h</tt> file as a #define. The implementation of <tt class="docutils literal">tos.h</tt>
 supports this:</p>
 <pre class="literal-block">
 /* This platform_bootstrap macro exists in accordance with TEP
@@ -530,7 +531,7 @@ configuration, clock calibration, and LED configuration. I/O pin
 configuration meets the first two criteria. It should always be performed
 (regardless of what components the OS uses) for low-power reasons:
 incorrectly configured pins can draw current and prevent the MCU from
-entering its lowest power sleep state <a class="footnote-reference" href="#id8" id="id3" name="id3">[2]</a>. Clock calibration meets
+entering its lowest power sleep state <a class="footnote-reference" href="#id8" id="id3">[2]</a>. Clock calibration meets
 all three criteria. LED configuration is a special case: while it
 nominally meets all three criteria, the most important one is the third:
 as LEDs are often needed during SoftwareInit initialization, they must
@@ -554,7 +555,7 @@ initialization routines of its internal components. The configuration
 does not provide an Init interface. Virtualized services
 often take this approach, as the service, rather than the clients, is
 what needs to be initialized. For example, the standard Timer
-virtualization <a class="footnote-reference" href="#id9" id="id4" name="id4">[3]</a>, TimerMilliC, wires to TimerMilliP, which is
+virtualization <a class="footnote-reference" href="#id9" id="id4">[3]</a>, TimerMilliC, wires to TimerMilliP, which is
 a very simple configuration that takes the underlying implementation
 (HilTimerMilliC) and wires it to MainC:</p>
 <pre class="literal-block">
@@ -572,8 +573,8 @@ TimerMilliP does it automatically. When a component instantiates a
 TimerMilliC, that names TimerMilliP, which will automatically make
 sure that the timer system is initialized when TinyOS boots.</p>
 </div>
-<div class="section">
-<h2><a id="interrupts-in-initialization" name="interrupts-in-initialization">4.2 Interrupts in Initialization</a></h2>
+<div class="section" id="interrupts-in-initialization">
+<h2>4.2 Interrupts in Initialization</h2>
 <p>Interrupts are not enabled until all calls to Init.init have returned.
 If a component's initialization needs to handle interrupts, it can
 do one of three things:</p>
@@ -609,7 +610,7 @@ SplitControl. A second possibility is to redirect the interrupt table,
 if the MCU supports doing so. Whichever mechanism is chosen, extreme
 care needs to be used in order to not disrupt the operation of other
 components.</p>
-<p>Unless part of a hardware abstraction architecture (HAA) <a class="footnote-reference" href="#id10" id="id5" name="id5">[4]</a>, the
+<p>Unless part of a hardware abstraction architecture (HAA) <a class="footnote-reference" href="#id10" id="id5">[4]</a>, the
 Init.init() command MUST NOT assume that other components have been
 initialized unless it has initialized them, and MUST NOT call any
 functional interfaces on any components that might be shared or
@@ -629,20 +630,20 @@ the initialization. The purpose of this convention is to simplify
 component initialization and the initialization sequence.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>5. Implementation</h1>
 <p>The following files in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/system</span></tt> contain the reference
 implementations of the TinyOS boot sequence:</p>
 <blockquote>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">RealMainP.nc</span></tt> is the module containing the function <tt class="docutils literal"><span class="pre">main</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">MainC.nc</span></tt> is the configuration that wires RealMainP to
-PlatformC and TinySchedulerC <a class="footnote-reference" href="#id7" id="id6" name="id6">[1]</a>.</li>
+<li><tt class="docutils literal">RealMainP.nc</tt> is the module containing the function <tt class="docutils literal">main</tt>.</li>
+<li><tt class="docutils literal">MainC.nc</tt> is the configuration that wires RealMainP to
+PlatformC and TinySchedulerC <a class="footnote-reference" href="#id7" id="id6">[1]</a>.</li>
 </ul>
 </blockquote>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">467 Soda Hall</div>
@@ -651,33 +652,33 @@ PlatformC and TinySchedulerC <a class="footnote-reference" href="#id7" id="id6" 
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 290 5283</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.berkeley.edu">pal&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.berkeley.edu">pal&#64;cs.berkeley.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id7">[1]</a></td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> TEP 106: Schedulers and Tasks.</td></tr>
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> TEP 106: Schedulers and Tasks.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id8">[2]</a></td><td>TEP 112: Microcontroller Power Management.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>TEP 112: Microcontroller Power Management.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id9" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4" name="id9">[3]</a></td><td>TEP 102: Timers.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id4">[3]</a></td><td>TEP 102: Timers.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id10" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5" name="id10">[4]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[4]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
 </tbody>
 </table>
 </div>

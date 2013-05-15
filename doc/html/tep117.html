@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Low-Level I/O</title>
 <meta name="author" content="Phil Buonadonna, Jonathan Hui" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.10 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,13 +306,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The memo documents the TinyOS 2.x interfaces used for controlling
 digital IO functionality and digital interfaces.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>The canonical TinyOS device is likely to have a variety of digital
 interfaces. These interfaces may be divided into two broad
 categories. The first are general purpose digital I/O lines (pins) for
@@ -325,8 +326,8 @@ bus formats, we presume SPI, I2C, and UART to have the largest
 coverage.</p>
 <p>This memo documents the interfaces used for pins and the three buses.</p>
 </div>
-<div class="section">
-<h1><a id="pins" name="pins">2. Pins</a></h1>
+<div class="section" id="pins">
+<h1>2. Pins</h1>
 <p>General Purpose I/O (GPIO) pins are single, versatile digital I/O
 signals individually controllable on a particular chip or
 platform. Each GPIO can be placed into either an input mode or an
@@ -367,8 +368,8 @@ interfaces:</p>
 <li>GpioCapture</li>
 </ul>
 </blockquote>
-<div class="section">
-<h2><a id="generalio" name="generalio">2.1 GeneralIO</a></h2>
+<div class="section" id="generalio">
+<h2>2.1 GeneralIO</h2>
 <p>The GeneralIO HIL interface is the fundamental mechanism for controlling a
 GPIO pin. The interface provides a mechanism for setting the pin mode
 and reading/setting the pin value. The toggle function switches the
@@ -390,8 +391,8 @@ interface GeneralIO
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="gpiointerrupt" name="gpiointerrupt">2.2 GpioInterrupt</a></h2>
+<div class="section" id="gpiointerrupt">
+<h2>2.2 GpioInterrupt</h2>
 <p>The GPIO Interrupt HIL interface provides baseline event control for a
 GPIO pin. It provides a mechanism to detect a rising edge OR a falling
 edge. Note that calls to enableRisingEdge and enableFallingEdge are
@@ -411,8 +412,8 @@ interface GpioInterrupt {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="gpiocapture" name="gpiocapture">2.3 GpioCapture</a></h2>
+<div class="section" id="gpiocapture">
+<h2>2.3 GpioCapture</h2>
 <p>The GpioCapture interface provides a means of associating a timestamp
 with a GPIO event. Platforms MAY provide this interface.</p>
 <p>Some platforms may have hardware support for such a feature. Other
@@ -434,14 +435,14 @@ interface GpioCapture {
 </pre>
 </div>
 </div>
-<div class="section">
-<h1><a id="buses" name="buses">3. Buses</a></h1>
+<div class="section" id="buses">
+<h1>3. Buses</h1>
 <p>Bus operations may be divided into two categories: data and
 control. The control operations of a particular bus controller are
 platform specific and not covered here. Instead, we focus on the data
 interfaces at the HIL level that are expected to be provided.</p>
-<div class="section">
-<h2><a id="serial-peripheral-interface" name="serial-peripheral-interface">3.1 Serial Peripheral Interface</a></h2>
+<div class="section" id="serial-peripheral-interface">
+<h2>3.1 Serial Peripheral Interface</h2>
 <p>The Serial Peripheral Interface (SPI) is part of a larger class of
 Synchronous Serial Protocols.  The term SPI typically refers to the
 Motorola SPI protocols. Other protocols include the National
@@ -471,8 +472,8 @@ interface SpiPacket {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="i2c" name="i2c">3.2 I2C</a></h2>
+<div class="section" id="i2c">
+<h2>3.2 I2C</h2>
 <p>The Inter-Integrated Circuit (I2C) interface is another type of
 digital bus that is often used for chip-to-chip communication. It is
 also known as a two-wire interface.</p>
@@ -507,8 +508,8 @@ I2C_ACK_END  - ACK the last byte sent from the buffer. This flags is only valid
                a write operation. Cannot be used with the I2C_STOP flag.
 </pre>
 </div>
-<div class="section">
-<h2><a id="uart" name="uart">3.3 UART</a></h2>
+<div class="section" id="uart">
+<h2>3.3 UART</h2>
 <p>The Universal Asynchronous Receiver/Transmitter (UART) interface is a
 type of serial interconnect. The interface is &quot;asynchronous&quot; since it
 recovers timing from the data stream itself, rather than a separate
@@ -550,8 +551,8 @@ interface UartByte {
 </pre>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>4. Implementation</h1>
 <p>Example implementations of the pin interfaces can be found in tos/chips/msp430/pins,
 tos/chips/atm128/pins, and tos/chips/pxa27x/gpio.</p>
 <p>Example implementations of the SPI interfaces can be found in tos/chips/msp430/usart,
@@ -561,8 +562,8 @@ tos/chips/atm128/i2c, and tos/chips/pxa27x/i2c.</p>
 <p>Example implementations of the UART interfaces can be found in tos/chips/msp430/usart,
 tos/chips/atm128/uart/ and tos/chips/pxa27x/uart.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>5. Author's Address</h1>
 <div class="line-block">
 <div class="line">Phil Buonadonna</div>
 <div class="line">Arch Rock Corporation</div>
@@ -580,12 +581,12 @@ tos/chips/atm128/uart/ and tos/chips/pxa27x/uart.</p>
 <div class="line">phone - +1 415 692-0828 x2835</div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils citation" frame="void" id="tep113" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep113">[tep113]</a></td><td>TEP 113: Serial Communication.</td></tr>
+<tr><td class="label">[tep113]</td><td>TEP 113: Serial Communication.</td></tr>
 </tbody>
 </table>
 </div>

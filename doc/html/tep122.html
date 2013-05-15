@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>IEEE EUI-64 Unique Node Identifier</title>
 <meta name="author" content="Gilman Tolle, Jonathan Hui" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -313,14 +314,14 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>A TinyOS application developer may desire a globally-unique node
 identifier within the IEEE EUI-64 namespace. This document describes
 the TinyOS components used to access such an identifier.</p>
 </div>
-<div class="section">
-<h1><a id="interfaces" name="interfaces">1. Interfaces</a></h1>
+<div class="section" id="interfaces">
+<h1>1. Interfaces</h1>
 <p>A platform that can provide a valid IEEE EUI-64 globally-unique node
 identifier SHOULD provide it through a component with the signature
 defined here, enabling platform-independent access to the identifier:</p>
@@ -335,7 +336,7 @@ interface LocalIeeeEui64 {
   command ieee_eui64_t getId();
 }
 </pre>
-<p>The ieee_eui64_t type is defined in <tt class="docutils literal"><span class="pre">tos/types/IeeeEui64.h</span></tt> as:</p>
+<p>The ieee_eui64_t type is defined in <tt class="docutils literal">tos/types/IeeeEui64.h</tt> as:</p>
 <pre class="literal-block">
 enum { IEEE_EUI64_LENGTH = 8; }
 
@@ -350,8 +351,8 @@ EUI-64 identifier, it SHOULD provide its unique identifier through a
 component with a different name and a different interface. The
 definition of such an interface is outside the scope of this TEP.</p>
 </div>
-<div class="section">
-<h1><a id="ieee-eui-64" name="ieee-eui-64">2. IEEE EUI-64</a></h1>
+<div class="section" id="ieee-eui-64">
+<h1>2. IEEE EUI-64</h1>
 <p>The IEEE EUI-64 structure is copied here:</p>
 <pre class="literal-block">
 |        company_id       |            extension identifier           |
@@ -367,13 +368,13 @@ of the manufacturer is specified: the most through least significant
 bytes of the EUI-64 value are contained within the lowest through
 highest byte addresses, as illustrated above.
 </pre>
-<p>See: <a class="reference" href="http://standards.ieee.org/regauth/oui/tutorials/EUI64.html">http://standards.ieee.org/regauth/oui/tutorials/EUI64.html</a></p>
+<p>See: <a class="reference external" href="http://standards.ieee.org/regauth/oui/tutorials/EUI64.html">http://standards.ieee.org/regauth/oui/tutorials/EUI64.html</a></p>
 <p>The author of the LocalIeeeEui64C component MUST ensure that the
 getId() call returns a valid EUI-64 identifier that follows the
 standard, with the bytes in the order described above.</p>
 </div>
-<div class="section">
-<h1><a id="implementation-notes" name="implementation-notes">3. Implementation Notes</a></h1>
+<div class="section" id="implementation-notes">
+<h1>3. Implementation Notes</h1>
 <p>Some TinyOS node platforms contain a unique hardware identifier that
 can be used to build the EUI-64 node identifier. That hardware
 identifier may be obtained from several places, e.g. a dedicated
@@ -385,8 +386,8 @@ event is signalled. If the EUI-64 is derived from a hardware device,
 the hardware device should be accessed during the Init portion of the
 boot sequence.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>4. Author's Address</h1>
 <div class="line-block">
 <div class="line">Gilman Tolle</div>
 <div class="line">Arch Rock Corporation</div>
@@ -394,7 +395,7 @@ boot sequence.</p>
 <div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 415 692 0828</div>
-<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 </div>
 <div class="line-block">
 <div class="line">Jonathan Hui</div>
@@ -403,7 +404,7 @@ boot sequence.</p>
 <div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 415 692 0828</div>
-<div class="line">email - <a class="reference" href="mailto:jhui&#64;archrock.com">jhui&#64;archrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:jhui&#64;archrock.com">jhui&#64;archrock.com</a></div>
 </div>
 </div>
 </div>

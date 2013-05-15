@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Virtualization</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.9 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -313,15 +314,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo desribes how TinyOS 2.0 virtualizes common abstractions through
 a combination of static allocation and runtime arbitration. It describes
 the benefits and tradeoffs of this approach and how it is used in several
 major abstractions.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>The TinyOS component model allows flexible composition, but that
 flexibility is often limited by reasons which are not explicitly
 stated in components. These implicit assumptions can manifest as buggy
@@ -345,12 +346,12 @@ System Key Interfaces). It describes the services OSKI provides and
 how their implementations are structured to simplify application
 writing.</p>
 </div>
-<div class="section">
-<h1><a id="distributions" name="distributions">2. Distributions</a></h1>
+<div class="section" id="distributions">
+<h1>2. Distributions</h1>
 <p>A distribution presents <em>services</em> to the programmer. A service is a
 set of generic (instantiable) components that represent API
 abstractions. To use an abstraction, a programmer instantiates the
-generic. For example, OSKI has the <tt class="docutils literal"><span class="pre">AMSenderC</span></tt> abstraction for
+generic. For example, OSKI has the <tt class="docutils literal">AMSenderC</tt> abstraction for
 sending active messages. The AMSender generic component takes a single
 parameter, the AM type. For example, if a programmer wants a component
 named AppM to send active messages of type 32, the configuration would
@@ -367,13 +368,13 @@ look something like this:</p>
 <p>Services often present abstractions at a fine grain. For example, the
 active message service has AMSender, AMReceiver, and AMSnooper, each
 of which is a separate abstraction.</p>
-<div class="section">
-<h2><a id="controlling-a-service" name="controlling-a-service">2.1 Controlling a Service</a></h2>
-<p>Every service has two abstractions: <tt class="docutils literal"><span class="pre">ServiceC</span></tt>, for powering it on
-and off, and <tt class="docutils literal"><span class="pre">ServiceNotifierC</span></tt>, for learning when the service's
+<div class="section" id="controlling-a-service">
+<h2>2.1 Controlling a Service</h2>
+<p>Every service has two abstractions: <tt class="docutils literal">ServiceC</tt>, for powering it on
+and off, and <tt class="docutils literal">ServiceNotifierC</tt>, for learning when the service's
 power state has changed. For example, active messages have the
-<tt class="docutils literal"><span class="pre">AMServiceC</span></tt> and <tt class="docutils literal"><span class="pre">AMServiceNotifierC</span></tt> abstractions. A service
-abstraction provides the <tt class="docutils literal"><span class="pre">Service</span></tt> interface</p>
+<tt class="docutils literal">AMServiceC</tt> and <tt class="docutils literal">AMServiceNotifierC</tt> abstractions. A service
+abstraction provides the <tt class="docutils literal">Service</tt> interface</p>
 <div class="line-block">
 <div class="line">interface Service {</div>
 <div class="line-block">
@@ -383,7 +384,7 @@ abstraction provides the <tt class="docutils literal"><span class="pre">Service<
 </div>
 <div class="line">}</div>
 </div>
-<p>while a notifier abstraction provides the <tt class="docutils literal"><span class="pre">ServiceNotify</span></tt> interface</p>
+<p>while a notifier abstraction provides the <tt class="docutils literal">ServiceNotify</tt> interface</p>
 <div class="line-block">
 <div class="line">interface ServiceNotify {</div>
 <div class="line-block">
@@ -408,19 +409,19 @@ instances are in the off state. This is an example timeline for
 active messages being used by two components, RouterA and RouterB:</p>
 <ol class="arabic simple">
 <li>System boots: active messages are off.</li>
-<li>RouterA calls <tt class="docutils literal"><span class="pre">Service.start()</span></tt>. The AM layer is turned on.</li>
+<li>RouterA calls <tt class="docutils literal">Service.start()</tt>. The AM layer is turned on.</li>
 <li>All AMServiceNotifierC abstractions signal <tt class="docutils literal"><span class="pre">ServiceNotify.started().</span></tt></li>
-<li>RouterB calls <tt class="docutils literal"><span class="pre">Service.start()</span></tt>.</li>
-<li>RouterA calls <tt class="docutils literal"><span class="pre">Service.stop()</span></tt>. RouterB is still using active messages, so the layer stays on.</li>
-<li>RouterB calls <tt class="docutils literal"><span class="pre">Service.stop()</span></tt>. The AM layer is turned off.</li>
+<li>RouterB calls <tt class="docutils literal">Service.start()</tt>.</li>
+<li>RouterA calls <tt class="docutils literal">Service.stop()</tt>. RouterB is still using active messages, so the layer stays on.</li>
+<li>RouterB calls <tt class="docutils literal">Service.stop()</tt>. The AM layer is turned off.</li>
 <li>All AMServiceNotifierC abstractions signal <tt class="docutils literal"><span class="pre">ServiceNotify.stopped().</span></tt></li>
 </ol>
 <p>By default, a service that has a control interface MUST be off. For an
 application to use the service, at least one component has to call
-<tt class="docutils literal"><span class="pre">Service.start()</span></tt>.</p>
+<tt class="docutils literal">Service.start()</tt>.</p>
 </div>
-<div class="section">
-<h2><a id="service-initialization" name="service-initialization">2.2 Service Initialization</a></h2>
+<div class="section" id="service-initialization">
+<h2>2.2 Service Initialization</h2>
 <p>Because distributions are collections of services that are designed to
 work together, they can avoid many of the common issues that arise
 when composing TinyOS programs. For example, user code does not have
@@ -431,18 +432,18 @@ initialized. Section 4 goes into an example implementation of how a
 distribution can achieve this.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="oski-services" name="oski-services">3. OSKI Services</a></h1>
+<div class="section" id="oski-services">
+<h1>3. OSKI Services</h1>
 <p>This section briefly describes the services that OSKI, an example
 distribution provides. It is intended to give a feel for how a
 distribution presents its abstractions.</p>
-<div class="section">
-<h2><a id="timers" name="timers">3.1 Timers</a></h2>
+<div class="section" id="timers">
+<h2>3.1 Timers</h2>
 <p>OSKI provides timers at one fidelity: milliseconds. Timers do not have
 a Service abstraction, as their use implicitly defines whether the
 service is active or not (the timer service is off if there are no
-pending timers).  The <tt class="docutils literal"><span class="pre">OSKITimerMsC</span></tt> component provides the
-abstraction: it provides a single interface, <tt class="docutils literal"><span class="pre">Timer&lt;TMilli&gt;</span></tt>.</p>
+pending timers).  The <tt class="docutils literal">OSKITimerMsC</tt> component provides the
+abstraction: it provides a single interface, <tt class="docutils literal">Timer&lt;TMilli&gt;</tt>.</p>
 <p>This is an example code snippet for instantiating a timer in a
 configuration:</p>
 <div class="line-block">
@@ -461,14 +462,14 @@ configuration:</p>
 <div class="line">}</div>
 </div>
 </div>
-<div class="section">
-<h2><a id="active-messages" name="active-messages">3.2 Active Messages</a></h2>
+<div class="section" id="active-messages">
+<h2>3.2 Active Messages</h2>
 <p>OSKI provides four functional active messaging abstractions:
-<tt class="docutils literal"><span class="pre">AMSender</span></tt>, <tt class="docutils literal"><span class="pre">AMReceiver</span></tt>, <tt class="docutils literal"><span class="pre">AMSnooper</span></tt>, and
-<tt class="docutils literal"><span class="pre">AMSnoopingReceiver</span></tt>. Each one takes an <tt class="docutils literal"><span class="pre">am_id_t</span></tt> as a parameter,
+<tt class="docutils literal">AMSender</tt>, <tt class="docutils literal">AMReceiver</tt>, <tt class="docutils literal">AMSnooper</tt>, and
+<tt class="docutils literal">AMSnoopingReceiver</tt>. Each one takes an <tt class="docutils literal">am_id_t</tt> as a parameter,
 indicating the AM type. Following the general TinyOS 2.x approach to
-networking, all active message abstractions provide the <tt class="docutils literal"><span class="pre">Packet</span></tt> and
-<tt class="docutils literal"><span class="pre">AMPacket</span></tt> interfaces.</p>
+networking, all active message abstractions provide the <tt class="docutils literal">Packet</tt> and
+<tt class="docutils literal">AMPacket</tt> interfaces.</p>
 <dl class="docutils">
 <dt>AMSender</dt>
 <dd>This abstraction is for sending active messages. In addition to Packet
@@ -517,23 +518,23 @@ its topology formation:</p>
 </div>
 <div class="line">}</div>
 </div>
-<p>The active messages layer has control abstractions, named <tt class="docutils literal"><span class="pre">AMServiceC</span></tt>
-and <tt class="docutils literal"><span class="pre">AMServiceNotifierC</span></tt>. Active messages follow an OR policy.</p>
+<p>The active messages layer has control abstractions, named <tt class="docutils literal">AMServiceC</tt>
+and <tt class="docutils literal">AMServiceNotifierC</tt>. Active messages follow an OR policy.</p>
 </div>
-<div class="section">
-<h2><a id="broadcasts" name="broadcasts">3.3 Broadcasts</a></h2>
+<div class="section" id="broadcasts">
+<h2>3.3 Broadcasts</h2>
 <p>In addition to active messages, OSKI provides a broadcasting service.
 Unlike active messages, which are addressed in terms of AM addresses,
 broadcasts are address-free. Broadcast communication has two
-abstractions: <tt class="docutils literal"><span class="pre">BroadcastSenderC</span></tt> and <tt class="docutils literal"><span class="pre">BroadcastReceiverC</span></tt>, both of
+abstractions: <tt class="docutils literal">BroadcastSenderC</tt> and <tt class="docutils literal">BroadcastReceiverC</tt>, both of
 which take a parameter, a broadcast message type. This parameter is
 similar to the AM type in active messages. Both abstractions provide
 the Packet interface. The broadcast service has control abstractions,
-named <tt class="docutils literal"><span class="pre">BroadcastServiceC</span></tt> and <tt class="docutils literal"><span class="pre">BroadcastServiceNotifierC</span></tt>, which
+named <tt class="docutils literal">BroadcastServiceC</tt> and <tt class="docutils literal">BroadcastServiceNotifierC</tt>, which
 follow an OR policy.</p>
 </div>
-<div class="section">
-<h2><a id="tree-collection-convergecast" name="tree-collection-convergecast">3.4 Tree Collection/Convergecast</a></h2>
+<div class="section" id="tree-collection-convergecast">
+<h2>3.4 Tree Collection/Convergecast</h2>
 <p><strong>NOTE: These services are not supported as of the 2.x prerelease.
 They will be supported by the first full release.</strong></p>
 <p>OSKI's third communication service is tree-based collection routing.
@@ -563,20 +564,20 @@ communication, collection routing has an additional abstraction:</p>
 <dd>This abstraction controls whether a node is a collection root
 or not.</dd>
 </dl>
-<p>Finally, collection routing has <tt class="docutils literal"><span class="pre">CollectionServiceC</span></tt> and
-<tt class="docutils literal"><span class="pre">CollectionServiceNotifierC</span></tt> abstractions, which follow an OR
+<p>Finally, collection routing has <tt class="docutils literal">CollectionServiceC</tt> and
+<tt class="docutils literal">CollectionServiceNotifierC</tt> abstractions, which follow an OR
 policy.</p>
 </div>
-<div class="section">
-<h2><a id="uart" name="uart">3.5 UART</a></h2>
+<div class="section" id="uart">
+<h2>3.5 UART</h2>
 <p><strong>NOTE: These services are not supported as of the 2.x prerelease.
 They will be supported by the first full release.
 They will be fully defined pending discussion/codification of
 UART interfaces.</strong></p>
 </div>
 </div>
-<div class="section">
-<h1><a id="oski-service-structure-and-design" name="oski-service-structure-and-design">4. OSKI Service Structure and Design</a></h1>
+<div class="section" id="oski-service-structure-and-design">
+<h1>4. OSKI Service Structure and Design</h1>
 <p>Presenting services through abstractions hides the underlying wiring
 details and gives a distribution a great deal of implementation
 freedom. One issue that arises, however, is initialization. If a user
@@ -584,13 +585,13 @@ component instantiates a service, then a distribution MUST make sure
 the service is initialized properly. OSKI achieves this by
 encapsulating a complete service as a working component; abstractions
 export the service's interfaces.</p>
-<div class="section">
-<h2><a id="example-timers" name="example-timers">4.1 Example: Timers</a></h2>
+<div class="section" id="example-timers">
+<h2>4.1 Example: Timers</h2>
 <p>For example, the timer service provides a single abstraction,
 OskiTimerMilliC, which is a generic component. OskiTimerMilliC provides a
 single instance of the Timer&lt;TMilli&gt; interface. It is implemented as a
 wrapper around the underlying timer service, a component named
-<tt class="docutils literal"><span class="pre">TimerMilliImplP</span></tt>, which provides a parameterized interface and
+<tt class="docutils literal">TimerMilliImplP</tt>, which provides a parameterized interface and
 follows the Service Instance design pattern[sipattern]_:</p>
 <div class="line-block">
 <div class="line">generic configuration OskiTimerMilliC() {</div>
@@ -637,12 +638,12 @@ itself to one of the sub-Inits.</p>
 underlying Service Instance pattern: the abstractions take care of
 that.</p>
 </div>
-<div class="section">
-<h2><a id="example-active-messages" name="example-active-messages">4.2 Example: Active Messages</a></h2>
+<div class="section" id="example-active-messages">
+<h2>4.2 Example: Active Messages</h2>
 <p>Active messaging reprsent a slightly more complex service, as it has
 several abstractions and a control interface. However, it follows the
 same basic pattern: abstractions are generics that export wirings to
-the underlying service, named <tt class="docutils literal"><span class="pre">ActiveMessageImplP</span></tt>:</p>
+the underlying service, named <tt class="docutils literal">ActiveMessageImplP</tt>:</p>
 <div class="line-block">
 <div class="line">configuration ActiveMessageImplP {</div>
 <div class="line-block">
@@ -707,7 +708,7 @@ achieve, as it represents only fan-in and no fan-out).</p>
 the SplitControl interface of the underlying active message
 layer. OSKI layers a <em>ServiceController</em> on top of SplitControl. As
 the active message service follows an OR policy, OSKI uses a
-<tt class="docutils literal"><span class="pre">ServiceOrControllerM</span></tt>, which is a generic component with the
+<tt class="docutils literal">ServiceOrControllerM</tt>, which is a generic component with the
 following signature:</p>
 <div class="line-block">
 <div class="line">generic module ServiceOrControllerM(char strID[]) {</div>
@@ -772,8 +773,8 @@ of AMServiceC. As with timers, encapsulating the service instance
 pattern in generic components relieves the programmer of having to
 deal with unique strings, a common source of bugs in TinyOS 1.x code.</p>
 </div>
-<div class="section">
-<h2><a id="oski-requirements" name="oski-requirements">4.3 OSKI Requirements</a></h2>
+<div class="section" id="oski-requirements">
+<h2>4.3 OSKI Requirements</h2>
 <p>OSKI is a layer on top of system components: it presents a more
 usable, less error-prone, and simpler interface to common TinyOS
 functionality. For OSKI to work properly, a platform MUST be compliant
@@ -788,8 +789,8 @@ o TEP 1XX: Collection Routing</blockquote>
 inoperable, exhibit strange behavior, or being uncompilable.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="distribution-interfaces" name="distribution-interfaces">5. Distribution Interfaces</a></h1>
+<div class="section" id="distribution-interfaces">
+<h1>5. Distribution Interfaces</h1>
 <p>The basic notion of a distribution is that it provides a self-contained,
 tested, and complete (for an application domain) programming interface
 to TinyOS. Layers can be added on top of a distribution, but as a
@@ -808,8 +809,8 @@ platform independent; if an application needs async events, then
 chances are it is operating close to the hardware, and so is not
 platform independent.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">467 Soda Hall</div>
@@ -818,27 +819,27 @@ platform independent.</p>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 290 5283</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.berkeley.edu">pal&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.berkeley.edu">pal&#64;cs.berkeley.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils citation" frame="void" id="rst" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="rst">[rst]</a></td><td>reStructuredText Markup Specification. &lt;<a class="reference" href="http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html">http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html</a>&gt;</td></tr>
+<tr><td class="label">[rst]</td><td>reStructuredText Markup Specification. &lt;<a class="reference external" href="http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html">http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html</a>&gt;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="sipattern" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="sipattern">[sipattern]</a></td><td>The Service Instance Pattern. In <em>Software Design Patterns for TinyOS.</em> David Gay, Philip Levis, and David Culler. Published in Proceedings of the ACM SIGPLAN/SIGBED 2005 Conference on Languages, Compilers, and Tools for Embedded Systems (LCTES'05).</td></tr>
+<tr><td class="label">[sipattern]</td><td>The Service Instance Pattern. In <em>Software Design Patterns for TinyOS.</em> David Gay, Philip Levis, and David Culler. Published in Proceedings of the ACM SIGPLAN/SIGBED 2005 Conference on Languages, Compilers, and Tools for Embedded Systems (LCTES'05).</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="boot" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="boot">[boot]</a></td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
+<tr><td class="label">[boot]</td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
 </tbody>
 </table>
 </div>

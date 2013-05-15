@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Testbeds - Setup and Interfaces</title>
 <meta name="author" content="Jan Beutel" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -302,7 +303,7 @@ ul.auto-toc {
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-06-28</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Testbed WG &lt;<a class="reference" href="mailto:tinyos-testbed-wg&#64;eecs.harvard.edu">tinyos-testbed-wg&#64;eecs.harvard.edu</a>&gt;&gt;</td>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Testbed WG &lt;<a class="reference external" href="mailto:tinyos-testbed-wg&#64;eecs.harvard.edu">tinyos-testbed-wg&#64;eecs.harvard.edu</a>&gt;&gt;</td>
 </tr>
 </tbody>
 </table>
@@ -312,13 +313,13 @@ ul.auto-toc {
 TinyOS Community, and requests discussion and suggestions for
 improvements.  Distribution of this memo is unlimited.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo describes the structure and interfaces required for TinyOS compliant
 testbeds.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>The testing and validation of embedded code on real hardware is key to
 successful development of TinyOS applications. Although popular and powerful for
 high level analysis, current simulation methods lack in terms of level of
@@ -348,11 +349,11 @@ standardized interface. This document serves as a key specification document for
 such an interface and its intended usage.</p>
 <p>MISSING: Difference of a testbed vs. a desktop test (e.g. single nodes with a
 programmer or a simple usb grid)</p>
-<p>Examples of currently used sensor network testbeds are MoteLab [<a class="reference" href="#id1">1</a>] and the
-Deployment-Support Network [<a class="reference" href="#id2">2</a>].</p>
+<p>Examples of currently used sensor network testbeds are MoteLab [<a class="reference internal" href="#id1">1</a>] and the
+Deployment-Support Network [<a class="reference internal" href="#id2">2</a>].</p>
 </div>
-<div class="section">
-<h1><a id="testbed-usage" name="testbed-usage">2. Testbed Usage</a></h1>
+<div class="section" id="testbed-usage">
+<h1>2. Testbed Usage</h1>
 <p>A testbed can serve different purposes depending on the development status and
 requirements of a specific project. While this document does not target to restrict
 such usage it defines a set of mandatory modes of operation that a testbed must
@@ -382,8 +383,8 @@ with the variation of one or more parameters.</p>
 <li>Scheduling of testing jobs</li>
 </ul>
 </div>
-<div class="section">
-<h1><a id="testbed-services" name="testbed-services">3. Testbed Services</a></h1>
+<div class="section" id="testbed-services">
+<h1>3. Testbed Services</h1>
 <p>Required Services:</p>
 <ul class="simple">
 <li>identification of target devices (presence, type, hw rev)</li>
@@ -401,8 +402,8 @@ with the variation of one or more parameters.</p>
 - stimuli
 - distributed scheduling of actions (at nodes)</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>4. Implementation</h1>
 <ul class="simple">
 <li>Server, DB/Storage, Interface XMLRPC</li>
 <li>Connection fabric</li>
@@ -422,14 +423,14 @@ with the variation of one or more parameters.</p>
 <li>scheduling of actions (time synched???)</li>
 </ul>
 </div>
-<div class="section">
-<h1><a id="reference" name="reference">5. Reference</a></h1>
+<div class="section" id="reference">
+<h1>5. Reference</h1>
 </div>
-<div class="section">
-<h1><a id="acknowledgments" name="acknowledgments">6. Acknowledgments</a></h1>
+<div class="section" id="acknowledgments">
+<h1>6. Acknowledgments</h1>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">7. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>7. Author's Address</h1>
 <div class="line-block">
 <div class="line">Jan Beutel</div>
 <div class="line">Gloriastr 35</div>
@@ -439,15 +440,15 @@ with the variation of one or more parameters.</p>
 <div class="line"><br /></div>
 <div class="line">phone - +41 44 632 7032</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:j.beutel&#64;ieee.org">j.beutel&#64;ieee.org</a></div>
+<div class="line">email - <a class="reference external" href="mailto:j.beutel&#64;ieee.org">j.beutel&#64;ieee.org</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">8. Citations</a></h1>
+<div class="section" id="citations">
+<h1>8. Citations</h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>G. Werner-Allen, P. Swieskowski, and M. Welsh. MoteLab: A wireless sensor
+<tr><td class="label">[1]</td><td>G. Werner-Allen, P. Swieskowski, and M. Welsh. MoteLab: A wireless sensor
 network testbed. In Proc. 4th Int'l Conf. Information Processing Sensor
 Networks (IPSN '05), pages 483-488. IEEE, Piscataway, NJ, April 2005.</td></tr>
 </tbody>
@@ -455,15 +456,15 @@ Networks (IPSN '05), pages 483-488. IEEE, Piscataway, NJ, April 2005.</td></tr>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>M. Dyer, J. Beutel, L. Thiele, T. Kalt, P. Oehen, K. Martin, and P. Blum.
+<tr><td class="label">[2]</td><td>M. Dyer, J. Beutel, L. Thiele, T. Kalt, P. Oehen, K. Martin, and P. Blum.
 Deployment support network - a toolkit for the development of WSNs. In Proc.
 4th European Workshop on Sensor Networks (EWSN 2007), volume 4373 of Lecture
 Notes in Computer Science, pages 195-211. Springer, Berlin, January 2007.</td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-example-appendix" name="appendix-a-example-appendix">Appendix A. Example Appendix</a></h1>
+<div class="section" id="appendix-a-example-appendix">
+<h1>Appendix A. Example Appendix</h1>
 <p>This is an example appendix. Appendices begin with the letter A.</p>
 </div>
 </div>

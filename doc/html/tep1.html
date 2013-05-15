@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>TEP Structure and Keywords</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -304,14 +305,14 @@ ul.auto-toc {
 TinyOS Community, and requests discussion and suggestions for
 improvements.  Distribution of this memo is unlimited.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo describes the structure all TinyOS Extension Proposal (TEP)
 documents follow, and defines the meaning of several key words in
 those documents.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>In order to simplify management, reading, and tracking development,
 all TinyOS Extension Proposals (TEPs) MUST have a particular
 structure. Additionally, to simplify development and improve
@@ -319,8 +320,8 @@ implementation interoperability, all TEPs MUST observe the meaning of
 several key words that specify levels of compliance. This document
 describes and follows both.</p>
 </div>
-<div class="section">
-<h1><a id="keywords" name="keywords">2. Keywords</a></h1>
+<div class="section" id="keywords">
+<h1>2. Keywords</h1>
 <p>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;,
 &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this
 document are to be interpreted as described in TEP 1.</p>
@@ -328,33 +329,33 @@ document are to be interpreted as described in TEP 1.</p>
 level of the document in which they are used. These words hold their
 special meanings only when capitalized, and documents SHOULD avoid using
 these words uncapitalized in order to minimize confusion.</p>
-<div class="section">
-<h2><a id="must" name="must">2.1 MUST</a></h2>
+<div class="section" id="must">
+<h2>2.1 MUST</h2>
 <p>MUST: This word, or the terms &quot;REQUIRED&quot; or &quot;SHALL&quot;, mean that the
 definition is an absolute requirement of the specification.</p>
 </div>
-<div class="section">
-<h2><a id="must-not" name="must-not">2.2 MUST NOT</a></h2>
+<div class="section" id="must-not">
+<h2>2.2 MUST NOT</h2>
 <p>MUST NOT: This phrase, or the phrase &quot;SHALL NOT&quot;, mean that the
 definition is an absolute prohibition of the specification.</p>
 </div>
-<div class="section">
-<h2><a id="should" name="should">2.3 SHOULD</a></h2>
+<div class="section" id="should">
+<h2>2.3 SHOULD</h2>
 <p>SHOULD: This word, or the adjective &quot;RECOMMENDED&quot;, mean that there
 may exist valid reasons in particular circumstances to ignore a
 particular item, but the full implications must be understood and
 carefully weighed before choosing a different course.</p>
 </div>
-<div class="section">
-<h2><a id="should-not" name="should-not">2.4 SHOULD NOT</a></h2>
+<div class="section" id="should-not">
+<h2>2.4 SHOULD NOT</h2>
 <p>SHOULD NOT: This phrase, or the phrase &quot;NOT RECOMMENDED&quot; mean that
 there may exist valid reasons in particular circumstances when the
 particular behavior is acceptable or even useful, but the full
 implications should be understood and the case carefully weighed
 before implementing any behavior described with this label.</p>
 </div>
-<div class="section">
-<h2><a id="may" name="may">2.5 MAY</a></h2>
+<div class="section" id="may">
+<h2>2.5 MAY</h2>
 <p>MAY: This word, or the adjective &quot;OPTIONAL&quot;, mean that an item is
 truly optional.  One implementer may choose to include the item
 because a particular application requires it or because the
@@ -367,8 +368,8 @@ does include a particular option MUST be prepared to interoperate with
 another implementation which does not include the option (except, of
 course, for the feature the option provides.)</p>
 </div>
-<div class="section">
-<h2><a id="guidance-in-the-use-of-these-imperatives" name="guidance-in-the-use-of-these-imperatives">2.6 Guidance in the use of these Imperatives</a></h2>
+<div class="section" id="guidance-in-the-use-of-these-imperatives">
+<h2>2.6 Guidance in the use of these Imperatives</h2>
 <p>Imperatives of the type defined in this memo must be used with care
 and sparingly.  In particular, they MUST only be used where it is
 actually required for interoperation or to limit behavior which has
@@ -378,16 +379,16 @@ on implementors where the method is not required for
 interoperability.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="tep-structure" name="tep-structure">3. TEP Structure</a></h1>
+<div class="section" id="tep-structure">
+<h1>3. TEP Structure</h1>
 <p>TEPs have two major parts, a header and a body. The header states
 document metadata, for management and status. The body contains the
 content of the proposal.</p>
-<p>All TEPs MUST conform to reStructuredText standards <a class="footnote-reference" href="#id2" id="id1" name="id1">[1]</a> and follow
+<p>All TEPs MUST conform to reStructuredText standards <a class="footnote-reference" href="#id2" id="id1">[1]</a> and follow
 the docutils template, to enable translation from  reStructuredText
 to HTML and LaTeX.</p>
-<div class="section">
-<h2><a id="tep-header" name="tep-header">3.1 TEP Header</a></h2>
+<div class="section" id="tep-header">
+<h2>3.1 TEP Header</h2>
 <p>The TEP header has several fields which MUST be included, as well as
 others which MAY be included. The TEP header MUST NOT include headers
 which are not specified in TEP 1 or supplementary Best Current
@@ -463,8 +464,8 @@ made. Draft-Discuss specifies the email address of a mailing list
 where the draft is being discussed. Final and Obsolete TEPs MUST NOT
 have these fields, which are for Drafts only.</p>
 </div>
-<div class="section">
-<h2><a id="tep-body" name="tep-body">3.2 TEP Body</a></h2>
+<div class="section" id="tep-body">
+<h2>3.2 TEP Body</h2>
 <p>The first element of the TEP body MUST be the title of the document. A
 TEP SHOULD follow the title with an Abstract, which gives a brief
 overview of the content of the TEP. Longer TEPs MAY, after the
@@ -487,17 +488,17 @@ or if there is no citations section, the author information section.
 Appendices are lettered.  Please refer to Appendix A for details.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="reference" name="reference">4. Reference</a></h1>
+<div class="section" id="reference">
+<h1>4. Reference</h1>
 <p>The reference use of this document is TEP 1 (itself).</p>
 </div>
-<div class="section">
-<h1><a id="acknowledgments" name="acknowledgments">5. Acknowledgments</a></h1>
+<div class="section" id="acknowledgments">
+<h1>5. Acknowledgments</h1>
 <p>The definitions of the compliance terms are a direct copy of
 definitions taken from IETF RFC 2119.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -506,20 +507,20 @@ definitions taken from IETF RFC 2119.</p>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id2">[1]</a></td><td>reStructuredText Markup Specification. &lt;<a class="reference" href="http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html">http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html</a>&gt;</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>reStructuredText Markup Specification. &lt;<a class="reference external" href="http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html">http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html</a>&gt;</td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-example-appendix" name="appendix-a-example-appendix">Appendix A. Example Appendix</a></h1>
+<div class="section" id="appendix-a-example-appendix">
+<h1>Appendix A. Example Appendix</h1>
 <p>This is an example appendix. Appendices begin with the letter A.</p>
 </div>
 </div>

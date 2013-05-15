@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Resource Arbitration</title>
 <meta name="authors" content="Kevin Klues  Philip Levis  David Gay  David Culler  Vlado Handziski" />
 <style type="text/css">
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -309,14 +310,14 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents the general resource sharing mechanisms for TinyOS
 2.x. These mechanisms are used to allow multiple software components to
 arbitrate access to shared abstractions.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>TinyOS 1.x has two mechanisms for managing shared resources:
 virtualization and completion events. A virtualized resource appears
 as an independent instance of an abstraction, such as the Timer
@@ -361,15 +362,15 @@ nicely using virtualization. The following section introduces the concept of
 resource classes in order to address this issue.  The sharing policy used by a
 particular resource abstraction is dictated by the resource class it belongs to.</p>
 </div>
-<div class="section">
-<h1><a id="resource-classes" name="resource-classes">2. Resource Classes</a></h1>
+<div class="section" id="resource-classes">
+<h1>2. Resource Classes</h1>
 <p>TinyOS 2.x distinguishes between three kinds of abstractions:
 <em>dedicated</em>, <em>virtualized</em>, and <em>shared</em>.  Components offer resource
 sharing mechanisms appropriate to their goals and level of abstraction.</p>
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">It is important to point out that Hardware Presentation Layer (HPL)
-components of the HAA <a class="footnote-reference" href="#id4" id="id1" name="id1">[1]</a> can never be virtualized, as virtualization
+components of the HAA <a class="footnote-reference" href="#id4" id="id1">[1]</a> can never be virtualized, as virtualization
 inevitably requires state. Depending on their
 expected use, HPL abstractions can either be dedicated or
 shared. For example, while hardware timers are rarely
@@ -378,8 +379,8 @@ This can be seen on the MSP430 microcontroller, where the compare and
 counter registers are implemented as dedicated resources, and the USARTs
 are shared ones.</p>
 </div>
-<div class="section">
-<h2><a id="dedicated" name="dedicated">2.1 Dedicated</a></h2>
+<div class="section" id="dedicated">
+<h2>2.1 Dedicated</h2>
 <p>An abstraction is <em>dedicated</em> if it is a resource
 which a subsystem needs exclusive access to at all times.
 In this class of resources, no sharing policy is needed since only
@@ -392,8 +393,8 @@ their usage assumptions are not violated.</p>
 resource might be represented, including the use of
 the nesC &#64;exactlyonce attribute.</p>
 </div>
-<div class="section">
-<h2><a id="virtualized" name="virtualized">2.2 Virtualized</a></h2>
+<div class="section" id="virtualized">
+<h2>2.2 Virtualized</h2>
 <p><em>Virtual</em> abstractions hide multiple clients from each other
 through software virtualization. Every client of a virtualized resource
 interacts with it as if it were a dedicated resource, with all virtualized
@@ -402,7 +403,7 @@ the virtualization is done in software, there is no upper bound on the number
 of clients using the abstraction, barring memory or efficiency constraints.
 As virtualization usually requires keeping state that scales with the number
 of virtualized instances, virtualized resources often use the Service Instance
-pattern <a class="footnote-reference" href="#id6" id="id2" name="id2">[3]</a>, which is based on a parameterized interface.</p>
+pattern <a class="footnote-reference" href="#id6" id="id2">[3]</a>, which is based on a parameterized interface.</p>
 <p>Virtualization generally provides a very simple interface to its clients.
 This simplicity comes at the cost of reduced efficiency and an inability to
 precisely control the underlying resource. For example, a virtualized
@@ -411,8 +412,8 @@ each individual virtual timer, as well as introducing jitter whenever two
 timers happen to fire at the same time. Please refer to Appendix A for an
 example of how such a virtualized timer resource might be implemented.</p>
 </div>
-<div class="section">
-<h2><a id="shared" name="shared">2.3 Shared</a></h2>
+<div class="section" id="shared">
+<h2>2.3 Shared</h2>
 <p>Dedicated abstractions are useful when a resource is
 always controlled by a single component. Virtualized abstractions are
 useful when clients are willing to pay a bit of overhead and sacrifice
@@ -443,8 +444,8 @@ The following section is dedicated to describing the arbiter and its
 interfaces.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="resource-arbiters" name="resource-arbiters">3. Resource Arbiters</a></h1>
+<div class="section" id="resource-arbiters">
+<h1>3. Resource Arbiters</h1>
 <p>Every shared resource has an arbiter to manage which client
 can use the resource at any given time. Because an arbiter is a
 centralized place that knows whether the resource is in use, it can also
@@ -472,8 +473,8 @@ Resource     ArbiterInfo ResourceRequested     ResourceDefaultOwner
                         \|/
                   ResourceConfigure
 </pre>
-<div class="section">
-<h2><a id="resource" name="resource">3.1 Resource</a></h2>
+<div class="section" id="resource">
+<h2>3.1 Resource</h2>
 <p>Clients of an arbiter request access
 to a shared resource using the Resource interface:</p>
 <pre class="literal-block">
@@ -548,8 +549,8 @@ refer to the same client ID.</p>
 abstracted according to this pattern.  For further examples see the various
 chip implementations in the tinyos-2.x source tree under tinyos-2.x/chips/</p>
 </div>
-<div class="section">
-<h2><a id="arbiterinfo" name="arbiterinfo">3.2 ArbiterInfo</a></h2>
+<div class="section" id="arbiterinfo">
+<h2>3.2 ArbiterInfo</h2>
 <p>Arbiters MUST provide an instance of the ArbiterInfo interface.
 The ArbiterInfo interface allows a component to query the current
 status of an arbiter:</p>
@@ -589,8 +590,8 @@ it.  For an example of how this interface is used in this fashion refer to Appen
 ----------------------      -------------------------------
 </pre>
 </div>
-<div class="section">
-<h2><a id="resourcerequested" name="resourcerequested">3.3 ResourceRequested</a></h2>
+<div class="section" id="resourcerequested">
+<h2>3.3 ResourceRequested</h2>
 <p>Sometimes it is useful for a client to be able to hold onto a resource until
 someone else needs it and only at that time decide to release it.  Using the
 ResourceRequested interface, this information is made available to the current
@@ -627,15 +628,15 @@ refer to Appendix B for an example of how this interface might be used.:</p>
 ----------------------      ----------------------------------------------------
 </pre>
 </div>
-<div class="section">
-<h2><a id="resourceconfigure" name="resourceconfigure">3.4 ResourceConfigure</a></h2>
+<div class="section" id="resourceconfigure">
+<h2>3.4 ResourceConfigure</h2>
 <p>The existence of the ResourceConfigure interface allows a resource to be
 automatically configured just before a client is granted access to it.
 Components providing the ResourceConfigure interface use the interfaces
 provided by an underlying dedicated resource to configure it into one
-of its desired modes of operation.  A cleint then wires its shared resource
+of its desired modes of operation.  A client then wires its shared resource
 abstraction to the component implementing the desired configuration.  The
-configure command is called immediataely before the client is granted access
+configure command is called immediately before the client is granted access
 to the resource, and the unconfigure command is called just before fully
 releasing it.:</p>
 <pre class="literal-block">
@@ -681,8 +682,8 @@ Msp430 Usart component can take advantage of the ResourceConfigure
 interface refer to Appendix B as well as section 4 on the use of
 cross-component reservation.</p>
 </div>
-<div class="section">
-<h2><a id="resourcedefaultowner" name="resourcedefaultowner">3.5 ResourceDefaultOwner</a></h2>
+<div class="section" id="resourcedefaultowner">
+<h2>3.5 ResourceDefaultOwner</h2>
 <p>The normal Resource interface is for use by clients that all share the resource
 in an equal fashion. The ResourceDefaultOwner interface is for use by a single
 client that needs to be given control of the resource whenever no one else is
@@ -730,11 +731,11 @@ and release it once the power up has completed.  Note that if power up is
 a split-phase operation (takes a while), then calls by clients to
 immediateRequest() when in the powered down state will return
 FAIL. Please see the TEP on the Power Management of Non-Virtualized devices
-(<a class="footnote-reference" href="#id7" id="id3" name="id3">[4]</a>) for more details.</p>
+(<a class="footnote-reference" href="#id7" id="id3">[4]</a>) for more details.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="cross-component-reservation" name="cross-component-reservation">4. Cross-Component Reservation</a></h1>
+<div class="section" id="cross-component-reservation">
+<h1>4. Cross-Component Reservation</h1>
 <p>In some cases, it is desirable to share the reservation of a
 single resource across multiple components. For example, on the TI
 MSP430, a single USART component can be used as an I2C bus, a UART,
@@ -816,8 +817,8 @@ reuse is encouraged.</p>
 <p>Implementations of components similar to this one can be found in the
 tinyos-2.x source tree in the tos/chips/msp430/uart directory</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>5. Implementation</h1>
 <p>Because most components use one of a small number of arbitration
 policies, tinyos-2.x includes a number of default resource arbiters. These
 arbiters can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/system</span></tt> and are all
@@ -913,8 +914,8 @@ to perform runtime checks on the current owner of a resource.  Please refer
 to the section on the ArbiterInfo interface in Appendix B for more information
 on how such runtime checks can be performed.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Kevin Klues</div>
 <div class="line">503 Bryan Hall</div>
@@ -922,7 +923,7 @@ on how such runtime checks can be performed.</p>
 <div class="line">St. Louis, MO 63130</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1-314-935-6355</div>
-<div class="line">email - <a class="reference" href="mailto:klueska&#64;cs.wustl.edu">klueska&#64;cs.wustl.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:klueska&#64;cs.wustl.edu">klueska&#64;cs.wustl.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -930,7 +931,7 @@ on how such runtime checks can be performed.</p>
 <div class="line">Stanford, CA 94305-9030</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -938,7 +939,7 @@ on how such runtime checks can be performed.</p>
 <div class="line">Berkeley, CA 94704</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 495 3055</div>
-<div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
 <div class="line"><br /></div>
 <div class="line">David Culler</div>
 <div class="line">627 Soda Hall</div>
@@ -946,7 +947,7 @@ on how such runtime checks can be performed.</p>
 <div class="line">Berkeley, CA 94720</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 643 7572</div>
-<div class="line">email - <a class="reference" href="mailto:culler&#64;cs.berkeley.edu">culler&#64;cs.berkeley.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:culler&#64;cs.berkeley.edu">culler&#64;cs.berkeley.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">Vlado Handziski</div>
 <div class="line">Sekr FT5</div>
@@ -954,46 +955,46 @@ on how such runtime checks can be performed.</p>
 <div class="line">10587 Berlin</div>
 <div class="line">GERMANY</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:handzisk&#64;tkn.tu-berlin.de">handzisk&#64;tkn.tu-berlin.de</a></div>
+<div class="line">email - <a class="reference external" href="mailto:handzisk&#64;tkn.tu-berlin.de">handzisk&#64;tkn.tu-berlin.de</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id4">[1]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id10" name="id5">[2]</a></td><td>TEP 102: Timers.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id10">[2]</a></td><td>TEP 102: Timers.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id6">[3]</a></td><td>Service Instance Pattern. In <em>Software Design Patterns for TinyOS.</em> David Gay, Philip Levis, and David Culler. Published in Proceedings of the ACM SIGPLAN/SIGBED 2005 Conference on Languages, Compilers, and Tools for Embedded Systems (LCTES'05).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[3]</a></td><td>Service Instance Pattern. In <em>Software Design Patterns for TinyOS.</em> David Gay, Philip Levis, and David Culler. Published in Proceedings of the ACM SIGPLAN/SIGBED 2005 Conference on Languages, Compilers, and Tools for Embedded Systems (LCTES'05).</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id7">[4]</a></td><td>TEP 115: Power Management of Non-Virtualized Devices.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[4]</a></td><td>TEP 115: Power Management of Non-Virtualized Devices.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id9" name="id8">[5]</a></td><td>TinyOS Programming. <a class="reference" href="http://csl.stanford.edu/~pal/pubs/tinyos-programming-1-0.pdf">http://csl.stanford.edu/~pal/pubs/tinyos-programming-1-0.pdf</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id9">[5]</a></td><td>TinyOS Programming. <a class="reference external" href="http://csl.stanford.edu/~pal/pubs/tinyos-programming-1-0.pdf">http://csl.stanford.edu/~pal/pubs/tinyos-programming-1-0.pdf</a></td></tr>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-resource-class-examples" name="appendix-a-resource-class-examples">Appendix A: Resource Class Examples</a></h1>
-<div class="section">
-<h2><a id="dedicated-resource" name="dedicated-resource">Dedicated Resource</a></h2>
+<div class="section" id="appendix-a-resource-class-examples">
+<h1>Appendix A: Resource Class Examples</h1>
+<div class="section" id="dedicated-resource">
+<h2>Dedicated Resource</h2>
 <p>Timer 2 on the Atmega128 microprocessor is a dedicated resource
 represented by the HplAtm128Timer2C component:</p>
 <pre class="literal-block">
@@ -1011,12 +1012,12 @@ this component are only allowed to be wired to once, nothing prevents the
 component wiring to them from virtualizing the services they provide at some
 higher level.  If you are unfamiliar with how &#64;exactlyonce and other nesC
 attributes are used to by the nesC compiler, please refer to section 9.1 of the
-TinyOS Programming Manual <a class="footnote-reference" href="#id8" id="id9" name="id9">[5]</a>.</p>
+TinyOS Programming Manual <a class="footnote-reference" href="#id8" id="id9">[5]</a>.</p>
 </div>
-<div class="section">
-<h2><a id="virtualized-resource" name="virtualized-resource">Virtualized Resource</a></h2>
+<div class="section" id="virtualized-resource">
+<h2>Virtualized Resource</h2>
 <p>The TimerMilliC component provides a virtual abstraction of millisecond
-precision timers to application components <a class="footnote-reference" href="#id5" id="id10" name="id10">[2]</a>. It encapsulates the required
+precision timers to application components <a class="footnote-reference" href="#id5" id="id10">[2]</a>. It encapsulates the required
 parameterized Timer interface through the use of a generic configuration.
 Clients wishing to use a millisecond timer need only instantiate a single
 instance of the TimerMilliC generic, leaving the fact that it is virtualized
@@ -1046,14 +1047,14 @@ implementation {
 </pre>
 </div>
 </div>
-<div class="section">
-<h1><a id="appendix-b-arbiter-interface-examples" name="appendix-b-arbiter-interface-examples">Appendix B: Arbiter Interface Examples</a></h1>
+<div class="section" id="appendix-b-arbiter-interface-examples">
+<h1>Appendix B: Arbiter Interface Examples</h1>
 <!-- Note:
 Most of the examples provided in this section use complex nesC syntax that may
 be unfamiliar to the novice nesC programmer.  Please refer to the TinyOS
 programming Manual [5]_ for clarification as necessary. -->
-<div class="section">
-<h2><a id="id11" name="id11">Resource</a></h2>
+<div class="section" id="id11">
+<h2>Resource</h2>
 <p>Examples of how to use the Resource interface for arbitrating
 between multiple clients can be found in the tinyos-2.x
 source tree under tinyos-2.x/apps/tests/TestArbiter.</p>
@@ -1135,8 +1136,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="id12" name="id12">ArbiterInfo</a></h2>
+<div class="section" id="id12">
+<h2>ArbiterInfo</h2>
 <p>In the implementation of the ADC component on the Msp430 microcontroller,
 a simple arbiter is used to provide a round robin sharing policy
 between clients of the ADC:</p>
@@ -1228,8 +1229,8 @@ interface.</p>
 <p>Take a look in the tinyos-2.x source tree under tinyos-2.x/tos/chips/adc12
 to see the full implementation of these components in their original context.</p>
 </div>
-<div class="section">
-<h2><a id="id13" name="id13">ResourceRequested</a></h2>
+<div class="section" id="id13">
+<h2>ResourceRequested</h2>
 <p>On the eyesIFXv2 platform, both the radio and the flash need access to the bus
 provided by the Usart0 component on the Msp430 microcontroller.  Using
 a simple cooperative arbitration policy, these two components should able to
@@ -1288,8 +1289,8 @@ tinyos-2.x/tos/chips/tda5250, tinyos-2.x/tos/chips/tda5250/mac,
 tinyos-2.x/tos/platforms/eyesIFX/chips/tda5250, and
 tinyos-2.x/tos/platforms/eyesIFX/chips/msp430.</p>
 </div>
-<div class="section">
-<h2><a id="resource-configure" name="resource-configure">Resource Configure</a></h2>
+<div class="section" id="resource-configure">
+<h2>Resource Configure</h2>
 <p>The Msp430 Usart0 bus can operate in three modes: SPI, I2C,
 and UART. Using all three concurrently is problematic: only one should
 be enabled at any given time. However, different clients of the bus might

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Platform Independent Non-Volatile Storage Abstractions</title>
 <meta name="authors" content="David Moss  Junzhao Du  Prabal Dutta  Deepak Ganesan  Kevin Klues  Manju  Ajay Martin  and Gaurav Mathur" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -312,8 +313,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>The storage abstractions proposed by TEP 103 are implemented on a
 platform-dependent basis.  A version of BlockStorage, ConfigStorage,
 and LogStorage were created from the ground up for both the
@@ -333,8 +334,8 @@ NAND flash, NOR flash, and EEPROM.  This abstraction layer should
 allow one implementation of each storage solution to operate across
 many different platforms.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>The implementations of the BlockStorage, ConfigStorage, and LogStorage
 layers described in TEP 103 [1] are platform dependent.  Platform-
 dependent implementations can cause behavioral and usage differences
@@ -349,8 +350,8 @@ applications on a specific platform wants to take advantage of
 extra functionality provided by a flash chip, it still has the opportunity
 to access those features directly with the understanding that its
 implementation is no longer considered platform-independent.</p>
-<div class="section">
-<h2><a id="platform-dependent-volume-settings" name="platform-dependent-volume-settings">1.1 Platform-dependent volume settings</a></h2>
+<div class="section" id="platform-dependent-volume-settings">
+<h2>1.1 Platform-dependent volume settings</h2>
 <p>Differences exist between the TEP 103 storage implementations
 on the AT45DB, ST M25P80, and PXA27X P30 flash chips.</p>
 <p>First, volume information is defined using two distinct methods. As
@@ -436,8 +437,8 @@ volumes should prevent a user from defining a volume too small::</p>
 +------------+--------+------------+-----------+------------+
 </pre>
 </div>
-<div class="section">
-<h2><a id="platform-dependent-component-signatures" name="platform-dependent-component-signatures">1.2 Platform-dependent component signatures</a></h2>
+<div class="section" id="platform-dependent-component-signatures">
+<h2>1.2 Platform-dependent component signatures</h2>
 <p>The storage components' signatures differ across implementations.
 For example, the PXA27X P30 flash defines &quot;P30BlockC&quot;, &quot;P30ConfigC&quot;,
 and &quot;P30LogC&quot; in place of &quot;BlockStorageC&quot;, &quot;ConfigStorageC&quot;, and
@@ -465,10 +466,10 @@ a physical address on flash.  Although it is a good idea, it
 is not consistent with other platforms' defined interfaces.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="directstorage" name="directstorage">2. DirectStorage</a></h1>
-<div class="section">
-<h2><a id="differences-and-advantages" name="differences-and-advantages">3.1 Differences and advantages</a></h2>
+<div class="section" id="directstorage">
+<h1>2. DirectStorage</h1>
+<div class="section" id="differences-and-advantages">
+<h2>3.1 Differences and advantages</h2>
 <p>The core current BlockStorage, ConfigStorage, and LogStorage
 layers can all be implemented on a platform-independent abstraction
 layer.  Providing an interface that allows direct, unimpeded
@@ -507,8 +508,8 @@ requires bad block management and error correction. This functionality
 can be implemented without changing the behavior of the DirectStorage
 interface above.</p>
 </div>
-<div class="section">
-<h2><a id="directstorage-interface" name="directstorage-interface">3.2 DirectStorage Interface</a></h2>
+<div class="section" id="directstorage-interface">
+<h2>3.2 DirectStorage Interface</h2>
 <p>The DirectStorage interface is described below.  Each &quot;addr&quot; variable
 is a virtual address, with 0x0 relative to the base address of the
 volume.  This base address may actually be physically located
@@ -541,21 +542,21 @@ interface DirectStorage {
 }
 </pre>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">read(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">'*buf',</span> <span class="pre">uint32_t</span> <span class="pre">len);</span></tt></dt>
+<dt><tt class="docutils literal">read(uint32_t addr, void '*buf', uint32_t len);</tt></dt>
 <dd><ul class="first last simple">
-<li>Read 'len' bytes into <tt class="docutils literal"><span class="pre">*buf</span></tt> from the given address</li>
+<li>Read 'len' bytes into <tt class="docutils literal">*buf</tt> from the given address</li>
 <li>Returns FAIL if the volume is already in use</li>
 <li>Signals readDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">write(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">'*buf',</span> <span class="pre">uint32_t</span> <span class="pre">len);</span></tt></dt>
+<dt><tt class="docutils literal">write(uint32_t addr, void '*buf', uint32_t len);</tt></dt>
 <dd><ul class="first last simple">
-<li>Write 'len' bytes from <tt class="docutils literal"><span class="pre">*buf</span></tt> starting at the given address</li>
+<li>Write 'len' bytes from <tt class="docutils literal">*buf</tt> starting at the given address</li>
 <li>Returns FAIL if the volume is already in use</li>
 <li>Signals writeDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">erase(uint16_t</span> <span class="pre">eraseUnitIndex);</span></tt></dt>
+<dt><tt class="docutils literal">erase(uint16_t eraseUnitIndex);</tt></dt>
 <dd><ul class="first last simple">
 <li>Erase a single 0-indexed erase unit</li>
 <li>Returns FAIL if the volume is already in use</li>
@@ -580,8 +581,8 @@ the given baseCrc as a seed.</li>
 </dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="directmodify-interface" name="directmodify-interface">3.3 DirectModify Interface</a></h2>
+<div class="section" id="directmodify-interface">
+<h2>3.3 DirectModify Interface</h2>
 <p>Some memory types have the ability to modify their contents without
 destroying surrounding data.</p>
 <p>The AT45DB NOR-flash, for example, is able to do this because
@@ -633,7 +634,7 @@ interface DirectModify {
 }
 </pre>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">modify(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">uint32_t</span> <span class="pre">len)</span></tt></dt>
+<dt><tt class="docutils literal">modify(uint32_t addr, void *buf, uint32_t len)</tt></dt>
 <dd><ul class="first last simple">
 <li>Modify 'len' bytes located on non-volatile memory at the given address,
 replacing them with data from the given buffer</li>
@@ -641,22 +642,22 @@ replacing them with data from the given buffer</li>
 <li>Signals modified(...) when the operation is complete</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">read(uint32_t</span> <span class="pre">addr,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">uint32_t</span> <span class="pre">len)</span></tt></dt>
+<dt><tt class="docutils literal">read(uint32_t addr, void *buf, uint32_t len)</tt></dt>
 <dd><ul class="first last simple">
-<li>Read 'len' bytes into <tt class="docutils literal"><span class="pre">*buf</span></tt> from the given address</li>
+<li>Read 'len' bytes into <tt class="docutils literal">*buf</tt> from the given address</li>
 <li>Same as DirectStorage.read(...)</li>
 <li>Returns FAIL if the volume is already in use</li>
 <li>Signals readDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">erase(uint16_t</span> <span class="pre">eraseUnitIndex);</span></tt></dt>
+<dt><tt class="docutils literal">erase(uint16_t eraseUnitIndex);</tt></dt>
 <dd><ul class="first last simple">
 <li>Erase a single 0-indexed erase unit</li>
 <li>Returns FAIL if the volume is already in use</li>
 <li>Signals eraseDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">flush()</span></tt></dt>
+<dt><tt class="docutils literal">flush()</tt></dt>
 <dd><ul class="first last simple">
 <li>All data that has been previously written and is not yet located on
 non-volatile memory should be immediately stored to non-volatile memory.</li>
@@ -665,7 +666,7 @@ non-volatile memory should be immediately stored to non-volatile memory.</li>
 <li>Signals flushDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">crc(uint32_t</span> <span class="pre">addr,</span> <span class="pre">uint32_t</span> <span class="pre">len,</span> <span class="pre">uint16_t</span> <span class="pre">baseCrc);</span></tt></dt>
+<dt><tt class="docutils literal">crc(uint32_t addr, uint32_t len, uint16_t baseCrc);</tt></dt>
 <dd><ul class="first last simple">
 <li>Calculate the CRC of 'len' bytes starting at the given address, using
 the given baseCrc as a seed.</li>
@@ -673,15 +674,15 @@ the given baseCrc as a seed.</li>
 <li>Signals crcDone(...) when complete.</li>
 </ul>
 </dd>
-<dt><tt class="docutils literal"><span class="pre">isSupported()</span></tt></dt>
+<dt><tt class="docutils literal">isSupported()</tt></dt>
 <dd><ul class="first last simple">
 <li>Returns TRUE if DirectModify is available on the current memory type</li>
 </ul>
 </dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="volumesettings-interface" name="volumesettings-interface">3.4 VolumeSettings Interface</a></h2>
+<div class="section" id="volumesettings-interface">
+<h2>3.4 VolumeSettings Interface</h2>
 <p>As was shown in Section 1.1, finding information about the current
 volume required platform-dependent methods of access.  VolumeSettings
 provides a unified method of accessing information about the underlying
@@ -760,8 +761,8 @@ calculations</li>
 </dl>
 </div>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>4. Author's Address</h1>
 <div class="line-block">
 <div class="line">David Moss</div>
 <div class="line">Rincon Research Corporation</div>
@@ -770,7 +771,7 @@ calculations</li>
 <div class="line"><br /></div>
 <div class="line">phone - +1 520 519 3138</div>
 <div class="line">phone - +1 520 519 3146</div>
-<div class="line">email ? <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
+<div class="line">email ? <a class="reference external" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Junzhao Du</div>
 <div class="line">Contact -</div>
@@ -794,30 +795,30 @@ calculations</li>
 <div class="line">Contact -</div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">5. Citations</a></h1>
+<div class="section" id="citations">
+<h1>5. Citations</h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>TEP 103: Permanent Data Storage (Flash). <a class="reference" href="http://tinyos.cvs.sourceforge.net/">http://tinyos.cvs.sourceforge.net/</a><em>checkout</em>/tinyos/tinyos-2.x/doc/html/tep103.html</td></tr>
+<tr><td class="label">[1]</td><td>TEP 103: Permanent Data Storage (Flash). <a class="reference external" href="http://tinyos.cvs.sourceforge.net/">http://tinyos.cvs.sourceforge.net/</a><em>checkout</em>/tinyos/tinyos-2.x/doc/html/tep103.html</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>Atmel AT45DB041B datasheet. <a class="reference" href="http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF">http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF</a></td></tr>
+<tr><td class="label">[2]</td><td>Atmel AT45DB041B datasheet. <a class="reference external" href="http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF">http://www.atmel.com/dyn/resources/prod_documents/DOC1432.PDF</a></td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id3">[3]</a></td><td>ST M25P80 datasheet. <a class="reference" href="http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf">http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf</a></td></tr>
+<tr><td class="label">[3]</td><td>ST M25P80 datasheet. <a class="reference external" href="http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf">http://www.st.com/stonline/products/literature/ds/8495/m25p80.pdf</a></td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id4">[4]</a></td><td>K9K1G08R0B datasheet. <a class="reference" href="http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf">http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf</a></td></tr>
+<tr><td class="label">[4]</td><td>K9K1G08R0B datasheet. <a class="reference external" href="http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf">http://www.samsung.com/Products/Semiconductor/NANDFlash/SLC_SmallBlock/1Gbit/K9K1G08R0B/ds_k9k1g08x0b_rev10.pdf</a></td></tr>
 </tbody>
 </table>
 </div>

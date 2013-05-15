@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Low Power Listening</title>
 <meta name="author" content="David Moss, Jonathan Hui, Kevin Klues" />
 <style type="text/css">
@@ -12,7 +12,7 @@
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
 :date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.2 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -213,7 +213,7 @@ pre.literal-block, pre.doctest-block {
   margin-right: 2em ;
   background-color: #eeeeee;
   border-color: #000000;
-  border-width: thin; 
+  border-width: thin;
   font-size: 14px
 }
 
@@ -275,6 +275,7 @@ tt {}
 ul.auto-toc {
   list-style-type: none }
 
+
 </style>
 </head>
 <body>
@@ -305,8 +306,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This TEP describes the structure and implementation of the TinyOS 2.x
 link layer abstractions. The architecture is designed to allow each radio
 type to implement its own low power strategy within the Hardware Adaptation
@@ -314,14 +315,14 @@ Layer (HAL), while maintaining a common application interface.  The
 history and strategies for low power listening are discussed, as well
 as expected behavior and implementation recommendations.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Asynchronous low power listening is a strategy used to duty cycle
 the radio while ensuring reliable message delivery since TinyOS 1.x
-<a class="citation-reference" href="#mica2" id="id1" name="id1">[MICA2]</a>.</p>
+<a class="citation-reference" href="#mica2" id="id1">[MICA2]</a>.</p>
 <p>While a CC1000 or CC2420 radio is turned on and listening, it can
 actively consume anywhere between 7.4 to 18.8 mA on top of the power
-consumed by other components in the system <a class="citation-reference" href="#cc1000" id="id2" name="id2">[CC1000]</a>,[CC2420]_.
+consumed by other components in the system <a class="citation-reference" href="#cc1000" id="id2">[CC1000]</a>,[CC2420]_.
 This can rapidly deplete batteries.  In the interest of extending
 battery lifetime, it is best to duty cycle the radio on and off to
 prevent this idle waste of energy.  In an asychronous low power
@@ -334,10 +335,10 @@ power message delivery scheme takes this idea a step further by
 allowing the transmitter to only transmit when it knows the
 destination node is performing a receive check.</p>
 </div>
-<div class="section">
-<h1><a id="background" name="background">2. Background</a></h1>
-<div class="section">
-<h2><a id="early-tinyos-1-x-cc1000-low-power-listening-implementation" name="early-tinyos-1-x-cc1000-low-power-listening-implementation">2.1 Early TinyOS 1.x CC1000 Low Power Listening Implementation</a></h2>
+<div class="section" id="background">
+<h1>2. Background</h1>
+<div class="section" id="early-tinyos-1-x-cc1000-low-power-listening-implementation">
+<h2>2.1 Early TinyOS 1.x CC1000 Low Power Listening Implementation</h2>
 <p>TinyOS 1.x introduced low power listening on the CC1000 radio, but
 never introduced a similar scheme for the CC2420 radio in the baseline.
 The CC1000 radio had the following low power listening commands,
@@ -380,8 +381,8 @@ necessary.  The transmitter's long preamble could end up costing both
 nodes to have their radios on much longer than required, sending and
 receiving useless preamble bits.</p>
 </div>
-<div class="section">
-<h2><a id="cc1000-pulse-check-implementation" name="cc1000-pulse-check-implementation">2.2 CC1000 Pulse Check Implementation</a></h2>
+<div class="section" id="cc1000-pulse-check-implementation">
+<h2>2.2 CC1000 Pulse Check Implementation</h2>
 <p>Joe Polastre and Jason Hill developed a better receive check
 implementation in the CC1000 ?Pulse Check? radio stack for TinyOS 1.x,
 while maintaining the same interface.  This implementation took advantage
@@ -399,8 +400,8 @@ but the transmitter still sent a long, inefficient preamble.  Energy
 consumption used to transmit messages was still high, while throughput
 was still low.</p>
 </div>
-<div class="section">
-<h2><a id="possible-improvements" name="possible-improvements">2.3 Possible Improvements</a></h2>
+<div class="section" id="possible-improvements">
+<h2>2.3 Possible Improvements</h2>
 <p>Low power listening is a struggle between minimizing energy efficiency
 and maximizing throughput.   In an asynchronous low power listening
 scheme, several improvements can be made over earlier implementations.
@@ -427,11 +428,11 @@ different receive check periods should still have the ability to
 reliably communicate with each other with little difficulty.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="interfaces" name="interfaces">3. Interfaces</a></h1>
+<div class="section" id="interfaces">
+<h1>3. Interfaces</h1>
 </div>
-<div class="section">
-<h1><a id="low-power-listening-interface" name="low-power-listening-interface">3.1 Low Power Listening Interface</a></h1>
+<div class="section" id="low-power-listening-interface">
+<h1>3.1 Low Power Listening Interface</h1>
 <p>The LowPowerListening interface MUST be provided for each radio by the
 platform independent ActiveMessageC configuration.</p>
 <p>In some implementations, low power listening may have an option to
@@ -505,16 +506,16 @@ interface LowPowerListening {
 </ul>
 </dd>
 </dl>
-<div class="section">
-<h2><a id="split-control-behaviour" name="split-control-behaviour">3.2 Split Control Behaviour</a></h2>
+<div class="section" id="split-control-behaviour">
+<h2>3.2 Split Control Behaviour</h2>
 <p>Low power listening MUST be enabled and disabled through the radio?s
 standard SplitControl interface, returning exactly one SplitControl
 event upon completion.  While the radio is duty cycling, it MUST NOT
 alert the application layer each time the radio turns on and off to
 perform a receive check or send a message.</p>
 </div>
-<div class="section">
-<h2><a id="send-interface-behaviour" name="send-interface-behaviour">3.3 Send Interface Behaviour</a></h2>
+<div class="section" id="send-interface-behaviour">
+<h2>3.3 Send Interface Behaviour</h2>
 <p>Attempts to send a message before SplitControl.start() has been called
 SHOULD return EOFF, signifying the radio has not been enabled.  When
 SplitControl.start() has been called by the application layer, calls
@@ -525,8 +526,8 @@ being sent, multiple calls to Send should return FAIL.</p>
 completion of the message delivery process, regardless if any mote
 actually received the message.</p>
 </div>
-<div class="section">
-<h2><a id="receive-interface-behaviour" name="receive-interface-behaviour">3.4 Receive Interface Behaviour</a></h2>
+<div class="section" id="receive-interface-behaviour">
+<h2>3.4 Receive Interface Behaviour</h2>
 <p>Upon the successful reception of a message, the low power receive event
 handler SHOULD drop duplicate messages sent to the broadcast address.
 For example, the CC2420 implementation can perform this by checking
@@ -539,14 +540,14 @@ detected going inbound or outbound after some short delay, the radio
 MUST continue duty cycling as configured.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="low-power-listening-message-t-metadata" name="low-power-listening-message-t-metadata">4. Low Power Listening message_t Metadata</a></h1>
+<div class="section" id="low-power-listening-message-t-metadata">
+<h1>4. Low Power Listening message_t Metadata</h1>
 <p>To store the extra 16-bit receiver low power listening value, the radio
 stack?s message_t footer MUST contain a parameter to store the message
 destination?s receive check sleep interval in milliseconds or duty cycle
 percentage.  For example, the low power listening CC2420 message_t footer
 stores the message's receive check interval in milliseconds, as shown
-below <a class="citation-reference" href="#tep111" id="id3" name="id3">[TEP111]</a>.:</p>
+below <a class="citation-reference" href="#tep111" id="id3">[TEP111]</a>.:</p>
 <pre class="literal-block">
 typedef nx_struct cc2420_metadata_t {
   nx_uint8_t tx_power;
@@ -559,8 +560,8 @@ typedef nx_struct cc2420_metadata_t {
 } cc2420_metadata_t;
 </pre>
 </div>
-<div class="section">
-<h1><a id="recommendations-for-hal-implementation" name="recommendations-for-hal-implementation">5. Recommendations for HAL Implementation</a></h1>
+<div class="section" id="recommendations-for-hal-implementation">
+<h1>5. Recommendations for HAL Implementation</h1>
 <p>In the interest of minimizing energy while maximizing throughput, it
 is RECOMMENDED that any asynchronous low power listening implementation
 use clear channel assessment methods to determine the presence of a
@@ -580,8 +581,8 @@ and not defined when low power listening functionality shouldn?t exist.</p>
 <p>It is RECOMMENDED that the radio on-time for actual receive checks be a
 measured value to help approximate the duty cycle percentage.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">David Moss</div>
 <div class="line">Rincon Research Corporation</div>
@@ -589,7 +590,7 @@ measured value to help approximate the duty cycle percentage.</p>
 <div class="line">Tucson, AZ  85750</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 520 519 3138</div>
-<div class="line">email ? <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
+<div class="line">email ? <a class="reference external" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Jonathan Hui</div>
 <div class="line">657 Mission St. Ste. 600</div>
@@ -597,7 +598,7 @@ measured value to help approximate the duty cycle percentage.</p>
 <div class="line">San Francisco, CA 94105-4120</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 415 692 0828</div>
-<div class="line">email - <a class="reference" href="mailto:jhui&#64;archedrock.com">jhui&#64;archedrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:jhui&#64;archedrock.com">jhui&#64;archedrock.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Kevin Klues</div>
 <div class="line">503 Bryan Hall</div>
@@ -605,33 +606,33 @@ measured value to help approximate the duty cycle percentage.</p>
 <div class="line">St. Louis, MO 63130</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1-314-935-6355</div>
-<div class="line">email - <a class="reference" href="mailto:klueska&#64;cs.wustl.edu">klueska&#64;cs.wustl.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:klueska&#64;cs.wustl.edu">klueska&#64;cs.wustl.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1>7. Citations</h1>
 <table class="docutils citation" frame="void" id="mica2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="mica2">[MICA2]</a></td><td>&quot;MICA2 Radio Stack for TinyOS.&quot;  <a class="reference" href="http://www.tinyos.net/tinyos-1.x/doc/mica2radio/CC1000.html">http://www.tinyos.net/tinyos-1.x/doc/mica2radio/CC1000.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[MICA2]</a></td><td>&quot;MICA2 Radio Stack for TinyOS.&quot;  <a class="reference external" href="http://www.tinyos.net/tinyos-1.x/doc/mica2radio/CC1000.html">http://www.tinyos.net/tinyos-1.x/doc/mica2radio/CC1000.html</a></td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep111" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="tep111">[TEP111]</a></td><td>TEP 111: message_t.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[TEP111]</a></td><td>TEP 111: message_t.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="cc1000" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="cc1000">[CC1000]</a></td><td>TI/Chipcon CC1000 Datasheet.  <a class="reference" href="http://www.chipcon.com/files/CC1000_Data_Sheet_2_2.pdf">http://www.chipcon.com/files/CC1000_Data_Sheet_2_2.pdf</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[CC1000]</a></td><td>TI/Chipcon CC1000 Datasheet.  <a class="reference external" href="http://www.chipcon.com/files/CC1000_Data_Sheet_2_2.pdf">http://www.chipcon.com/files/CC1000_Data_Sheet_2_2.pdf</a></td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="cc2420" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="cc2420">[CC2420]</a></td><td>TI/Chipcon CC2420 Datasheet.  <a class="reference" href="http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf">http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf</a></td></tr>
+<tr><td class="label">[CC2420]</td><td>TI/Chipcon CC2420 Datasheet.  <a class="reference external" href="http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf">http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf</a></td></tr>
 </tbody>
 </table>
 </div>
