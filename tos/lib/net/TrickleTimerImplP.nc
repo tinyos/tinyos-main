@@ -80,7 +80,7 @@ implementation {
   void generateTime(uint8_t id);
   
   command error_t Init.init() {
-    int i;
+    uint8_t i;
     for (i = 0; i < count; i++) {
       trickles[i].period = high;
       trickles[i].count = 0;
