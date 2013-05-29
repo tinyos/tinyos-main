@@ -64,9 +64,9 @@ module Msp430Adc12ImplP @safe()
 implementation
 { 
 
-// #ifdef ADC12_TIMERA_ENABLED
-//   #warning Accessing TimerA for ADC12 
-// #endif
+#ifdef ADC12_TIMERA_ENABLED
+  #warning Accessing TimerA for ADC12
+#endif
 
   enum {
     SINGLE_DATA = 1,
