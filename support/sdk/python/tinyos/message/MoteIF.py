@@ -142,8 +142,10 @@ class MoteIF:
             source = tinyos.packet.SerialSource.SerialSource(self, args)
         else:
             raise MoteIFException("bad source")
-        
         source.start()
+        #block until the source has started up.
+        source.semaphore.acquire()
+        source.semaphore.release()
 
         return source
 
