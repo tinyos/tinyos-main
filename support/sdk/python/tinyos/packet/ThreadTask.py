@@ -64,6 +64,7 @@ class ThreadTaskRunner:
 
     def start(self, task):
         thread = threading.Thread(None, task)
+        thread.setDaemon(True)
         thread.start()
 
     def cancelAll(self):
