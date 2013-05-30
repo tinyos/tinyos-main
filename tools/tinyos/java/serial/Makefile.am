@@ -13,9 +13,9 @@ EXTRA_PROGRAMS = libtoscomm.so toscomm.dll libtoscomm.jnilib
 # Compiling libtoscomm.so with -O2 generates bad code with gcc 4.1.x on x86_64
 # (the -O1 code is slightly weird, but works at least ;-))
 
-LIBFLAGS = "-I$(JDK)/include" -s -shared -O2
-SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -fPIC
-DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at
+LIBFLAGS = "-I$(JDK)/include" -s -O2
+SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -shared -fPIC
+DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -shared -D_JNI_IMPLEMENTATION -Wl,--kill-at
 JNILIBFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle
 
 libtoscomm_common_SOURCES = \
