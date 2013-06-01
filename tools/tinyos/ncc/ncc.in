@@ -149,12 +149,19 @@ foreach $dir (@includes) {
 	$platform_def = "$dir/platform";
 	last;
     }
+    if ($dir =~ m!/$target/?$! && -f "$dir/.platform") {
+	$platform_def = "$dir/.platform";
+	last;
+    }
 }
 
 if (!-f $platform_def) {
     # Next, check if it's a "plain" platform
     if (-f "$TOSDIR/$platform/$target/platform") {
 	$platform_def = "$TOSDIR/$platform/$target/platform";
+    }
+    elsif (-f "$TOSDIR/$platform/$target/.platform") {
+	$platform_def = "$TOSDIR/$platform/$target/.platform";
     }
     else {
 	# Finally, see if it's in a platform family
@@ -166,10 +173,43 @@ if (!-f $platform_def) {
 		    $family_def = "$TOSDIR/$platform/$dir/family";
 		    last;
 		}
+		if (-f "$TOSDIR/$platform/$dir/$target/.platform") {
+		    $platform_def = "$TOSDIR/$platform/$dir/$target/.platform";
+		    $family_def = "$TOSDIR/$platform/$dir/family";
+		    last;
+		}
+	    }
+	    if (-f "$TOSDIR/$platform/$dir/.family") {
+		if (-f "$TOSDIR/$platform/$dir/$target/platform") {
+		    $platform_def = "$TOSDIR/$platform/$dir/$target/platform";
+		    $family_def = "$TOSDIR/$platform/$dir/.family";
+		    last;
+		}
+		if (-f "$TOSDIR/$platform/$dir/$target/.platform") {
+		    $platform_def = "$TOSDIR/$platform/$dir/$target/.platform";
+		    $family_def = "$TOSDIR/$platform/$dir/.family";
+		    last;
+		}
 	    }
 	}
 	closedir PLATFORMS;
     }
+}
+
+$platform_dir = $platform_def;
+if ($platform_def =~ m/^.+\/\.[^\/]+$/) {
+    print STDERR "Warning: The .platform file name is deprecated.\n";
+    print STDERR "         It should be renamed to 'platform'\n";
+    print STDERR "         Bad Platform: $platform_def\n";
+    $platform_dir =~ s!/.platform$!!;
+} else {
+    $platform_dir =~ s!/platform$!!;
+}
+
+if ($family_def =~ m/^.+\/\.[^\/]+$/) {
+    print STDERR "Warning: The .family file name is deprecated.\n";
+    print STDERR "         It should be renamed to 'family'\n";
+    print STDERR "         Bad Family: $family_def\n";
 }
 
 # Use sim directory with tossim
@@ -209,18 +249,37 @@ BOARD: while ($i <= $#boards) {
 	    do "$dir/sensor";
 	    next BOARD;
 	}
+	elsif ($dir =~ m!/$board/?$! && -f "$dir/.sensor") {
+	    print STDERR "Warning: The .sensor file name is deprecated.\n";
+	    print STDERR "         It should be renamed to 'sensor'\n";
+	    print STDERR "         Bad Sensor: $dir/.sensor\n";
+	    # Remove from @boards so that we don't add sensorboards/$board
+	    # to the search path
+	    splice @boards, $i, 1;
+	    do "$dir/.sensor";
+	    next BOARD;
+	}
     }
 
     # If none found, check the standard sensorboards directory
     $bspec = &idir_subst("%T/sensorboards/$board/sensor");
-    do $bspec if -f $bspec;
+    if (-f $bspec) {
+	do $bspec;
+    }
+    else {
+	    $bspec = &idir_subst("%T/sensorboards/$board/.sensor");
+	    if (-f $bspec) {
+		print STDERR "Warning: The .sensor file name is deprecated.\n";
+		print STDERR "         It should be renamed to 'sensor'\n";
+		print STDERR "         Bad Sensor: $bspec\n";
+		do $bspec;
+	    }
+    }
 
     $i++;
 }
 
 # Setup platform
-$platform_dir = $platform_def;
-$platform_dir =~ s!/platform$!!;
 push @includes, $platform_dir unless $nostdinc;
 do $platform_def;
 do $family_def if -f $family_def;
@@ -312,16 +371,44 @@ sub all_platforms() {
   local(@platforms);
 
   foreach $dir (@includes) {
-    push_platform($1) if -f "$dir/platform" && $dir =~ m!/([^/]*)/?$!;
+    if (-f "$dir/platform" && $dir =~ m!/([^/]*)/?$!) {
+	push_platform($1);
+    }
+    elsif (-f "$dir/.platform" && $dir =~ m!/([^/]*)/?$!) {
+	push_platform($1);
+    }
   }
 
   if (opendir PLATFORMS, "$TOSDIR/$platform") {
       foreach $d (readdir PLATFORMS) {
-	  push_platform($d) if (-f "$TOSDIR/$platform/$d/platform");
+	  if (-f "$TOSDIR/$platform/$d/platform") {
+		push_platform($d);
+	  }
+	  elsif (-f "$TOSDIR/$platform/$d/.platform") {
+		push_platform($d);
+	  }
 	  if (-f "$TOSDIR/$platform/$d/family") {
 	      if (opendir SUBPLATFORMS, "$TOSDIR/$platform/$d") {
 		  foreach $subdir (readdir SUBPLATFORMS) {
-		      push_platform($subdir) if (-f "$TOSDIR/$platform/$d/$subdir/platform");
+		      if (-f "$TOSDIR/$platform/$d/$subdir/platform") {
+		  	push_platform($subdir);
+		      }
+		      elsif (-f "$TOSDIR/$platform/$d/$subdir/.platform") {
+		  	push_platform($subdir);
+		      }
+		  }
+	      }
+	      closedir SUBPLATFORMS;
+	  }
+	  if (-f "$TOSDIR/$platform/$d/.family") {
+	      if (opendir SUBPLATFORMS, "$TOSDIR/$platform/$d") {
+		  foreach $subdir (readdir SUBPLATFORMS) {
+		      if (-f "$TOSDIR/$platform/$d/$subdir/platform") {
+		  	push_platform($subdir);
+		      }
+		      elsif (-f "$TOSDIR/$platform/$d/$subdir/.platform") {
+		  	push_platform($subdir);
+		      }
 		  }
 	      }
 	      closedir SUBPLATFORMS;
