@@ -34,7 +34,7 @@ BUILD_ROOT=$(pwd)
 CODENAME=squeeze
 
 SOURCENAME=tinyos-tools-devel
-SOURCEVERSION=1.5.0
+SOURCEVERSION=2.2.0
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
@@ -46,6 +46,7 @@ download()
   mkdir -p ${SOURCEDIRNAME}
   cp -R ${TINYOS_ROOT_DIR}/tools ${SOURCEDIRNAME}
   cp -R ${TINYOS_ROOT_DIR}/licenses ${SOURCEDIRNAME}
+  ln -s ../../../tos ${SOURCEDIRNAME}/tos
 }
 
 build()
