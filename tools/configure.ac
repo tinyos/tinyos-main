@@ -44,21 +44,6 @@ AC_MSG_NOTICE(Default ncc build target is $default_target)
 AC_MSG_NOTICE(...but using a tos/default-platform file is a better choice)
 AC_SUBST(default_target)
 
-if test -z "$TOSDIR"; then
-  if test -d ../tos; then
-    TOSDIR=../tos
-  elif test -d ../../tos; then
-    TOSDIR=../../tos
-  elif test -d $HOME/nest/tos; then
-    TOSDIR=$HOME/nest/tos
-  else
-    AC_MSG_ERROR(I can't find the tos directory);
-  fi
-fi
-TOSDIR=`(cd $TOSDIR;pwd)`
-AC_MSG_NOTICE(TinyOS directory is $TOSDIR)
-AC_SUBST(TOSDIR)
-
 AC_MSG_CHECKING(for cygwin)
 case $host in
   *-*-cygwin*)

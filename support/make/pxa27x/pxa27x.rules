@@ -25,6 +25,7 @@ XDB_SYMBOL_EXTRACT = dwarf2bd
 NCC = ncc
 LIBS = -lm
 
+NCC_OPTS = -tosdir=$(TOSDIR)
 AMADDR = ActiveMessageAddressC\$$addr
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
@@ -61,6 +62,7 @@ build_storage: $(BUILDDIR)/StorageVolumes.h
 exe0: build_storage 
 
 VOLUME_ALLOCATOR_FLAGS ?= 
+VOLUME_ALLOCATOR_FLAGS += --tosdir $(TOSDIR)
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
 
@@ -89,7 +91,7 @@ exe: exe0 bytes FORCE
 
 exe0: builddir asms $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(ASSEMBLY_OBJS) $(LIBRARY_OBJS)
+	$(NCC) $(NCC_OPTS) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(ASSEMBLY_OBJS) $(LIBRARY_OBJS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
 endif

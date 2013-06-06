@@ -35,7 +35,7 @@
 # $Revision: 1.7 $
 # $Date: 2009-10-28 04:19:20 $
 #
-                                  
+
 from re import match
 from sys import *
 from xml.dom import minidom
@@ -45,11 +45,11 @@ import string
 import commands
 #New way of handling arguments........
 try:
-  opts, args = getopt(argv[1:], "t", [])
+  opts, args = getopt(argv[1:], "t", ["tosdir="])
 except GetoptError, err:
   print str(err) # will print something like "option -a not recognized"
   stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
-  
+
 if len( args ) == 1:
   platformdir = args[0]
   # This gives the whole string when there's no / in platformdir
@@ -59,11 +59,13 @@ elif len( args ) == 0:
   platform = ""
 else:
   stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
-  
+
 cthreads = False
 for o, a in opts:
   if o == "-t":
     cthreads = True
+  elif o == "--tosdir":
+    pass
   else:
     assert False, "unhandled option"
 
@@ -105,7 +107,7 @@ for volume in dom.documentElement.getElementsByTagName( "volume" ):
     isCircular = string.upper(volume.getAttribute("circular"))
     if isCircular == "":
       isCircular = "FALSE"
-          
+
     if name == "":
         error_exit( "volume has no name" )
     elif not match( "^[a-zA-Z0-9_]+$", name ):
@@ -114,7 +116,7 @@ for volume in dom.documentElement.getElementsByTagName( "volume" ):
         error_exit( "duplicate volume definition '%s'" % name )
     else:
         volumes[ name ] = "blah"
-    
+
     if size == "":
         error_exit( "volume '%s' has no size" % name )
     try:
@@ -138,7 +140,7 @@ for volume in dom.documentElement.getElementsByTagName( "volume" ):
     volumeSizes.append( size / SECTOR_SIZE )
     volumeTypes["VOLUME_" + name] = type
     volumeOptions["VOLUME_" + name] = isCircular
-      
+
     if base == "":
         volumeOffsets.append( -1 )
     else:
@@ -178,7 +180,7 @@ for i in range( len( volumeNames ) ):
     print "#define %s %s" % ( volumeNames[ i ] + "_UQ", "unique(\"pxa27xp30.Volume\")" )
 print "#define _V_NUMVOLS_ %d" % ( len( volumeNames ))
 print ""
-        
+
 print "static const p30_volume_info_t P30_VMAP[ %d ] = {" % \
       len( volumeNames )
 for i in range( len( volumeNames ) ):
@@ -200,8 +202,8 @@ if cthreads == True:
   outFile.write("    interface BlockWrite[uint8_t volume_id]; \n")
   outFile.write("    interface LogRead[uint8_t volumeId]; \n")
   outFile.write("    interface LogWrite[uint8_t volumeId]; \n")
-   outFile.write("    interface Mount[uint8_t volumeId]; \n")
-   outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
+  outFile.write("    interface Mount[uint8_t volumeId]; \n")
+  outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
   outFile.write("  } \n")
   outFile.write("} \n")
   outFile.write("\n")
@@ -222,9 +224,9 @@ if cthreads == True:
       outFile.write("  VolumeMapP.SubBlockRead[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubBlockWrite[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("\n")
-      
+
     elif volumeTypes[volumeNames[i]] == "log":
-      outFile.write("\n")      
+      outFile.write("\n")
       outFile.write("  components new LogStorageC(" + volumeNames[i] + ", " + volumeOptions[volumeNames[i]] + ") as LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogRead[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")

@@ -24,10 +24,9 @@ Quick Start
 ----------------------------------------------------------------------------
 
 To use this build system, GNU Make 3.80 or greater is required; check with
-"make --version".  Then, set MAKERULES, find an application, and try make
+"make --version".  Then, find an application, and try make
 
-export MAKERULES=`ncc -print-tosdir`/../tools/make/Makerules
-cd `ncc -print-tosdir`/../apps/Blink  #or any app dir
+cd ../../apps/Blink  #or any app dir
 make telos help
 
 The end of this document has a few notes on some issues that can arise with
@@ -74,7 +73,7 @@ User make/ directories
 ----------------------------------------------------------------------------
 
 I've added a new variable TOSMAKE_PATH that allows you to define additional
-root directories for the TinyOS Make System that behave just like the 
+root directories for the TinyOS Make System that behave just like the
 primary make/ directory.  In one of your own make files, just add one or
 more directories to TOSMAKE_PATH sometime before make/Makerules is included:
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2000-2003 The Regents of the University of California.  
+# Copyright (c) 2000-2003 The Regents of the University of California.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# @author Kamin Whitehouse 
+# @author Kamin Whitehouse
 #
 
 import sys, string, math, re, os
@@ -39,7 +39,7 @@ from copy import deepcopy
 ###########
 # This class can be used to hold a basic nesc type, eg uint8_t It can
 # be set and get through nescType.value, and does type checking
-# 
+#
 ###########
 
 def findBuildFile(givenString, desiredFilename) :
@@ -62,20 +62,16 @@ def findBuildFile(givenString, desiredFilename) :
   elif len(givenString) > 0:
     filename = 'build/' + givenString + '/' + desiredFilename
 
-  #check if a default platform environment variable is defined
-  elif os.environ.has_key("TINYOS_DEFAULT_PLATFORM") :
-    filename = 'build/' + os.environ["TINYOS_DEFAULT_PLATFORM"] + '/' + desiredFilename
-
   #otherwise, assume the file is in './'
   else :
     filename = desiredFilename
-    
+
   #check to see if the file was successfully found
   if not os.path.isfile(filename) :
     raise IOError("File %s not found" % filename)
   return filename
 
-  
+
 class nescType( object ) :
   """A python representation of a nesc type.
 
@@ -108,7 +104,7 @@ class nescType( object ) :
     else :
         return str(self.value)
 
-  #   this func could be used for type checking 
+  #   this func could be used for type checking
   def __setattr__(self, name, value) :
     if self.__dict__.has_key("value") and name == "value":
         #use the type conversions built into pack
@@ -124,7 +120,7 @@ class nescType( object ) :
                     deepcopy(self.value, memo))
     memo[id(self)] = result
     return result
-  
+
   def isType(self, xmlDefinition) :
     """returns 1 if the xml definition describes this type.
     Returns 0 otherwise."""
@@ -137,7 +133,7 @@ class nescType( object ) :
       return 1
     else :
       return 0
-  
+
   def getBytes(self) :
     """Hexidecimal representation of a value of this type"""
     if self.nescType == "void" :
@@ -152,7 +148,7 @@ class nescType( object ) :
       raise Exception("Wrong number of bytes for conversion: %s %d bytes to %d" %
                       (self.nescType, len(bytes), self.size))
     return bytes
-  
+
   def setBytes(self, bytes):
     """A value of this type from a hexidecimal representation"""
     if self.nescType == "void" :
@@ -213,12 +209,12 @@ class nescArray( object ) :
     self.value = []
     for i in range(self.len):
       self.value.append(deepcopy(self.elementType))
-      
+
 
   def __repr__(self) :
     """A printable representation of the value"""
     return "%s object at %s:\n\n\t%s" % (self.__class__, hex(id(self)), str(self))
-    
+
   def __str__(self) :
     """A printable representation of the value"""
     string = "nescArray of type %s:\n" % self.nescType
@@ -243,8 +239,8 @@ class nescArray( object ) :
               return self.value.__getitem__(key).value
       else:
           return self.value.__getitem__(key)
-      
-  def __setitem__(self, key, value) : 
+
+  def __setitem__(self, key, value) :
       if self.elementType.__class__ == nescType :
         if key.__class__ == slice:
             i=0;
@@ -256,7 +252,7 @@ class nescArray( object ) :
       else :
           self.value.__setitem__(key, value)
 
-  def __delitem__(self, key) : 
+  def __delitem__(self, key) :
       return self.value.__delitem__(key)
 
   def oneLineStr(self) :
@@ -282,7 +278,7 @@ class nescArray( object ) :
       else:
         string += "\b\b]"
     return string
- 
+
   def __deepcopy__(self, memo={}) :
     result = nescArray()
     memo[id(self)] = result
@@ -314,8 +310,8 @@ class nescArray( object ) :
       raise Exception("Byte conversion error: %s %d bytes to %d" %
                       ( self.nescType, len(bytes), self.size))
     return bytes
-    
-  
+
+
   def setBytes(self, bytes) :
     """A value of this type from a hexidecimal representation"""
     if len(bytes) < self.size:
@@ -342,7 +338,7 @@ class nescPointer( object ) :
   pointer
   print pointer
   """
-  
+
   def __init__( self , *varargs) :
     """initialize all elements to 0"""
     if len(varargs) == 0:
@@ -362,7 +358,7 @@ class nescPointer( object ) :
     self.nescType = self.value.nescType + "*"
     self.cType = self.value.cType + "*"
     self.pythonType = self.value.pythonType + "*"
-      
+
   def __repr__(self) :
     return "%s object at %s:\n\n\t%s" % (self.__class__, hex(id(self)), str(self))
 
@@ -399,7 +395,7 @@ class nescPointer( object ) :
           raise Exception("Byte conversion error: %s %d bytes to %d" %
                           (self.nescType, len(bytes), self.size) )
       return bytes
-  
+
   def setBytes(self, bytes) :
     if len(bytes) < self.size:
         raise Exception("Byte conversion error: %s %d bytes to %d" %
@@ -455,7 +451,7 @@ class nescStruct( object ) :
     self.cType = self.nescType
     self.pythonType = self.nescType
     self.__initialized = True
-    
+
   def __getattr__(self, name) :
     if self.__dict__.has_key("value") :
       if self.value.has_key(name) :
@@ -479,11 +475,11 @@ class nescStruct( object ) :
       self.__dict__[name] = value
     else :
       raise AttributeError("No such field \"%s\" in the nescStruct \"%s\"" % (name, self.nescType))
-        
+
 
   def __repr__(self) :
     return "%s object at %s:\n\n\t%s" % (self.__class__, hex(id(self)), str(self))
-    
+
   def __str__(self) :
     """All fields and values as a readable string"""
     string = self.nescType + ": \n"
@@ -550,7 +546,7 @@ class nescStruct( object ) :
       self.fields.append(field)
       self.value[field["name"]] = fType
       self.size += fType.size
-  
+
   def isType(self, xmlDefinition) :
     """returns 1 if the xml definition describes this type.
     Returns 0 otherwise."""
@@ -559,7 +555,7 @@ class nescStruct( object ) :
     child = getUniqueChild(xmlDefinition)
     if ( ( xmlDefinition.tagName == "struct" and
            xmlDefinition.getAttribute("name") == self.nescType) or
-         ( xmlDefinition.tagName == "type-tag" and child != None and 
+         ( xmlDefinition.tagName == "type-tag" and child != None and
            child.tagName == "struct-ref" and
            child.getAttribute("name") == self.nescType ) ) :
       return 1
@@ -641,7 +637,7 @@ class TosMsg ( nescStruct ) :
     Is a nescStruct object.
     Can be used with
     pytos.comm.send, pytos.comm.register, pytos.comm.unregister.
-    
+
     usage:
     msg = TosMsg(amType)
     msg = TosMsg(amType, nescStruct)
@@ -680,7 +676,7 @@ class TosMsg ( nescStruct ) :
         return self.parentMsg
       else :
         return self.parentMsg.getParentMsg(amOrName)
-      
+
     def createMigMsg(self) :
         """Returns a java BaseTOSMsg with same amType and length
         and with data payload of same bytes"""
@@ -701,11 +697,11 @@ class TosMsg ( nescStruct ) :
 
     def __repr__(self) :
       return "%s object at %s:\n\n\t%s" % (self.__class__, hex(id(self)), str(self))
-      
+
     def __str__(self) :
         """All fields and values as a readable string"""
         return "TosMsg(am=%d) " % self.amType + nescStruct.__str__(self)
-        
+
     def setBytes(self, bytes) :
         """Extend this msg to be longer, if necessary to accomodate extra data.
         This only happens if the last field is a nescArray of length 0.
@@ -735,7 +731,7 @@ class TosMsg ( nescStruct ) :
             else:
                 #print "last field is not nescArray[0]. Cannot grow. Ignoring extra data."
                 pass
-            
+
         #make sure everything worked out correctly and call parent's function
         if len(bytes) != self.size :#trueSize() :
             raise Exception("Incorrect number of bytes for TosMsg. Byte conversion error: %s %d bytes to %d" % ( self.nescType, len(bytes), self.size) )
@@ -778,5 +774,5 @@ def hex2bin(bytes) :
 def TestAppTypes() :
     testRpc = appTypes('/home/kamin/tinyos-1.x/contrib/hood/apps/TestRpc/build/telosb/nesc.xml')
     print testRpc
-    
+
 if __name__ == "__main__": TestAppTypes()

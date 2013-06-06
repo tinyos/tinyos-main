@@ -16,6 +16,7 @@ OBJDUMP = objdump
 NCC = ncc
 LIBS = -lm
 
+NCC_OPTS = -tosdir=$(TOSDIR)
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
@@ -47,6 +48,7 @@ build_storage: $(BUILDDIR)/StorageVolumes.h
 
 exe0: build_storage 
 
+VOLUME_ALLOCATOR_FLAGS += --tosdir $(TOSDIR)
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) <$(VOLUMEFILE) >$@
 
@@ -68,7 +70,7 @@ exe: exe0 bytes FORCE
 
 exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+	$(NCC) $(NCC_OPTS) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
 
 builddir: FORCE

@@ -27,13 +27,16 @@ ifeq ($(filter quiet,$(DOCS)),quiet)
 QUIET = -quiet
 endif
 
+# Get an absolute path to the tos folder
+NESDOC_TOSDIR = -tosdir=$(TOSDIR)
+
 BUILD_DEPS = docs_
 
 docs_: FORCE
 	@echo "    Making documentation for $(COMPONENT) on $(PLATFORM)"
-        # first generate the xml files
-	nesdoc -o $(DOCDIR) $(NESDOC_FLAGS) $(PFLAGS) $(CFLAGS) $(QUIET) $(COMPONENT).nc
+	# first generate the xml files
+	nesdoc -o $(DOCDIR) $(NESDOC_TOSDIR) $(NESDOC_FLAGS) $(PFLAGS) $(CFLAGS) $(QUIET) $(COMPONENT).nc
 ifneq ($(filter nohtml,$(DOCS)),nohtml)
-        # generate html from the xml files
-	nesdoc -o $(DOCDIR) -html $(QUIET) -target=$(PLATFORM)
+	# generate html from the xml files
+	nesdoc -o $(DOCDIR) $(NESDOC_TOSDIR) -html $(QUIET) -target=$(PLATFORM)
 endif

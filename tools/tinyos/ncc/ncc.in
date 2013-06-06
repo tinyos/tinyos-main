@@ -10,20 +10,13 @@
 # 94704.  Attention:  Intel License Inquiry.
 
 # Configuration
-$TOSDIR = $ENV{"TOSDIR"} if defined($ENV{"TOSDIR"});
 $nescc = "nescc";
 $tossim = 0;
 $is_tos_1 = 0;
 $with_scheduler_flag = 1;
 
-# Support platform directory renaming for 2.x
-if (-d "$TOSDIR/platform") {
-    $platform = "platform";
-    $is_tos_1 = 1;
-}
-else {
-    $platform = "platforms";
-}
+# platform directory for 2.x
+$platform = "platforms";
 
 my $exeflag=0;
 my $libs = "";
@@ -52,10 +45,6 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	}
 	elsif (/^-board=(.*)/) {
 	    push @boards, $1;
-	    $strip = 1;
-	}
-	elsif (/^-print-tosdir$/) {
-	    $print_tosdir = 1;
 	    $strip = 1;
 	}
 	elsif (/^-print-target$/) {
@@ -105,14 +94,13 @@ if ($print_version) {
     print "ncc: @PACKAGE_VERSION@\n";
 }
 
+if (!defined $TOSDIR) {
+	print "No TOSDIR provided. Cannot find TinyOS source.\n";
+	exit 1;
+}
+
 # Remove trailing / from TOSDIR, if any (it confuses the topdir stuff)
 chop $TOSDIR if $TOSDIR =~ m!./$!;
-
-if ($print_tosdir)
-{
-    print $TOSDIR, "\n";
-    exit 0;
-}
 
 if ($print_platforms)
 {

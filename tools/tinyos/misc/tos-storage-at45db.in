@@ -2,9 +2,9 @@
 # Copyright (c) 2006-2007 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 from xml.dom import *
@@ -16,17 +16,25 @@ from subprocess import Popen, PIPE
 from getopt import *
 import string
 import commands
+
+def print_usage():
+  stderr.write("Usage: tos-storage-at45db [-t] [-s <sector size>] \
+[-f <flash size in sectors>] [--tosdir <path to tos directory>] \
+<platform directory>\n")
+
 #New way of handling arguments........
 try:
-  opts, args = getopt(argv[1:], "ts:f:", [])
+  opts, args = getopt(argv[1:], "ts:f:", ["tosdir="])
 except GetoptError, err:
   print str(err) # will print something like "option -a not recognized"
-  stderr.write("Usage: tos-storage-at45db [-t] [-s <sector size>] [-f <flash size in sectors>] <platform directory>\n")
-  
+  print_usage()
+  quit(1)
+
 sector_size = 256
 flash_size = 2048 # in sectors
 
 cthreads = False
+tosdir = ""
 for o, a in opts:
   if o == "-t":
     cthreads = True
@@ -34,6 +42,8 @@ for o, a in opts:
     sector_size = int(a)
   elif o == "-f":
     flash_size = int(a)
+  elif o == "--tosdir":
+    tosdir = str(a)
   else:
     assert False, "unhandled option"
 
@@ -45,7 +55,8 @@ elif len( args ) == 0:
   platformdir = ""
   platform = ""
 else:
-  stderr.write("Usage: tos-storage-at45db [-t] <platform directory>\n")
+  print_usage()
+  quit(1)
 
 # print an error message and exit
 def nfail(s):
@@ -131,8 +142,7 @@ def expand_path(path):
       elif c == 'P':
         sub = platformdir
       elif c == 'T':
-        sub = Popen(["ncc", "-print-tosdir"], stdout=PIPE).communicate()[0]
-        sub = sub[:-1] # remove newline
+        sub = tosdir
       else:
         nfail("unknown include-path substitution character " + c)
       path += sub
@@ -163,11 +173,11 @@ def volumeparse(file, fname, depth):
     if size == None:
       nfail("size omitted in volume %s %s" % (name, fname))
     check_volume(name, base, size)
-    
+
     volumeNames.append( "VOLUME_" + name )
     volumeTypes["VOLUME_" + name] = type
     volumeOptions["VOLUME_" + name] = isCircular
-    
+
   for include in dom.documentElement.getElementsByTagName("include"):
     included = include.firstChild
     if included != None and included.nodeType == included.TEXT_NODE:
@@ -255,9 +265,9 @@ if cthreads == True:
       outFile.write("  VolumeMapP.SubBlockRead[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubBlockWrite[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("\n")
-      
+
     elif volumeTypes[volumeNames[i]] == "log":
-      outFile.write("\n")      
+      outFile.write("\n")
       outFile.write("  components new LogStorageC(" + volumeNames[i] + ", " + volumeOptions[volumeNames[i]] + ") as LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogRead[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
