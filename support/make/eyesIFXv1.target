@@ -1,18 +1,18 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eyesIFXv1.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
-PLATFORM = eyesIFXv1
+TARGET = eyesIFXv1
 
 MSP_MCU = msp430f149
 
-ifndef DEFAULT_PROGRAM
-DEFAULT_PROGRAM = jtag
-endif
+# Use JTAG as the default programmer
+$(call TOSMake_include,msp/jtag.extra)
 
-VOLUME_FILE = volumes-stm25p.xml
-VOLUME_ALLOCATOR ?= tos-storage-stm25p
+TOSMAKE_VOLUME_FILE = volumes-stm25p.xml
+TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-stm25p
 
-$(call TOSMake_include_platform,msp)
+$(call TOSMake_include_family,eyesIFX)
+$(call TOSMake_include_platform,eyesIFXv1)
+$(call TOSMake_include_make_platform,msp)
 
 eyesIFXv1: $(BUILD_DEPS)
-    @:
+	@:

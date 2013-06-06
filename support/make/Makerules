@@ -174,7 +174,7 @@ endef
 #  Use this function to add a sensorboard to a target.
 TOSMake_include_sensor=$(eval $(call TOSMake_include_sensor_define,$(1)))
 define TOSMake_include_sensor_define
-$(call TOSMake_include,sensors/$(1).sensor)
+$(call TOSMake_include,sensorboards/$(1).sensor)
 PFLAGS += -DBOARD_$(shell echo $(1) | tr a-z A-Z)
 endef
 

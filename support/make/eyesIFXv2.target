@@ -1,27 +1,25 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eyesIFXv2.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
-PLATFORM = eyesIFXv2
+TARGET = eyesIFXv2
 
 MSP_MCU = msp430f1611
 
 #Flash Config
-VOLUME_FILE = volumes-at45db.xml
-VOLUME_ALLOCATOR ?= tos-storage-at45db
-
-ifndef DEFAULT_PROGRAM
-DEFAULT_PROGRAM = bsl
-endif
+TOSMAKE_VOLUME_FILE = volumes-at45db.xml
+TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-at45db
 
 MSP_BSL_FLAGS ?= --invert-test --invert-reset --f1x
-BSL?=/dev/ttyUSB1
+BSL ?= /dev/ttyUSB1
+
 ifeq (,$(findstring /dev/ttyUSB,$(BSL)))
   ifneq (,$(findstring USB,$(BSL)))
     BSL:=/dev/tty$(BSL)
   endif
 endif
 
-$(call TOSMake_include_platform,msp)
+$(call TOSMake_include_family,eyesIFX)
+$(call TOSMake_include_platform,eyesIFXv2)
+$(call TOSMake_include_make_platform,msp)
 
 eyesIFXv2: $(BUILD_DEPS)
-    @:
+	@:

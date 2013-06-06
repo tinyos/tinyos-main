@@ -1,6 +1,4 @@
-#$Id:
-
-PLATFORM = ucbase
+TARGET = ucbase
 PROGRAMMER ?= avrdude
 
 PROGRAMMER_PART ?= -pm128rfa1
@@ -46,7 +44,8 @@ softreset:
 
 reset:$(RESETTARGET)
 
-$(call TOSMake_include_platform,avr)
+$(call TOSMake_include_platform,ucbase)
+$(call TOSMake_include_make_platform,avr)
 
 ucbase: $(BUILD_DEPS)
 	@:

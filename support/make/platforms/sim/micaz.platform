@@ -1,0 +1,33 @@
+#-*-Makefile-*- vim:syntax=make
+#
+PFLAGS += %T/platforms/mica
+PFLAGS += %T/platforms/micaz/chips/cc2420
+PFLAGS += %T/chips/cc2420
+
+PFLAGS += %T/chips/cc2420/alarm
+PFLAGS += %T/chips/cc2420/control
+PFLAGS += %T/chips/cc2420/csma
+PFLAGS += %T/chips/cc2420/interfaces
+PFLAGS += %T/chips/cc2420/link
+PFLAGS += %T/chips/cc2420/lowpan
+PFLAGS += %T/chips/cc2420/lpl
+PFLAGS += %T/chips/cc2420/packet
+PFLAGS += %T/chips/cc2420/receive
+PFLAGS += %T/chips/cc2420/spi
+PFLAGS += %T/chips/cc2420/transmit
+PFLAGS += %T/chips/cc2420/unique
+PFLAGS += %T/platforms/mica2/chips/at45db
+PFLAGS += %T/platforms/mica/chips/at45db
+PFLAGS += %T/chips/at45db
+
+PFLAGS += %T/chips/atm128
+PFLAGS += %T/chips/atm128/adc
+PFLAGS += %T/chips/atm128/pins
+PFLAGS += %T/chips/atm128/spi
+PFLAGS += %T/chips/atm128/timer
+PFLAGS += %T/lib/power
+PFLAGS += %T/lib/timer
+PFLAGS += %T/lib/serial
+
+PFLAGS += -fnesc-no-debug
+

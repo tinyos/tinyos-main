@@ -1,4 +1,4 @@
-PLATFORM = z1
+TARGET = z1
 
 MSP_BSL ?= tos-bsl
 MOTELIST ?= motelist
@@ -19,7 +19,8 @@ endif
 VOLUME_FILE = volumes-stm25p.xml
 VOLUME_ALLOCATOR ?= tos-storage-stm25p
 
-$(call TOSMake_include_platform,msp)
+$(call TOSMake_include_platform,z1)
+$(call TOSMake_include_make_platform,msp)
 
 z1: $(BUILD_DEPS)
 	@:

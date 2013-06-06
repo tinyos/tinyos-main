@@ -1,7 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: telosa.target,v 1.6 2008-03-11 09:34:13 klueska Exp $
 
-PLATFORM ?= telosa
+TARGET = telosa
 
 MSP_MCU = msp430f149
 
@@ -14,7 +13,8 @@ endif
 VOLUME_FILE = volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
 
-$(call TOSMake_include_platform,msp)
+$(call TOSMake_include_platform,telosa)
+$(call TOSMake_include_make_platform,msp)
 
 telos: $(BUILD_DEPS)
 	@:

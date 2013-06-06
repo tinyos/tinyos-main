@@ -1,3 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
 EYES_IFX_VER ?= v2
 
 ifeq ($(EYES_IFX_VER),v2)

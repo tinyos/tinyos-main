@@ -1,6 +1,4 @@
-#$Id:
-
-PLATFORM = ucmini
+TARGET = ucmini
 PROGRAMMER ?= avrdude
 
 PROGRAMMER_PART ?= -pm128rfa1
@@ -38,7 +36,8 @@ endif
 reset:
 	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -reset -sleep 2  -askforreset
 
-$(call TOSMake_include_platform,avr)
+$(call TOSMake_include_platform,ucmini)
+$(call TOSMake_include_make_platform,avr)
 
 ucmini: $(BUILD_DEPS)
 	@:

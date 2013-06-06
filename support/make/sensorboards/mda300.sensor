@@ -1,0 +1,3 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/sensorboards/mda300

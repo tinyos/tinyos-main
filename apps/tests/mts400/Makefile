@@ -1,5 +1,4 @@
 COMPONENT=Mts400TesterC
-SENSORBOARD=mts400
 
 BUILD_EXTRA_DEPS = DataMsg.java Mts400Tester.class
 CLEAN_EXTRA = $(BULID_EXTRA_DEPS) *.class
@@ -10,3 +9,4 @@ Mts400Tester.class: Mts400Tester.java DataMsg.java
 	javac Mts400Tester.java
 TINYOS_ROOT_DIR?=../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
+$(call TOSMake_include_sensor,mts400)

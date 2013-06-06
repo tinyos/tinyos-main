@@ -1,7 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: btnode3.target,v 1.5 2007-11-06 19:32:56 sallai Exp $
 
-PLATFORM ?= btnode3
+TARGET = btnode3
 SENSORBOARD ?= micasb
 PROGRAMMER ?= avrdude
 ifeq ($(PROGRAMMER),avrdude)
@@ -22,7 +21,8 @@ endif
 
 AVR_FUSE_H ?= 0xd9
 
-$(call TOSMake_include_platform,avr)
+$(call TOSMake_include_platform,btnode3)
+$(call TOSMake_include_make_platform,avr)
 
 btnode3: $(BUILD_DEPS)
 	@:

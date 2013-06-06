@@ -1,4 +1,4 @@
-SENSORBOARD = mts300
+#SENSORBOARD = mts300
 PFLAGS += -DMTS300CA
 PFLAGS += -I%T/lib/net/ctp -I%T/lib/net -I%T/lib/net/4bitle -I%T/lib/net/drip
 COMPONENT=AntiTheftAppC
@@ -10,4 +10,4 @@ COMPONENT=AntiTheftAppC
 
 TINYOS_ROOT_DIR?=../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-
+$(call TOSMake_include_sensor,mts300)
