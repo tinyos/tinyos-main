@@ -9,6 +9,5 @@ CFLAGS += $(IDENT_FLAGS)
 
 BUILD_EXTRA_DEPS += ident_cache
 
-ident_cache: FORCE
-	@echo '$(IDENT_FLAGS)' > $(BUILDDIR)/ident_flags.txt
-
+ident_cache: build_dir FORCE
+	@echo '$(IDENT_FLAGS)' > $(TOSMAKE_BUILD_DIR)/ident_flags.txt

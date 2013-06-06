@@ -16,7 +16,7 @@
 ifneq ($(findstring \,$(TINYOS_MAKERULES)),)
 TINYOS_MAKERULES := $(subst \,/,$(TINYOS_MAKERULES))
 define BACKSLASH_WARNING
-warning, TINYOS_MAKERULES contains backslashes.
+$(WARN_STRING) TINYOS_MAKERULES contains backslashes.
 
     The environment variable TINYOS_MAKERULES contains backslashes \'s.  This
     can cause shell scripts including ones in this make system to fail in
@@ -37,7 +37,31 @@ endif
 #  like the make system to search.
 TOSMAKE_PATH = $(addsuffix /support/make,$(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL)))
 TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
-#$(warning $(TOSMAKE_PATH))
+
+#  Also determine the path for all TinyOS OS directories that may have code in
+#  them. This makes out-of-tree builds and multiple TinyOS code trees very easy
+#  to manage. All relevant folders will automatically be included to the call to
+#  nescc.
+TOSMAKE_OS_DIR_ALL = $(addsuffix /tos,$(TINYOS_ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
+
+#  Set the rules that expand PFLAGS (which have %T in them) to the PFLAGS that
+#  nescc sees when it compiles.
+TOSDIR_OPTS = $(addprefix --tosdir ,$(TOSMAKE_OS_DIR_ALL))
+NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
+
+#  Add the defaults to the list of PFLAGS. These are set in Makedefaults.
+#  - The standard include directories to PFLAGS. (tos/system, etc.)
+#  - nescc defaults (all warnings, include tos.h)
+#  - nescc scheduler
+#  - .c file for nescc output
+#  - Separator for nescc output
+#  - Define the default TOS AM group
+PFLAGS += $(TINYOS_PFLAGS_STD_INCLUDE)
+PFLAGS += $(NESC_FLAGS)
+PFLAGS += -fnesc-scheduler=$(NESC_SCHEDULER)
+PFLAGS += -fnesc-cfile=$(NESC_CFILE)
+PFLAGS += -fnesc-separator=$(NESC_SEPARATOR)
+PFLAGS += $(TINYOS_PFLAGS_DEFINED_TOS_AM_GROUP)
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -121,20 +145,35 @@ $(call TOSMake_include_dir,$(1))
 $(call TOSMake_include,$(1)/$(1).rules)
 endef
 
+# TOSMake_include_sensor(sensorboard)
+#  Includes the [sensorboard].sensor file from the $TOSMAKE_PATH/sensors folder.
+#  Use this function to add a sensorboard to a target.
 TOSMake_include_sensor=$(eval $(call TOSMake_include_sensor_define,$(1)))
 define TOSMake_include_sensor_define
 $(call TOSMake_include,sensors/$(1).sensor)
 endef
 
+# TOSMake_include_platform(platform)
+#  Use this to specify which platform the target is based on.
 TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
 define TOSMake_include_platform_define
 $(call TOSMake_include,platforms/$(1).platform)
 endef
 
+# TOSMake_include_family(family)
+#  Specify that this target is part of a family.
 TOSMake_include_family=$(eval $(call TOSMake_include_family_define,$(1)))
 define TOSMake_include_family_define
 $(call TOSMake_include,families/$(1).family)
 endef
+
+
+### ---
+### --- Common targets
+### ---
+
+build_dir:
+	@mkdir -p $(TOSMAKE_BUILD_DIR)
 
 
 ### ---

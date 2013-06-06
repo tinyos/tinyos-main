@@ -4,11 +4,10 @@
 PLATFORM ?= epic
 
 # Default BSL assumes telosb-like programming interface
-MSP_BSL ?= tos-bsl
 MSP_BSL_FLAGS = --telosb
 
-VOLUME_FILE = volumes-at45db.xml
-VOLUME_ALLOCATOR ?= tos-storage-at45db
+TOSMAKE_VOLUME_FILE = volumes-at45db.xml
+TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-at45db
 
 ifdef CC2420_CHANNEL
 PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)

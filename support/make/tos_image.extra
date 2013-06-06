@@ -5,5 +5,5 @@ TOS_IMAGE_PL ?= tos-write-image
 IDENT_PROGRAM_NAME ?= $(COMPONENT)
 
 build_tosimage: FORCE
-	@echo "    writing TOS image"
-	@$(TOS_IMAGE_PL) $(IDENT_FLAGS) --ihex="$(MAIN_IHEX)" --exe="$(MAIN_EXE)" --objdump="$(OBJDUMP)" --platform="$(PLATFORM)" > $(BUILDDIR)/tos_image.xml
+	@echo -e "$(INFO_STRING) writing TOS image"
+	@tos-write-image $(IDENT_FLAGS) --ihex="$(MAIN_IHEX)" --exe="$(MAIN_EXE)" --objdump="$(OBJDUMP)" --platform="$(PLATFORM)" > $(TOSMAKE_BUILD_DIR)/tos_image.xml

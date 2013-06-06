@@ -8,12 +8,34 @@ NESC_FLAGS += -fnesc-include=tos
 NESC_FLAGS += -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 GOALS += ident_flags tos_image tosboot
 
-PFLAGS += -DPLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)
+NESC_FLAGS ?= -Wnesc-all -fnesc-include=tos
+NESC_SCHEDULER ?= TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+NESC_CFILE ?= $(TOSMAKE_BUILD_DIR)/app.c
+NESC_SEPARATOR ?= __
 
 # Add the standard TinyOS source directories to the build search path
-STD_PFLAGS += -I%T/system
-STD_PFLAGS += -I%T/types
-STD_PFLAGS += -I%T/interfaces
+TINYOS_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
+
+# Define the TOS_AM_GROUP to be 0x22 by default
+TINYOS_PFLAGS_DEFINED_TOS_AM_GROUP ?= -DDEFINED_TOS_AM_GROUP=0x22
+
+### ---
+### --- Set common variables that are local to the Make system that are used in
+### --- many .rules files.
+### ---
+
+# Setup variables for the common output files. Not all toolchains may use all
+# these, but this way not all .rules files have to set all of them.
+TOSMAKE_BUILD_DIR ?= build/$(TARGET)
+MAIN_EXE = $(TOSMAKE_BUILD_DIR)/main.exe
+MAIN_IHEX = $(TOSMAKE_BUILD_DIR)/main.ihex
+MAIN_BIN = $(TOSMAKE_BUILD_DIR)/main.bin
+MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec
+
+# Variable name to be replaced when a NODEID is set
+TOSMAKE_AMADDR ?= ActiveMessageAddressC__addr
+
+GOALS += ident_flags tos_image tos_buildinfo tosboot
 
 define DEFAULT_HELP
 

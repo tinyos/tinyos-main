@@ -40,6 +40,4 @@ PFLAGS += -mmcu=msp430f1611
 PFLAGS += -fnesc-target=msp430
 PFLAGS += -fnesc-no-debug
 
-##PFLAGS += -DPLATFORM_EPIC
-
 #push @opts, "-mingw-gcc" if $cygwin;

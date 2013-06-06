@@ -1,7 +1,7 @@
 #-*-Makefile-*- vim:syntax=make
 #$Id: jtag.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
-PROGRAM = jtag
+TOSMAKE_PROGRAMMER_TYPE = jtag
 
 ifndef MSP_JTAG
 MSP_JTAG = msp430-jtag

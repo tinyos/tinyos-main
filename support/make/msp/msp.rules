@@ -30,26 +30,14 @@ SET_ID = tos-set-symbols
 NESC = nescc
 LIBS = -lm
 
-# Use __ as the separator - requires nesC 1.2.9 or later
-ifneq ($(filter sim,$(GOALS)),sim)
-  PFLAGS += -fnesc-separator=__
-endif
-
-ALL_TOS_DIRS = $(addsuffix /tos,$(TINYOS_ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
-TOSDIR_OPTS = $(addprefix --tosdir ,$(ALL_TOS_DIRS))
-AMADDR = ActiveMessageAddressC__addr
-BUILDDIR ?= build/$(PLATFORM)
-MAIN_EXE = $(BUILDDIR)/main.exe
-MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
-PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
-PFLAGS += -fnesc-cfile=$(BUILDDIR)/app.c
-ifdef MSG_SIZE
-PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
-endif
-ifdef DEFAULT_LOCAL_GROUP
-PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+PFLAGS += -Wall -Wshadow
+
+# Check if the user specified a programmer type with a .extra file.
+# If not, use bsl by default.
+ifndef TOSMAKE_PROGRAMMER_TYPE
+  $(call TOSMake_include,msp/bsl.extra)
 endif
 
 DEFAULT_PROGRAM ?= bsl
@@ -67,59 +55,44 @@ PFLAGS += $(STD_PFLAGS)
 PFLAGS_SUB = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
 
 # Build storage file if volumes.xml present
-ifneq ($(wildcard $(VOLUME_FILE)), )
-build_storage: $(BUILDDIR)/StorageVolumes.h
+ifneq ($(wildcard $(TOSMAKE_VOLUME_FILE)), )
+build_storage: $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
 
-exe0: build_storage
+$(TOSMAKE_BUILD_DIR)/StorageVolumes.h: $(TOSMAKE_VOLUME_FILE) build_dir
+	$(TOSMAKE_VOLUME_ALLOCATOR) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <$(TOSMAKE_VOLUME_FILE) >$@ || rm -f $@
 
-VOLUME_ALLOCATOR_FLAGS ?=
-VOLUME_ALLOCATOR_FLAGS += --tosdir $(TINYOS_OS_DIR)
-$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
-	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
-
-PFLAGS += -I$(BUILDDIR)
+PFLAGS += -I$(TOSMAKE_BUILD_DIR)
 else
 
 build_storage:
 
 endif
 
-ifndef BUILD_DEPS
-  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
-    BUILD_DEPS = tosimage $(POST_BUILD_EXTRA_DEPS)
-  endif
+# Main build target for building an application
+ifeq ($(TOSMAKE_DO_REINSTALL),)
+tinyos_image: ihex build_tosimage build_buildinfo FORCE
+else
+tinyos_image:
+	@echo -e "$(INFO_STRING) reinstalling $(COMPONENT) binary"
 endif
 
-setid: FORCE
-	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_IHEX) $(INSTALL_IHEX); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
+setid: tinyos_image FORCE
+ifneq ($(NODEID),)
+	@# Edit the binary with the updated nodeid
+	@echo -e "$(INFO_STRING) setting the node id to $(NODEID)"
+	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(TOSMAKE_AMADDR)=$(NODEID)
+else
+	@# Just use the default NODEID that was compiled in initially
+	@cp $(MAIN_IHEX) $(INSTALL_IHEX)
+endif
 
-tos_buildinfo: ihex build_buildinfo FORCE
-  @:
-
-tosimage: ihex build_tosimage FORCE
-	@:
-
-ihex: exe FORCE
+ihex: exe bytes FORCE
+	@echo -e "$(INFO_STRING) creating ihex file"
 	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
 
 exe: exe0 bytes FORCE
 	@:
 
-exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
-	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-ifeq ("$(MSPGCC_VER_OK)","0")
-	@echo
-	@echo "    WARNING: Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)!!!"
-	@echo
-endif
-	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS_SUB) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
-ifdef WIRING_CHECK_FILE
-	@nescc-wiring $(WIRING_CHECK_FILE)
-endif
-	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
-
-builddir: FORCE
-	mkdir -p $(BUILDDIR)
-
-bytes: FORCE
-	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+exe: $(TINYOS_MAKE_EXTRA_DEPS) $(COMPONENT).nc build_dir build_storage FORCE
+	@echo -e "$(INFO_STRING) compiling $(COMPONENT) to a $(TARGET) binary"
+	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
