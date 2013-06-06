@@ -1,17 +1,47 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: install.extra,v 1.4 2006/12/12 18:22:59 vlahan Exp $
 
 NODEID = $(INSTALL)
-BUILD_DEPS = bin tosimage bytes setid 
 
 ifdef BOOTLOADER
   ifeq ($(BOOTLOADER),tosboot)
     ifdef INSTALL_GOLDENIMAGE
-      BUILD_DEPS += program_gi
+      BUILD_DEPS = program_gi
     else
-      BUILD_DEPS += program_ngi
+      BUILD_DEPS = program_ngi
     endif
   endif
 else
- BUILD_DEPS += program
+ BUILD_DEPS = program
 endif
+
+
+DELUGE_BASE_EXE=$(TOSMAKE_BUILD_DIR)/deluge-base.exe
+DELUGE_BASE_BIN=$(TOSMAKE_BUILD_DIR)/deluge-base.bin
+
+
+program: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using $(TOSMAKE_PROGRAMMER_TYPE)'
+	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(START_ADDR) -t $(BOARD) -p $(SAM-BA) -r -c
+
+deluge_base_bin: FORCE
+	@echo -e '$(INFO_STRING) Compiling $(PLATFORM) deluge base station'
+	@$(NESC) -o $(DELUGE_BASE_EXE) $(OPTFLAGS) $(NESC_PFLAGS) -DDELUGE_BASESTATION $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+	@$(OBJCOPY) --output-target=binary $(DELUGE_BASE_EXE) $(DELUGE_BASE_BIN)
+
+program_gi: deluge_base_bin FORCE
+	@echo -e '$(INFO_STRING) Installing $(PLATFORM) deluge base station using $(TOSMAKE_PROGRAMMER_TYPE)'
+	$(PROGRAMMER) -b $(DELUGE_BASE_BIN) -s $(TOSBOOT_REALPROG_START) -t $(BOARD) -p $(SAM-BA) -c
+	@echo -e '$(INFO_STRING) Installing $(PLATFORM) bootloader using $(TOSMAKE_PROGRAMMER_TYPE)'
+	$(PROGRAMMER) -b $(BOOTLOADER_IMG) -s $(TOSBOOT_START) -t $(BOARD) -p $(SAM-BA) -r -c
+	@echo -e '$(INFO_STRING) Injecting $(PLATFORM) golden image'
+	@sleep 5
+	tos-deluge $(INSTALL_GOLDENIMAGE) -i 0 $(TOSMAKE_BUILD_DIR)/tos_image.xml
+	@echo -e '$(INFO_STRING) Rebooting into $(PLATFORM) golden image'
+	@sleep 1
+	tos-deluge $(INSTALL_GOLDENIMAGE) -r 0
+
+program_ngi: setid FORCE
+	@echo -e '$(INFO_STRING) Installing $(PLATFORM) binary using $(TOSMAKE_PROGRAMMER_TYPE)'
+	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(TOSBOOT_REALPROG_START) -t $(BOARD) -p $(SAM-BA) -c
+	@echo -e '$(INFO_STRING) Installing $(PLATFORM) bootloader using $(TOSMAKE_PROGRAMMER_TYPE)'
+	$(PROGRAMMER) -b $(BOOTLOADER_IMG) -s $(TOSBOOT_START) -t $(BOARD) -p $(SAM-BA) -r -c

@@ -1,26 +1,21 @@
+#-#-Makefile-#- vim:syntax=make
 ###
  # @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  ##
 
-ifeq ($(SM16CF), )
-SM16CF = /dev/ttyUSB0
-endif
+SM16CF ?= /dev/ttyUSB0
 
-PROGRAM = sm16cf
+TOSMAKE_PROGRAMMER_TYPE = sm16cf
 PROGRAMMER = sm16cf
 
-ifdef BOOTLOADER
-  program: FORCE
-	@echo "    installing $(PLATFORM) with bootloader using sm16cf"
-	srec_cat $(BOOTLOADER_IMG) $(INSTALL_SREC) -exclude 0x000FFFDC 0x00100000 -o $(BUILDDIR)/main_boot.srec -CRLF
-	sed '/S5/d' $(BUILDDIR)/main_boot.srec > $(BUILDDIR)/main_boot2.srec
-	$(PROGRAMMER) --baud-rate=57600 --device=$(SM16CF) --input-file=$(BUILDDIR)/main_boot2.srec --flash-program
-	rm $(BUILDDIR)/main_boot.srec
-	rm $(BUILDDIR)/main_boot2.srec
-else
-program: FORCE
-	@echo "    installing $(PLATFORM) using sm16cf"
+program: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using sm16cf'
 	$(PROGRAMMER) --baud-rate=57600 --device=$(SM16CF) --input-file=$(INSTALL_SREC) --flash-program
-endif
 
-program_bl: FORCE
+program_bl: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(PLATFORM) with bootloader using sm16cf'
+	srec_cat $(BOOTLOADER_IMG) $(INSTALL_SREC) -exclude 0x000FFFDC 0x00100000 -o $(TOSMAKE_BUILD_DIR)/main_boot.srec -CRLF
+	sed '/S5/d' $(TOSMAKE_BUILD_DIR)/main_boot.srec > $(TOSMAKE_BUILD_DIR)/main_boot2.srec
+	$(PROGRAMMER) --baud-rate=57600 --device=$(SM16CF) --input-file=$(TOSMAKE_BUILD_DIR)/main_boot2.srec --flash-program
+	rm $(TOSMAKE_BUILD_DIR)/main_boot.srec
+	rm $(TOSMAKE_BUILD_DIR)/main_boot2.srec

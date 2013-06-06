@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bsl.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
 
 # BSL arguments:
 #
@@ -21,16 +20,19 @@ MSP_BSL_FLAGS ?= --telos
 MOTELIST ?= motelist
 
 ifeq ($(BSL),auto)
-BSLTEST = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
-BSLTEST_COMMENT = "using bsl,auto"
-BSL = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
+  BSLTEST := $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
+  BSLTEST_COMMENT = "using bsl,auto"
+  BSL = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
 else
-ifeq ($(BSL:ref,%=ref),ref)
-BSLREF := $(BSL:ref,%=%)
-BSLTEST_COMMENT = "using bsl,ref,$(BSLREF)"
-BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
-BSL = $(BSLTEST)
-endif
+  ifeq ($(BSL:ref,%=ref),ref)
+    BSLREF := $(BSL:ref,%=%)
+    BSLTEST_COMMENT = "using bsl,ref,$(BSLREF)"
+    BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
+    BSL = $(BSLTEST)
+  else
+    BSLTEST_COMMENT = "using bsl,$(BSL)"
+    BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^([^,]+),$$r,([^,]+)/) { print $$r; exit; } }' $(BSL))
+  endif
 endif
 
 # bsltest is a separate rule so that make doesn't resolve BSL along with
@@ -38,25 +40,26 @@ endif
 # all together if bsl,auto was not specified (whew).
 bsltest: FORCE
 ifeq ($(BSLTEST),)
-	@echo -e "$(ERROR_STRING) found no motes ($(BSLTEST_COMMENT))"
+	@echo -e '$(ERROR_STRING) found no motes ($(BSLTEST_COMMENT))'
 	@exit 1
 else
-	@echo -e "$(INFO_STRING) found mote on $(BSLTEST) ($(BSLTEST_COMMENT))"
+	@echo -e '$(INFO_STRING) found mote on $(BSLTEST) ($(BSLTEST_COMMENT))'
 endif
 
-program: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
-	@echo "    installing $(PLATFORM) binary using bsl"
+program: setid bsltest FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using bsl'
 	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(INSTALL_IHEX)
 	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX)
 
-program_no_e: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
-	@echo "    installing $(PLATFORM) binary using bsl (without mass erase)"
+# Install the bootloader first, and then install the application without erasing
+# the bootloader.
+program_with_bl: program_no_e
+
+program_no_e: program_bl FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using bsl (without mass erase)'
 	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -I -p $(INSTALL_IHEX)
 	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX)
 
 program_bl: setid bsltest check_tosboot FORCE
-	@echo -e "$(INFO_STRING) installing $(TARGET) bootloader using bsl"
+	@echo -e '$(INFO_STRING) installing $(TARGET) bootloader using bsl'
 	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(BOOTLOADER_IMG)
-
-program_input: ihex
-	@:

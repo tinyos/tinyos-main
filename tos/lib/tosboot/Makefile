@@ -73,21 +73,21 @@ endif
 # ifeq ($(MAKECMDGOALS),telosa)
 #   CFLAGS += -DTOSBOOT_START=0x1100 -DTOSBOOT_END=0x1a00
 #   CFLAGS += -Iat45db -Imsp430 -Itelos -Ilib
-#   POST_BUILD_EXTRA_DEPS += strip_iv
+#   BUILD_DEPS += strip_iv
 # endif
 
 ifeq ($(MAKECMDGOALS),telosb)
   CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
   CFLAGS += -Imsp430 -Imsp430f1611 -Istm25p -Itelosb -Ilib
   CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv
+  BUILD_DEPS += strip_iv
 endif
 
 ifeq ($(MAKECMDGOALS),epic)
   CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
   CFLAGS += -Imsp430 -Imsp430f1611 -Iepic -Ilib
   CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv
+  BUILD_DEPS += strip_iv
 endif
 
 ifeq ($(MAKECMDGOALS),mulle)
@@ -102,12 +102,12 @@ ifeq ($(MAKECMDGOALS),tinynode)
   CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
   CFLAGS += -Itinynode -Imsp430 -Imsp430f1611 -Iat45db -Ilib
   CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv 
+  BUILD_DEPS += strip_iv
 endif
 
 
 
-strip_iv: FORCE
+strip_iv: tinyos_image FORCE
 	@echo "    removing interrupt vector from binary"
 	msp430-objcopy -j .text -j .data -O ihex $(BUILDDIR)/main.exe $(BUILDDIR)/main.ihex
 

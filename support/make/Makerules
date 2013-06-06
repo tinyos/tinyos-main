@@ -32,7 +32,7 @@ endif
 #  Allow users to specify additional directories to find .target, .extra, and
 #  .rules files. This allows for platforms to be stored in separate repositories
 #  and still compile against the main TinyOS code.
-#  To use this feature, set the environment variable TINYOS_MAKE_DIR_ADDITIONAL
+#  To use this feature, set the environment variable TINYOS_ROOT_DIR_ADDITIONAL
 #  to a space separated list of additionals paths to make folders you would
 #  like the make system to search.
 TOSMAKE_PATH = $(addsuffix /support/make,$(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL)))
@@ -47,7 +47,7 @@ TOSMAKE_OS_DIR_ALL = $(addsuffix /tos,$(TINYOS_ROOT_DIR_ADDITIONAL)) $(TINYOS_OS
 #  Set the rules that expand PFLAGS (which have %T in them) to the PFLAGS that
 #  nescc sees when it compiles.
 TOSDIR_OPTS = $(addprefix --tosdir ,$(TOSMAKE_OS_DIR_ALL))
-NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
+NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS) $(TINYOS_PFLAGS_STD_INCLUDE))
 
 #  Add the defaults to the list of PFLAGS. These are set in Makedefaults.
 #  - The standard include directories to PFLAGS. (tos/system, etc.)
@@ -56,12 +56,15 @@ NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
 #  - .c file for nescc output
 #  - Separator for nescc output
 #  - Define the default TOS AM group
-PFLAGS += $(TINYOS_PFLAGS_STD_INCLUDE)
+#PFLAGS += $(TINYOS_PFLAGS_STD_INCLUDE)
 PFLAGS += $(NESC_FLAGS)
 PFLAGS += -fnesc-scheduler=$(NESC_SCHEDULER)
 PFLAGS += -fnesc-cfile=$(NESC_CFILE)
 PFLAGS += -fnesc-separator=$(NESC_SEPARATOR)
 PFLAGS += $(TINYOS_PFLAGS_DEFINED_TOS_AM_GROUP)
+
+# Set default build targets
+BUILD_DEPS ?= tinyos_image
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -72,6 +75,22 @@ OptRE := [,.]
 GoalOpts := $(shell perl -e 'print join " ", map {s{^(.*?)$(OptRE)}{\U$$1=};$$_} grep /$(OptRE)/, split /\s+/, "$(GOALS)";')
 GOALS := $(shell perl -e '$$_="$(GOALS)"; s{$(OptRE)\S*}{}g; print;')
 $(foreach opt,$(GoalOpts),$(eval $(opt)))
+
+
+# Colors
+ifndef TOSMAKE_NO_COLOR
+NO_COLOR=\x1b[0m
+OK_COLOR=\x1b[32;01m
+ERROR_COLOR=\x1b[31;01m
+WARN_COLOR=\x1b[33;01m
+INFO_COLOR=\x1b[34;01m
+endif
+
+OK_STRING=$(OK_COLOR)[OK]$(NO_COLOR)
+ERROR_STRING=$(ERROR_COLOR)[ERROR]$(NO_COLOR)
+WARN_STRING=$(WARN_COLOR)[WARNING]$(NO_COLOR)
+INFO_STRING=$(INFO_COLOR)[INFO]$(NO_COLOR)
+
 
 
 ### ---
@@ -101,7 +120,11 @@ TOSMake_makelist = $(wildcard $(call TOSMake_find,$(1))/*.$(2))
 
 #  TOSMake_include(file)
 #    Include a makefile which MUST be in a dir or subdir under TOSMAKE_PATH.
-TOSMake_include = $(eval include $(call TOSMake_find,$(1)))
+TOSMake_include = $(eval $(call TOSMake_include_define,$(1)))
+define TOSMake_include_define
+$(if $(call TOSMake_find,$(1)),,$(error File $(1) not found in any TinyOS make path. The search path is '$(TOSMAKE_PATH)'))
+$(eval include $(call TOSMake_find,$(1)))
+endef
 
 #  TOSMake_extra_targets(name)
 #    Create a default make targets for a TOSMake extra full with its possible
@@ -143,6 +166,7 @@ TOSMake_include_make_platform=$(eval $(call TOSMake_include_make_platform_define
 define TOSMake_include_make_platform_define
 $(call TOSMake_include_dir,$(1))
 $(call TOSMake_include,$(1)/$(1).rules)
+TOSMAKE_MAKE_PLATFORM_DIR = $(shell dirname $(call TOSMake_find,$(1)/$(1).rules))
 endef
 
 # TOSMake_include_sensor(sensorboard)
@@ -151,6 +175,7 @@ endef
 TOSMake_include_sensor=$(eval $(call TOSMake_include_sensor_define,$(1)))
 define TOSMake_include_sensor_define
 $(call TOSMake_include,sensors/$(1).sensor)
+PFLAGS += -DBOARD_$(shell echo $(1) | tr a-z A-Z)
 endef
 
 # TOSMake_include_platform(platform)
@@ -158,6 +183,8 @@ endef
 TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
 define TOSMake_include_platform_define
 $(call TOSMake_include,platforms/$(1).platform)
+PFLAGS += -DPLATFORM_$(shell echo $(1) | tr a-z A-Z)
+PLATFORM = $(1)
 endef
 
 # TOSMake_include_family(family)
@@ -169,22 +196,12 @@ endef
 
 
 ### ---
-### --- Common targets
-### ---
-
-build_dir:
-	@mkdir -p $(TOSMAKE_BUILD_DIR)
-
-
-### ---
 ### --- Include Makelocal and Makedefaults
 ### ---
 
 #  Makelocal comes first to allow overriding Makedefaults.
 -include $(TINYOS_MAKELOCAL)
 -include $(TINYOS_MAKEDEFAULTS)
-
-PLATFORMDIR ?= $(TINYOS_OS_DIR)/platforms/$(PLATFORM)
 
 #  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
 $(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_accum_dir,$(incdir)))
@@ -194,6 +211,72 @@ $(foreach file,$(VALID_TARGETS),$(if $(filter $(call names,$(file)),$(GOALS)),$(
 
 #  Make default rules for each extra with full argument
 $(foreach goal,$(MAKECMDGOALS),$(if $(filter-out $(TARGETS) help,$(goal)),$(eval $(call TOSMake_extra_targets,$(goal)))))
+
+
+
+
+
+### ---
+### --- Common targets
+### ---
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(TOSMAKE_VOLUME_FILE)), )
+build_storage: $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
+
+$(TOSMAKE_BUILD_DIR)/StorageVolumes.h: $(TOSMAKE_VOLUME_FILE) build_dir
+	$(TOSMAKE_VOLUME_ALLOCATOR) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <$(TOSMAKE_VOLUME_FILE) >$@ || rm -f $@
+
+PFLAGS += -I$(TOSMAKE_BUILD_DIR)
+else
+build_storage:
+endif
+
+# Main build target for building an application
+ifeq ($(TOSMAKE_DO_REINSTALL),)
+tinyos_image: $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_IMAGE_DEPS) build_tosimage build_buildinfo FORCE
+else
+tinyos_image:
+	@echo -e '$(INFO_STRING) reinstalling $(COMPONENT) binary'
+endif
+
+setid: tinyos_image FORCE
+ifneq ($(NODEID),)
+	@# Edit the binary with the updated nodeid
+	@echo -e '$(INFO_STRING) setting the node id to $(NODEID)'
+	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT) $(TOSMAKE_TOS_NODE_ID)=$(NODEID) $(TOSMAKE_AMADDR)=$(NODEID)
+else
+	@# Just use the default NODEID that was compiled in initially
+	@cp $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT)
+endif
+
+#delsetid: FORCE
+#	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC)
+
+ihex: exe bytes FORCE
+	@echo -e '$(INFO_STRING) creating ihex file'
+	@$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+srec: exe bytes FORCE
+	@echo -e '$(INFO_STRING) creating srec file'
+	@$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
+
+bin: exe bytes FORCE
+	@echo -e '$(INFO_STRING) creating bin file'
+	$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
+
+bytes: exe FORCE
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+
+exe: $(TINYOS_MAKE_EXTRA_DEPS) $(COMPONENT).nc build_dir build_storage FORCE
+	@echo -e '$(INFO_STRING) compiling $(COMPONENT) to a $(TARGET) binary'
+	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(TOSMAKE_ADDITIONAL_INPUTS)
+
+build_dir:
+	@mkdir -p $(TOSMAKE_BUILD_DIR)
+
+
+
 
 
 ### ---

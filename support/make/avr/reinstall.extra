@@ -1,11 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: reinstall.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
-NODEID = $(REINSTALL)
-BUILD_DEPS = setid program delsetid
-
-ifdef BOOTLOADER
-  ifeq ($(BOOTLOADER),tosboot)
-    BUILD_DEPS += program_bl
-  endif
-endif
+# Basically just use install, except with the TOSMAKE_DO_REINSTALL flag set
+INSTALL = $(REINSTALL)
+TOSMAKE_DO_REINSTALL = y
+$(call TOSMake_include,avr/install.extra)

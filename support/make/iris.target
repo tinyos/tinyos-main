@@ -1,8 +1,8 @@
 #-*-Makefile-*- vim:syntax=make
 #$Id: iris.target,v 1.5 2009-03-10 15:09:55 sallai Exp $
 
-PLATFORM = iris
-SENSORBOARD ?= micasb
+TARGET = iris
+
 PROGRAMMER ?= avrdude
 
 ifeq ($(PROGRAMMER),avrdude)
@@ -16,7 +16,9 @@ ifdef RF230_CHANNEL
 PFLAGS += -DRF230_DEF_CHANNEL=$(RF230_CHANNEL)
 endif
 
-$(call TOSMake_include_platform,avr)
+$(call TOSMake_include_platform,iris)
+
+$(call TOSMake_include_make_platform,avr)
 
 iris: $(BUILD_DEPS)
 	@:

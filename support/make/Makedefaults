@@ -1,12 +1,10 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makedefaults,v 1.8 2008-06-18 20:22:51 razvanm Exp $
 
-DEFAULT_LOCAL_GROUP ?= 0x22
+### ---
+### --- Set standard defaults for user-definable variables
+### ---
+
 OPTFLAGS ?= -Os
-NESC_FLAGS ?= -Wnesc-all
-NESC_FLAGS += -fnesc-include=tos
-NESC_FLAGS += -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
-GOALS += ident_flags tos_image tosboot
 
 NESC_FLAGS ?= -Wnesc-all -fnesc-include=tos
 NESC_SCHEDULER ?= TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
@@ -31,9 +29,11 @@ MAIN_EXE = $(TOSMAKE_BUILD_DIR)/main.exe
 MAIN_IHEX = $(TOSMAKE_BUILD_DIR)/main.ihex
 MAIN_BIN = $(TOSMAKE_BUILD_DIR)/main.bin
 MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec
+MAIN_ELF = $(TOSMAKE_BUILD_DIR)/main.elf
 
 # Variable name to be replaced when a NODEID is set
 TOSMAKE_AMADDR ?= ActiveMessageAddressC__addr
+TOSMAKE_TOS_NODE_ID ?= TOS_NODE_ID
 
 GOALS += ident_flags tos_image tos_buildinfo tosboot
 

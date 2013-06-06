@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-PLATFORM = sam3s_ek
+TARGET = sam3s_ek
 
 LINKERFILE_PREFIX?=sam3s-ek-flash
 SAM-BA?=/dev/ttyUSB10
@@ -10,7 +10,9 @@ ifdef CC2520_CHANNEL
 PFLAGS += -DCC2520_DEF_CHANNEL=$(CC2520_CHANNEL)
 endif
 
-$(call TOSMake_include_platform,sam3)
+$(call TOSMake_include_platform,sam3s_ek)
+
+$(call TOSMake_include_make_platform,sam3)
 
 sam3s_ek: $(BUILD_DEPS)
 	@:

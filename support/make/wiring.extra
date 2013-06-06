@@ -3,8 +3,8 @@
 WIRING_CHECK_FLAGS = -fnesc-dump=wiring -fnesc-dump='interfaces(!abstract())' -fnesc-dump='referenced(interfacedefs, components)' -fnesc-dumpfile=$(WIRING_CHECK_FILE)
 WIRING_CHECK_FILE = $(TOSMAKE_BUILD_DIR)/wiring-check.xml
 
-BUILD_DEPS += wiring_check
+TOSMAKE_IMAGE_DEPS += wiring_check
 
-wiring_check: exe0
-	@echo "    STATUS: running the wiring check"
+wiring_check: exe FORCE
+	@echo -e '$(INFO_STRING) running the wiring check'
 	nescc-wiring $(WIRING_CHECK_FILE)

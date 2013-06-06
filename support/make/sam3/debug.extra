@@ -2,4 +2,3 @@
 
 OPTFLAGS = -g -fnesc-no-inline
 CFLAGS += -DDEBUG_CORE
-

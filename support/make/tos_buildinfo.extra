@@ -1,9 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: tos_buildinfo.extra,v 1.1 2007-08-17 15:47:30 beutel Exp $
 
-TOS_BUILDINFO_PL ?= tos-write-buildinfo
-IDENT_PROGRAM_NAME ?= $(COMPONENT)
-
-build_buildinfo: FORCE
-	@echo -e "$(INFO_STRING) writing TOS buildinfo"
+build_buildinfo: exe build_dir FORCE
+	@echo -e '$(INFO_STRING) writing TOS buildinfo'
 	@tos-write-buildinfo $(IDENT_FLAGS) --exe="$(MAIN_EXE)" --size="$(SIZE)" --platform="$(PLATFORM)" > $(TOSMAKE_BUILD_DIR)/tos_buildinfo.xml

@@ -1,27 +1,14 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: dapa.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
 
-
-
-
-
-PROGRAM = dapa
+TOSMAKE_PROGRAMMER_TYPE = dapa
 
 ifeq ($(PROGRAMMER),avrdude)
-    ifdef BOOTLOADER_IMG
-      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
-        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
-      endif
+  ifdef BOOTLOADER_IMG
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
     endif
-    PROGRAMMER_FLAGS = -cdapa               -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
-    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
+  endif
+  PROGRAMMER_FLAGS = -cdapa -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
+  PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+  PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
-
-program: FORCE
-	@echo "    installing $(PLATFORM) binary using dapa"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
-
-program_bl: FORCE
-	@echo "    installing $(PLATFORM) bootloader using dapa"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

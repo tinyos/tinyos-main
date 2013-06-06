@@ -21,11 +21,17 @@ define MSP_HELP
 endef
 HELP += $(MSP_HELP)
 
+#  Check if the user has a new enough version of msp430-gcc
 MSPGCC_MIN_VER := 4.6.3
 MSPGCC_VER_OK := $(shell expr `msp430-gcc -dumpversion` \>= '$(MSPGCC_MIN_VER)')
+ifeq ("$(MSPGCC_VER_OK)","0")
+  $(warning $(shell echo -e '$(WARN_STRING) Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)'))
+endif
+
 
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
+SIZE = msp430-size
 SET_ID = tos-set-symbols
 NESC = nescc
 LIBS = -lm
@@ -40,59 +46,7 @@ ifndef TOSMAKE_PROGRAMMER_TYPE
   $(call TOSMake_include,msp/bsl.extra)
 endif
 
-DEFAULT_PROGRAM ?= bsl
 
-BUILDLESS_DEPS += bytes
-
-# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
-# out with call in there.  I don't know why.
-$(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
-
-# Add in the standard PFLAGS
-PFLAGS += $(STD_PFLAGS)
-
-# Replace the %T with the correct tosdir path
-PFLAGS_SUB = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
-
-# Build storage file if volumes.xml present
-ifneq ($(wildcard $(TOSMAKE_VOLUME_FILE)), )
-build_storage: $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
-
-$(TOSMAKE_BUILD_DIR)/StorageVolumes.h: $(TOSMAKE_VOLUME_FILE) build_dir
-	$(TOSMAKE_VOLUME_ALLOCATOR) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <$(TOSMAKE_VOLUME_FILE) >$@ || rm -f $@
-
-PFLAGS += -I$(TOSMAKE_BUILD_DIR)
-else
-
-build_storage:
-
-endif
-
-# Main build target for building an application
-ifeq ($(TOSMAKE_DO_REINSTALL),)
-tinyos_image: ihex build_tosimage build_buildinfo FORCE
-else
-tinyos_image:
-	@echo -e "$(INFO_STRING) reinstalling $(COMPONENT) binary"
-endif
-
-setid: tinyos_image FORCE
-ifneq ($(NODEID),)
-	@# Edit the binary with the updated nodeid
-	@echo -e "$(INFO_STRING) setting the node id to $(NODEID)"
-	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(TOSMAKE_AMADDR)=$(NODEID)
-else
-	@# Just use the default NODEID that was compiled in initially
-	@cp $(MAIN_IHEX) $(INSTALL_IHEX)
-endif
-
-ihex: exe bytes FORCE
-	@echo -e "$(INFO_STRING) creating ihex file"
-	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
-
-exe: exe0 bytes FORCE
-	@:
-
-exe: $(TINYOS_MAKE_EXTRA_DEPS) $(COMPONENT).nc build_dir build_storage FORCE
-	@echo -e "$(INFO_STRING) compiling $(COMPONENT) to a $(TARGET) binary"
-	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+TOSMAKE_BINARY_FORMAT = ihex
+TOSMAKE_BINARY_IN = $(MAIN_IHEX)
+TOSMAKE_BINARY_OUT = $(INSTALL_IHEX)

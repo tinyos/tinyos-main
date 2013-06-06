@@ -1,26 +1,21 @@
+#-*-Makefile-*- vim:syntax=make
 ###
  # @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  ##
 
-ifeq ($(SFLASH), )
-SFLASH = /dev/ttyUSB0
-endif
+SFLASH ?= /dev/ttyUSB0
 
-PROGRAM = sflash
+TOSMAKE_PROGRAMMER_TYPE = sflash
 PROGRAMMER = sflash
 
-ifdef BOOTLOADER
-  program: FORCE
-	@echo "    installing $(PLATFORM) with bootloader using sflash"
-	srec_cat $(BOOTLOADER_IMG) $(INSTALL_SREC) -exclude 0x000FFFDC 0x00100000 -o $(BUILDDIR)/main_boot.srec -CRLF
-	sed '/S5/d' $(BUILDDIR)/main_boot.srec > $(BUILDDIR)/main_boot2.srec
-	$(PROGRAMMER) -p $(SFLASH) $(BUILDDIR)/main_boot2.srec
-	rm $(BUILDDIR)/main_boot.srec
-	rm $(BUILDDIR)/main_boot2.srec
-else
-program: FORCE
-	@echo "    installing $(PLATFORM) using slash"
+program: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using sflash'
 	$(PROGRAMMER) -p $(SFLASH) $(INSTALL_SREC)
-endif
 
-program_bl: FORCE
+program_bl: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) with bootloader using sflash'
+	srec_cat $(BOOTLOADER_IMG) $(INSTALL_SREC) -exclude 0x000FFFDC 0x00100000 -o $(TOSMAKE_BUILD_DIR)/main_boot.srec -CRLF
+	sed '/S5/d' $(TOSMAKE_BUILD_DIR)/main_boot.srec > $(TOSMAKE_BUILD_DIR)/main_boot2.srec
+	$(PROGRAMMER) -p $(SFLASH) $(TOSMAKE_BUILD_DIR)/main_boot2.srec
+	rm $(TOSMAKE_BUILD_DIR)/main_boot.srec
+	rm $(TOSMAKE_BUILD_DIR)/main_boot2.srec

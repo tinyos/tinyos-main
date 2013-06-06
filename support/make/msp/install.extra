@@ -1,11 +1,9 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: install.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
-NODEID = $(INSTALL)
-BUILD_DEPS = tosimage $(POST_BUILD_EXTRA_DEPS) bytes setid program 
+# Set the NODEID equal to the command line arg install.<nodeid>
+NODEID ?= $(INSTALL)
+BUILD_DEPS = program
 
-ifdef BOOTLOADER
-  ifeq ($(BOOTLOADER),tosboot)
-    BUILD_DEPS = tosimage $(POST_BUILD_EXTRA_DEPS) setid program_bl program_no_e 
-  endif
+ifeq ($(BOOTLOADER),tosboot)
+  BUILD_DEPS = program_with_bl
 endif

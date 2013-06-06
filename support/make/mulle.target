@@ -36,7 +36,7 @@
  ##
 
 # @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
-PLATFORM = mulle
+TARGET = mulle
 
 # Flash settings
 VOLUMEFILE = volumes-at45db.xml
@@ -45,7 +45,10 @@ VOLUME_ALLOCATOR_FLAGS ?= -s 512 -f 4096
 
 #MCU settings
 M16C60_MCU=62p
-$(call TOSMake_include_platform,m16c60)
+
+$(call TOSMake_include_platform,mulle)
+
+$(call TOSMake_include_make_platform,m16c60)
 
 mulle: $(BUILD_DEPS)
 	@:
