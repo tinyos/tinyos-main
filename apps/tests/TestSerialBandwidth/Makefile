@@ -9,5 +9,6 @@ CLEAN_EXTRA = *.class TestSerialMsg.java
 TestSerialMsg.java:
 	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=TestSerialMsg TestSerial.h TestSerialMsg -o $@
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

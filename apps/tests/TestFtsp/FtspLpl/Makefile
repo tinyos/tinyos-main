@@ -8,9 +8,10 @@ PFLAGS += -DTIMESYNC_RATE=10
 CFLAGS += -DTOSH_DATA_LENGTH=50
 #CFLAGS += -DCOUNT_LOG
 
-PFLAGS += -I$(TOSDIR)/lib/ftsp -I$(TOSDIR)/../apps/RadioCountToLeds -I$(TOSDIR)/lib/printf
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ftsp -I$(TINYOS_OS_DIR)/../apps/RadioCountToLeds -I$(TINYOS_OS_DIR)/lib/printf
 
 CFLAGS += -DLPL_INTERVAL=200
 CFLAGS += -DLOW_POWER_LISTENING
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

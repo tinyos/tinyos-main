@@ -10,8 +10,8 @@ VOLUME_FILE = volumes-pxa27xp30.xml
 VOLUME_ALLOCATOR ?= tos-storage-pxa27xp30
 
 #ASSEMBLY_FILES += $(PLATFORM_DIR)/../imote2/flash.s $(PLATFORM_DIR)/../imote2/binarymover.s
-ASSEMBLY_FILES += $(TOSDIR)/platforms/intelmote2/toscrt0.s $(TOSDIR)/chips/pxa27x/pxa27x_util.s
-CFLAGS += -DPXA27X_13M -T$(TOSDIR)/platforms/intelmote2/tos.x 
+ASSEMBLY_FILES += $(TINYOS_OS_DIR)/platforms/intelmote2/toscrt0.s $(TINYOS_OS_DIR)/chips/pxa27x/pxa27x_util.s
+CFLAGS += -DPXA27X_13M -T$(TINYOS_OS_DIR)/platforms/intelmote2/tos.x 
 
 $(call TOSMake_include_platform,pxa27x)
 

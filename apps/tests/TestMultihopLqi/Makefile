@@ -1,4 +1,5 @@
 COMPONENT=MultihopOscilloscopeAppC
-CFLAGS += -I$(TOSDIR)/lib/net/ -I$(TOSDIR)/lib/net/lqi -I$(TOSDIR)/chips/cc2420/interfaces
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/ -I$(TINYOS_OS_DIR)/lib/net/lqi -I$(TINYOS_OS_DIR)/chips/cc2420/interfaces
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

@@ -27,7 +27,7 @@ HELP += $(M16C60_HELP)
 THIS_FOLDER = m16c60
 
 #ifdef MAKE_DEPUTY_FLAG
-#        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib ' $(TOSDIR)/lib/safe/avr/fail.c 
+#        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -fnesc-deputy -fnesc-deputy-args='-I$(TINYOS_OS_DIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib ' $(TINYOS_OS_DIR)/lib/safe/avr/fail.c 
 #else
 #        NCC_SAFE_TINYOS_FLAGS =
 #endif
@@ -38,7 +38,7 @@ SET_ID = tos-set-symbols --objcopy $(OBJCOPY) --objdump $(OBJDUMP)
 NCC = ncc
 LIBS = #-lm -lc -lgcc
 
-NCC_OPTS = -tosdir=$(TOSDIR)
+NCC_OPTS = -tosdir=$(TINYOS_OS_DIR)
 AMADDR = _ActiveMessageAddressC\$$addr
 # Uncomment the next two lines if you have a toolchain without the dollar sign
 # patch. This needs nesc 1.2.8 or newer (1.2.9 is recommended).
@@ -96,7 +96,7 @@ build_storage: $(BUILDDIR)/StorageVolumes.h
 exe0: build_storage 
 
 VOLUME_ALLOCATOR_FLAGS ?= 
-VOLUME_ALLOCATOR_FLAGS += --tosdir $(TOSDIR)
+VOLUME_ALLOCATOR_FLAGS += --tosdir $(TINYOS_OS_DIR)
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUMEFILE) >$@ || rm -f $@
 

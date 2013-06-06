@@ -10,46 +10,33 @@
 ### --- Prepare variables
 ### ---
 
-#  Get TOSDIR from ncc if it isn't set already.
-ifndef TOSDIR
-TOSDIR := $(shell ncc -print-tosdir)
-endif
+#  Most variables are set in Makefile.include
 
 #  Mung MAKERULES for Cygwin; see the warning below for more details.
-ifneq ($(findstring \,$(MAKERULES)),)
-MAKERULES := $(subst \,/,$(MAKERULES))
+ifneq ($(findstring \,$(TINYOS_MAKERULES)),)
+TINYOS_MAKERULES := $(subst \,/,$(TINYOS_MAKERULES))
 define BACKSLASH_WARNING
-warning, MAKERULES contains backslashes.
+warning, TINYOS_MAKERULES contains backslashes.
 
-    The environment variable MAKERULES contains backslashes \'s.  This can
-    cause shell scripts including ones in this make system to fail in
+    The environment variable TINYOS_MAKERULES contains backslashes \'s.  This
+    can cause shell scripts including ones in this make system to fail in
     strange ways.  I've changed those to forward slashes for you for this
-    build.  However, you are strongly encouraged to respecify MAKERULES as
-    either a standard unix-style path or as a mixed-style path where the
+    build.  However, you are strongly encouraged to respecify TINYOS_MAKERULES
+    as either a standard unix-style path or as a mixed-style path where the
     backslashes are replaced with forward slashes /'s.
 
 endef
 $(warning $(BACKSLASH_WARNING))
 endif
 
-#  Deduce TINYOS_MAKE_PATH, the path to this file, if it's not defined already.
-ifndef TINYOS_MAKE_PATH
-  ifdef MAKERULES
-    TINYOS_MAKE_PATH := $(dir $(MAKERULES))
-    TINYOS_MAKE_PATH := $(TINYOS_MAKE_PATH:%/=%)
-  else
-    TINYOS_MAKE_PATH := $(TOSDIR)/../support/make
-  endif
-endif
-
-#  Use a default Makelocal if it's not defined already.
-TINYOS_MAKELOCAL ?= $(TINYOS_MAKE_PATH)/Makelocal
-
-#  Use a default Makedefaults if it's not defined already.
-TINYOS_MAKEDEFAULTS ?= $(TINYOS_MAKE_PATH)/Makedefaults
-
-#  Allow users to specify additional directories to find TOSMake files.
-TOSMAKE_PATH += $(TINYOS_MAKE_PATH)
+#  Allow users to specify additional directories to find .target, .extra, and
+#  .rules files. This allows for platforms to be stored in separate repositories
+#  and still compile against the main TinyOS code.
+#  To use this feature, set the environment variable TINYOS_MAKE_DIR_ADDITIONAL
+#  to a space separated list of additionals paths to make folders you would
+#  like the make system to search.
+TOSMAKE_PATH = $(TINYOS_MAKE_DIR_ADDITIONAL)
+TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -142,7 +129,7 @@ endef
 -include $(TINYOS_MAKELOCAL)
 -include $(TINYOS_MAKEDEFAULTS)
 
-PLATFORMDIR ?= $(TOSDIR)/platforms/$(PLATFORM)
+PLATFORMDIR ?= $(TINYOS_OS_DIR)/platforms/$(PLATFORM)
 
 #  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
 $(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_accum_dir,$(incdir)))

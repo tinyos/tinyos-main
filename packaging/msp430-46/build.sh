@@ -17,15 +17,15 @@
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
+# TINYOS_ROOT_DIR	head of the tinyos source tree root.  Used for base of default repo
 # PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
-# REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
+# REPO_DEST	Where the repository is being built (${TINYOS_ROOT_DIR}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
 #		properly.   Examples of reprepo configuration can be found in
-#               ${TOSROOT}/packaging/repo/conf.
+#               ${TINYOS_ROOT_DIR}/packaging/repo/conf.
 #
 # Experimental tools go in /opt/msp430-<ver> to avoid conflicting with tools
 # distributed with the major distibutions.
@@ -46,10 +46,10 @@ CODENAME=msp430-46
 REL=LTS
 MAKE_J=-j8
 
-if [[ -z "${TOSROOT}" ]]; then
-    TOSROOT=$(pwd)/../../../..
+if [[ -z "${TINYOS_ROOT_DIR}" ]]; then
+    TINYOS_ROOT_DIR=$(pwd)/../../../..
 fi
-echo -e "\n*** TOSROOT: $TOSROOT"
+echo -e "\n*** TINYOS_ROOT_DIR: $TINYOS_ROOT_DIR"
 echo "*** Destination: ${DEB_DEST}"
 
 BINUTILS_VER=2.21.1
@@ -80,7 +80,7 @@ PATCHES="
   msp430mcu-20120406-sf3522088.patch
 "
 
-: ${PREFIX:=${TOSROOT}/local}
+: ${PREFIX:=${TINYOS_ROOT_DIR}/local}
 
 
 setup_deb()
@@ -102,8 +102,8 @@ setup_rpm()
 
 setup_local()
 {
-    mkdir -p ${TOSROOT}/local
-    ${PREFIX:=${TOSROOT}/local}
+    mkdir -p ${TINYOS_ROOT_DIR}/local
+    ${PREFIX:=${TINYOS_ROOT_DIR}/local}
 }
 
 
@@ -638,7 +638,7 @@ case $1 in
     repo)
 	setup_deb
 	if [[ -z "${REPO_DEST}" ]]; then
-	    REPO_DEST=${TOSROOT}/packaging/repo
+	    REPO_DEST=${TINYOS_ROOT_DIR}/packaging/repo
 	fi
 	echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
 	echo -e   "*** Using packages from ${PACKAGES_DIR}\n"

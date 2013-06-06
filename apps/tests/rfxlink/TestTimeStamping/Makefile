@@ -14,4 +14,5 @@ CLEAN_EXTRA = TestMsg.class TestMsg.java \
 TestMsg.java: TestTimeStamping.h Makefile
 	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=TestMsg TestTimeStamping.h test_msg_t -o $@
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

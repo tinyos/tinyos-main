@@ -1,6 +1,7 @@
 COMPONENT=TestAppC
-PFLAGS += -I$(TOSDIR)/lib/ppp
-PFLAGS += -I$(TOSDIR)/lib/printf
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ppp
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
 PFLAGS += -DPLATFORM_SERIAL_RX_BUFFER_SIZE=16
 PFLAGS += -DDEBUG_PLATFORM_SERIAL_HDLC_UART
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

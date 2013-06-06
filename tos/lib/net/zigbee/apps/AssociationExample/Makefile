@@ -1,12 +1,13 @@
 COMPONENT=AssociationExampleC
 
-PFLAGS += 	-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/includes \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/mac \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/phy \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/timerasync \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces/mac \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces/phy \
-			-I$(TOSROOT)/tos/lib/net/zigbee/cc2420
-include $(MAKERULES)
+PFLAGS += 	-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/includes \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/mac \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/phy \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/timerasync \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/interfaces \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/interfaces/mac \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/ieee802154/interfaces/phy \
+			-I$(TINYOS_OS_DIR)/lib/net/zigbee/cc2420
+TINYOS_ROOT_DIR?=../../../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

@@ -31,6 +31,6 @@ Usage:
 
 To use include the following in your Makefile:
 
-CFLAGS += -I$(TOSDIR)/lib/net
-CFLAGS += -I$(TOSDIR)/lib/net/dip
-CFLAGS += -I$(TOSDIR)/lib/net/dip/interfaces
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dip
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dip/interfaces

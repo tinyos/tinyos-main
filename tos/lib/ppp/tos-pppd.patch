@@ -11,7 +11,7 @@ git clone git://ozlabs.org/~paulus/ppp.git
 Apply the patch with:
 
 cd ppp
-patch -p1 < ${TOSDIR}/lib/ppp/tos-pppd.patch
+patch -p1 < ${TINYOS_OS_DIR}/lib/ppp/tos-pppd.patch
 
 Configure and install the updated daemon for local use:
 
@@ -20,7 +20,7 @@ make DESTDIR=/usr/local/tos-pppd all install
 
 You can then use this version to see messages from the application:
 
-sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TOSDIR}/lib/ppp/tospppd
+sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TINYOS_OS_DIR}/lib/ppp/tospppd
 
 diff --git a/pppd/Makefile.linux b/pppd/Makefile.linux
 index 060db6a..db82a9c 100644

@@ -275,7 +275,7 @@ redacted)...
   authors are added is the actually Copyright (c) <year> <name> clause at
   the front.
 
-  A template for this copyright can be found in $(TOSROOT)/licenses/bsd.txt.
+  A template for this copyright can be found in $(TINYOS_ROOT_DIR)/licenses/bsd.txt.
   
 
 * coding style.   These are suggestions.   There isn't a style nazi.
@@ -283,7 +283,7 @@ redacted)...
   o First, don't change the style to just change the style.
 
   o Follow the coding standard conventions documented in TEP3. A copy can be 
-    found in $(TOSROOT)/doc/txt/tep3.txt.
+    found in $(TINYOS_ROOT_DIR)/doc/txt/tep3.txt.
 
   o When working in a section of code, try to adapt to the existing style.
 

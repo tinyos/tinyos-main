@@ -11,7 +11,8 @@ ThroughputMsg.java: TxThroughput.h
 ThroughputMsg.class: $(wildcard *.java) ThroughputMsg.java
 	javac *.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 
 
  

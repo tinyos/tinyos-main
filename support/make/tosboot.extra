@@ -1,14 +1,14 @@
 #-*-Makefile-*- vim:syntax=make
 #$Id: tosboot.extra,v 1.4 2009-11-10 07:03:34 rflury Exp $
 
-DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
+DELUGE_DIR ?= $(TINYOS_OS_DIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
-TOSBOOT_DIR ?= $(TOSDIR)/lib/tosboot/build
+TOSBOOT_DIR ?= $(TINYOS_OS_DIR)/lib/tosboot/build
 
 ifeq ($(BOOTLOADER),tosboot)
 
   CFLAGS += -DDELUGE
-  CFLAGS += -I$(TOSDIR)/lib/net -I$(TOSDIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager -I$(DELUGE_DIR)/BlockStorageManager
+  CFLAGS += -I$(TINYOS_OS_DIR)/lib/net -I$(TINYOS_OS_DIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager -I$(DELUGE_DIR)/BlockStorageManager
 
   ifneq ($(filter telosb tmote epic,$(TARGETS)),)
     CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos

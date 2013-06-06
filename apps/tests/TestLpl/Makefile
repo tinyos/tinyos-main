@@ -1,5 +1,6 @@
 COMPONENT=TestLplAppC
 CFLAGS += -DLOW_POWER_LISTENING
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

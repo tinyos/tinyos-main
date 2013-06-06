@@ -5,7 +5,7 @@ IPv6 packets from a tun interface, encapsulating them as 6lowpan
 packets and sedning them to the mote.
 
 To build the daemon you also need to build the libmote.a library in
-$TOSROOT/support/sdk/c/.
+$TINYOS_ROOT_DIR/support/sdk/c/.
 
 Usage with a TelosB mote:
 	sudo ./serial_tun /dev/ttyUSB0 115200

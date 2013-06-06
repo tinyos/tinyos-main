@@ -4,53 +4,53 @@
 CFLAGS += -DCC2420X
 
 ifeq ($(TARGETS),telosb)
-  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x/t32khz/am
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),shimmer)
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),shimmer2)
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer2/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer2/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
-  PFLAGS+=-I$(TOSDIR)/lib/diagmsg
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/diagmsg
 endif
 
 ifeq ($(TARGETS),shimmer2r)
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer2r/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2r/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),span)
-  PFLAGS+=-I$(TOSDIR)/platforms/span/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/span/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/span/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/span/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
 endif
 

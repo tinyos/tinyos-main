@@ -5,12 +5,12 @@ COMPONENT=PppRouterC
 #DEFAULT_LOCAL_GROUP = 0xCA
 
 # use rpl
-PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
+PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TINYOS_OS_DIR)/lib/net/rpl
 # PFLAGS += -DRPL_OF_MRHOF
 
 # and ppp
-PFLAGS += -I$(TOSDIR)/lib/ppp
-PFLAGS += -I$(TOSDIR)/lib/fragpool
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ppp
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/fragpool
 
 # this works around fragmentation in the RX buffer pool
 PFLAGS += -DPPP_HDLC_RX_FRAME_LIMIT=1 -DPPP_HDLC_TX_FRAME_LIMIT=8
@@ -25,4 +25,5 @@ PFLAGS += -DIN6_PREFIX=\"fec0::\"
 # derive short address from the dhcp address assignment, if possible
 PFLAGS += -DBLIP_DERIVE_SHORTADDRS
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

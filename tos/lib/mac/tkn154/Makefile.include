@@ -1,14 +1,14 @@
 # Make sure that TinyOS Makerules has been included *before* including
 # this Makefile, because it expands the PLATFORM variable, which we need
 
-TKN154_PLATFORM_INCLUDE ?= $(TOSDIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
-TKN154_EXTRAS += $(wildcard $(TOSDIR)/lib/mac/tkn154/extras/*.extra)
-CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
-	-I$(TOSDIR)/lib/mac/tkn154/dummies \
-	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MCPS \
-	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MLME \
-	-I$(TOSDIR)/lib/mac/tkn154/interfaces/private \
-	-I$(TOSDIR)/lib/mac/tkn154/interfaces/public
+TKN154_PLATFORM_INCLUDE ?= $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
+TKN154_EXTRAS += $(wildcard $(TINYOS_OS_DIR)/lib/mac/tkn154/extras/*.extra)
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/mac/tkn154 \
+	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/dummies \
+	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/MCPS \
+	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/MLME \
+	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/private \
+	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/public
 
 
 # Whenever platforms have identical configuration we don't need to put copies of
@@ -17,12 +17,12 @@ CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
 
 # The shimmer2 platform configuration is identical to telosb
 ifeq ($(findstring $(PLATFORM),shimmer2), shimmer2)
-  TKN154_PLATFORM_INCLUDE = $(TOSDIR)/platforms/telosb/mac/tkn154/Makefile.include
+  TKN154_PLATFORM_INCLUDE = $(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154/Makefile.include
 endif
 
 # The shimmer2r platform configuration is identical to telosb
 ifeq ($(findstring $(PLATFORM),shimmer2r), shimmer2r)
-  TKN154_PLATFORM_INCLUDE = $(TOSDIR)/platforms/telosb/mac/tkn154/Makefile.include
+  TKN154_PLATFORM_INCLUDE = $(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154/Makefile.include
 endif
 
 #################################### Extras ####################################

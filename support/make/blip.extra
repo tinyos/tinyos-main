@@ -1,6 +1,6 @@
 # -*- makefile -*-
 
-PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS 
+PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
 PFLAGS += -DCC2420_HW_ADDRESS_RECOGNITION
 PFLAGS += -DPACKET_LINK
 
@@ -10,25 +10,20 @@ else
 	PFLAGS += -DTOSH_DATA_LENGTH=112
 endif
 
-ifndef LOWPAN_ROOT
-  LOWPAN_ROOT=$(TOSROOT)
-endif
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/printf/
+PFLAGS+=-I$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/interfaces/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/nwprog/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/shell/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/serial/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/platform/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/icmp/
+PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/dhcp/
 
-PFLAGS+=-I$(TOSDIR)/lib/net/
-PFLAGS+=-I$(TOSDIR)/lib/printf/
-PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/ 
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/nwprog/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/shell/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/serial/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/platform/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/icmp/
-PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/dhcp/
-
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/iovec.c
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/in_cksum.c
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/ip_malloc.c
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/utility.c
-PFLAGS+=$(LOWPAN_ROOT)/tos/lib/net/blip/table.c
-
+PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/iovec.c
+PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/in_cksum.c
+PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/ip_malloc.c
+PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/utility.c
+PFLAGS+=$(TINYOS_OS_DIR)/lib/net/blip/table.c

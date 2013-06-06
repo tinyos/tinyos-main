@@ -1,1 +1,1 @@
-PFLAGS += -I$(TOSDIR)/lib/fastserial
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/fastserial

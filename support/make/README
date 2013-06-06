@@ -77,7 +77,7 @@ root directories for the TinyOS Make System that behave just like the
 primary make/ directory.  In one of your own make files, just add one or
 more directories to TOSMAKE_PATH sometime before make/Makerules is included:
 
-    TOSMAKE_PATH += $(TOSDIR)/../contrib/eyes/make
+    TOSMAKE_PATH += $(TINYOS_OS_DIR)/../contrib/eyes/make
 
 That's all you need, and you're in business.  Enjoy.
 

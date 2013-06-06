@@ -12,14 +12,14 @@ PYTHON_VERSION ?= $(shell python --version 2>&1 | sed 's/Python 2\.\([0-9]\)\.[0
 BUILDDIR   = simbuild/$(PLATFORM)
 CFILE    = $(BUILDDIR)/sim.c
 OBJFILE    = $(BUILDDIR)/sim.o
-CXXFILE    = $(TOSDIR)/lib/tossim/tossim.c
+CXXFILE    = $(TINYOS_OS_DIR)/lib/tossim/tossim.c
 CXXOBJFILE = $(BUILDDIR)/tossim.o
-HASHFILE    = $(TOSDIR)/lib/tossim/hashtable.c
+HASHFILE    = $(TINYOS_OS_DIR)/lib/tossim/hashtable.c
 HASHOBJFILE = $(BUILDDIR)/c-support.o
-PYFILE     = $(TOSDIR)/lib/tossim/tossim_wrap.cxx
+PYFILE     = $(TINYOS_OS_DIR)/lib/tossim/tossim_wrap.cxx
 PYOBJFILE  = $(BUILDDIR)/pytossim.o
 PYDIR      =/usr/include/python$(PYTHON_VERSION)
-SIMDIR     =$(TOSDIR)/lib/tossim
+SIMDIR     =$(TINYOS_OS_DIR)/lib/tossim
 XML        = app.xml
 DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
 
@@ -68,7 +68,7 @@ sim-exe: builddir $(BUILD_EXTRA_DEPS) FORCE
 	@echo "  linking into shared object ./$(SHARED_OBJECT)"
 	$(GPP) $(PLATFORM_BUILD_FLAGS) $(PLATFORM_CC_FLAGS) $(PYOBJFILE) $(OBJFILE) $(CXXOBJFILE) $(HASHOBJFILE) $(PLATFORM_LIB_FLAGS) -o $(SHARED_OBJECT)
 	@echo "  copying Python script interface TOSSIM.py from lib/tossim to local directory"
-	@cp $(TOSDIR)/lib/tossim/TOSSIM.py .
+	@cp $(TINYOS_OS_DIR)/lib/tossim/TOSSIM.py .
 	@echo " "
 	@echo "*** Successfully built $(PLATFORM) TOSSIM library. "
 

@@ -4,10 +4,7 @@
 
 PLATFORM=telosb
 
-ZIGBEE_PATH=$TOSDIR/lib/zigbee/clusterTree
-echo $ZIGBEE_PATH
-
-APP_TEST_PATH=$TOSDIR/lib/zigbee/tests
+APP_TEST_PATH=$TINYOS_OS_DIR/lib/zigbee/tests
 echo $APP_TEST_PATH
 
 PROG_DEV=bsl
@@ -18,7 +15,7 @@ if [ $# -lt 4 ]; then
 	echo "Not recognized parameters!!!"
 	echo "Usage : ./pmote.sh <install type> <device type> <USB port number> <device address> [<depth> <address parent> <xPos> <yPos>]"
 	echo "pmote.sh i c 3 0, compile and program mote (i) as coordinator (c), on /dev/ttyUSB3, with address 0"
-	echo "Installation type <Parameter>. Use c to compile only, i to install or r to reinstall." 
+	echo "Installation type <Parameter>. Use c to compile only, i to install or r to reinstall."
 	read -p "Installation type : " inst_type
 	echo "Please enter device type."
 	echo "c - Coordinator."
@@ -28,7 +25,7 @@ if [ $# -lt 4 ]; then
 	read -p "Device type : " device
 	read -p "Please enter USB port number : " port
 	read -p "Please enter device address : " initAddress
-    
+
 else
 	inst=`echo $1`
 	device=`echo $2`
@@ -92,7 +89,7 @@ elif [ $device = 'e' ] || [ $device = 'E' ]; then
 
 elif [ $device = 's' ] || [ $device = 'S' ]; then
 
-	cd $TOSROOT/apps/tests/tkn154/packetsniffer/
+	cd $TINYOS_ROOT_DIR/apps/tests/tkn154/packetsniffer/
 	device_type="IM_SNIFFER=1"
 else
 	echo "Wrong parameters"
@@ -118,10 +115,10 @@ if [ $inst = 'i' ] || [ $inst = 'I' ]; then
 elif [ $inst = 'c' ] || [ $inst = 'C' ]; then
 	make clean
 	make $PLATFORM
-	
+
 elif [ $inst = 'r' ] || [ $inst = 'R' ]; then
 	make $PLATFORM reinstall.$initAddress $PROG_DEV,/dev/$port
-	
+
 else
     echo "Wrong parameters"
     exit

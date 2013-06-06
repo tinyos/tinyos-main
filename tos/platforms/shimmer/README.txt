@@ -16,13 +16,13 @@ you must have a shimmer programming board).
 
 For example, to complie and install Blink, do the following:
 
-  $ cd $TOSROOT/apps/Blink
+  $ cd $TINYOS_ROOT_DIR/apps/Blink
   $ make shimmer install bsl,X
 
 where X is your serial port.
 
 You may also want to test the radio.  Do this by compiling and
-installing "$TOSROOT/apps/RadioCountToLeds" on TWO shimmers (for
+installing "$TINYOS_ROOT_DIR/apps/RadioCountToLeds" on TWO shimmers (for
 sending and receiving radio messages).
 
 

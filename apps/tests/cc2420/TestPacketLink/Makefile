@@ -9,4 +9,5 @@ PacketLinkMsg.java: TestPacketLink.h
 TestPacketLink.class: $(wildcard *.java) TestPacketLink.java
 	javac *.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

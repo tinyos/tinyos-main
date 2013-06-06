@@ -10,4 +10,5 @@ UcminiSensorMeas.java:
 	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=UcminiSensorMeas UcminiSensor.h measurement -o $@
 
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

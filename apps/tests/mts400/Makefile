@@ -8,4 +8,5 @@ DataMsg.java: DataMsg.h
 		mig -target=null -java-classname=DataMsg java DataMsg.h datamsg -o $@
 Mts400Tester.class: Mts400Tester.java DataMsg.java
 	javac Mts400Tester.java
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

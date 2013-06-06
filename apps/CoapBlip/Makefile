@@ -25,7 +25,7 @@ COMPONENT=CoapBlipC
 
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
-PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
+PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TINYOS_OS_DIR)/lib/net/rpl
 #PFLAGS += -DRPL_OF_MRHOF -DRPL_ROOT_ADDR=1
 
 # Set this when you want to use statically assigned addresses. The stack will
@@ -128,4 +128,5 @@ CFLAGS += -DCOAP_CLIENT_DEST=\"fec0::100\"
 #CFLAGS += -DCOAP_CLIENT_DEST=\"2a01:c911:0:2120:215:58ff:fe0b:8bb8\"
 
 CFLAGS += -I.
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

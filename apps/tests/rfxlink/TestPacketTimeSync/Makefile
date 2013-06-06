@@ -20,5 +20,6 @@ PongMsg.java: TestPacketTimeSync.h
 TestPacketTimeSync.class: PongMsg.class PingMsg.class
 	javac TestPacketTimeSync.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

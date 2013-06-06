@@ -22,7 +22,7 @@ endef
 HELP += $(MSP_HELP)
 
 ifdef MAKE_DEPUTY_FLAG
-        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -I$(TOSDIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib '
+        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -I$(TINYOS_OS_DIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TINYOS_OS_DIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib '
 else
         NCC_SAFE_TINYOS_FLAGS =
 endif
@@ -41,7 +41,7 @@ ifneq ($(filter sim,$(GOALS)),sim)
         PFLAGS += -fnesc-separator=__
 endif
 
-NCC_OPTS = -tosdir=$(TOSDIR)
+NCC_OPTS = -tosdir=$(TINYOS_OS_DIR)
 AMADDR = ActiveMessageAddressC__addr
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
@@ -72,7 +72,7 @@ build_storage: $(BUILDDIR)/StorageVolumes.h
 exe0: build_storage
 
 VOLUME_ALLOCATOR_FLAGS ?=
-VOLUME_ALLOCATOR_FLAGS += --tosdir $(TOSDIR)
+VOLUME_ALLOCATOR_FLAGS += --tosdir $(TINYOS_OS_DIR)
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
 

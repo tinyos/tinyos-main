@@ -28,7 +28,7 @@ QUIET = -quiet
 endif
 
 # Get an absolute path to the tos folder
-NESDOC_TOSDIR = -tosdir=$(TOSDIR)
+NESDOC_TOSDIR = -tosdir=$(TINYOS_OS_DIR)
 
 BUILD_DEPS = docs_
 

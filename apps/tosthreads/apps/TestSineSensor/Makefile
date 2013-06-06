@@ -1,4 +1,5 @@
 COMPONENT=TestSineSensorAppC
-CFLAGS += -I$(TOSDIR)/lib/tosthreads/sensorboards/universal
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/tosthreads/sensorboards/universal
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

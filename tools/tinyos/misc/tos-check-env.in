@@ -304,7 +304,7 @@ sub chk_path {
 }
 
 #
-# - should include $TOSROOT/support/sdk/java/tinyos.jar
+# - should include $TINYOS_ROOT_DIR/support/sdk/java/tinyos.jar
 #   (we look for just support/sdk/java/tinyos.jar)
 # - '.' is recommended
 # 
@@ -316,7 +316,7 @@ sub chk_classpath {
     my $tosjarpath = "";
     print "Classpath:\n";
     if (exists $ENV{CLASSPATH}) {
-	$tosjarpath="$ENV{TOSROOT}/support/sdk/java/tinyos.jar";
+	$tosjarpath="$ENV{TINYOS_ROOT_DIR}/support/sdk/java/tinyos.jar";
 	if (is_windows()) {
 	    open CYGPATH, "cygpath -w $tosjarpath 2>&1 |" or die "couldn't execute cygpath: it is not PATH.";
 	    while (<CYGPATH>) {

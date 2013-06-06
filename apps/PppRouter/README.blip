@@ -91,7 +91,7 @@ PppRouterC is an application which advertises itsself as a RPL DODAG
 root.  It also has a second ppp interface which allows it to route
 packets between the 6lowpan network and other networks.
 
-$ cd $TOSROOT/apps/PppRouter
+$ cd $TINYOS_ROOT_DIR/apps/PppRouter
 $ make epic blip
 
 Then install it on a mote with ID 1 -- static addressing is default.
@@ -137,7 +137,7 @@ UDPEcho
 The stock image for motes not needing ppp is UDPEcho -- make and
 install it the same way
 
-$ cd $TOSROOT/apps/UDPEcho
+$ cd $TINYOS_ROOT_DIR/apps/UDPEcho
 $ make epic blip install.2 bsl,/dev/ttyUSB1
 
 Since we're not using DHCP here, we give it a new address based on

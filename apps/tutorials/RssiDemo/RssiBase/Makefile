@@ -9,4 +9,5 @@ ifneq ($(filter iris,$(MAKECMDGOALS)),)
 	CFLAGS += -DRF230_RSSI_ENERGY
 endif
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

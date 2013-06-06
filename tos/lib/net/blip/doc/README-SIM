@@ -28,9 +28,9 @@ blip, it ought to work, but there are definitly NO GUARANTEES and NO
 SUPPORT.  It's just too much of a hack at the moment.
 
  - patch your tossim installation.  The patch is in $LOWPAN_ROOT/tos/lib/tossim.patch, so apply that using
-    * `cd $TOSDIR/tos/lib`
+    * `cd $TINYOS_OS_DIR/lib`
     * `patch -p0 < $LOWPAN_ROOT/tos/lib/tossim.patch`
-   Then copy $LOWPAN_ROOT/tos/lib/tossim/Packet* to $TOSDIR/tos/lib/tossim
+   Then copy $LOWPAN_ROOT/tos/lib/tossim/Packet* to $TINYOS_OS_DIR/lib/tossim
 
  - I think you should then be able to cd to apps/UDPEcho/sim and type `make`
     * make sure you have python2.5 and python2.5-dev installed

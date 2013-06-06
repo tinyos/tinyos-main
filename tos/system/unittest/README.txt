@@ -30,8 +30,8 @@ number of the failure.  If everything goes right, the green LED will be lit
 and "All tests passed" will be printed to the screen.
 
 You can run all unit tests that are found within a directory (default:
-${TOSROOT/apps}) by using the ${TOSDIR}/system/unittests/runtests script.
+${TINYOS_ROOT_DIR/apps}) by using the ${TINYOS_OS_DIR}/system/unittests/runtests script.
 
 When creating a new unit test, copy the basic configuration (Makefile,
 application configuration, application module) from
-${TOSDIR}/system/unittest/Stub.
+${TINYOS_OS_DIR}/system/unittest/Stub.

@@ -32,7 +32,7 @@
 #
 # Author: Chad Metcalf
 
-SF_DIR=$(TOSDIR)/lib/tossim/sf
+SF_DIR=$(TINYOS_OS_DIR)/lib/tossim/sf
 SF_FLAGS=-I$(SF_DIR)
 
 GCC=gcc
@@ -60,11 +60,11 @@ PYOBJFILE       = $(BUILDDIR)/pytossim.o
 
 CXXFILE     = $(SF_DIR)/tossim.c
 CXXOBJFILE  = $(BUILDDIR)/tossim.o
-HASHFILE    = $(TOSDIR)/lib/tossim/hashtable.c
+HASHFILE    = $(TINYOS_OS_DIR)/lib/tossim/hashtable.c
 HASHOBJFILE = $(BUILDDIR)/c-support.o
 
 PYDIR       = /usr/include/python$(PYTHON_VERSION)
-SIMDIR      = $(TOSDIR)/lib/tossim
+SIMDIR      = $(TINYOS_OS_DIR)/lib/tossim
 XML         = app.xml
 
 DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags

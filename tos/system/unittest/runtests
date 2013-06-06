@@ -2,7 +2,7 @@
 #
 # Usage: runtests [root [platform]]
 #
-# Search all directories in root (default: ${TOSROOT}/apps) that use
+# Search all directories in root (default: ${TINYOS_ROOT_DIR}/apps) that use
 # the OSIAN unittest framework.  For each such test, build it for
 # platform (default ${PLATFORM} or tmote), and run it.
 #
@@ -12,7 +12,7 @@
 # passed" once if everything was good.  In either situation, you have
 # to type control-c to move to the next test.
 
-ROOT=${1:-${TOSROOT}/apps}
+ROOT=${1:-${TINYOS_ROOT_DIR}/apps}
 PLATFORM=${2:-${PLATFORM:-tmote}}
 
 MOTEDEV=${MOTEDEV:-/dev/ttyUSB0}

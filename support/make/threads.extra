@@ -5,7 +5,7 @@
 #Set up flag signifying threads are enabled
 THREADS = THREADS
 PFLAGS += -D$(THREADS)
-TOS_THREADS_DIR ?= $(TOSDIR)/lib/tosthreads
+TOS_THREADS_DIR ?= $(TINYOS_OS_DIR)/lib/tosthreads
 
 #Include directories required by all platforms and mcus
 CFLAGS += -I$(TOS_THREADS_DIR)/system

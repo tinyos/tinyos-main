@@ -48,12 +48,12 @@ This is controlled by a build script at the top level, "build.sh".
    
 4) set environment variables.
 
-   export TOSROOT=${HOME}/top/t2_cur/tinyos-2.x
-   export TOSDIR=${TOSROOT}/tos
-   export MAKERULES=${TOSROOT}/support/make/Makerules
-   export CLASSPATH=.:${TOSROOT}/support/sdk/java/tinyos.jar
+   export TINYOS_ROOT_DIR=${HOME}/top/t2_cur/tinyos-2.x
+   export TINYOS_OS_DIR=${TINYOS_ROOT_DIR}/tos
+   export MAKERULES=${TINYOS_ROOT_DIR}/support/make/Makerules
+   export CLASSPATH=.:${TINYOS_ROOT_DIR}/support/sdk/java/tinyos.jar
 
-   export REPO_DEST=${TOSROOT}/repo             # defaults to packaging/repo
+   export REPO_DEST=${TINYOS_ROOT_DIR}/repo             # defaults to packaging/repo
 
    PACKAGING_DIR defaults to ${BUILD_DIR}/packaging, local package being
    built.  And typically doesn't need to be changed.
@@ -66,7 +66,7 @@ This is controlled by a build script at the top level, "build.sh".
    Expermental packages typically get placed into /opt.
 
 
-For each package in ${TOSROOT}/packaging:
+For each package in ${TINYOS_ROOT_DIR}/packaging:
 
 1) Build package
 

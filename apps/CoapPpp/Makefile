@@ -24,8 +24,8 @@ DEFAULT_LOCAL_GROUP = 0x1A
 # CFLAGS += -DNO_LIB6LOWPAN_ASCII
 
 # ppp
-PFLAGS += -I$(TOSDIR)/lib/ppp
-PFLAGS += -I$(TOSDIR)/lib/fragpool
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ppp
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/fragpool
 
 # this works around fragmentation in the RX buffer pool
 PFLAGS += -DPPP_HDLC_RX_FRAME_LIMIT=1 -DPPP_HDLC_TX_FRAME_LIMIT=4
@@ -132,4 +132,5 @@ CFLAGS += -DCOAP_CLIENT_DEST=\"fec0::100\"
 #CFLAGS += -DCOAP_CLIENT_DEST=\"2a01:c911:0:2120:215:58ff:fe0b:8bb8\"
 
 CFLAGS += -I.
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

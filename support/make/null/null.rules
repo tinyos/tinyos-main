@@ -16,7 +16,7 @@ OBJDUMP = objdump
 NCC = ncc
 LIBS = -lm
 
-NCC_OPTS = -tosdir=$(TOSDIR)
+NCC_OPTS = -tosdir=$(TINYOS_OS_DIR)
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
@@ -48,7 +48,7 @@ build_storage: $(BUILDDIR)/StorageVolumes.h
 
 exe0: build_storage 
 
-VOLUME_ALLOCATOR_FLAGS += --tosdir $(TOSDIR)
+VOLUME_ALLOCATOR_FLAGS += --tosdir $(TINYOS_OS_DIR)
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) <$(VOLUMEFILE) >$@
 

@@ -8,5 +8,6 @@ RssiSerialMsg.java: RssiToSerial.h
 SpecAnalyzer.class: $(wildcard *.java) SpecAnalyzer.java
 	javac *.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

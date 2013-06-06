@@ -1,11 +1,7 @@
-#-*-Makefile-*- 
+#-*-Makefile-*-
 #$Id: tinynode.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
 PLATFORM = tinynode
-
-ifndef TOSDIR
-TOSDIR := $(shell ncc -print-tosdir)
-endif
 
 MSP_BSL ?= tos-bsl
 
@@ -14,7 +10,7 @@ VOLUME_FILE = volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
 
 OPTFLAGS += -Os
-#OPTFLAGS = 
+#OPTFLAGS =
 
 $(call TOSMake_include_platform,tinynode)
 $(call TOSMake_include_platform,msp)

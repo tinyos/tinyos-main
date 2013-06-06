@@ -12,5 +12,6 @@ RadioCountMsg.java: RadioCountToFlash.h
 	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=RadioCountMsg RadioCountToFlash.h RadioCountMsg -o $@
 
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

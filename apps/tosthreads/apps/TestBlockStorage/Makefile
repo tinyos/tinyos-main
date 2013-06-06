@@ -9,7 +9,8 @@ ifneq ($(filter $(THIS_SUPPORTED_PLATFORMS) clean,$(MAKECMDGOALS)),)
 		CFLAGS+=-DUSE_AT45DB
 	endif
 
-	include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 else
 %:
 	@echo "    Sorry, this application is only written to work with the following platforms:"

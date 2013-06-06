@@ -12,7 +12,7 @@ ifdef TINYOS_NP
   ifeq ($(TINYOS_NP),BNP)
     PFLAGS += -I%T/lib/Deluge
     PFLAGS += -I%T/lib/Deluge/TOSBoot/include
-    BOOTLOADER ?= $(TOSDIR)/lib/Deluge/TOSBoot/bl_mica2.srec
+    BOOTLOADER ?= $(TINYOS_OS_DIR)/lib/Deluge/TOSBoot/bl_mica2.srec
     AVR_FUSE_H ?= 0xd8
   endif
   ifeq ($(TINYOS_NP),XNP)

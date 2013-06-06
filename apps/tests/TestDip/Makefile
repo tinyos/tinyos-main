@@ -1,8 +1,8 @@
 COMPONENT=TestDipC
 BUILD_EXTRA_DEPS = DipMsg.py DipDataMsg.py DipMsg.class DipDataMsg.class DipData.class DipInject.class
-CFLAGS += -I$(TOSDIR)/lib/net
-CFLAGS += -I$(TOSDIR)/lib/net/dip -I$(TOSDIR)/lib/net/dip/interfaces
-#CFLAGS += -I$(TOSDIR)/lib/net/drip
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dip -I$(TINYOS_OS_DIR)/lib/net/dip/interfaces
+#CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/drip
 
 CONSTANTS += -DTOSH_DATA_LENGTH=32
 #CONSTANTS += -DDIP_JOINTEST
@@ -17,13 +17,13 @@ CFLAGS += $(CONSTANTS)
 CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
 
 DipMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DipMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_msg -o $@
+	mig python -target=$(PLATFORM) -python-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
 
 DipDataMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DipDataMsg -python-extends=DipMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_data_msg -o $@
+	mig python -target=$(PLATFORM) -python-classname=DipDataMsg -python-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
 
 DipData.py:
-	mig python -target=$(PLATFORM) -python-classname=DipData -python-extends=DipDataMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_data -o $@
+	mig python -target=$(PLATFORM) -python-classname=DipData -python-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
 
 
 DipMsg.class: DipMsg.java
@@ -36,15 +36,16 @@ DipData.class: DipData.java
 	javac -target 1.4 -source 1.4 DipData.java
 
 DipMsg.java:
-	mig java -target=$(PLATFORM) -java-classname=DipMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_msg -o $@
+	mig java -target=$(PLATFORM) -java-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
 
 DipDataMsg.java:
-	mig java -target=$(PLATFORM) -java-classname=DipDataMsg -java-extends=DipMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_data_msg -o $@
+	mig java -target=$(PLATFORM) -java-classname=DipDataMsg -java-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
 
 DipData.java:
-	mig java -target=$(PLATFORM) -java-classname=DipData -java-extends=DipDataMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_data -o $@
+	mig java -target=$(PLATFORM) -java-classname=DipData -java-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
 
 DipInject.class:
 	javac -target 1.4 -source 1.4 DipInject.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
