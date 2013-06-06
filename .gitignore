@@ -2,8 +2,29 @@
 *~
 *.pyc
 *.class
-build
 #*#
 .#*
 .gdb*
 TAGS
+
+# Ignore application built output
+build
+pp
+
+# Ignore application based documentation
+doc
+appdoc
+# But not the main documentation folder
+!/doc
+
+# Ignore TOSSIM products
+simbuild
+TOSSIM.py
+_TOSSIMmodule.so
+_TOSSIM.dll
+!/tos/lib/tossim/TOSSIM.py
+!/tos/lib/tossim/sf/TOSSIM.py
+
+# Ignore application byproducts
+apps/BaseStation15.4/seriallisten15-4
+

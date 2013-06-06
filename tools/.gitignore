@@ -4,10 +4,12 @@ aclocal.m4
 autom4te.cache
 config-aux
 configure
+config.h.in
 
 # Configure
 Makefile
 config.log
+config.h
 config.status
 platforms/intelmote2/openocd/imote2-ocd-program.py
 platforms/mica/cc1000-channelgen/.deps/
@@ -43,6 +45,11 @@ tinyos/ncc/nesdoc
 tinyos/safe/tos-decode-flid
 tinyos/safe/tos-ramsize
 tinyos/tosthreads/tosthreads_standard_api.py
+tinyos/misc/tos-serlook.py
+tinyos/python/tos.py
+tinyos/misc/tos-sub-tosdir
+tinyos/ncc/nesdoc-archive
+tinyos/ncc/nesdoc-genhtml
 
 # Make
 *.so
@@ -50,6 +57,8 @@ platforms/mica/cc1000-channelgen/tos-channelgen
 platforms/msp430/motelist/motelist
 tinyos/misc/tos-serial-debug
 tinyos/tosthreads/tosthreads-dynamic-app
+tinyos/python/message/SerialPacket.py
+tinyos/python/packet/Serial.py
 
 # Cygwin
 platforms/mica/cc1000-channelgen/tos-channelgen.exe
@@ -59,9 +68,117 @@ tinyos/java/env/getenv-64.dll
 tinyos/java/serial/toscomm-32.dll
 tinyos/java/serial/toscomm-64.dll
 tinyos/misc/tos-serial-debug.exe
+tinyos/c/coap/examples/coap-client.exe
+tinyos/c/coap/examples/coap-server.exe
+tinyos/c/coap/examples/coap-tiny.exe
+tinyos/c/sf/sf-listen.exe
+tinyos/c/sf/sf-prettylisten.exe
+tinyos/c/sf/sf-send.exe
+tinyos/c/sf/sf-seriallisten.exe
+tinyos/c/sf/sf-serialsend.exe
+tinyos/c/sf/sf.exe
+tinyos/cpp/sf/sf2.exe
+tinyos/jni/env/getenv-32.dll
+tinyos/jni/env/getenv-64.dll
+tinyos/jni/serial/toscomm-32.dll
+tinyos/jni/serial/toscomm-64.dll
+
+# Coap
+tinyos/c/coap/.deps/
+tinyos/c/coap/config.h
+tinyos/c/coap/depcomp
+tinyos/c/coap/doc/Doxyfile
+tinyos/c/coap/doc/doxygen.out
+tinyos/c/coap/doc/html/
+tinyos/c/coap/examples/.deps/
+tinyos/c/coap/examples/coap-client
+tinyos/c/coap/examples/coap-server
+tinyos/c/coap/examples/coap-tiny
+tinyos/c/coap/install-sh
+tinyos/c/coap/missing
+tinyos/c/coap/stamp-h1
+
+# Blip
+tinyos/c/blip/ar-lib
+tinyos/c/blip/config.guess
+tinyos/c/blip/config.h
+tinyos/c/blip/config.h.in
+tinyos/c/blip/config.sub
+tinyos/c/blip/depcomp
+tinyos/c/blip/install-sh
+tinyos/c/blip/lib6lowpan/.deps/
+tinyos/c/blip/lib6lowpan/tests/test_bit_range_zero_p
+tinyos/c/blip/lib6lowpan/tests/test_inet_ntop6
+tinyos/c/blip/lib6lowpan/tests/test_iovec
+tinyos/c/blip/lib6lowpan/tests/test_ipnh_real_length
+tinyos/c/blip/lib6lowpan/tests/test_lowpan_frag_get
+tinyos/c/blip/lib6lowpan/tests/test_pack_address
+tinyos/c/blip/lib6lowpan/tests/test_pack_multicast
+tinyos/c/blip/lib6lowpan/tests/test_pack_nhc_chain
+tinyos/c/blip/lib6lowpan/tests/test_pack_tcfl
+tinyos/c/blip/lib6lowpan/tests/test_unpack_address
+tinyos/c/blip/lib6lowpan/tests/test_unpack_ipnh
+tinyos/c/blip/lib6lowpan/tests/test_unpack_multicast
+tinyos/c/blip/lib6lowpan/tests/test_unpack_tcfl
+tinyos/c/blip/lib6lowpan/tests/test_unpack_udp
+tinyos/c/blip/lib6lowpan/trace/.deps/
+tinyos/c/blip/lib6lowpan/trace/compress
+tinyos/c/blip/lib6lowpan/trace/decompress
+tinyos/c/blip/linux/tun_dev.c
+tinyos/c/blip/missing
+tinyos/c/blip/stamp-h1
+
+# sf
+tinyos/c/sf/.deps/
+tinyos/c/sf/autoconf.h
+tinyos/c/sf/autoconf.h.in
+tinyos/c/sf/prettylisten
+tinyos/c/sf/seriallisten
+tinyos/c/sf/serialpacket.c
+tinyos/c/sf/serialpacket.h
+tinyos/c/sf/serialprotocol.h
+tinyos/c/sf/serialsend
+tinyos/c/sf/sf
+tinyos/c/sf/sf-listen
+tinyos/c/sf/sf-prettylisten
+tinyos/c/sf/sf-send
+tinyos/c/sf/sf-seriallisten
+tinyos/c/sf/sf-serialsend
+tinyos/c/sf/sflisten
+tinyos/c/sf/sfsend
+stamp-h*
+
+# serial tun
+tinyos/c/serial_tun/.deps/
+tinyos/c/serial_tun/serial_tun
+
+# sf2
+tinyos/cpp/sf/.deps/
+tinyos/cpp/sf/config.h
+tinyos/cpp/sf/sf2
+
+# Java
+tinyos/java/.deps/
+tinyos/java/net/tinyos/comm/.deps/
+tinyos/java/net/tinyos/message/SerialPacket.java
+tinyos/java/net/tinyos/packet/Serial.java
+tinyos/java/net/tinyos/tools/PrintfMsg.java
+tinyos/java/tinyos.jar
+tinyos/jni/env/.deps/
+tinyos/jni/serial/.deps/
+
+tinyos/c/coap/examples/etsi_iot_01
+tinyos/c/coap/examples/rd
 
 #cppbsl
 platforms/msp430/cppbsl/src/.deps/
 platforms/msp430/cppbsl/stamp-h1
 platforms/msp430/cppbsl/src/cppbsl
 
+# ucmote
+platforms/ucmote/mcp2200gpio/.deps/
+platforms/ucmote/mcp2200gpio/mcp2200gpio
+platforms/ucmote/motelist2/motelist2
+platforms/ucmote/motelist2/motelist2_getdevices-cygwin.py
+platforms/ucmote/motelist2/motelist2_getdevices-linux.py
+platforms/ucmote/motelist2/motelist2_getdevices.py
