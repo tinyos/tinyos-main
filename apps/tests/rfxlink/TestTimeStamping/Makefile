@@ -12,7 +12,7 @@ CLEAN_EXTRA = TestMsg.class TestMsg.java \
 	else CLASSPATH="$$CLASSPATH:Jama-1.0.2.jar" javac $<; fi 
 
 TestMsg.java: TestTimeStamping.h Makefile
-	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=TestMsg TestTimeStamping.h test_msg_t -o $@
+	nescc-mig java $(NESC_PFLAGS) $(CFLAGS) -java-classname=TestMsg TestTimeStamping.h test_msg_t -o $@
 
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include

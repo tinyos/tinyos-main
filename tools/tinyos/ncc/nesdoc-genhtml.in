@@ -1,10 +1,11 @@
+#!@pathpython@
 # -*- python -*-
 # Copyright (c) 2005 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 # HTML generation from the XML files in a nesdoc repository.
@@ -45,7 +46,7 @@ def param_doctag(val):
 # Print @return tags as Returns:
 def return_doctag(val):
   return ("returns", val)
-  
+
 register_doctag("param", param_doctag)
 register_doctag("return", return_doctag)
 
@@ -60,7 +61,7 @@ else:
 
 try:
   chdir(repository)
-  
+
   # set up directories
   nmkdir("ihtml")
   nmkdir("chtml")
@@ -68,14 +69,15 @@ try:
 
   # copy stylesheet
   pathname = os.path.abspath(os.path.dirname(argv[0]))
-  copyfile(pathname + "/nesdoc.css", "chtml/nesdoc.css")
-  copyfile(pathname + "/nesdoc.css", "ihtml/nesdoc.css")
-  copyfile(pathname + "/nesdoc.css", "index/nesdoc.css")
-  copyfile(pathname + "/nesdoc.css", "nesdoc.css")
+  nesdoc_css_loc = "@pythondir@/nesdoc/nesdoc.css".replace("${prefix}", "@prefix@")
+  copyfile(nesdoc_css_loc, "chtml/nesdoc.css")
+  copyfile(nesdoc_css_loc, "ihtml/nesdoc.css")
+  copyfile(nesdoc_css_loc, "index/nesdoc.css")
+  copyfile(nesdoc_css_loc, "nesdoc.css")
 
   compfiles = listdir("components")
   intffiles = listdir("interfaces")
-  
+
 except OSError:
   nfail("Couldn't access nesdoc repository " + repository)
 

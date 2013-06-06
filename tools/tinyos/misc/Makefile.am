@@ -34,6 +34,7 @@ bin_SCRIPTS = tos-ident-flags \
               tos-deluge \
               tos-dump.py \
               tos-nwprog \
-              tos-serlook.py
+              tos-serlook.py \
+              tos-sub-tosdir
 
 bin_PROGRAMS = tos-serial-debug

@@ -15,13 +15,13 @@ CFLAGS += $(CONSTANTS)
 CLEAN_EXTRA += DhvMsg.py DhvDataMsg.py DhvData.py DhvMsg.java DhvDataMsg.java DhvData.java DhvMsg.class DhvDataMsg.class DhvData.class DhvInject.class DhvTestMsg.class DhvTestMsg.java
 
 DhvMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_msg -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_msg -o $@
 
 DhvDataMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DhvDataMsg -python-extends=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data_msg -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DhvDataMsg -python-extends=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data_msg -o $@
 
 DhvData.py:
-	mig python -target=$(PLATFORM) -python-classname=DhvData -python-extends=DhvDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DhvData -python-extends=DhvDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data -o $@
 
 DhvTestMsg.class: DhvTestMsg.java
 	javac DhvTestMsg.java
@@ -36,16 +36,16 @@ DhvData.class: DhvData.java
 	javac  DhvData.java
 
 DhvTestMsg.java:
-	mig java -target=null -java-classname=DhvTestMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_test_msg -o $@
+	nescc-mig java -java-classname=DhvTestMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_test_msg -o $@
 
 DhvMsg.java:
-	mig java -target=null -java-classname=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_msg -o $@
+	nescc-mig java -java-classname=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_msg -o $@
 
 DhvDataMsg.java:
-	mig java -target=null -java-classname=DhvDataMsg -java-extends=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data_msg -o $@
+	nescc-mig java -java-classname=DhvDataMsg -java-extends=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data_msg -o $@
 
 DhvData.java:
-	mig java -target=null -java-classname=DhvData -java-extends=DhvDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data -o $@
+	nescc-mig java -java-classname=DhvData -java-extends=DhvDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_data -o $@
 
 DhvInject.class:
 	javac  DhvInject.java

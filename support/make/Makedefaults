@@ -4,7 +4,16 @@
 DEFAULT_LOCAL_GROUP ?= 0x22
 OPTFLAGS ?= -Os
 NESC_FLAGS ?= -Wnesc-all
+NESC_FLAGS += -fnesc-include=tos
+NESC_FLAGS += -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 GOALS += ident_flags tos_image tosboot
+
+PFLAGS += -DPLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)
+
+# Add the standard TinyOS source directories to the build search path
+STD_PFLAGS += -I%T/system
+STD_PFLAGS += -I%T/types
+STD_PFLAGS += -I%T/interfaces
 
 define DEFAULT_HELP
 

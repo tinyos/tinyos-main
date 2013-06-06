@@ -17,34 +17,27 @@ INJECT_OBJS = set_rate_msg.o tn-injector.o collection_debug_msg.o $(LIBMOTE)
 
 # arguments: output filename stem, input filename, struct name
 define mig_templ
-MIGFILES += $(1).c $(1).h $(1).java $(1).o
+TOSMAKE_CLEAN_EXTRA += $(1).c $(1).h $(1).java $(1).o
 $(1).c:
-	mig -o $(1).h c -target=$$(PLATFORM) $$(CFLAGS) $$(TFLAGS) $(2) $(3)
+	nescc-mig -o $(1).h c $$(NESC_PFLAGS) $$(CFLAGS) $$(TFLAGS) $(2) $(3)
 $(1).java:
-	mig -o $(1).java java -target=$$(PLATFORM) $$(CFLAGS) $$(TFLAGS) $(2) $(3)
+	nescc-mig -o $(1).java java $$(NESC_PFLAGS) $$(CFLAGS) $$(TFLAGS) -java-classname=$(3) $(2) $(3)
 endef
 
-$(eval $(call mig_templ,test_network_msg,TestNetwork.h,TestNetworkMsg))
-$(eval $(call mig_templ,set_rate_msg,$(TINYOS_OS_DIR)/lib/net/DisseminationEngine.h,dissemination_message))
-$(eval $(call mig_templ,collection_debug_msg,$(TINYOS_OS_DIR)/lib/net/collection/CollectionDebugMsg.h,CollectionDebugMsg))
-
 %.o: %.c
-	gcc -v  $(TFLAGS) $(CFLAGS) -c -o $@ $<
+	gcc $(TFLAGS) $(CFLAGS) -c -o $@ $<
 
 tn-listener: $(LISTEN_OBJS)
 	gcc -v $(TFLAGS) $(CFLAGS) -o $@ $(LISTEN_OBJS)
 
 tn-injector: $(INJECT_OBJS)
-	gcc -v $(TFLAGS) $(CFLAGS) -o $@ $(INJECT_OBJS)
-
-#tn-listener.o: tn-listener.c
-#	gcc $(TFLAGS) $(CFLAGS) -c -o $@ $<
+	gcc $(TFLAGS) $(CFLAGS) -o $@ $(INJECT_OBJS)
 
 tn-injector.o: tn-injector.c test_network_msg.c
 	gcc $(TFLAGS) $(CFLAGS) -c -o $@ $<
 
 #test_network_msg.c:
-#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg 
+#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg
 
 #set_rate_msg.c:
 #	mig -o set_rate_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TINYOS_OS_DIR)/lib/net/DisseminationEngine.h dissemination_message
@@ -61,5 +54,6 @@ tn-injector.o: tn-injector.c test_network_msg.c
 TINYOS_ROOT_DIR?=../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
 
-migclean:
-	rm -rf $(MIGFILES)
+$(eval $(call mig_templ,test_network_msg,TestNetwork.h,TestNetworkMsg))
+$(eval $(call mig_templ,set_rate_msg,$(TINYOS_OS_DIR)/lib/net/drip/DisseminationEngine.h,dissemination_message))
+$(eval $(call mig_templ,collection_debug_msg,$(TINYOS_OS_DIR)/lib/net/CollectionDebugMsg.h,CollectionDebugMsg))

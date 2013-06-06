@@ -8,13 +8,13 @@ antitheft.jar: AntiTheftGui.class
 	jar cf $@ *.class
 
 SettingsMsg.java: $(ANTITHEFT_H)
-	mig -target=null -java-classname=SettingsMsg java $(ANTITHEFT_H) settings -o $@
+	nescc-mig -java-classname=SettingsMsg java $(ANTITHEFT_H) settings -o $@
 
 AlertMsg.java: $(ANTITHEFT_H)
-	mig -target=null -java-classname=AlertMsg java $(ANTITHEFT_H) alert -o $@
+	nescc-mig -java-classname=AlertMsg java $(ANTITHEFT_H) alert -o $@
 
 Constants.java: $(ANTITHEFT_H)
-	ncg -target=null -java-classname=Constants java $(ANTITHEFT_H) antitheft.h -o $@
+	nescc-ncg -java-classname=Constants java $(ANTITHEFT_H) antitheft.h -o $@
 
 AntiTheftGui.class: $(wildcard *.java) $(GEN)
 	javac *.java

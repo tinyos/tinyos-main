@@ -5,7 +5,7 @@ FtspDataLogger.class: TestFtspMsg.java
 	javac *.java
 
 TestFtspMsg.java: TestFtsp.h
-	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=TestFtspMsg TestFtsp.h test_ftsp_msg -o $@
+	nescc-mig java $(NESC_PFLAGS) $(CFLAGS) -java-classname=TestFtspMsg TestFtsp.h test_ftsp_msg -o $@
 
 COMPONENT=TestFtspAppC
 

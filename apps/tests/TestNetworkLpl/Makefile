@@ -53,7 +53,7 @@ tn-injector.o: tn-injector.c test_network_msg.c
 	gcc $(TFLAGS) $(CFLAGS) -c -o $@ $<
 
 #test_network_msg.c:
-#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg 
+#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg
 
 #set_rate_msg.c:
 #	mig -o set_rate_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TINYOS_OS_DIR)/lib/net/DisseminationEngine.h dissemination_message
@@ -69,6 +69,3 @@ tn-injector.o: tn-injector.c test_network_msg.c
 
 TINYOS_ROOT_DIR?=../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-
-migclean:
-	rm -rf $(MIGFILES)

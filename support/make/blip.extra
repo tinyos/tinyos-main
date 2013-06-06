@@ -10,17 +10,17 @@ else
 	PFLAGS += -DTOSH_DATA_LENGTH=112
 endif
 
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/printf/
+PFLAGS+=-I%T/lib/net/
+PFLAGS+=-I%T/lib/printf/
 PFLAGS+=-I$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/interfaces/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/nwprog/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/shell/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/serial/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/platform/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/icmp/
-PFLAGS+=-I$(TINYOS_OS_DIR)/lib/net/blip/dhcp/
+PFLAGS+=-I%T/lib/net/blip/
+PFLAGS+=-I%T/lib/net/blip/interfaces/
+PFLAGS+=-I%T/lib/net/blip/nwprog/
+PFLAGS+=-I%T/lib/net/blip/shell/
+PFLAGS+=-I%T/lib/net/blip/serial/
+PFLAGS+=-I%T/lib/net/blip/platform/
+PFLAGS+=-I%T/lib/net/blip/icmp/
+PFLAGS+=-I%T/lib/net/blip/dhcp/
 
 PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/iovec.c
 PFLAGS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/in_cksum.c

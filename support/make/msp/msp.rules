@@ -21,27 +21,22 @@ define MSP_HELP
 endef
 HELP += $(MSP_HELP)
 
-ifdef MAKE_DEPUTY_FLAG
-        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -I$(TINYOS_OS_DIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TINYOS_OS_DIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib '
-else
-        NCC_SAFE_TINYOS_FLAGS =
-endif
-
 MSPGCC_MIN_VER := 4.6.3
 MSPGCC_VER_OK := $(shell expr `msp430-gcc -dumpversion` \>= '$(MSPGCC_MIN_VER)')
 
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
 SET_ID = tos-set-symbols
-NCC = ncc
+NESC = nescc
 LIBS = -lm
 
 # Use __ as the separator - requires nesC 1.2.9 or later
 ifneq ($(filter sim,$(GOALS)),sim)
-        PFLAGS += -fnesc-separator=__
+  PFLAGS += -fnesc-separator=__
 endif
 
-NCC_OPTS = -tosdir=$(TINYOS_OS_DIR)
+ALL_TOS_DIRS = $(addsuffix /tos,$(TINYOS_ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
+TOSDIR_OPTS = $(addprefix --tosdir ,$(ALL_TOS_DIRS))
 AMADDR = ActiveMessageAddressC__addr
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
@@ -49,7 +44,7 @@ MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
 PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
-PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
+PFLAGS += -fnesc-cfile=$(BUILDDIR)/app.c
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
 endif
@@ -64,6 +59,12 @@ BUILDLESS_DEPS += bytes
 # Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
 # out with call in there.  I don't know why.
 $(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
+
+# Add in the standard PFLAGS
+PFLAGS += $(STD_PFLAGS)
+
+# Replace the %T with the correct tosdir path
+PFLAGS_SUB = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS))
 
 # Build storage file if volumes.xml present
 ifneq ($(wildcard $(VOLUME_FILE)), )
@@ -111,7 +112,7 @@ ifeq ("$(MSPGCC_VER_OK)","0")
 	@echo "    WARNING: Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)!!!"
 	@echo
 endif
-	$(NCC) $(NCC_OPTS) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS_SUB) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
 endif

@@ -2,13 +2,13 @@ COMPONENT=RadioSenseToLedsAppC
 BUILD_EXTRA_DEPS = RadioSenseMsg.py RadioSenseMsg.class
 
 RadioSenseMsg.py: RadioSenseToLeds.h
-	mig python -target=$(PLATFORM) $(CFLAGS) -python-classname=RadioSenseMsg RadioSenseToLeds.h radio_sense_msg -o $@
+	nescc-mig python $(NESC_PFLAGS) $(CFLAGS) -python-classname=RadioSenseMsg RadioSenseToLeds.h radio_sense_msg -o $@
 
 RadioSenseMsg.class: RadioSenseMsg.java
 	javac RadioSenseMsg.java
 
 RadioSenseMsg.java: RadioSenseToLeds.h
-	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=RadioSenseMsg RadioSenseToLeds.h radio_sense_msg -o $@
+	nescc-mig java $(NESC_PFLAGS) $(CFLAGS) -java-classname=RadioSenseMsg RadioSenseToLeds.h radio_sense_msg -o $@
 
 
 TINYOS_ROOT_DIR?=../..

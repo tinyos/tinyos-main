@@ -7,7 +7,7 @@ UcminiSensor.class: UcminiSensor.java UcminiSensorMeas.java
 	javac UcminiSensor.java
 
 UcminiSensorMeas.java:
-	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=UcminiSensorMeas UcminiSensor.h measurement -o $@
+	nescc-mig java $(NESC_PFLAGS) $(CFLAGS) -java-classname=UcminiSensorMeas UcminiSensor.h measurement -o $@
 
 
 TINYOS_ROOT_DIR?=../../../..

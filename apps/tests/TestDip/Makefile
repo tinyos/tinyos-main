@@ -17,13 +17,13 @@ CFLAGS += $(CONSTANTS)
 CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
 
 DipMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
 
 DipDataMsg.py:
-	mig python -target=$(PLATFORM) -python-classname=DipDataMsg -python-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DipDataMsg -python-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
 
 DipData.py:
-	mig python -target=$(PLATFORM) -python-classname=DipData -python-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
+	nescc-mig python $(NESC_PFLAGS) -python-classname=DipData -python-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
 
 
 DipMsg.class: DipMsg.java
@@ -36,13 +36,13 @@ DipData.class: DipData.java
 	javac -target 1.4 -source 1.4 DipData.java
 
 DipMsg.java:
-	mig java -target=$(PLATFORM) -java-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
+	nescc-mig java $(NESC_PFLAGS) -java-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@
 
 DipDataMsg.java:
-	mig java -target=$(PLATFORM) -java-classname=DipDataMsg -java-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
+	nescc-mig java $(NESC_PFLAGS) -java-classname=DipDataMsg -java-extends=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data_msg -o $@
 
 DipData.java:
-	mig java -target=$(PLATFORM) -java-classname=DipData -java-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
+	nescc-mig java $(NESC_PFLAGS) -java-classname=DipData -java-extends=DipDataMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_data -o $@
 
 DipInject.class:
 	javac -target 1.4 -source 1.4 DipInject.java

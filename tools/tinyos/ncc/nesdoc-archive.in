@@ -1,10 +1,11 @@
+#!@pathpython@
 # -*- python -*-
 # Copyright (c) 2005 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 # Archive nesdoc information from a given compilation in a nesdoc repository.
@@ -93,7 +94,7 @@ def canonicalise(name):
     name = "/%s/%s" %(name[0], name[2:])
   name = replace(name, "\\", "/")
   return name
-  
+
 # canonicalise a directory. like canonicalise, but ensures
 # there is trailing /
 def canonicalisedir(dirname):
@@ -205,16 +206,21 @@ if app:
   name = toplevel.getAttribute("qname")
   nicename = toplevel.getAttribute("nicename")
   wiring = xml_tag(xml_tag(dom, "nesc"), "wiring")
-  generate_graph(".", repository, dom, wiring, name, nicename)
 
-  ht = Html("%s.html" % nicename)
+  app_folder = "appdoc"
+  docs_dir = ("../"*(app_folder.count("/")+1)) + repository
+  nmkdir(app_folder)
+
+  generate_graph(app_folder, docs_dir, dom, wiring, name, nicename)
+
+  ht = Html("%s/%s.html" % (app_folder, nicename))
   ht.title("Application: " + nicename)
   ht.body()
   ht.push("h2");
   ht.p("Application: " + nicename)
   ht.popln();
   ht.pushln("map", 'name="comp"')
-  cmap = file("%s.cmap" % nicename)
+  cmap = file("%s/%s.cmap" % (app_folder, nicename))
   for line in cmap.readlines():
     ht.pln(line)
   cmap.close()
@@ -290,7 +296,7 @@ for x in components.getElementsByTagName("component"):
       refd.appendChild(refidx[ref].cloneNode(True))
     for qname in allcomps.keys():
       refd.appendChild(qnameidx[qname].cloneNode(True))
-    
+
     doc.appendChild(copy)
     ifile = file(filename, "w")
     doc.writexml(ifile)

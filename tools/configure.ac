@@ -271,12 +271,13 @@ AC_OUTPUT(
 	tinyos/misc/tos-mote-key
 	tinyos/misc/tos-check-env
 	tinyos/misc/tos-serlook.py
+	tinyos/misc/tos-sub-tosdir
 	tinyos/misc/Makefile
 	tinyos/ncc/Makefile
 	tinyos/ncc/mig
-	tinyos/ncc/ncc
 	tinyos/ncc/ncg
-	tinyos/ncc/nesdoc
+	tinyos/ncc/nesdoc-archive
+	tinyos/ncc/nesdoc-genhtml
 	tinyos/ncc/nesdoc-py/Makefile
 	tinyos/python/Makefile
 	tinyos/python/tos.py

@@ -3,6 +3,7 @@ AUTOMAKE_OPTIONS = foreign
 MIGFLAGS = -D_POSIX_C_SOURCE
 TOS=../../../../tos
 SERIAL_H = $(TOS)/lib/serial/Serial.h
+TFLAGS = -I$(TOS)/types
 
 BUILT_SOURCES = serialpacket.h serialprotocol.h
 
@@ -34,7 +35,7 @@ libmote_a_SOURCES = \
 	sfsource.c
 
 serialpacket.c serialpacket.h: $(SERIAL_H)
-	../../ncc/mig -o serialpacket.h -c-prefix=spacket c $(SERIAL_H) serial_packet $(MIGFLAGS) -tosdir=$(TOS)
+	nescc-mig -o serialpacket.h $(TFLAGS) -c-prefix=spacket c $(SERIAL_H) serial_packet $(MIGFLAGS)
 
 serialprotocol.h: $(SERIAL_H)
-	../../ncc/ncg -o $@ -c-prefix=SERIAL c $(SERIAL_H) Serial.h $(MIGFLAGS) -tosdir=$(TOS)
+	nescc-ncg -o $@ $(TFLAGS) -c-prefix=SERIAL c $(SERIAL_H) Serial.h $(MIGFLAGS)

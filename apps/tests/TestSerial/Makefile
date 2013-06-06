@@ -6,7 +6,7 @@ TestSerial.class: $(wildcard *.java) TestSerialMsg.java
 	javac -target 1.4 -source 1.4 *.java
 
 TestSerialMsg.java:
-	mig java -target=null $(CFLAGS) -java-classname=TestSerialMsg TestSerial.h test_serial_msg -o $@
+	nescc-mig java $(CFLAGS) -java-classname=TestSerialMsg TestSerial.h test_serial_msg -o $@
 
 
 TINYOS_ROOT_DIR?=../../..

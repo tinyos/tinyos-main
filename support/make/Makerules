@@ -35,8 +35,9 @@ endif
 #  To use this feature, set the environment variable TINYOS_MAKE_DIR_ADDITIONAL
 #  to a space separated list of additionals paths to make folders you would
 #  like the make system to search.
-TOSMAKE_PATH = $(TINYOS_MAKE_DIR_ADDITIONAL)
+TOSMAKE_PATH = $(addsuffix /support/make,$(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL)))
 TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
+#$(warning $(TOSMAKE_PATH))
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -114,10 +115,25 @@ endef
 #    Pull in a directory as a new TOSMake platform, which MUST be a subdir of
 #    TOSMAKE_PATH.  A platform directory must also have a .rules file, which
 #    is automatically evaluated.
-TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
-define TOSMake_include_platform_define
+TOSMake_include_make_platform=$(eval $(call TOSMake_include_make_platform_define,$(1)))
+define TOSMake_include_make_platform_define
 $(call TOSMake_include_dir,$(1))
 $(call TOSMake_include,$(1)/$(1).rules)
+endef
+
+TOSMake_include_sensor=$(eval $(call TOSMake_include_sensor_define,$(1)))
+define TOSMake_include_sensor_define
+$(call TOSMake_include,sensors/$(1).sensor)
+endef
+
+TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
+define TOSMake_include_platform_define
+$(call TOSMake_include,platforms/$(1).platform)
+endef
+
+TOSMake_include_family=$(eval $(call TOSMake_include_family_define,$(1)))
+define TOSMake_include_family_define
+$(call TOSMake_include,families/$(1).family)
 endef
 
 

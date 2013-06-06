@@ -3,7 +3,7 @@ CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/ -I$(TINYOS_OS_DIR)/lib/net/ctp -I$(TINYOS_
 BUILD_EXTRA_DEPS = MVizMsg.class
 
 MVizMsg.java: MViz.h
-	mig -target=null -java-classname=MVizMsg java MViz.h mviz_msg -o $@
+	nescc-mig -I$(TINYOS_OS_DIR)/types -java-classname=MVizMsg java MViz.h mviz_msg -o $@
 
 MVizMsg.class: MVizMsg.java
 	javac MVizMsg.java

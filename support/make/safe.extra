@@ -1,5 +1,4 @@
 #-*-Makefile-*-
 
-MAKE_DEPUTY_FLAG := 1
-#export MAKE_DEPUTY_FLAG
-
+MAKE_DEPUTY_FLAG = 1
+NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -I$(TINYOS_OS_DIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TINYOS_OS_DIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib '
