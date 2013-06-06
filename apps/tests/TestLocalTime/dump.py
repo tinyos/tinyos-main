@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import tos
+from tinyos import tos
 
 class Localtime(tos.Packet):
     def __init__(self, packet = None):

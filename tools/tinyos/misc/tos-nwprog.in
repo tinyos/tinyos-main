@@ -37,12 +37,7 @@
 # @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
 
 import sys, stat, struct, subprocess, time, os.path, socket, getopt, re
-try:
-    import tos
-except ImportError:
-    import posix
-    sys.path = [os.path.join(posix.environ['TOSROOT'], 'support', 'sdk', 'python')] + sys.path
-    import tos
+from tinyos import tos
 from datetime import datetime
 
 # Path to the python script that builds Deluge image from XML
@@ -115,7 +110,7 @@ def read(imgNum, unused=None):
         pkt_offset += len(data) - 6
         length -= (len(data) - 6)
     return True
-            
+
 
 def write(imgNum, data):
     length = len(data)
@@ -235,7 +230,7 @@ if __name__ == '__main__':
     uploadFile = None
     appFile = None
     dudFile = None
-    
+
     for o, a in opts:
         if o in ["-e", "--erase"]:
             imgNum = checkImgNum(a)
@@ -305,7 +300,7 @@ if __name__ == '__main__':
     if dudFile != None:
         dudFp = open(dudFile, "w")
     else: dudFp = sys.stdout
-    
+
     for i in range(0, len(upload_list)):
         remote, tries_left = upload_list[i]
         if tries_left == 0 and not printedHeading:

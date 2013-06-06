@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, time
-import tos
+from tinyos import tos
 
 class Test(tos.Packet):
     def __init__(self, payload = None):

@@ -5,9 +5,7 @@
 # http://docs.tinyos.net/index.php/OpenOCD_for_IMote2
 #
 
-PROGRAM = imote2-ocd-program.py
-
-PROGRAMMER ?= $(TOSROOT)/tools/platforms/intelmote2/openocd/imote2-ocd-program.py
+PROGRAMMER = imote2-ocd-program.py
 
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using $(PROGRAM)"

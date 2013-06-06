@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, time
-import tos
+from tinyos import tos
 
 AM_TEST_FTSP_MSG = 137
 

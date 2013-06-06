@@ -34,12 +34,7 @@
 # @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 
 import sys, stat, struct, subprocess, time, os.path
-try:
-    import tos
-except ImportError:
-    import posix
-    sys.path = [os.path.join(posix.environ['TOSROOT'], 'support', 'sdk', 'python')] + sys.path
-    import tos
+from tinyos import tos
 from datetime import datetime
 
 # Path to the python script that builds Deluge image from XML

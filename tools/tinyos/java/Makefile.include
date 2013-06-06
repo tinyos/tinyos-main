@@ -1,0 +1,67 @@
+#-*-makefile-*-
+######################################################################
+#
+# Contains the shared make rules for the tools/java tree.
+#
+# In each directory, create a Makefile that includes the lines
+#    ROOT = <path to this directory>
+#    include $(ROOT)/Makefile.include
+#
+# By default the Makefile will compile all .java source code in the
+# current directory. You may also specify the following flags in
+# your Makefile, *before* including Makefile.include:
+#
+#   SUBDIRS = dir1 dir2 ...
+#     Specify a list of subdirectories that 'make' should descend into
+#
+#   INITIAL_TARGETS = target1 target2 ...
+#     Specify build targets to be compiled before compiling Java classes
+#
+#   FINAL_TARGETS = target1 target2 ...
+#     Specify build targets to be compiled after compiling Java classes
+#
+#   OTHER_CLEAN = target1 target2 ...
+#     Specify other targets to be executed when 'make clean' is run
+#
+# NOTE: this Makefile requires GNU make, as well as a number of
+#       standard UNIX shell tools.
+#
+######################################################################
+
+SRC = $(wildcard *.java)
+JAVA = $(SRC)
+CLASSES = $(JAVA:.java=.class)
+
+TINYOS_OS_DIR ?= $(ROOT)/../../../tos
+
+all: here $(FINAL_TARGETS)
+
+# figure out useful variables
+PWD = $(shell pwd)
+
+# set compiler command
+ifeq ($(JAVAC)_x, _x)
+JAVAC = javac
+endif
+
+# general rule for java files
+%.class: %.java
+	$(JAVAC) -classpath $(ROOT) $<
+
+here: printdir $(INITIAL_TARGETS) $(JAVA) $(CLASSES)
+
+printdir:
+	@echo "... $(PWD)";
+
+here-clean: FORCE
+	@rm -f *.class *~ javacore*.txt
+	@echo "cleaning $(PWD)"
+
+clean: here-clean $(OTHER_CLEAN)
+
+# some phony targets - FORCE forces a command to be run on all dependencies,
+# and .PHONY prevents badness if a phony target coincides with a filename
+
+FORCE:
+
+.PHONY: compile clean

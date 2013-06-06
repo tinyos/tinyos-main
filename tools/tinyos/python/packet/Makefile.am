@@ -10,6 +10,6 @@ tospydir = $(pythondir)/tinyos/packet
 
 SERIAL_H = $(TINYOS_OS_DIR)/lib/serial/Serial.h
 
-Serial.py:  
+Serial.py:
 	ncg -o $@ -python-classname=Serial python $(SERIAL_H) Serial.h
 
