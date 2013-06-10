@@ -22,19 +22,16 @@ endef
 
 HELP += $(AVR_HELP)
 
-
+GCC = avr-gcc
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
-SET_ID = tos-set-symbols
 SIZE = avr-size
 PROGRAMMER ?= avrdude
-NESC = nescc
 LIBS = -lm
 
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 
-TOSMAKE_VOLUME_FILE ?= volumes-at45db.xml
-TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-at45db
+TOSMAKE_FLASH_CHIP ?= at45db
 
 PFLAGS += -Wall -Wshadow
 
@@ -76,16 +73,10 @@ endif
 TOSMAKE_BINARY_FORMAT = srec
 TOSMAKE_BINARY_IN = $(MAIN_SREC)
 TOSMAKE_BINARY_OUT = $(INSTALL_SREC)
-TOSMAKE_IMAGE_DEPS += stack_check
 
-delsetid: program FORCE
-	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC)
+ifeq ($(STACK_CHECK),1)
+TOSMAKE_POST_EXE_DEPS += stack_check
+endif
 
 delsetid_bl: program_bl FORCE
 	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC)
-
-stack_check: exe FORCE
-	@echo -e '$(INFO_STRING) checking the ramsize'
-	@-tos-ramsize $(PLATFORM) $(MAIN_EXE)
-
-

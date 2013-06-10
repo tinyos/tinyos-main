@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: iris.target,v 1.5 2009-03-10 15:09:55 sallai Exp $
 
 TARGET = iris
 

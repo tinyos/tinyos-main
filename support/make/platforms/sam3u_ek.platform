@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/sam3u_ek
 PFLAGS += -I%T/platforms/sam3u_ek/lcd
@@ -58,7 +59,6 @@ PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/power
 
-PFLAGS += -gcc=arm-none-eabi-gcc
 PFLAGS += -mcpu=cortex-m3
 PFLAGS += -nostartfiles
 PFLAGS += -fnesc-target=env

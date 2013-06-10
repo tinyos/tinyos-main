@@ -8,16 +8,15 @@ define NULL_HELP
 endef
 HELP += $(NULL_HELP)
 
+GCC = gcc
 OBJCOPY = objcopy
 OBJDUMP = objdump
-NESC = nescc
 SIZE = size
 LIBS = -lm
 
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 
-TOSMAKE_VOLUME_FILE = volumes-at45db.xml
-TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-at45db
+TOSMAKE_FLASH_CHIP ?= at45db
 
 PFLAGS += -Wall -Wshadow
 

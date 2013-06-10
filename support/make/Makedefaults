@@ -12,10 +12,10 @@ NESC_CFILE ?= $(TOSMAKE_BUILD_DIR)/app.c
 NESC_SEPARATOR ?= __
 
 # Add the standard TinyOS source directories to the build search path
-TINYOS_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
+TOSMAKE_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
 
 # Define the TOS_AM_GROUP to be 0x22 by default
-TINYOS_PFLAGS_DEFINED_TOS_AM_GROUP ?= -DDEFINED_TOS_AM_GROUP=0x22
+TOSMAKE_AM_GROUP ?= 0x22
 
 ### ---
 ### --- Set common variables that are local to the Make system that are used in
@@ -31,11 +31,16 @@ MAIN_BIN = $(TOSMAKE_BUILD_DIR)/main.bin
 MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec
 MAIN_ELF = $(TOSMAKE_BUILD_DIR)/main.elf
 
-# Variable name to be replaced when a NODEID is set
-TOSMAKE_AMADDR ?= ActiveMessageAddressC__addr
-TOSMAKE_TOS_NODE_ID ?= TOS_NODE_ID
+# Default applications
+SET_ID ?= tos-set-symbols
+NESC ?= nescc
 
-GOALS += ident_flags tos_image tos_buildinfo tosboot
+# Variable name to be replaced when a NODEID is set
+TOSMAKE_AMADDR_STR ?= ActiveMessageAddressC__addr
+TOSMAKE_TOS_NODE_ID_STR ?= TOS_NODE_ID
+
+# Cause Makerules to include more .extra files
+GOALS += tos_image tos_buildinfo tosboot
 
 define DEFAULT_HELP
 

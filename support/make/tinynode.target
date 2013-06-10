@@ -1,16 +1,13 @@
 #-*-Makefile-*-
-#$Id: tinynode.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
 TARGET = tinynode
 
 MSP_BSL ?= tos-bsl
 
-#Flash Config
-VOLUME_FILE = volumes-at45db.xml
-VOLUME_ALLOCATOR ?= tos-storage-at45db
-
 $(call TOSMake_include_platform,tinynode)
-$(call TOSMake_include_platform,msp)
+
+$(call TOSMake_include_make_platform,tinynode)
+$(call TOSMake_include_make_platform,msp)
 
 tinynode: $(BUILD_DEPS)
 	@:

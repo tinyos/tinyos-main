@@ -13,18 +13,18 @@ endef
 
 HELP += $(SAM3_HELP)
 
+GCC = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
-SET_ID = tos-set-symbols
-NESC = nescc
 SIZE = arm-none-eabi-size
 LIBS = -lm
 
 OPTFLAGS ?= -O3 -g
 CFLAGS += -mthumb -fno-strict-aliasing
-PFLAGS += $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/vectors.c
 PFLAGS += -Wall -Wshadow
 PFLAGS += -finline-limit=100000
+
+TOSMAKE_ADDITIONAL_INPUTS += $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/vectors.c
 
 # can be overridden by MP-enabled linker file (see mpu.extra)
 LINKERFILE_PREFIX ?= sam3u-ek-flash

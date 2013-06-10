@@ -35,9 +35,10 @@ PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/onewire
 
 # Extra options for epic platform
-PFLAGS += -gcc=msp430-gcc
 PFLAGS += -mmcu=msp430f1611
 PFLAGS += -fnesc-target=msp430
 PFLAGS += -fnesc-no-debug
 
 #push @opts, "-mingw-gcc" if $cygwin;
+
+TOSMAKE_FLASH_CHIP = at45db

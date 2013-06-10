@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/intelmote2
 PFLAGS += -I%T/platforms/intelmote2/chips/cc2420
@@ -32,13 +33,10 @@ PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/gpio
 
-
-PFLAGS += -gcc=arm-none-eabi-gcc
 PFLAGS += -nostartfiles
 PFLAGS += -fnesc-target=env
 PFLAGS += -fnesc-no-debug
 
-
 export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true
 
-
+TOSMAKE_FLASH_CHIP = pxa27xp30

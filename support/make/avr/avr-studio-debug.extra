@@ -12,4 +12,4 @@ OPTFLAGS += -gdwarf-2
 build_elf: exe FORCE
 	@echo -e '$(INFO_STRING) building ELF output $(MAIN_ELF) for debugging in AVR Studio'
 	@perl -pe 's/#(.*)\"(.*)\"/ "#$$1\"".`cygpath -ma $$2`."\""/e; s/\n\"/\"/;' $(TOSMAKE_BUILD_DIR)/app.c > $(APPC_WINPATH)
-	@$(NESC) -o $(MAIN_ELF) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(APPC_WINPATH) $(LIBS) $(LDFLAGS)
+	@$(NESC) -o $(MAIN_ELF) $(SAFE_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(APPC_WINPATH) $(LIBS) $(LDFLAGS)

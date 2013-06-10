@@ -1,56 +1,55 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: cc2420x_32khz.extra,v 1.4 2009-11-10 07:03:34 rflury Exp $
 
 CFLAGS += -DCC2420X
 
 ifeq ($(TARGETS),telosb)
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/telosa/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),shimmer)
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),shimmer2)
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/diagmsg
+  PFLAGS+=-I%T/platforms/shimmer2/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer2/chips/cc2420x
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+  PFLAGS+=-I%T/lib/diagmsg
 endif
 
 ifeq ($(TARGETS),shimmer2r)
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer2r/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
+  PFLAGS+=-I%T/platforms/shimmer2r/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
 endif
 
 ifeq ($(TARGETS),span)
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/span/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/span/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x/t32khz/am
-  PFLAGS+=-I$(TINYOS_OS_DIR)/platforms/shimmer/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/chips/cc2420x
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/layers
-  PFLAGS+=-I$(TINYOS_OS_DIR)/lib/rfxlink/util
+  PFLAGS+=-I%T/platforms/span/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/span/chips/cc2420x
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
 endif
 

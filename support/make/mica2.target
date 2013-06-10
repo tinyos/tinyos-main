@@ -1,7 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
 
 TARGET = mica2
-SENSORBOARD ?= micasb
 PROGRAMMER ?= avrdude
 ifeq ($(PROGRAMMER),avrdude)
   PROGRAMMER_PART ?= -pm128  -U efuse:w:0xff:m

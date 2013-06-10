@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/micaz
 PFLAGS += -I%T/platforms/mica
@@ -31,7 +32,6 @@ PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/diagmsg
 
-PFLAGS += -gcc=avr-gcc
 PFLAGS += -mmcu=atmega128
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug
@@ -60,4 +60,3 @@ PFLAGS += -fnesc-no-debug
 #    "underscore_name=false " .
 #    "__builtin_va_list=true " .
 #    "__thread_is_keyword=true";
-

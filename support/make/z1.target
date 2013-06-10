@@ -1,3 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
 TARGET = z1
 
 MSP_BSL ?= tos-bsl
@@ -15,9 +17,6 @@ HAS_MDATA = $(shell msp430-gcc --target-help | grep mdata-64k | awk '{print $1}'
 ifneq "$(HAS_MDATA)" ""
 PFLAGS += -mdata-64k
 endif
-
-VOLUME_FILE = volumes-stm25p.xml
-VOLUME_ALLOCATOR ?= tos-storage-stm25p
 
 $(call TOSMake_include_platform,z1)
 $(call TOSMake_include_make_platform,msp)

@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/ucbase
 PFLAGS += -I%T/platforms/ucbase/chips/stm25p
@@ -32,8 +33,8 @@ PFLAGS += -I%T/lib/rfxlink/layers
 PFLAGS += -I%T/lib/rfxlink/util
 PFLAGS += -I%T/lib/diagmsg
 
-PFLAGS += -gcc=avr-gcc
 PFLAGS += -mmcu=atmega128rfa1
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug
 
+TOSMAKE_FLASH_CHIP = stm25p

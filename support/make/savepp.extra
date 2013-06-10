@@ -1,8 +1,12 @@
 #-*-Makefile-*- vim:syntax=make
 
-PFLAGS += -fnesc-cppdir=pp
+# Save the preprocessing output from nescc to a folder
 
-BUILD_EXTRA_DEPS += rmpp
+C_PRE_PROCESS_DIR = pp
 
-rmpp: FORCE
-	rm -rf pp
+PFLAGS += -fnesc-cppdir=$(C_PRE_PROCESS_DIR)
+
+TOSMAKE_PRE_EXE_DEPS += rm_old_pp_dir
+
+rm_old_pp_dir: FORCE
+	rm -rf $(C_PRE_PROCESS_DIR)

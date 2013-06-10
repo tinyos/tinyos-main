@@ -7,12 +7,12 @@ ifeq ($(BOOTLOADER),tosboot)
   BUILD_DEPS = delsetid_bl
 endif
 
-TOSMAKE_PROGRAMMER_NAME ?= $(TOSMAKE_PROGRAMMER_TYPE)
+PROGRAMMER_NAME ?= $(TOSMAKE_PROGRAMMER_TYPE)
 
 program: setid FORCE
-	@echo -e '$(INFO_STRING) installing $(PLATFORM) binary using $(TOSMAKE_PROGRAMMER_NAME)'
+	@echo -e '$(INFO_STRING) installing $(PLATFORM) binary using $(PROGRAMMER_NAME)'
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
 
 program_bl: setid FORCE
-	@echo '$(INFO_STRING) installing $(PLATFORM) bootloader using $(TOSMAKE_PROGRAMMER_NAME)'
+	@echo '$(INFO_STRING) installing $(PLATFORM) bootloader using $(PROGRAMMER_NAME)'
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

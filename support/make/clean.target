@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: clean.target,v 1.7 2008-09-22 20:54:11 idgay Exp $
 
 clean: FORCE
 	rm -rf build $(CLEAN_EXTRA) pp

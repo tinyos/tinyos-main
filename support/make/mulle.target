@@ -39,9 +39,7 @@
 TARGET = mulle
 
 # Flash settings
-VOLUMEFILE = volumes-at45db.xml
-VOLUME_ALLOCATOR ?= tos-storage-at45db
-VOLUME_ALLOCATOR_FLAGS ?= -s 512 -f 4096
+TOSMAKE_VOLUME_ALLOCATOR_FLAGS ?= -s 512 -f 4096
 
 #MCU settings
 M16C60_MCU=62p

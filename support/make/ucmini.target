@@ -1,10 +1,11 @@
+#-*-Makefile-*- vim:syntax=make
+
 TARGET = ucmini
 PROGRAMMER ?= avrdude
 
 PROGRAMMER_PART ?= -pm128rfa1
 
-VOLUMEFILE = volumes-stm25p.xml
-VOLUME_ALLOCATOR ?= tos-storage-stm25p -s32
+TOSMAKE_VOLUME_ALLOCATOR_FLAGS ?= -s32
 
 AVR_FUSE_H ?= 0x98
 AVR_FUSE_L ?= 0xE2

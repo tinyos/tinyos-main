@@ -5,3 +5,5 @@ PFLAGS += -I%T/platforms/eyesIFX/eyesIFXv2/chips/at45db
 PFLAGS += -I%T/chips/at45db
 
 PFLAGS += -mmcu=msp430f1611
+
+TOSMAKE_FLASH_CHIP = at45db

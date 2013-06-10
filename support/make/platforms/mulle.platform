@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/mulle
 PFLAGS += -I%T/platforms/mulle/fix
@@ -37,7 +38,6 @@ PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/diagmsg
 PFLAGS += -I%T/lib/net/Deluge
 
-PFLAGS += -gcc=m32c-elf-gcc
 PFLAGS += -mcpu=m16c
 PFLAGS += -fnesc-target=env
 
@@ -61,3 +61,5 @@ long_long=8,1 \
 int1248_align=1,1,1,1 \
 wchar_size_size=2,2 \
 char_wchar_signed=true,true
+
+TOSMAKE_FLASH_CHIP = at45db

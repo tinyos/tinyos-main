@@ -19,7 +19,6 @@ OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
 SET_ID = tos-set-symbols
 SIZE = arm-none-eabi-size
-NESC = nescc
 LIBS = -lm
 
 PFLAGS += -mtune=iwmmxt -march=iwmmxt
@@ -33,7 +32,7 @@ ifndef TOSMAKE_PROGRAMMER_TYPE
   $(call TOSMake_include,pxa27x/jflashmm.extra)
 endif
 
-TINYOS_ADDITIONAL_INPUTS += $(ASSEMBLY_FILES)
+TOSMAKE_ADDITIONAL_INPUTS += $(ASSEMBLY_FILES)
 
 TOSMAKE_BINARY_FORMAT = bin
 TOSMAKE_BINARY_IN = $(MAIN_BIN)

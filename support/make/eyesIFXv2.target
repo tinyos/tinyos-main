@@ -4,10 +4,6 @@ TARGET = eyesIFXv2
 
 MSP_MCU = msp430f1611
 
-#Flash Config
-TOSMAKE_VOLUME_FILE = volumes-at45db.xml
-TOSMAKE_VOLUME_ALLOCATOR ?= tos-storage-at45db
-
 MSP_BSL_FLAGS ?= --invert-test --invert-reset --f1x
 BSL ?= /dev/ttyUSB1
 

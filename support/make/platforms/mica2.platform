@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/mica2
 PFLAGS += -I%T/platforms/mica
@@ -16,7 +17,6 @@ PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/power
 
-PFLAGS += -gcc=avr-gcc
 PFLAGS += -mmcu=atmega128
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug

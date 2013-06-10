@@ -1,3 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
 PFLAGS += -I%T/platforms/shimmer2r
 PFLAGS += -I%T/platforms/shimmer2r/chips/cc2420
 PFLAGS += -I%T/platforms/shimmer2r/chips/mma7361
@@ -49,7 +51,6 @@ PFLAGS += -I%T/lib/adc
 PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/onewire
 
-PFLAGS += -gcc=msp430-gcc
 PFLAGS += -mmcu=msp430f1611
 PFLAGS += -fnesc-target=msp430
 PFLAGS += -fnesc-no-debug

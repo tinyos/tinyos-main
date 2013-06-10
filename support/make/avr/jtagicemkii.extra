@@ -5,7 +5,7 @@ $(error $(shell echo -e '$(ERROR_STRING) JTAGICEMKII must be defined, try "make 
 endif
 
 TOSMAKE_PROGRAMMER_TYPE = jtagicemkii
-TOSMAKE_PROGRAMMER_NAME = AVR JTAGICE mkII
+PROGRAMMER_NAME = AVR JTAGICE mkII
 
 ifeq ($(PROGRAMMER),avrdude)
   ifdef BOOTLOADER_IMG

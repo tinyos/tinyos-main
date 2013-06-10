@@ -1,3 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/telosb
 PFLAGS += -I%T/platforms/telosb/chips/stm25p
@@ -36,7 +37,6 @@ PFLAGS += -I%T/lib/serial
 PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/onewire
 
-PFLAGS += -gcc=msp430-gcc
 PFLAGS += -mmcu=msp430f1611
 PFLAGS += -fnesc-target=msp430
 PFLAGS += -fnesc-no-debug
@@ -66,3 +66,4 @@ PFLAGS += -fnesc-no-debug
 #    "__builtin_va_list=true " .
 #    "__thread_is_keyword=true";
 
+TOSMAKE_FLASH_CHIP = stm25p

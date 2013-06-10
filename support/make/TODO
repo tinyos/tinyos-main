@@ -1,10 +1,10 @@
 - remove include function from volume allocator
 - shimmer and msp430 hw multiply
-- span doesnt compile
-- does shimmer2 work??
-- does ucbase compile??
-- what about ucmini??
-- and ucprotonb?
+- fix tosthreads shinanigans
+- change name of build_extra_deps
+- tinynode folder - update files in there
+- figure out what rst.extra is
+
 -
 
 

@@ -1,3 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
 PFLAGS += -I%T/platforms/span
 PFLAGS += -I%T/platforms/span/chips/cc2420
 PFLAGS += -I%T/platforms/span/chips/ds2411
@@ -31,7 +33,6 @@ PFLAGS += -I%T/lib/adc
 PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/onewire
 
-PFLAGS += -gcc=msp430-gcc
 PFLAGS += -mmcu=msp430f1611
 PFLAGS += -fnesc-target=msp430
 PFLAGS += -fnesc-no-debug

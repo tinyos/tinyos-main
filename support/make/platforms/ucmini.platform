@@ -1,6 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/ucmini
-PFLAGS += -I%T/platforms/ucmini/chips/cp2102    
+PFLAGS += -I%T/platforms/ucmini/chips/cp2102
 PFLAGS += -I%T/platforms/ucmini/chips/stm25p
 PFLAGS += -I%T/platforms/ucmini/chips/sht21
 PFLAGS += -I%T/platforms/ucmini/chips/bh1750fvi
@@ -12,7 +13,7 @@ PFLAGS += -I%T/chips/atm128rfa1/pins
 PFLAGS += -I%T/chips/atm128rfa1/sensors
 PFLAGS += -I%T/chips/atm128rfa1/timer
 PFLAGS += -I%T/chips/atm128rfa1/radio
-PFLAGS += -I%T/chips/atm128rfa1/i2c  
+PFLAGS += -I%T/chips/atm128rfa1/i2c
 PFLAGS += -I%T/chips/atm128rfa1/spi
 PFLAGS += -I%T/chips/atm1281
 PFLAGS += -I%T/chips/atm1281/adc
@@ -34,7 +35,6 @@ PFLAGS += -I%T/lib/rfxlink/layers
 PFLAGS += -I%T/lib/rfxlink/util
 PFLAGS += -I%T/lib/diagmsg
 
-PFLAGS += -gcc=avr-gcc
 PFLAGS += -mmcu=atmega128rfa1
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug
@@ -63,3 +63,5 @@ PFLAGS += -fnesc-no-debug
 #    "underscore_name=false " .
 #    "__builtin_va_list=true " .
 #    "__thread_is_keyword=true";
+
+TOSMAKE_FLASH_CHIP = stm25p

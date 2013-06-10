@@ -1,0 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
+
+STACK_CHECK = 1
+
+stack_check: exe FORCE
+	@echo -e '$(INFO_STRING) checking the ramsize'
+	@-tos-ramsize $(PLATFORM) $(MAIN_EXE)

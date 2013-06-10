@@ -1,7 +1,12 @@
 #-*-Makefile-*- vim:syntax=make
 #$Id: Makerules,v 1.6 2008/09/26 20:13:58 klueska Exp $
 
+### ---
+### --- TinyOS Make System Version 3
+### ---
+
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
+# @author Brad Campbell <bradjc@umich.edu>
 
 ### --- This makefile requires GNU Make version 3.80 or newer.
 
@@ -33,35 +38,52 @@ endif
 #  .rules files. This allows for platforms to be stored in separate repositories
 #  and still compile against the main TinyOS code.
 #  To use this feature, set the environment variable TINYOS_ROOT_DIR_ADDITIONAL
-#  to a space separated list of additionals paths to make folders you would
+#  to a space separated list of additional paths to make folders you would
 #  like the make system to search.
-TOSMAKE_PATH = $(addsuffix /support/make,$(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL)))
+ROOT_DIR_ADDITIONAL = $(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL))
+TOSMAKE_PATH = $(addsuffix /support/make,$(ROOT_DIR_ADDITIONAL))
 TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
 
 #  Also determine the path for all TinyOS OS directories that may have code in
 #  them. This makes out-of-tree builds and multiple TinyOS code trees very easy
 #  to manage. All relevant folders will automatically be included to the call to
 #  nescc.
-TOSMAKE_OS_DIR_ALL = $(addsuffix /tos,$(TINYOS_ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
+TOSMAKE_OS_DIR_ALL = $(addsuffix /tos,$(ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
+
+# Create identifying flags for the particular application, user, timestamp, etc.
+IDENT_FLAGS := $(shell tos-ident-flags "$(COMPONENT)")
+CFLAGS += $(IDENT_FLAGS)
 
 #  Set the rules that expand PFLAGS (which have %T in them) to the PFLAGS that
 #  nescc sees when it compiles.
 TOSDIR_OPTS = $(addprefix --tosdir ,$(TOSMAKE_OS_DIR_ALL))
-NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(PFLAGS) $(TINYOS_PFLAGS_STD_INCLUDE))
+ADD_SIM_DIRS = $(if $(filter sim sim-fast sim-sf,$(GOALS)),--sim,)
+NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(ADD_SIM_DIRS) $(PFLAGS) $(TOSMAKE_PFLAGS_STD_INCLUDE))
 
-#  Add the defaults to the list of PFLAGS. These are set in Makedefaults.
-#  - The standard include directories to PFLAGS. (tos/system, etc.)
-#  - nescc defaults (all warnings, include tos.h)
-#  - nescc scheduler
-#  - .c file for nescc output
-#  - Separator for nescc output
-#  - Define the default TOS AM group
-#PFLAGS += $(TINYOS_PFLAGS_STD_INCLUDE)
+# Add the defaults to the list of PFLAGS. These are set in Makedefaults.
+# - What gcc to use
+# - nescc defaults (all warnings, include tos.h)
+# - nescc scheduler
+# - .c file for nescc output
+# - Separator for nescc output
+# - Define the default TOS AM group
+PFLAGS += -gcc=$(GCC)
 PFLAGS += $(NESC_FLAGS)
 PFLAGS += -fnesc-scheduler=$(NESC_SCHEDULER)
 PFLAGS += -fnesc-cfile=$(NESC_CFILE)
 PFLAGS += -fnesc-separator=$(NESC_SEPARATOR)
-PFLAGS += $(TINYOS_PFLAGS_DEFINED_TOS_AM_GROUP)
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(TOSMAKE_AM_GROUP)
+
+# Check for Cygwin
+OSNAME := $(shell uname -s)
+ifeq ($(OSNAME),Cygwin)
+  TOSMAKE_CYGWIN := 1
+  PFLAGS += -mingw-gcc
+endif
+
+# Setup the flags needed to do the wiring check
+WIRING_CHECK_FLAGS = -fnesc-dump=wiring -fnesc-dump='interfaces(!abstract())' -fnesc-dump='referenced(interfacedefs, components)' -fnesc-dumpfile=$(WIRING_CHECK_FILE)
+WIRING_CHECK_FILE = $(TOSMAKE_BUILD_DIR)/wiring-check.xml
 
 # Set default build targets
 BUILD_DEPS ?= tinyos_image
@@ -95,7 +117,6 @@ INFO_STRING=$(INFO_COLOR)[INFO]$(NO_COLOR)
 
 ### ---
 ### --- Define make functions.
-### --- (Lord, this is ugly. I want a real scripting language so bad.)
 ### ---
 ### --- The functions a user will generally be interested in are
 ### ---   TOSMake_include(file)
@@ -221,11 +242,10 @@ $(foreach goal,$(MAKECMDGOALS),$(if $(filter-out $(TARGETS) help,$(goal)),$(eval
 ### ---
 
 # Build storage file if volumes.xml present
-ifneq ($(wildcard $(TOSMAKE_VOLUME_FILE)), )
-build_storage: $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
-
-$(TOSMAKE_BUILD_DIR)/StorageVolumes.h: $(TOSMAKE_VOLUME_FILE) build_dir
-	$(TOSMAKE_VOLUME_ALLOCATOR) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <$(TOSMAKE_VOLUME_FILE) >$@ || rm -f $@
+ifneq ($(wildcard volumes-$(TOSMAKE_FLASH_CHIP).xml), )
+build_storage: volumes-$(TOSMAKE_FLASH_CHIP).xml build_dir
+	@echo -e '$(INFO_STRING) creating StorageVolumes.h'
+	@tos-storage-$(TOSMAKE_FLASH_CHIP) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <volumes-$(TOSMAKE_FLASH_CHIP).xml > $(TOSMAKE_BUILD_DIR)/StorageVolumes.h || rm -f $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
 
 PFLAGS += -I$(TOSMAKE_BUILD_DIR)
 else
@@ -234,7 +254,7 @@ endif
 
 # Main build target for building an application
 ifeq ($(TOSMAKE_DO_REINSTALL),)
-tinyos_image: $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_IMAGE_DEPS) build_tosimage build_buildinfo FORCE
+tinyos_image: $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_POST_EXE_DEPS) build_tosimage build_buildinfo wiring_check FORCE
 else
 tinyos_image:
 	@echo -e '$(INFO_STRING) reinstalling $(COMPONENT) binary'
@@ -244,37 +264,47 @@ setid: tinyos_image FORCE
 ifneq ($(NODEID),)
 	@# Edit the binary with the updated nodeid
 	@echo -e '$(INFO_STRING) setting the node id to $(NODEID)'
-	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT) $(TOSMAKE_TOS_NODE_ID)=$(NODEID) $(TOSMAKE_AMADDR)=$(NODEID)
+	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT) $(TOSMAKE_TOS_NODE_ID_STR)=$(NODEID) $(TOSMAKE_AMADDR_STR)=$(NODEID)
 else
 	@# Just use the default NODEID that was compiled in initially
 	@cp $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT)
 endif
 
-#delsetid: FORCE
-#	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC)
+delsetid: program FORCE
+	rm -f $(subst .$(TOSMAKE_BINARY_FORMAT).,.exe.,$(TOSMAKE_BINARY_OUT)) $(TOSMAKE_BINARY_OUT)
 
-ihex: exe bytes FORCE
+ihex: bytes FORCE
 	@echo -e '$(INFO_STRING) creating ihex file'
 	@$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
 
-srec: exe bytes FORCE
+srec: bytes FORCE
 	@echo -e '$(INFO_STRING) creating srec file'
 	@$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
 
-bin: exe bytes FORCE
+bin: bytes FORCE
 	@echo -e '$(INFO_STRING) creating bin file'
-	$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
+	@$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
 
 bytes: exe FORCE
 	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
 
-exe: $(TINYOS_MAKE_EXTRA_DEPS) $(COMPONENT).nc build_dir build_storage FORCE
+ifeq ($(NO_WIRING_CHECK),)
+wiring_check: exe FORCE
+	@echo -e '$(INFO_STRING) running the wiring check'
+	@nescc-wiring $(WIRING_CHECK_FILE)
+else
+wiring_check:
+endif
+
+exe: $(TOSMAKE_PRE_EXE_DEPS) $(COMPONENT).nc build_dir build_storage ident_cache FORCE
 	@echo -e '$(INFO_STRING) compiling $(COMPONENT) to a $(TARGET) binary'
-	$(NESC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(TOSMAKE_ADDITIONAL_INPUTS)
+	$(NESC) -o $(MAIN_EXE) $(SAFE_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(TOSMAKE_ADDITIONAL_INPUTS)
+
+ident_cache: build_dir FORCE
+	@echo '$(IDENT_FLAGS)' > $(TOSMAKE_BUILD_DIR)/ident_flags.txt
 
 build_dir:
 	@mkdir -p $(TOSMAKE_BUILD_DIR)
-
 
 
 

@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.20 2010-03-17 00:38:05 klueska Exp $
 
 define MSP_HELP
 
@@ -28,12 +27,10 @@ ifeq ("$(MSPGCC_VER_OK)","0")
   $(warning $(shell echo -e '$(WARN_STRING) Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)'))
 endif
 
-
+GCC = msp430-gcc
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
 SIZE = msp430-size
-SET_ID = tos-set-symbols
-NESC = nescc
 LIBS = -lm
 
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)

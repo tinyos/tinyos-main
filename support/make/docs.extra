@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: docs.extra,v 1.5 2008-05-02 20:49:44 idgay Exp $
 
 # configure the base for the app dirs.  This is used to generate more
 # useful package names in the documentation.
@@ -33,7 +32,7 @@ NESDOC_TOSDIR = -tosdir=$(TINYOS_OS_DIR)
 BUILD_DEPS = docs_
 
 docs_: FORCE
-	@echo "    Making documentation for $(COMPONENT) on $(PLATFORM)"
+	@echo -e '$(INFO_STRING) Making documentation for $(COMPONENT) on $(PLATFORM)'
 	# first generate the xml files
 	nesdoc -o $(DOCDIR) $(NESDOC_TOSDIR) $(NESDOC_FLAGS) $(PFLAGS) $(CFLAGS) $(QUIET) $(COMPONENT).nc
 ifneq ($(filter nohtml,$(DOCS)),nohtml)
