@@ -1,6 +1,6 @@
 COMPONENT=RadioCountToFlashAppC
-BUILD_EXTRA_DEPS = RadioCountMsg.py RadioCountMsg.class
-CLEAN_EXTRA = *.class RadioCountMsg.py RadioCountMsg.java
+TOSMAKE_PRE_EXE_DEPS = RadioCountMsg.py RadioCountMsg.class
+TOSMAKE_CLEAN_EXTRA = *.class RadioCountMsg.py RadioCountMsg.java
 
 RadioCountMsg.py: RadioCountToFlash.h
 	nescc-mig python $(NESC_PFLAGS) $(CFLAGS) -python-classname=RadioCountMsg RadioCountToFlash.h RadioCountMsg -o $@
@@ -14,4 +14,3 @@ RadioCountMsg.java: RadioCountToFlash.h
 
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-

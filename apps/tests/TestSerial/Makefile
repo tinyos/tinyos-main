@@ -1,6 +1,6 @@
 COMPONENT=TestSerialAppC
-BUILD_EXTRA_DEPS += TestSerial.class
-CLEAN_EXTRA = *.class TestSerialMsg.java
+TOSMAKE_PRE_EXE_DEPS += TestSerial.class
+TOSMAKE_CLEAN_EXTRA = *.class TestSerialMsg.java
 
 TestSerial.class: $(wildcard *.java) TestSerialMsg.java
 	javac -target 1.4 -source 1.4 *.java

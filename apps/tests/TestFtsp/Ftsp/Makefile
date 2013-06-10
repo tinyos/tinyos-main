@@ -1,5 +1,5 @@
-BUILD_EXTRA_DEPS = FtspDataLogger.class
-CLEAN_EXTRA = *.class TestFtspMsg.java
+TOSMAKE_PRE_EXE_DEPS = FtspDataLogger.class
+TOSMAKE_CLEAN_EXTRA = *.class TestFtspMsg.java
 
 FtspDataLogger.class: TestFtspMsg.java
 	javac *.java
@@ -10,7 +10,6 @@ TestFtspMsg.java: TestFtsp.h
 COMPONENT=TestFtspAppC
 
 PFLAGS += -DTIMESYNC_RATE=3
-#PFLAGS += -DTIMESYNC_DEBUG
 
 PFLAGS += -I$(TINYOS_OS_DIR)/lib/ftsp -I$(TINYOS_OS_DIR)/../apps/RadioCountToLeds
 

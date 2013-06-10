@@ -1,11 +1,9 @@
 COMPONENT=TestDipC
-BUILD_EXTRA_DEPS = DipMsg.py DipDataMsg.py DipMsg.class DipDataMsg.class DipData.class DipInject.class
+TOSMAKE_PRE_EXE_DEPS = DipMsg.py DipDataMsg.py DipMsg.class DipDataMsg.class DipData.class DipInject.class
 CFLAGS += -I$(TINYOS_OS_DIR)/lib/net
 CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dip -I$(TINYOS_OS_DIR)/lib/net/dip/interfaces
-#CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/drip
 
 CONSTANTS += -DTOSH_DATA_LENGTH=32
-#CONSTANTS += -DDIP_JOINTEST
 CFLAGS += $(CONSTANTS)
 
 # LPL FLAGS
@@ -14,7 +12,7 @@ CFLAGS += $(CONSTANTS)
 #CFLAGS += -DLPL_DEF_REMOTE_WAKEUP=512
 #CFLAGS += -DDELAY_AFTER_RECEIVE=20
 
-CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
+TOSMAKE_CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
 
 DipMsg.py:
 	nescc-mig python $(NESC_PFLAGS) -python-classname=DipMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dip/Dip.h dip_msg -o $@

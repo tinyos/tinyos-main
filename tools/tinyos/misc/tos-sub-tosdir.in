@@ -47,6 +47,15 @@ def substitute_inc_path(ipath):
     ret.append(ipath)
   return ret
 
+def add_sim_folder(arguments):
+  ret = []
+  for a in arguments:
+    if '-I' == a[0:2]:
+      simpath = os.path.join(a, 'sim')
+      if os.path.exists(simpath[2:]):
+        ret.append(simpath)
+  return ret
+
 # Array of arguments to pass to nesC
 ret_args = []
 
@@ -57,6 +66,9 @@ argp.add_argument('--tosdir',
   default=[],
   required=True,
   help='Paths to the /tos directories to use as the system code.')
+argp.add_argument('--sim',
+  action='store_true',
+  help='Add /sim directories to the include path.')
 argp.add_argument('--version',
   action='version',
   version='{}: @PACKAGE_VERSION@'.format(name),
@@ -71,7 +83,9 @@ for tosdir in args.tosdir:
 # Do the substitutions and add the include paths
 for rawarg in extra_args:
   arglist = substitute_inc_path(rawarg)
-  for arg in arglist:
-    ret_args.append(arg)
+  if args.sim:
+    argsimlist = add_sim_folder(arglist)
+    ret_args.extend(argsimlist)
+  ret_args.extend(arglist)
 
 print(' '.join(ret_args).replace('"', '\\"'))

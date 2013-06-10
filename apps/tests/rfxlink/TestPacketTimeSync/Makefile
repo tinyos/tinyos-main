@@ -1,9 +1,8 @@
 COMPONENT=TestPacketTimeSyncAppC
 PFLAGS+=-DTIMESYNC_TMICRO
 PFLAGS+=-DTASKLET_IS_TASK
-#PFLAGS+=-DRADIO_DEBUG -DRADIO_DEBUG_MESSAGES
-BUILD_EXTRA_DEPS = PingMsg.class PongMsg.class TestPacketTimeSync.class
-CLEAN_EXTRA = *.class PongMsg.java PingMsg.java
+TOSMAKE_PRE_EXE_DEPS = PingMsg.class PongMsg.class TestPacketTimeSync.class
+TOSMAKE_CLEAN_EXTRA = *.class PongMsg.java PingMsg.java
 
 PingMsg.class: PingMsg.java
 	javac PingMsg.java
@@ -22,4 +21,3 @@ TestPacketTimeSync.class: PongMsg.class PingMsg.class
 
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-

@@ -1,6 +1,6 @@
 COMPONENT=RadioCountToLedsAppC
-BUILD_EXTRA_DEPS = RadioCountMsg.py RadioCountMsg.class
-CLEAN_EXTRA = RadioCountMsg.py RadioCountMsg.class RadioCountMsg.java
+TOSMAKE_PRE_EXE_DEPS = RadioCountMsg.py RadioCountMsg.class
+TOSMAKE_CLEAN_EXTRA = RadioCountMsg.py RadioCountMsg.class RadioCountMsg.java
 
 RadioCountMsg.py: RadioCountToLeds.h
 	nescc-mig python $(CFLAGS) $(NESC_PFLAGS) -python-classname=RadioCountMsg RadioCountToLeds.h radio_count_msg -o $@

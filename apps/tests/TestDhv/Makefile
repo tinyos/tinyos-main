@@ -1,18 +1,16 @@
 COMPONENT=TestDhvC
-BUILD_EXTRA_DEPS = DhvMsg.py DhvDataMsg.py DhvMsg.class DhvDataMsg.class DhvData.class DhvInject.class DhvTestMsg.class
+TOSMAKE_PRE_EXE_DEPS = DhvMsg.py DhvDataMsg.py DhvMsg.class DhvDataMsg.class DhvData.class DhvInject.class DhvTestMsg.class
 CFLAGS += -I$(TINYOS_OS_DIR)/lib/net
 #CFLAGS += -DLOW_POWER_LISTENING
 #CFLAGS += -DLPL_DEF_LOCAL_SLEEP=512
 #CFLAGS += -DLPL_DEF_RX_SLEEP=512
 #CFLAGS += -DDELAY_AFTER_RECEIVE=20
 CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dhv -I$(TINYOS_OS_DIR)/lib/net/dhv/interfaces
-#CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dhv -I$(TINYOS_OS_DIR)/lib/net/dhv/interfaces
-#CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/drip
 
 CONSTANTS += -DTOSH_DATA_LENGTH=32
 CFLAGS += $(CONSTANTS)
 
-CLEAN_EXTRA += DhvMsg.py DhvDataMsg.py DhvData.py DhvMsg.java DhvDataMsg.java DhvData.java DhvMsg.class DhvDataMsg.class DhvData.class DhvInject.class DhvTestMsg.class DhvTestMsg.java
+TOSMAKE_CLEAN_EXTRA += DhvMsg.py DhvDataMsg.py DhvData.py DhvMsg.java DhvDataMsg.java DhvData.java DhvMsg.class DhvDataMsg.class DhvData.class DhvInject.class DhvTestMsg.class DhvTestMsg.java
 
 DhvMsg.py:
 	nescc-mig python $(NESC_PFLAGS) -python-classname=DhvMsg $(CFLAGS) $(TINYOS_OS_DIR)/lib/net/dhv/Dhv.h dhv_msg -o $@

@@ -3,10 +3,10 @@
 TELOS_REV ?= A
 
 ifeq ($(TELOS_REV),A)
-  TELOS_TARGET = telosa.target
+  TELOS_TARGET = telosa
 else
-  TELOS_TARGET = telosb.target
+  TELOS_TARGET = telosb
 endif
 
-$(call TOSMake_include,$(TELOS_TARGET))
+$(call TOSMake_include_target,$(TELOS_TARGET))
 

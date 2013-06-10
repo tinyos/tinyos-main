@@ -1,5 +1,5 @@
 COMPONENT=RadioSenseToLedsAppC
-BUILD_EXTRA_DEPS = RadioSenseMsg.py RadioSenseMsg.class
+TOSMAKE_PRE_EXE_DEPS = RadioSenseMsg.py RadioSenseMsg.class
 
 RadioSenseMsg.py: RadioSenseToLeds.h
 	nescc-mig python $(NESC_PFLAGS) $(CFLAGS) -python-classname=RadioSenseMsg RadioSenseToLeds.h radio_sense_msg -o $@
@@ -13,4 +13,3 @@ RadioSenseMsg.java: RadioSenseToLeds.h
 
 TINYOS_ROOT_DIR?=../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-

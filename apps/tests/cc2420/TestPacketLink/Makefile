@@ -1,7 +1,7 @@
 COMPONENT=TestPacketLinkC
 CFLAGS += -DPACKET_LINK
-BUILD_EXTRA_DEPS = PacketLinkMsg.java TestPacketLink.class
-CLEAN_EXTRA = *.class PacketLinkMsg.java
+TOSMAKE_PRE_EXE_DEPS = PacketLinkMsg.java TestPacketLink.class
+TOSMAKE_CLEAN_EXTRA = *.class PacketLinkMsg.java
 
 PacketLinkMsg.java: TestPacketLink.h
 	nescc-mig java $(NESC_PFLAGS) $(CFLAGS) -java-classname=PacketLinkMsg TestPacketLink.h PacketLinkMsg -o $@

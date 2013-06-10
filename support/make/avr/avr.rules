@@ -22,7 +22,7 @@ endef
 
 HELP += $(AVR_HELP)
 
-GCC = avr-gcc
+GCC ?= avr-gcc
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SIZE = avr-size
@@ -63,7 +63,7 @@ ifeq ($(PROGRAMMER),avrdude)
 endif
 
 ifndef TOSMAKE_NO_WIRING_CHECK
-  $(call TOSMake_include,wiring.extra)
+  $(call TOSMake_include,extras/wiring.extra)
 endif
 
 ifndef TOSMAKE_PROGRAMMER_TYPE

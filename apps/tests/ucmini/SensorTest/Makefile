@@ -1,7 +1,7 @@
 COMPONENT=UcminiSensorC
 
-BUILD_EXTRA_DEPS += UcminiSensor.class
-CLEAN_EXTRA = *.class UcminiSensorMeas.java
+TOSMAKE_PRE_EXE_DEPS += UcminiSensor.class
+TOSMAKE_CLEAN_EXTRA = *.class UcminiSensorMeas.java
 
 UcminiSensor.class: UcminiSensor.java UcminiSensorMeas.java
 	javac UcminiSensor.java

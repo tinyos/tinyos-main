@@ -4,8 +4,5 @@ CFLAGS += -DTOSH_DATA_LENGTH=114
 CFLAGS += -DTFRAME_ENABLED
 CFLAGS += -DSAM3U_TWI_PDC
 
-CLEAN_EXTRA += *.pyc
-
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-

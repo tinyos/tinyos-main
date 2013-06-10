@@ -25,11 +25,11 @@ TOSMAKE_AM_GROUP ?= 0x22
 # Setup variables for the common output files. Not all toolchains may use all
 # these, but this way not all .rules files have to set all of them.
 TOSMAKE_BUILD_DIR ?= build/$(TARGET)
-MAIN_EXE = $(TOSMAKE_BUILD_DIR)/main.exe
+MAIN_EXE  = $(TOSMAKE_BUILD_DIR)/main.exe
 MAIN_IHEX = $(TOSMAKE_BUILD_DIR)/main.ihex
-MAIN_BIN = $(TOSMAKE_BUILD_DIR)/main.bin
+MAIN_BIN  = $(TOSMAKE_BUILD_DIR)/main.bin
 MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec
-MAIN_ELF = $(TOSMAKE_BUILD_DIR)/main.elf
+MAIN_ELF  = $(TOSMAKE_BUILD_DIR)/main.elf
 
 # Default applications
 SET_ID ?= tos-set-symbols

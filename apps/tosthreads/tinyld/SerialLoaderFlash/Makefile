@@ -17,7 +17,7 @@ CFLAGS += -I$(THREADS_DIR)/lib/printf
 # Creates VolumeMapC.nc
 VOLUME_ALLOCATOR_FLAGS += -t
 
-CLEAN_EXTRA += *.pyc
+TOSMAKE_CLEAN_EXTRA += *.pyc
 
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include

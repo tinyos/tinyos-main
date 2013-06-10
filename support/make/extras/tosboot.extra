@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: tosboot.extra,v 1.4 2009-11-10 07:03:34 rflury Exp $
 
 DELUGE_DIR ?= $(TINYOS_OS_DIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -27,12 +26,12 @@ ifeq ($(BOOTLOADER),tosboot)
       endif
     endif
     ifeq ($(TARGETS),telosb)
-	CFLAGS += -I$(DELUGE_EXTRA)/telosb
-	BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/telosb/main.ihex
+      CFLAGS += -I$(DELUGE_EXTRA)/telosb
+      BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/telosb/main.ihex
     endif
     ifeq ($(TARGETS),epic)
-	CFLAGS += -I$(DELUGE_EXTRA)/epic
-	BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/epic/main.ihex
+      CFLAGS += -I$(DELUGE_EXTRA)/epic
+      BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/epic/main.ihex
     endif
     ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
       BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
@@ -57,13 +56,12 @@ ifeq ($(BOOTLOADER),tosboot)
   endif
 
    ifeq ($(TARGETS),tinynode)
-		CFLAGS += -I$(DELUGE_EXTRA)/tinynode
-		CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/msp430f1611 
-     ifeq ($(filter docs,$(GOALS)),)
-			CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
-     endif
-		BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/tinynode/main.ihex
-   endif
-
+    CFLAGS += -I$(DELUGE_EXTRA)/tinynode
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/msp430f1611
+    ifeq ($(filter docs,$(GOALS)),)
+      CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
+    endif
+    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/tinynode/main.ihex
+  endif
 
 endif

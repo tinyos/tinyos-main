@@ -1,7 +1,7 @@
 COMPONENT=Mts400TesterC
 
-BUILD_EXTRA_DEPS = DataMsg.java Mts400Tester.class
-CLEAN_EXTRA = $(BULID_EXTRA_DEPS) *.class
+TOSMAKE_PRE_EXE_DEPS = DataMsg.java Mts400Tester.class
+TOSMAKE_CLEAN_EXTRA = $(BULID_EXTRA_DEPS) *.class
 
 DataMsg.java: DataMsg.h
 	nescc-mig -java-classname=DataMsg java DataMsg.h datamsg -o $@
