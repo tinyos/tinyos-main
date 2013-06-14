@@ -137,6 +137,12 @@ implementation
 		CMD_SIGNAL_DONE = 8,		// signal the end of the state transition
 		CMD_DOWNLOAD = 9,		// download the received message
 	};
+	
+	
+	enum {
+		// this disables the RF212OffP component
+		RF212RADIOON = unique("RF212RadioOn"),
+	};
 
 	norace bool radioIrq;
 
