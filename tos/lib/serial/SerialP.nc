@@ -401,9 +401,9 @@ implementation {
   bool valid_rx_proto(uint8_t proto){
     switch (proto){
     case SERIAL_PROTO_PACKET_ACK: 
+    case SERIAL_PROTO_PACKET_NOACK:
       return TRUE;
     case SERIAL_PROTO_ACK:
-    case SERIAL_PROTO_PACKET_NOACK:
     default: 
       return FALSE;
     }
@@ -422,15 +422,15 @@ implementation {
       
     case RXSTATE_PROTO:
       if (!isDelimeter){
-        rxCRC = crcByte(rxCRC,data);
-        rxState = RXSTATE_TOKEN;
         rxProto = data;
         if (!valid_rx_proto(rxProto))
           goto nosync;
-        // only supports serial proto packet ack
-        if (rxProto != SERIAL_PROTO_PACKET_ACK){
-          goto nosync;
-        }
+        
+        rxCRC = crcByte(rxCRC,data);
+        if( rxProto == SERIAL_PROTO_PACKET_ACK )
+          rxState = RXSTATE_TOKEN;
+        else
+          rxState = RXSTATE_INFO;
         if (signal ReceiveBytePacket.startPacket() != SUCCESS){
           goto nosync;
         }
@@ -454,7 +454,8 @@ implementation {
           if (rxByteCnt >= 2) {
             if (rx_current_crc() == rxCRC) {
               signal ReceiveBytePacket.endPacket(SUCCESS);
-              ack_queue_push(rxSeqno);
+              if( rxProto == SERIAL_PROTO_PACKET_ACK)
+                ack_queue_push(rxSeqno);
 	      rxInit();
 	      call SerialFrameComm.resetReceive();
 	      if (offPending) {
