@@ -550,6 +550,10 @@ implementation
 
 			*(timesync_absolute_t*)data = absolute;
 		}
+		
+		//dummy bytes for FCS. Otherwise we'll get an TRX_UR interrupt. It's strange though, the RF23x, doesn't need this
+		call FastSpiByte.splitReadWrite(0);
+		call FastSpiByte.splitReadWrite(0);
 
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();
