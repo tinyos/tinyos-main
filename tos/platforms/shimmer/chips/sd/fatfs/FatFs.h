@@ -63,7 +63,11 @@
 #ifndef _FATFS
 #define _FATFS 0x007E
 
+#ifdef FATFS_REALTIME
+#define REALTIME FATFS_REALTIME
+#else
 #define REALTIME	1
+#endif //FATFS_REALTIME
 
 #if REALTIME
 #warning "Using enhanced/optimized version of FatFs............."
