@@ -56,6 +56,38 @@ module FastClockP{
 }
 
 implementation {
+
+  void setTimerAInputDivider(uint8_t val) {
+    //set TimerA input divider
+    //by default, in the MSP430 timer subsystem TimerA is sourced from SMCLK
+    //and it is assumed in a number of places that TimerA runs at 1MHz
+
+    atomic {
+      //stop TimerA
+      TACTL = TACTL & ~(MC1|MC0);
+
+      switch(val) {
+      case 1:
+        TACTL = TACTL & ~(ID1|ID0);
+        break;
+      case 2:
+        TACTL = ID0 | (TACTL & ~ID1);
+        break;
+      case 4:
+        TACTL = ID1 | (TACTL & ~ID0);
+        break;
+      case 8:
+        TACTL |= (ID1|ID0);
+        break;
+      default:
+        //do nothing
+      }
+
+      //restart TimerA, continuous mode
+      TACTL = MC1 | (TACTL & ~MC0);
+    }
+  }
+
   command error_t Init.init() {
     register uint8_t i;
     /* 
@@ -89,7 +121,8 @@ implementation {
 
       SET_FLAG(BCSCTL2, SELS);  // smclk from xt2
       SET_FLAG(BCSCTL2, DIVS_1);  // divide it by 2
- 
+      CLR_FLAG(BCSCTL2, DIVS_2);
+      setTimerAInputDivider(4);
     }
 
     return SUCCESS;
@@ -99,6 +132,11 @@ implementation {
     atomic {
       SET_FLAG(BCSCTL2, SELM_0);
       SET_FLAG(BCSCTL1, XT2OFF);
+      CLR_FLAG(BCSCTL2, SELS); //reset SMCLK to source from DCOCLK
+      //SMCLK = DCOCLK / 4
+      SET_FLAG(BCSCTL2, DIVS_2);  // divide by 4
+      CLR_FLAG(BCSCTL2, DIVS_1);
+      setTimerAInputDivider(1);
     }
   }
   
@@ -106,17 +144,21 @@ implementation {
     switch(mhz) {
     case 1:
       SET_FLAG(BCSCTL2, DIVS_3);  // divide 8mhz xt2 by 8
+      setTimerAInputDivider(1);
       break;
     case 2:
       SET_FLAG(BCSCTL2, DIVS_2);  // divide by 4
       CLR_FLAG(BCSCTL2, DIVS_1);
+      setTimerAInputDivider(2);
       break;
     case 4:
       SET_FLAG(BCSCTL2, DIVS_1);  // divide by 2
       CLR_FLAG(BCSCTL2, DIVS_2);
+      setTimerAInputDivider(4);
       break;
     default:
       SET_FLAG(BCSCTL2, DIVS_3);  // divide by 8
+      setTimerAInputDivider(1);
       break;
     }
   }
