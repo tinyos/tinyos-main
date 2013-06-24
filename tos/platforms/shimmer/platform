@@ -17,6 +17,7 @@ push( @includes, qw(
   %T/platforms/shimmer/chips/bluetooth
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/ds2411
+  %T/platforms/shimmer/chips/ds2411/power
   %T/platforms/shimmer/chips/gsr
   %T/platforms/shimmer/chips/rmcm01
   %T/platforms/shimmer2/chips/gyro
@@ -41,10 +42,12 @@ push( @includes, qw(
   %T/chips/msp430/timer
   %T/chips/msp430/usart
   %T/chips/msp430/sensors
+  %T/chips/ds2411
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc
   %T/lib/power
+  %T/lib/onewire
   ) );
 
 @opts = qw(

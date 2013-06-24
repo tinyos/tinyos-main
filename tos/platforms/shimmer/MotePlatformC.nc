@@ -1,31 +1,31 @@
 /*
  * Copyright (c) 2006, Intel Corporation
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * Redistributions of source code must retain the above copyright notice, 
- * this list of conditions and the following disclaimer. 
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution. 
+ * and/or other materials provided with the distribution.
  *
  * Neither the name of the Intel Corporation nor the names of its contributors
- * may be used to endorse or promote products derived from this software 
- * without specific prior written permission. 
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Steven Ayer
@@ -37,7 +37,7 @@ module MotePlatformC {
 }
 implementation {
   command error_t Init.init() {
-    
+
     //LEDS
     TOSH_MAKE_RED_LED_OUTPUT();
     TOSH_MAKE_YELLOW_LED_OUTPUT();
@@ -83,19 +83,16 @@ implementation {
     TOSH_SEL_RADIO_SFD_IOFUNC();
     TOSH_SEL_RADIO_TIMED_SFD_IOFUNC();
 
-    TOSH_MAKE_ONEWIRE_PWR_OUTPUT();
-    TOSH_SET_ONEWIRE_PWR_PIN();
-
     TOSH_SEL_SD_CS_N_IOFUNC();
     TOSH_MAKE_SD_CS_N_OUTPUT();
     TOSH_SET_SD_CS_N_PIN();
 
     // BT PINS
-    TOSH_MAKE_BT_RESET_OUTPUT();  
-    TOSH_SEL_BT_RESET_IOFUNC();    
+    TOSH_MAKE_BT_RESET_OUTPUT();
+    TOSH_SEL_BT_RESET_IOFUNC();
     TOSH_CLR_BT_RESET_PIN();   // mitsumi module disabled by clr
 
-    TOSH_MAKE_BT_RTS_INPUT();      
+    TOSH_MAKE_BT_RTS_INPUT();
     TOSH_SEL_BT_RTS_IOFUNC();
 
     TOSH_MAKE_BT_PIO_INPUT();
@@ -150,20 +147,20 @@ implementation {
     TOSH_SEL_ADC_2_IOFUNC();
     TOSH_SEL_ADC_6_IOFUNC();
     TOSH_SEL_ADC_7_IOFUNC();
-  
+
     TOSH_MAKE_ADC_ACCELZ_INPUT();
     TOSH_MAKE_ADC_ACCELY_INPUT();
     TOSH_MAKE_ADC_ACCELX_INPUT();
     TOSH_SEL_ADC_ACCELZ_MODFUNC();
     TOSH_SEL_ADC_ACCELY_MODFUNC();
     TOSH_SEL_ADC_ACCELX_MODFUNC();
-  
+
     TOSH_SEL_ROSC_IOFUNC();
     TOSH_MAKE_ROSC_INPUT();
 
     // DAC lines
     // Default is not to use DAC mode.  Please define pin usage if you want to use them
-    
+
     // UART pins
     // These declarations are to allow the UART module to work since it's using the names.
     // The UART module will set them to the right direction when initialized
@@ -174,6 +171,7 @@ implementation {
     // 1-wire function
     TOSH_MAKE_ONEWIRE_PWR_OUTPUT();
     TOSH_SEL_ONEWIRE_PWR_IOFUNC();
+    TOSH_SET_ONEWIRE_PWR_PIN();
     TOSH_MAKE_ONEWIRE_INPUT();
     TOSH_SEL_ONEWIRE_IOFUNC();
 
@@ -181,13 +179,13 @@ implementation {
     TOSH_SEL_ACCEL_SEL0_IOFUNC();
     TOSH_SEL_ACCEL_SEL1_IOFUNC();
     TOSH_SEL_ACCEL_SLEEP_N_IOFUNC();
-  
+
     TOSH_MAKE_ACCEL_SEL0_OUTPUT();
     TOSH_MAKE_ACCEL_SEL1_OUTPUT();
     TOSH_MAKE_ACCEL_SLEEP_N_OUTPUT();
 
     /*
-     * unless the accel_sel0 pin is cleared, 
+     * unless the accel_sel0 pin is cleared,
      * a severe quiescent power hit occurs on the msp430
      * we go from 3.7 ua to 65.1 ua when asleep!
      */
