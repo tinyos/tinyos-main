@@ -19,6 +19,7 @@ Current:
   Fixed TOSSIM ack bug for nodes that change their AM id at runtime
   Fixed Trickle bugs that could cause timers to fire slightly off 
   Fixed Pool bug that did not allow large (> 127 element) pools
+  Updated CoAP implementation to draft-ietf-core-coap-17
 
 2.1:
   Added support for iris platform
