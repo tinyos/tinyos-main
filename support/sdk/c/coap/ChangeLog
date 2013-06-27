@@ -1,3 +1,11 @@
+2013-02-01  Olaf Bergmann  <bergmann@tzi.org>
+
+	* coap_time.h (coap_clock_init_impl): fix invalid preprocessor
+	directive. #warning is now only used for gcc only (close sf bug #15)
+
+	* net.c (wellknown_response): applied patch from chrysn to
+	fix bug in generation of .well-known/core representation
+
 2013-01-21  Olaf Bergmann  <bergmann@tzi.org>
 
 	* option.h: renamed option field in coap_opt_iterator_t to

@@ -87,7 +87,11 @@ coap_clock_init_impl(void) {
 #ifdef HAVE_TIME_H
   clock_offset = time(NULL);
 #else
-#warn "cannot initialize clock"
+#  ifdef __GNUC__
+    /* Issue a warning when using gcc. Other prepropressors do 
+     *  not seem to have a similar feature. */ 
+#   warning "cannot initialize clock"
+#  endif
   clock_offset = 0;
 #endif
 }

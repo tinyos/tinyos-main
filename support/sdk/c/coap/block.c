@@ -68,7 +68,7 @@ coap_write_block_opt(coap_block_t *block, unsigned short type,
 
   /* check if entire block fits in message */
   if (want <= avail) {
-    block->m = want <= data_length - start;
+    block->m = want < data_length - start;
   } else {
     /* Sender has requested a block that is larger than the remaining
      * space in pdu. This is ok if the remaining data fits into the pdu

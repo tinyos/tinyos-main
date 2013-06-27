@@ -10,6 +10,7 @@ VERSION:=@PACKAGE_VERSION@
 
 # tools
 @SET_MAKE@
+RANLIB=@RANLIB@
 SHELL = /bin/sh
 MKDIR = mkdir
 ETAGS = @ETAGS@
@@ -29,20 +30,41 @@ CFLAGS:=-Wall -Wextra -std=c99 -pedantic @CFLAGS@
 CPPFLAGS:=@CPPFLAGS@
 DISTDIR=$(top_builddir)/$(package)
 SUBDIRS:=examples doc @TESTS@
-FILES:=ChangeLog Makefile.in configure configure.in config.h.in $(SOURCES) $(HEADERS)
+FILES:=ChangeLog README LICENSE.BSD LICENSE.GPL Makefile.in configure configure.in config.h.in $(SOURCES) $(HEADERS)
 LIB:=libcoap.a
+LDSOFLAGS=-shared
 LDFLAGS:=@LIBS@
 ARFLAGS:=cru
 examples:=examples
 doc:=doc
+@BUILD_SO@
 
+ifdef BUILD_SO
+  MACHINE?=$(shell $(CC) -dumpmachine)
+  ifeq ($(findstring Darwin, $(MACHINE)), Darwin)
+    LDSOFLAGS=-dynamiclib
+    LIBSO=libcoap.dylib
+  endif
+  ifeq ($(findstring Windows, $(MACHINE)), Windows)
+    LIBSO=libcoap.dll
+  endif
+  # more platforms go here
+  ifndef LIBSO
+    LIBSO=libcoap.so
+  endif
+  ifndef PICFLAG
+    CFLAGS+=-fPIC
+  else
+    CFLAGS+=$(PICFLAG)
+  endif
+endif
 
 .PHONY: all dirs clean distclean .gitignore doc TAGS
 
 .SUFFIXES:
 .SUFFIXES:      .c .o
 
-all:	$(LIB) dirs
+all:	$(LIB) $(LIBSO) dirs
 
 check:	
 	echo DISTDIR: $(DISTDIR)
@@ -56,10 +78,13 @@ dirs:	$(SUBDIRS)
 
 $(LIB):	$(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^ 
-	ranlib $@
+	$(RANLIB) $@
+
+$(LIBSO):	$(OBJECTS)
+	$(LD) $(LDSOFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
-	@rm -f $(PROGRAM) main.o $(LIB) $(OBJECTS)
+	@rm -f $(PROGRAM) main.o $(LIB) $(LIBSO) $(OBJECTS)
 	for dir in $(SUBDIRS); do \
 		$(MAKE) -C $$dir clean ; \
 	done

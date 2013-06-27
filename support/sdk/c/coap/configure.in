@@ -7,7 +7,7 @@
 # README for terms of use. 
 
 AC_PREREQ([2.65])
-AC_INIT([libcoap], [4.0.0])
+AC_INIT([libcoap], [4.0.2])
 AC_CONFIG_SRCDIR([coap.h])
 
 # First check for Contiki build to quit configure before any other test
@@ -74,6 +74,11 @@ AC_ARG_WITH(tests,
   [TESTS="tests"],
   [])
 
+AC_ARG_WITH(shared,
+  [AS_HELP_STRING([--with-shared],[build shared library])],	
+  [BUILD_SO="BUILD_SO=1"],
+  [])
+
 # Checks for header files.
 AC_CHECK_HEADERS([assert.h arpa/inet.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h time.h unistd.h sys/unistd.h])
 
@@ -86,6 +91,7 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset select socket strcasecmp strrchr getaddrinfo strnlen])
 
 AC_SUBST(TESTS)
+AC_SUBST(BUILD_SO)
 
 AC_CONFIG_HEADERS([config.h])
 

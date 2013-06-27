@@ -100,11 +100,11 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
 #ifndef WITHOUT_QUERY_FILTER
   str resource_param = { 0, NULL }, query_pattern = { 0, NULL };
   int flags = 0; /* MATCH_SUBSTRING, MATCH_PREFIX, MATCH_URI */
-  str *rt_attributes;
+  const str *rt_attributes;
 #define MATCH_URI       0x01
 #define MATCH_PREFIX    0x02
 #define MATCH_SUBSTRING 0x04
-  static str _rt_attributes[] = {
+  static const str _rt_attributes[] = {
     {2, (unsigned char *)"rt"},
     {2, (unsigned char *)"if"},
     {3, (unsigned char *)"rel"},
