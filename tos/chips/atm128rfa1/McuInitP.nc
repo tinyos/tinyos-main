@@ -77,13 +77,10 @@ implementation
 	command error_t Init.init()
 	{
 		error_t ok;
-		// workaround for errata 38.5.1 in datasheet
-		if( VERSION_NUM==3 ){ //revision c (1.1)
-			DRTRAM0 |= 1<<ENDRT;
-			DRTRAM1 |= 1<<ENDRT;
-			DRTRAM2 |= 1<<ENDRT;
-			DRTRAM3 |= 1<<ENDRT;
-		}
+		DRTRAM0 |= 1<<ENDRT;
+		DRTRAM1 |= 1<<ENDRT;
+		DRTRAM2 |= 1<<ENDRT;
+		DRTRAM3 |= 1<<ENDRT;
 #ifndef ENABLE_JTAG_DEBUG
 		MCUCR |= 1<<JTD;
 		MCUCR |= 1<<JTD;

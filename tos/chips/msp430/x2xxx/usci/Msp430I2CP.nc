@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2012 Zolertia Labs
+ * Copyright (c) 2012 Instituto Tecnológico de Galicia (ITG)
  * Copyright (c) 2010-2011 Eric B. Decker
  * Copyright (c) 2009-2010 DEXMA SENSORS SL
  * Copyright (c) 2005-2006 Arch Rock Corporation
@@ -39,6 +41,8 @@
  * @author Xavier Orduña <xorduna@dexmatech.com>
  * @author Jordi Soucheiron <jsoucheiron@dexmatech.com>
  * @author Eric B. Decker <cire831@gmail.com>
+ * @author Antonio Lignan <alinan@zolertia.com>
+ * @author Carlos Giraldo <cgiraldo@itg.es>
  */
 
 #include <I2C.h>
@@ -59,7 +63,11 @@ generic module Msp430I2CP() {
 
 implementation {
   enum {
-    TIMEOUT = 800, // 200
+    /* Due to different versions of msp430-gcc toolchain this value has 
+     * been incremented (200 in v.3.2.3, 800 in v.4.5.3), it is currently
+     * functional but this has to be addressed  */
+
+    TIMEOUT = 1200,
   };
 
   norace uint8_t* m_buf;
@@ -122,13 +130,25 @@ implementation {
     call UsciB.enableRxIntr();
 
     if ( flags & I2C_START ) {
-      while(call UsciB.getStopBit()){
-        if(i>=TIMEOUT) { 
-          return EBUSY;
-        }
-        i++;
-      }
-      call UsciB.setTXStart();
+     while(call UsciB.getStopBit()){
+       if(i>=TIMEOUT) { 
+         return EBUSY;
+       }
+       i++;
+     }
+     call UsciB.setTXStart();
+
+     if (m_len == 1){
+       if ( m_flags & I2C_STOP ) {
+         while (call UsciB.getStartBit()){
+           if(i>=TIMEOUT) { 
+             return EBUSY;
+           }
+           i++;
+         }
+         call UsciB.setTXStop();
+       }
+     }
     } else {
       nextRead();
     }
@@ -162,6 +182,7 @@ implementation {
         i++;
       }
       i=0;
+
       while((call UsciB.getUstat()) & UCBBUSY) {
         if(i>=TIMEOUT) {
           return FAIL;
@@ -177,10 +198,19 @@ implementation {
 
   void nextRead() {
     uint16_t i=0;
-    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
-    if ( m_pos == m_len ) {
+
+    #ifdef USCI_X2XXX_DELAY
+     for(i=0xffff;i!=0;i--) asm("nop"); //software delay (aprox 25msec on z1)
+    #endif
+
+    m_buf[m_pos ++ ] = call UsciB.rx();
+    if (m_pos == m_len-1){
       if ( m_flags & I2C_STOP ) {
         call UsciB.setTXStop();
+      }
+    }
+    if ( m_pos == m_len ) {
+      if ( m_flags & I2C_STOP ) {
         while(!call UsciB.getStopBit()){
           if(i>=TIMEOUT) { 
             signalDone( EBUSY );
@@ -192,14 +222,16 @@ implementation {
       } else {
         signalDone( SUCCESS );
       }
-    } else {
-      m_buf[ m_pos++ ] = call UsciB.rx();
     }
   }
 
   void nextWrite() {
     uint16_t i = 0;
-    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
+
+    #ifdef USCI_X2XXX_DELAY
+      for(i=0xffff;i!=0;i--) asm("nop"); //software delay (aprox 25msec on z1)
+    #endif
+
     if ( ( m_pos == m_len) && ( m_flags & I2C_STOP ) ) {
       call UsciB.setTXStop();
       while(call UsciB.getStopBit()){

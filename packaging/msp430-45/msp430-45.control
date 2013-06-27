@@ -1,0 +1,8 @@
+Package: msp430-45
+Version: @version@
+Architecture: @architecture@
+Depends: msp430-binutils-45, msp430-gcc-45, msp430-libc-45, msp430mcu-45, msp430-gdb-45, tinyos-tools
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Dummy package to pull in all the MSP430 (gcc 4.5) packages

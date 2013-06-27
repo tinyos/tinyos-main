@@ -47,16 +47,13 @@ implementation {
   StdControl     = Bmp085P;
   PressureSensor = Bmp085P;
 
-  /*
-  components LedsC;
-  Bmp085P.Leds -> LedsC;
-  */
   enum {
     CLIENT_ID = unique( MSP430_I2CO_BUS ),
   };
 
   components Msp430I2CP;        // this is mine, ported from tos-1.x; find it in shimmer/chips/msp430
   Bmp085P.I2CPacket -> Msp430I2CP.I2CBasicAddr;
+  Bmp085P.I2CInit   -> Msp430I2CP.I2CInit;
 
   components HplMsp430I2C0C;
   Bmp085P.HplI2C -> HplMsp430I2C0C;

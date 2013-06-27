@@ -36,8 +36,8 @@ configuration HplAtmRfa1Timer2AsyncC
 {
 	provides
 	{
-		interface AtmegaCounter<uint8_t> as Counter;
-		interface AtmegaCompare<uint8_t> as Compare[uint8_t id];
+		interface HplAtmegaCounter<uint8_t> as Counter;
+		interface HplAtmegaCompare<uint8_t> as Compare[uint8_t id];
 	}
 }
 
@@ -47,7 +47,7 @@ implementation
 
 	Counter = HplAtmRfa1Timer2AsyncP;
 	Compare[0] = HplAtmRfa1Timer2AsyncP.CompareA;
-//	Compare[1] = HplAtmRfa1Timer2AsyncP.CompareB;
+	Compare[1] = HplAtmRfa1Timer2AsyncP.CompareB;
 
 	components McuSleepC;
 	HplAtmRfa1Timer2AsyncP.McuPowerState -> McuSleepC;

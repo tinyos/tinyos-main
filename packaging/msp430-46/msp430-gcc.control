@@ -1,0 +1,8 @@
+Package: msp430-gcc-46
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, msp430-binutils-46
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430 4.6 gcc

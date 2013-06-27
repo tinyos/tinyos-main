@@ -1,0 +1,295 @@
+
+Original patch from: http://sourceware.org/ml/gdb-patches/2011-03/msg00965.html
+modified for gdb-7.2a: http://ftp.gnu.org/gnu/gdb/gdb-7.2a.tar.gz
+
+Hi,
+
+with GCC HEAD (4.7.0 experimental) GDB now prints:
+Breakpoint 1, 0x00000000004004b8 in f (param=Unhandled dwarf expression opcode 0xf3)
+instead of:
+Breakpoint 1, 0x00000000004004b8 in f (param=<optimized out>)
+
+With archer-jankratochvil-entryval it prints the correct calculated parameter
+value.  But archer-jankratochvil-entryval still needs some cleanups and it will
+not make it in gdb-7.3.  And even if not gdb-7.3 it is disturbing with FSF GDB
+HEAD for FSF GCC HEAD, therefore providing at least this quick hack as
+a temporary solution.
+
+No regressions on {x86_64,x86_64-m32,i686}-fedora15-linux-gnu.
+
+
+Thanks,
+Jan
+
+
+gdb/
+2011-03-21  Jan Kratochvil  <jan.kratochvil@redhat.com>
+
+	* dwarf2expr.c (execute_stack_op): Handle DW_OP_GNU_entry_value.  New
+	label abort_expression.
+	* dwarf2loc.c (dwarf2_evaluate_loc_desc_full): Handle
+	DWARF_VALUE_OPTIMIZED_OUT.
+
+gdb/testsuite/
+2011-03-21  Jan Kratochvil  <jan.kratochvil@redhat.com>
+
+	* gdb.dwarf2/dw2-entry-value-main.c: New file.
+	* gdb.dwarf2/dw2-entry-value.S: New file.
+	* gdb.dwarf2/dw2-entry-value.exp: New file.
+
+diff -ruN gdb-7.2-orig/gdb/dwarf2expr.c gdb-7.2/gdb/dwarf2expr.c
+--- gdb-7.2-orig/gdb/dwarf2expr.c	2010-07-07 11:50:57.000000000 -0700
++++ gdb-7.2/gdb/dwarf2expr.c	2012-04-30 06:56:59.562743849 -0700
+@@ -874,6 +874,13 @@
+ 	  op_ptr += 4;
+ 	  ctx->dwarf_call (ctx, result);
+ 	  goto no_push;
++	
++	case DW_OP_GNU_entry_value:
++	  /* This operation is not yet supported by GDB.  */
++	  ctx->location = DWARF_VALUE_OPTIMIZED_OUT;
++	  ctx->stack_len = 0;
++	  ctx->num_pieces = 0;
++	  goto abort_expression;
+ 
+ 	default:
+ 	  error (_("Unhandled dwarf expression opcode 0x%x"), op);
+@@ -884,6 +891,7 @@
+     no_push:;
+     }
+ 
++abort_expression:
+   ctx->recursion_depth--;
+   gdb_assert (ctx->recursion_depth >= 0);
+ #undef sign_ext
+diff -ruN gdb-7.2-orig/gdb/dwarf2loc.c gdb-7.2/gdb/dwarf2loc.c
+--- gdb-7.2-orig/gdb/dwarf2loc.c	2010-07-27 09:11:03.000000000 -0700
++++ gdb-7.2/gdb/dwarf2loc.c	2012-04-30 06:56:59.566514718 -0700
+@@ -991,7 +991,13 @@
+ 
+ 	  /* DWARF_VALUE_OPTIMIZED_OUT can't occur in this context --
+ 	     it can only be encountered when making a piece.  */
++
+ 	case DWARF_VALUE_OPTIMIZED_OUT:
++	  retval = allocate_value (type);
++	  VALUE_LVAL (retval) = not_lval;
++	  set_value_optimized_out (retval, 1);
++	  break;
++
+ 	default:
+ 	  internal_error (__FILE__, __LINE__, _("invalid location type"));
+ 	}
+diff -ruN gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value.exp gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value.exp
+--- gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value.exp	1969-12-31 16:00:00.000000000 -0800
++++ gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value.exp	2012-04-30 06:56:39.962745141 -0700
+@@ -0,0 +1,32 @@
++# Copyright 2011 Free Software Foundation, Inc.
++
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
++load_lib dwarf.exp
++
++# This test can only be run on targets which support DWARF-2 and use gas.
++if {![dwarf2_support]} {
++    return 0  
++}
++
++if { [prepare_for_testing dw2-entry-value.exp "dw2-entry-value" {dw2-entry-value-main.c dw2-entry-value.S} {nodebug}] } {
++    return -1
++}
++
++if ![runto f] {
++    return -1
++}
++
++# FAIL was printing:
++# param=Unhandled dwarf expression opcode 0xf3
++gdb_test "frame" "param=<optimized out>.*" "<optimized out> is printed"
+diff -ruN gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value-main.c gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value-main.c
+--- gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value-main.c	1969-12-31 16:00:00.000000000 -0800
++++ gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value-main.c	2012-04-30 06:56:39.962745141 -0700
+@@ -0,0 +1,37 @@
++/* This testcase is part of GDB, the GNU debugger.
++
++   Copyright 2011 Free Software Foundation, Inc.
++
++   This program is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
++
++asm (".globl f_start");
++asm ("f_start:");
++
++volatile int v;
++
++void
++f (int x)
++{
++  v++;
++}
++
++asm (".globl f_end");
++asm ("f_end:");
++
++int
++main (void)
++{
++  f (1);
++  return 0;
++}
+diff -ruN gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value.S gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value.S
+--- gdb-7.2-orig/gdb/testsuite/gdb.dwarf2/dw2-entry-value.S	1969-12-31 16:00:00.000000000 -0800
++++ gdb-7.2/gdb/testsuite/gdb.dwarf2/dw2-entry-value.S	2012-04-30 06:56:39.962745141 -0700
+@@ -0,0 +1,104 @@
++/* Copyright 2011 Free Software Foundation, Inc.
++
++   This program is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
++
++	.section	.debug_info
++debug_start:
++	.long	debug_end - 1f	/* Length of Compilation Unit Info */
++1:
++	.2byte	0x3	/* DWARF version number */
++	.long	.Ldebug_abbrev0	/* Offset Into Abbrev. Section */
++	.byte	0x4	/* Pointer Size (in bytes) */
++	.uleb128 0x1	/* (DIE (0xb) DW_TAG_compile_unit) */
++	.ascii "GNU C 4.4.3\0"	/* DW_AT_producer */
++	.byte	0x1	/* DW_AT_language */
++	.ascii "1.c\0"	/* DW_AT_name */
++	.uleb128 0x4	/* (DIE (0x3c) DW_TAG_subprogram) */
++	.ascii "f\0"	/* DW_AT_name */
++	.long	f_start	/* DW_AT_low_pc */
++	.long	f_end	/* DW_AT_high_pc */
++	.byte	0x1	/* DW_AT_prototyped */
++	.uleb128 0x5	/* (DIE (0x42) DW_TAG_formal_parameter) */
++	.ascii	"param\0"		/* DW_AT_name */
++	.long	type - debug_start	/* DW_AT_type */
++	.long	loclist	/* DW_AT_location */
++	.byte	0x0	/* end of children of DIE 0x3c */
++type:
++	.uleb128	3			/* Abbrev: DW_TAG_base_type */
++	.ascii		"int\0"			/* DW_AT_name */
++	.byte		4			/* DW_AT_byte_size */
++	.byte		5			/* DW_AT_encoding */
++
++	.byte	0x0	/* end of children of DIE 0xb */
++debug_end:
++
++	.section	.debug_loc
++loclist:
++	.long	f_start, f_end
++	.2byte	2f-1f
++1:	.byte	0xf3	/* DW_OP_GNU_entry_value */
++	.uleb128  2f-3f
++3:	.byte	0x50	/* DW_OP_reg0 */
++2:
++	.long	0, 0
++
++	.section	.debug_abbrev
++.Ldebug_abbrev0:
++	.uleb128 0x1	/* (abbrev code) */
++	.uleb128 0x11	/* (TAG: DW_TAG_compile_unit) */
++	.byte	0x1	/* DW_children_yes */
++	.uleb128 0x25	/* (DW_AT_producer) */
++	.uleb128 0x8	/* (DW_FORM_string) */
++	.uleb128 0x13	/* (DW_AT_language) */
++	.uleb128 0xb	/* (DW_FORM_data1) */
++	.uleb128 0x3	/* (DW_AT_name) */
++	.uleb128 0x8	/* (DW_FORM_string) */
++	.byte	0x0
++	.byte	0x0
++	.uleb128	3			/* Abbrev code */
++	.uleb128	0x24			/* DW_TAG_base_type */
++	.byte		0			/* has_children */
++	.uleb128	0x3			/* DW_AT_name */
++	.uleb128	0x8			/* DW_FORM_string */
++	.uleb128	0xb			/* DW_AT_byte_size */
++	.uleb128	0xb			/* DW_FORM_data1 */
++	.uleb128	0x3e			/* DW_AT_encoding */
++	.uleb128	0xb			/* DW_FORM_data1 */
++	.byte		0x0			/* Terminator */
++	.byte		0x0			/* Terminator */
++	.uleb128 0x4	/* (abbrev code) */
++	.uleb128 0x2e	/* (TAG: DW_TAG_subprogram) */
++	.byte	0x1	/* DW_children_yes */
++	.uleb128 0x3	/* (DW_AT_name) */
++	.uleb128 0x8	/* (DW_FORM_string) */
++	.uleb128 0x11	/* (DW_AT_low_pc) */
++	.uleb128 0x1	/* (DW_FORM_addr) */
++	.uleb128 0x12	/* (DW_AT_high_pc) */
++	.uleb128 0x1	/* (DW_FORM_addr) */
++	.uleb128 0x27	/* (DW_AT_prototyped) */
++	.uleb128 0xc	/* (DW_FORM_flag) */
++	.byte	0x0
++	.byte	0x0
++	.uleb128 0x5	/* (abbrev code) */
++	.uleb128 0x5	/* (TAG: DW_TAG_formal_parameter) */
++	.byte	0x0	/* DW_children_no */
++	.uleb128	0x3			/* DW_AT_name */
++	.uleb128	0x8			/* DW_FORM_string */
++	.uleb128 0x49	/* (DW_AT_type) */
++	.uleb128 0x13	/* (DW_FORM_ref4) */
++	.uleb128 0x02	/* (DW_AT_location) */
++	.uleb128 0x06	/* (DW_FORM_data4) */
++	.byte	0x0
++	.byte	0x0
++	.byte	0x0
+diff -ruN gdb-7.2-orig/include/dwarf2.h gdb-7.2/include/dwarf2.h
+--- gdb-7.2-orig/include/dwarf2.h	2010-06-21 09:39:14.000000000 -0700
++++ gdb-7.2/include/dwarf2.h	2012-04-30 06:56:59.566514718 -0700
+@@ -228,6 +228,12 @@
+        are properly part of DWARF 5.  */
+     DW_TAG_GNU_template_parameter_pack = 0x4107,
+     DW_TAG_GNU_formal_parameter_pack = 0x4108,
++    /* The GNU call site extension, specified at
++       http://www.dwarfstd.org/ShowIssue.php?issue=100909.2&type=open .
++       The values of these two TAGS are in the DW_TAG_GNU_* space until the tags
++       are properly part of DWARF 5.  */
++    DW_TAG_GNU_call_site = 0x4109,
++    DW_TAG_GNU_call_site_parameter = 0x410a,
+     /* Extensions for UPC.  See: http://upc.gwu.edu/~upc.  */
+     DW_TAG_upc_shared_type = 0x8765,
+     DW_TAG_upc_strict_type = 0x8766,
+@@ -622,6 +628,12 @@
+     /* The following is for marking variables that are uninitialized.  */
+     DW_OP_GNU_uninit     = 0xf0,
+     DW_OP_GNU_encoded_addr = 0xf1,
++    /* The GNU implicit pointer extension.
++       See http://www.dwarfstd.org/ShowIssue.php?issue=100831.1&type=open .  */
++    DW_OP_GNU_implicit_pointer = 0xf2,
++    /* The GNU entry value extension.
++       See http://www.dwarfstd.org/ShowIssue.php?issue=100909.1&type=open .  */
++    DW_OP_GNU_entry_value = 0xf3,
+     /* HP extensions.  */
+     DW_OP_HP_unknown     = 0xe0, /* Ouch, the same as GNU_push_tls_address.  */
+     DW_OP_HP_is_value    = 0xe1,

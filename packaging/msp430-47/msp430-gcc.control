@@ -1,0 +1,8 @@
+Package: msp430-gcc-47
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, msp430-binutils-47
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Experimental MSP430 gcc 4.7

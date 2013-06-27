@@ -152,7 +152,6 @@ implementation {
 
   // performCommand() returns both error_t and status reg -- fortunately, error_t is 8bit
   error_t performCommand() {
-    uint8_t i = 0;
     initPins();
     resetDevice();
     transmissionStart();
@@ -340,7 +339,7 @@ implementation {
 
   task void readSensor() {
     uint16_t data = 0;
-    uint8_t crc = 0;
+    uint8_t crc;
 
     if ( busy == FALSE ) {
       // the interrupt was received after the timeout. 

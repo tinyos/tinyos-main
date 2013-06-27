@@ -41,14 +41,14 @@ implementation
 {
 	components HplAtmegaExtInterruptC;
 
-	components new AtmegaExtInterruptP() as Int0P;
-	components new AtmegaExtInterruptP() as Int1P;
-	components new AtmegaExtInterruptP() as Int2P;
-	components new AtmegaExtInterruptP() as Int3P;
-	components new AtmegaExtInterruptP() as Int4P;
-	components new AtmegaExtInterruptP() as Int5P;
-	components new AtmegaExtInterruptP() as Int6P;
-	components new AtmegaExtInterruptP() as Int7P;
+	components new AtmegaExtInterruptP(FALSE) as Int0P;
+	components new AtmegaExtInterruptP(FALSE) as Int1P;
+	components new AtmegaExtInterruptP(FALSE) as Int2P;
+	components new AtmegaExtInterruptP(FALSE) as Int3P;
+	components new AtmegaExtInterruptP(TRUE) as Int4P;
+	components new AtmegaExtInterruptP(TRUE) as Int5P;
+	components new AtmegaExtInterruptP(TRUE) as Int6P;
+	components new AtmegaExtInterruptP(TRUE) as Int7P;
 
 	GpioInterrupt[0] = Int0P;
 	GpioInterrupt[1] = Int1P;

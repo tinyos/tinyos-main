@@ -338,6 +338,7 @@ implementation {
   async command void Usci.setMasterMode() { UCB0CTL0 &= ~UCMST; }
 
   /* get stop bit in i2c mode */
+  async command bool Usci.getStartBit() { return (UCB0CTL1 & UCTXSTT); } 
   async command bool Usci.getStopBit() { return (UCB0CTL1 & UCTXSTP); }
   async command bool Usci.getTransmitReceiveMode() { return (UCB0CTL1 & UCTR); }
 

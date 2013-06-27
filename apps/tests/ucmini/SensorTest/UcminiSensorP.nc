@@ -31,7 +31,9 @@
 *
 * Author: Andras Biro
 */ 
+
 #include "Ms5607.h"
+
 module UcminiSensorP {
   uses {
     interface Boot;
@@ -39,7 +41,7 @@ module UcminiSensorP {
     interface Read<uint16_t> as HumiRead;
     interface Read<uint16_t> as LightRead;
     interface Read<uint32_t> as PressRead;
-    interface Read<uint32_t> as Temp2Read;
+    interface Read<int16_t> as Temp2Read;
     interface Read<uint16_t> as Temp3Read;
     interface Read<uint16_t> as VoltageRead;
     interface ReadRef<calibration_t>;
@@ -124,7 +126,7 @@ implementation {
     
   }
   
-  event void Temp2Read.readDone(error_t error, uint32_t data) { 
+  event void Temp2Read.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
       meas->temp2=data;
     } else
@@ -147,5 +149,5 @@ implementation {
   }
   
   event void MeasSend.sendDone(message_t* msg, error_t error){}
-    
 }
+

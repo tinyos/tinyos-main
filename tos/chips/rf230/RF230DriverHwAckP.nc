@@ -189,7 +189,7 @@ implementation
 
 		// 8 undocumented delay, 128 for CSMA, 16 for delay, 5*32 for preamble and SFD
 		TX_SFD_DELAY = (uint16_t)((8 + 128 + 16 + 5*32) * RADIO_ALARM_MICROSEC),
-		
+
 		// 32 for frame length, 16 for delay
 		RX_SFD_DELAY = (uint16_t)((32 + 16) * RADIO_ALARM_MICROSEC),
 	};
@@ -369,11 +369,11 @@ tasklet_async command uint8_t RadioState.getChannel()
 			call RadioAlarm.wait(SLEEP_WAKEUP_TIME);
 			state = STATE_SLEEP_2_TRX_OFF;
 		}
-		else if( cmd == CMD_TURNON && state == STATE_TRX_OFF 
+		else if( cmd == CMD_TURNON && state == STATE_TRX_OFF
 			&& isSpiAcquired() && call RadioAlarm.isFree() )
 		{
 			uint16_t temp;
-	
+
 			RADIO_ASSERT( ! radioIrq );
 
 			readRegister(RF230_IRQ_STATUS); // clear the interrupt register
@@ -390,7 +390,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 			writeRegister(RF230_TRX_STATE, RF230_RX_AACK_ON);
 			state = STATE_TRX_OFF_2_RX_ON;
 		}
-		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) 
+		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY)
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			writeRegister(RF230_TRX_STATE, RF230_FORCE_TRX_OFF);
@@ -423,7 +423,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 		return SUCCESS;
 	}
-	
+
 	tasklet_async command error_t RadioState.standby()
 	{
 		if( cmd != CMD_NONE || (state == STATE_SLEEP && ! call RadioAlarm.isFree()) )
@@ -480,11 +480,11 @@ tasklet_async command uint8_t RadioState.getChannel()
 	tasklet_async command error_t RadioSend.send(message_t* msg)
 	{
 		uint16_t time;
-		uint8_t length;
-		uint8_t* data;
-		uint8_t header;
 		uint32_t time32;
-		void* timesync;
+		uint8_t* data;
+		uint8_t length;
+		uint8_t upload1;
+		uint8_t upload2;
 
 		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
 			return EBUSY;
@@ -502,7 +502,26 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 		// do something useful, just to wait a little
 		time32 = call LocalTime.get();
-		timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
+		data = getPayload(msg);
+		length = getHeader(msg)->length;
+
+		if( call PacketTimeSyncOffset.isSet(msg) )
+		{
+			// the number of bytes before the embedded timestamp
+			upload1 = (((void*)msg) - (void*)data + call PacketTimeSyncOffset.get(msg));
+
+			// the FCS is automatically generated (2 bytes)
+			upload2 = length - 2 - upload1;
+
+			// make sure that we have enough space for the timestamp
+			RADIO_ASSERT( upload2 >= 4 && upload2 <= 127 );
+		}
+		else
+		{
+			upload1 = length - 2;
+			upload2 = 0;
+		}
+		RADIO_ASSERT( upload1 >= 1 && upload1 <= 127 );
 
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_TX_ARET_ON )
@@ -527,26 +546,13 @@ tasklet_async command uint8_t RadioState.getChannel()
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF230_CMD_FRAME_WRITE);
 
-		data = getPayload(msg);
-		length = getHeader(msg)->length;
-
 		// length | data[0] ... data[length-3] | automatically generated FCS
 		call FastSpiByte.splitReadWrite(length);
 
-		// the FCS is atomatically generated (2 bytes)
-		length -= 2;
-
-		header = call Config.headerPreloadLength();
-		if( header > length )
-			header = length;
-
-		length -= header;
-
-		// first upload the header to gain some time
 		do {
 			call FastSpiByte.splitReadWrite(*(data++));
 		}
-		while( --header != 0 );
+		while( --upload1 != 0 );
 
 #ifdef RF230_SLOW_SPI
 		atomic
@@ -559,43 +565,47 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 		time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
 
-		if( timesync != 0 )
-			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
+		if( upload2 != 0 )
+		{
+			uint32_t absolute = *(timesync_absolute_t*)data;
+			*(timesync_relative_t*)data = absolute - time32;
 
-		while( length-- != 0 )
-			call FastSpiByte.splitReadWrite(*(data++));
+			// do not modify the data pointer so we can reset the timestamp
+			RADIO_ASSERT( upload1 == 0 );
+			do {
+				call FastSpiByte.splitReadWrite(data[upload1]);
+			}
+			while( ++upload1 != upload2 );
+
+			*(timesync_absolute_t*)data = absolute;
+		}
 
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();
 		call SELN.set();
 
 		/*
-		 * There is a very small window (~1 microsecond) when the RF230 went 
-		 * into PLL_ON state but was somehow not properly initialized because 
+		 * There is a very small window (~1 microsecond) when the RF230 went
+		 * into PLL_ON state but was somehow not properly initialized because
 		 * of an incoming message and could not go into BUSY_TX. I think the
 		 * radio can even receive a message, and generate a TRX_UR interrupt
 		 * because of concurrent access, but that message probably cannot be
 		 * recovered.
 		 *
-		 * TODO: this needs to be verified, and make sure that the chip is 
+		 * TODO: this needs to be verified, and make sure that the chip is
 		 * not locked up in this case.
 		 */
 
 		// go back to RX_ON state when finished
 		writeRegister(RF230_TRX_STATE, RF230_RX_AACK_ON);
 
-		if( timesync != 0 )
-			*(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
-
 		call PacketTimeStamp.set(msg, time32);
 
 #ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = getHeader(msg)->length;
-
 			call DiagMsg.chr('t');
-			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+			call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(length);
 			call DiagMsg.hex8s(getPayload(msg), length - 2);
@@ -628,7 +638,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 		writeRegister(RF230_PHY_CC_CCA, RF230_CCA_REQUEST | RF230_CCA_MODE_VALUE | channel);
 		call RadioAlarm.wait(CCA_REQUEST_TIME);
 		cmd = CMD_CCA;
-		
+
 		return SUCCESS;
 	}
 
@@ -751,13 +761,13 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	void serviceRadio()
 	{
-		if( isSpiAcquired() )
+		if( state != STATE_SLEEP && isSpiAcquired() )
 		{
 			uint16_t time;
 			uint32_t time32;
 			uint8_t irq;
 			uint8_t temp;
-			
+
 			atomic time = capturedTime;
 			radioIrq = FALSE;
 			irq = readRegister(RF230_IRQ_STATUS);
@@ -856,7 +866,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 				changeState();
 			else if( cmd == CMD_CHANNEL )
 				changeChannel();
-			
+
 			if( cmd == CMD_SIGNAL_DONE )
 			{
 				cmd = CMD_NONE;
@@ -872,7 +882,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 	}
 
 /*----------------- RadioPacket -----------------*/
-	
+
 	async command uint8_t RadioPacket.headerLength(message_t* msg)
 	{
 		return call Config.headerLength(msg) + sizeof(rf230_header_t);

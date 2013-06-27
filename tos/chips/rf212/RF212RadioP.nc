@@ -176,6 +176,7 @@ implementation
 // SHR:  BPSK: 40; OQPSK: 10
 // phySymbolsPerOctet: BPSK: 8; OQPSK: 2
 // plus we add a constant for safety
+//TODO: this const seems way too high. I think we can even go with 0...
 #ifndef SOFTWAREACK_TIMEOUT_PLUS
 #define SOFTWAREACK_TIMEOUT_PLUS	1000
 #endif
@@ -281,24 +282,32 @@ implementation
 
 /*----------------- RandomCollisionConfig -----------------*/
 
-// 802.15.4 constants:
-// aUnitBackoffPeriod: 20 symbol
-// macMinBE:0..5 (8), default 3
-// but we don't care about the standard yet, just converted the rf230 lpl timeouts to SymbolTime base
+
+#ifndef RF212_BACKOFF_MIN
+#define RF212_BACKOFF_MIN 20
+#endif
 
 	async command uint16_t RandomCollisionConfig.getMinimumBackoff()
 	{
-		return (uint16_t)(10 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(RF212_BACKOFF_MIN * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
+
+#ifndef RF212_BACKOFF_INIT
+#define RF212_BACKOFF_INIT 310
+#endif
 
 	async command uint16_t RandomCollisionConfig.getInitialBackoff(message_t* msg)
 	{
-		return (uint16_t)(50 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(RF212_BACKOFF_INIT * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
+	
+#ifndef RF212_BACKOFF_CONG
+#define RF212_BACKOFF_CONG 140
+#endif
 
 	async command uint16_t RandomCollisionConfig.getCongestionBackoff(message_t* msg)
 	{
-		return (uint16_t)(100 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(RF212_BACKOFF_CONG * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
 
 // 802.15.4 standard: SIFS (no ack requested): 12 symbol; LIFS (ack requested): 40 symbol

@@ -1,0 +1,7 @@
+KNOWN ISSUES:
+* FCS calculation is wrong (ignore the BAD FCS in Wireshark for now)
+* Wireshark by default uses IPv6 dissector and not the 802.15.4 dissector
+  (fix would need to modify pppd)
+
+TODO:
+* check with non-cc2420x rfxlink platforms

@@ -42,14 +42,17 @@ module BeaconRequestRxP
   {
     interface Init as Reset;
     interface IEEE154TxBeaconPayload;
+    interface MLME_START;
   }
   uses
   {
     interface FrameRx as BeaconRequestRx;
     interface FrameTx as BeaconRequestResponseTx;
     interface MLME_GET;
+    interface MLME_SET;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
+    interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;     
 
   }
 }
@@ -61,6 +64,9 @@ implementation
   ieee154_metadata_t        m_metadata;  
   uint8_t                   m_beaconPayloadLen;
   uint8_t                   m_payload[IEEE154_aMaxBeaconPayloadLength];
+  bool                      m_started;
+
+  task void signalStartConfirmTask();
 
   /* ------------------- Init ------------------- */
 
@@ -72,9 +78,58 @@ implementation
     m_beaconFrame.payload = m_payload;
     m_beaconFrame.payloadLen = 4;  // first 4 bytes belong to superframe- & gts-fields
     m_beaconFrame.metadata = &m_metadata;
+    m_started = FALSE;
 
-    dbg_serial("BeaconRequestResponderP","Init()\n");
+    dbg_serial("BeaconRequestRxP","Init()\n");
     return SUCCESS;
+  }
+
+  command ieee154_status_t MLME_START.request  (
+                          uint16_t panID,
+                          uint8_t logicalChannel,
+                          uint8_t channelPage,
+                          uint32_t startTime,
+                          uint8_t beaconOrder,
+                          uint8_t superframeOrder,
+                          bool panCoordinator,
+                          bool batteryLifeExtension,
+                          bool coordRealignment,
+                          ieee154_security_t *coordRealignSecurity,
+                          ieee154_security_t *beaconSecurity)
+  {
+    ieee154_status_t status;
+    ieee154_macShortAddress_t shortAddress = call MLME_GET.macShortAddress();
+
+    // check parameters
+    if ((coordRealignSecurity && coordRealignSecurity->SecurityLevel) ||
+        (beaconSecurity && beaconSecurity->SecurityLevel))
+      status = IEEE154_UNSUPPORTED_SECURITY;
+    else if (shortAddress == 0xFFFF) 
+      status = IEEE154_NO_SHORT_ADDRESS;
+    else if (logicalChannel > 26 ||
+        (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
+        !(IEEE154_SUPPORTED_CHANNELS & ((uint32_t) 1 << logicalChannel)))
+      status =  IEEE154_INVALID_PARAMETER;
+    else if (beaconOrder != 15) 
+      status = IEEE154_INVALID_PARAMETER;
+    else {
+      call MLME_SET.macPANId(panID);
+      call MLME_SET.phyCurrentChannel(logicalChannel);
+      call MLME_SET.macBeaconOrder(beaconOrder);
+      call SetMacPanCoordinator.set(panCoordinator);
+      //TODO: check realignment
+      post signalStartConfirmTask();
+      status = IEEE154_SUCCESS;
+      m_started = TRUE;
+    }
+    dbg_serial("DispatchUnslottedCsmaP", "MLME_START.request -> result: %lu\n", (uint32_t) status);
+    dbg_serial_flush();
+    return status;
+  }
+
+  task void signalStartConfirmTask()
+  {
+    signal MLME_START.confirm(IEEE154_SUCCESS);
   }
 
   /* ------------------- Beacon-Request Response ------------------- */
@@ -89,6 +144,12 @@ implementation
     ieee154_macShortAddress_t shortAddress = call MLME_GET.macShortAddress();
     bool isShortAddr;
 
+    if (!m_started) {
+      dbg_serial("BeaconRequestRxP","received beacon request, but I'm not a coordinator -> dropping frame\n");
+      dbg_serial_flush();
+      return frame;
+    }
+    dbg_serial("BeaconRequestRxP","received beacon request -> sending beacon...\n");
     shortAddress = call MLME_GET.macShortAddress();
     isShortAddr = (shortAddress != 0xFFFE);
     m_beaconFrame.header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_BEACON;
@@ -123,9 +184,8 @@ implementation
     post sendBeaconTask();
 
     return frame;
-
   }
- 
+
   event void BeaconRequestResponseTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status){
     signal IEEE154TxBeaconPayload.beaconTransmitted();
   }
@@ -133,7 +193,7 @@ implementation
   /* ----------------------- Beacon Payload ----------------------- */
 
   command error_t IEEE154TxBeaconPayload.setBeaconPayload(void *beaconPayload, uint8_t length) {
-    dbg_serial("BeaconRequestResponderP","IEEE154TxBeaconPayload.setBeaconPayload\n\n");
+    dbg_serial("BeaconRequestRxP","IEEE154TxBeaconPayload.setBeaconPayload\n\n");
     if (length < IEEE154_aMaxBeaconPayloadLength){
       memcpy(&m_payload[4], beaconPayload, length);
       m_beaconFrame.payloadLen = 4 + length;
@@ -167,6 +227,7 @@ implementation
   default event void IEEE154TxBeaconPayload.modifyBeaconPayloadDone(uint8_t offset, void *buffer, uint8_t bufferLength) {}
   default event void IEEE154TxBeaconPayload.aboutToTransmit() {}
   default event void IEEE154TxBeaconPayload.beaconTransmitted() {}
+  default event void MLME_START.confirm(ieee154_status_t status) {}
 
 }
 

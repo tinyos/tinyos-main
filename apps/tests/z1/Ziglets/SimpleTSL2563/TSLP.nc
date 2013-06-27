@@ -61,7 +61,7 @@ implementation {
   norace uint8_t state = TSLCMD_IDLE;
   norace uint8_t pointer;
   norace uint8_t setreg;
-  norace uint16_t lightBuff[4];
+  norace uint8_t lightBuff[4];
   norace uint16_t reading[2];
   norace uint16_t lux;
   
@@ -127,13 +127,13 @@ implementation {
  
 
   async event void I2CBasicAddr.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t *data){
-    error_t e;
+    error_t e = FAIL;
     if(call Resource.isOwner()){
       if(state == TSLCMD_START){
         state = TSLCMD_READ;
         e = call I2CBasicAddr.write((I2C_START | I2C_STOP), TSL2563_ADDRESS, 1, &pointer);		  
       } else if (state == TSLCMD_READ){
-        e = call I2CBasicAddr.read((I2C_START | I2C_STOP), TSL2563_ADDRESS, 4, &lightBuff);  
+        e = call I2CBasicAddr.read((I2C_START | I2C_STOP), TSL2563_ADDRESS, 4, lightBuff);  
       }
       if (e){
         call Resource.release();
@@ -146,13 +146,20 @@ implementation {
     if (call Resource.isOwner()){
       uint16_t tmp;
       state = TSLCMD_IDLE;
-      for(tmp=0;tmp<0xff;tmp++);	//delay
+
+      /* The new msp430-gcc 4.6.3 toolchain eliminates the delay, the intrinsic 
+       * __delay_cycles() function is an elegant solution to an ugly hack but
+       * breaks the compatibility with 3.2.3 toolchain */
+
+      //__delay_cycles(8000);
+      for(tmp=0;tmp<0xffee;tmp++) asm("nop");	//delay
+
       call Resource.release();
+      call TimeoutTimer.stop();
       reading[0] = (data[1] << 8) + data[0];
       reading[1] = (data[3] << 8) + data[2];
       lux = calculatelux();
       post signalEvent();
-      call TimeoutTimer.stop();
     }
   }
 

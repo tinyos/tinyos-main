@@ -7,9 +7,9 @@ UcminiSensor.class: UcminiSensor.java UcminiSensorCalib.java UcminiSensorMeas.ja
 	javac UcminiSensor.java
 
 UcminiSensorMeas.java:
-	mig java -target=null $(CFLAGS) -java-classname=UcminiSensorMeas UcminiSensor.h measurement -o $@
+	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=UcminiSensorMeas UcminiSensor.h measurement -o $@
 
 UcminiSensorCalib.java:
-	mig java -target=null $(CFLAGS) -java-classname=UcminiSensorCalib UcminiSensor.h calib -o $@
+	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=UcminiSensorCalib UcminiSensor.h calib -o $@
 
 include $(MAKERULES)

@@ -1,0 +1,98 @@
+#!/bin/bash
+#
+# You have to run this script in a completely pristine checkout with
+# no build files. In particular, do NOT run the Bootstrap and configure
+# scripts in the tools directory
+
+PKG_VERSION=2.1.2
+PKG_NAME=tinyos-${PKG_VERSION}
+DOWNLOAD_URL=http://tinyos.stanford.edu/tinyos/dists/source/
+
+PKG_TARBALL=${PKG_NAME}.tar.gz
+PKG_RELEASE=`date +%Y%m%d`
+PKG_DIR=${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all
+
+if [ ! -f ../../old-release/tinyos.files ]; then
+	echo "You working directory is incorrect"
+	exit 2
+fi
+
+if [ "$1" == "--tar" ]; then
+	HERE=$PWD
+	echo "*** Building tinyos tarball"
+	if [ -f $PKG_TARBALL ]; then
+		rm $PKG_TARBALL
+	fi
+	cd ../../old-release
+	bash tinyos.files "tinyos" $PKG_VERSION ${HERE}/${PKG_TARBALL}
+	cd $HERE
+	exit 0
+elif [ "$1" == "--clean" ]; then
+	echo "*** Cleaning all files"
+	if [ -d $PKG_DIR ]; then
+		rm -rf $PKG_DIR
+	fi
+	if [ -f ${PKG_DIR}.deb ]; then
+		rm ${PKG_DIR}.deb
+	fi
+	if [ -f ${PKG_NAME}-${PKG_VERSION}-${PKG_RELEASE}.noarch.rpm ]; then
+		rm ${PKG_NAME}-${PKG_VERSION}-${PKG_RELEASE}.noarch.rpm
+	fi
+	if [ -f $PKG_TARBALL ]; then
+		rm $PKG_TARBALL
+	fi
+elif [ "$1" == "--deb" ]; then
+	if [ -d $PKG_DIR ]; then
+		rm -rf $PKG_DIR
+	fi
+	if [ -f ${PKG_DIR}.deb ]; then
+		rm ${PKG_DIR}.deb
+	fi
+	if [ ! -f $PKG_TARBALL ]; then
+		echo "*** Downloading tinyos tarball"
+		wget $DOWNLOAD_URL/$PKG_TARBALL
+	fi
+
+	echo "*** Unpacking tarball"
+	install -d $PKG_DIR ${PKG_DIR}/DEBIAN ${PKG_DIR}/opt
+	tar --directory ${PKG_DIR}/opt -xzf $PKG_TARBALL
+	PKG_SIZE=`du -ks ${PKG_DIR} | cut -f 1`
+
+	echo "*** Creating debian package"
+	sed "s/PKG_VERSION/${PKG_VERSION}-${PKG_RELEASE}/g" tinyos.control | \
+		sed "s/PKG_NAME/${PKG_NAME}/g" | \
+		sed "s/PKG_SIZE/${PKG_SIZE}/g" > ${PKG_DIR}/DEBIAN/control
+	fakeroot dpkg-deb --build $PKG_DIR
+
+	echo "*** Removing build directory"
+	rm -rf $PKG_DIR
+elif [ "$1" == "--rpm" ]; then
+	if [ -d $PKG_DIR ]; then
+		rm -rf $PKG_DIR
+	fi
+	if [ -f ${PKG_NAME}-${PKG_VERSION}-${PKG_RELEASE}.noarch.rpm ]; then
+		rm ${PKG_NAME}-${PKG_VERSION}-${PKG_RELEASE}.noarch.rpm
+	fi
+	if [ ! -f $PKG_TARBALL ]; then
+		echo "*** Downloading tinyos tarball"
+		wget $DOWNLOAD_URL/$PKG_TARBALL
+	fi
+	echo "*** Unpacking tarball"
+	install -d $PKG_DIR ${PKG_DIR}/SOURCES ${PKG_DIR}/BUILD
+	cp $PKG_TARBALL ${PKG_DIR}/SOURCES
+
+	PKG_DIR="$(readlink -f $PKG_DIR)"
+	export PKG_NAME
+	export PKG_VERSION
+	export PKG_RELEASE
+
+	echo "*** Creating RPM package"
+	rpmbuild --define "_topdir ${PKG_DIR}" -bb tinyos.spec
+	cp ${PKG_DIR}/RPMS/noarch/${PKG_NAME}*.rpm .
+
+	echo "*** Removing build directory"
+	rm -rf $PKG_DIR
+else
+    echo "Usage: build [--tar|--deb|--rpm|--clean]" >&2
+    exit 2
+fi

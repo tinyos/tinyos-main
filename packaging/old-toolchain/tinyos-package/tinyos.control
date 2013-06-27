@@ -1,0 +1,17 @@
+Package: PKG_NAME
+Version: PKG_VERSION
+Section: devel
+Priority: optional
+Architecture: all
+Depends: tinyos-required-all|tinyos-required-msp430|tinyos-required-avr
+Provides: tinyos
+Installed-Size: PKG_SIZE
+Maintainer: Philip Levis <pal@ahoy.stanford.edu>
+Description: An event-based operating environment designed for use with
+ embedded networked sensors.  TinyOS is an event based operating environment
+ designed for use with embedded networked sensors.  It is designed to support
+ the concurrency intensive operations required by networked sensors while
+ requiring minimal hardware resources. For a full analysis and description of
+ the TinyOS system, its component model, and its implications for Networked
+ Sensor Architectures please see: "Architectural Directions for Networked
+ Sensors" which can be found off of http://www.tinyos.net

@@ -16,10 +16,6 @@ VOLUME_ALLOCATOR ?= tos-storage-at45db
 OPTFLAGS += -Os
 #OPTFLAGS = 
 
-# Disable MSP430 hardware multiply because it makes MSPGCC die
-PFLAGS += -mdisable-hwmul
-PFLAGS += -mstrict-align
-
 $(call TOSMake_include_platform,tinynode)
 $(call TOSMake_include_platform,msp)
 

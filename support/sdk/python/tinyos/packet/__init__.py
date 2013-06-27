@@ -30,4 +30,4 @@
 #
 __all__ = ["PacketDispatcher", "PacketSource", "Packetizer",
            "SFProtocol", "SFSource", "ThreadTask",
-           "avrmote", "micaz", "telos"]
+           "avrmote", "micaz", "telos", "SerialSource", "SerialProtocol", "SerialIO"]

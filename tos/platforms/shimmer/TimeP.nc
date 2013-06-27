@@ -351,6 +351,36 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
     return SUCCESS;
   }
 
+  // this does not do tz or dst conversion!  utc in (the tm struct); utc out (t)
+  command error_t Time.mktime(const struct tm *tm, time_t * t ){
+    time_t unix_time;
+    uint32_t secs_per_year = 31536000;
+    uint32_t year_secs, mon_secs, day_secs, hour_secs;
+    register uint16_t i;
+
+    hour_secs = (uint32_t)tm->tm_hour * 3600UL;
+    day_secs = (uint32_t)(tm->tm_mday - 1) * 86400UL; 
+
+    mon_secs = 0;
+    for(i = 0; i < tm->tm_mon; i++){
+      mon_secs += (uint32_t)days_per_month[i] * 86400UL;
+      if((i == 1) && ((tm->tm_year % 4) == 0))  // we can add in a day for feb. 29
+	mon_secs += 86400;
+    }
+    year_secs = 0;
+    for(i = 0; i < (uint16_t)tm->tm_year - 70; i++){
+      year_secs += secs_per_year;
+      if(((1970 + i) % 4) == 0)
+	year_secs += 86400;
+    }
+
+    unix_time = year_secs + mon_secs + day_secs + hour_secs + (uint32_t)tm->tm_min * 60 + (uint32_t)tm->tm_sec;
+
+    *t = unix_time;
+
+    return SUCCESS;
+  }
+
   default event void Time.tick() { }
 
   /*****************************************

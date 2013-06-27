@@ -1,0 +1,2 @@
+You have to install avr-gcc before compiling this package.
+Warning: the configure script will only enable targets which gcc knows.

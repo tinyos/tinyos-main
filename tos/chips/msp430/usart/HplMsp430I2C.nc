@@ -37,7 +37,7 @@ interface HplMsp430I2C {
   async command bool getStartBit();
   async command void setStartBit();
   
-  // I2CDR
+  // I2CDRB
   async command uint8_t getData();
   async command void setData( uint8_t data );
   

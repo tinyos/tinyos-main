@@ -21,12 +21,6 @@ ifeq ($(PROGRAMMER),avrdude)
     PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
 
-ifeq ($(PROGRAMMER),uisp)
-    PROGRAMMER_FLAGS = -dprog=mib510 -dserial=$(MIB510) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
-    PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) --verify
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER_IMG) --verify
-endif
-
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using mib510"
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)

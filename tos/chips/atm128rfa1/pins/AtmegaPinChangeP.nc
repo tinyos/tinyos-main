@@ -29,16 +29,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Andras Biro
+ * Author: Andras Biro, Miklos Maroti
  */
 
+/*
+ * This module provides emulated edge triggered GpioInterrupt using a
+ * shared pin change interrupt. Note, that this emulation cannot be
+ * perfect, as if one is wating for a rising edge and gets an ON quickly
+ * followed by a OFF signal, then the fired event will miss this and
+ * will not report anything. This emulation works only for external
+ * components that hold their interrupt line long enough (e.g. they
+ * need to be manually cleared via SPI or I2C).
+ *
+ * Also note, that the actual filtering logic is done in the fired
+ * event and we cannot rule out spontaneous interrupts (e.g. by a
+ * pin change interrupt in an uninteresting direction), therefore we
+ * do no clear the interrupt flag when enabling the pin change
+ * interrupt and save on code size.
+ */
 generic module AtmegaPinChangeP(){
   uses interface HplAtmegaPinChange;
   provides interface GpioInterrupt[uint8_t pin];
 }
 implementation{
   uint8_t isFalling;
-  
+
   /* Enables the interrupt */
   async command error_t GpioInterrupt.enableRisingEdge[uint8_t pin](){
     atomic{
@@ -48,7 +63,7 @@ implementation{
     }
     return SUCCESS;
   }
-  
+
   async command error_t GpioInterrupt.enableFallingEdge[uint8_t pin](){
     atomic {
       isFalling |= 1<<pin;
@@ -68,10 +83,15 @@ implementation{
     }
     return SUCCESS;
   }
-  
+
   /* Signalled when any of the enabled pins changed */
   async event void HplAtmegaPinChange.fired(){
     uint8_t pins=call HplAtmegaPinChange.getMask() & ( call HplAtmegaPinChange.getPins() ^ isFalling );
+
+    /*
+     * Load the pins into memory and call the fired event in separate if
+     * statements so the compiler can eliminate calls to unconnected interfaces
+     */
     if( pins & (1<<0) )
       signal GpioInterrupt.fired[0]();
     if( pins & (1<<1) )
@@ -88,8 +108,7 @@ implementation{
       signal GpioInterrupt.fired[6]();
     if( pins & (1<<7) )
       signal GpioInterrupt.fired[7]();
-    
   }
-  
+
   default async event void GpioInterrupt.fired[uint8_t pin]() {}
 }

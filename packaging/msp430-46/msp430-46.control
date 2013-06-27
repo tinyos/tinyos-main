@@ -1,0 +1,8 @@
+Package: msp430-46
+Version: @version@
+Architecture: @architecture@
+Depends: msp430-binutils-46, msp430-gcc-46, msp430-libc-46, msp430mcu-46, msp430-gdb-46, tinyos-tools
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Pull in all MSP430 (4.6) packages

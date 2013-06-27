@@ -1,0 +1,21 @@
+To create a new tinyos source package follow these steps:
+
+1) First check out the appropriate version of tinyos-main
+2) Update the PKG_VERSION and DOWNLOAD_URL settings in the build-tinyos script
+3) Run the "build-tinyos --tar" command, this will create your source tarball
+4) Manually upload the source tarball to the DOWNLOAD_URL, to create an
+   official source version that others can use
+
+To create a debian package for your system follow these steps:
+
+5) Either use one of the official tinyos source tarballs from DOWNLOAD_URL
+   or create your own source tarball (steps 1-3)
+6) Run the "build-tinyos --deb" command, this will create your debian package
+7) Upload the debian package to a place where your users can download it
+
+To create an RPM package for your system follow these steps:
+
+5) Either use one of the official tinyos source tarballs from DOWNLOAD_URL
+   or create your own source tarball (steps 1-3)
+6) Run the "build-tinyos --rpm" command, this will create your debian package
+7) Upload the RPM package to a place where your users can download it

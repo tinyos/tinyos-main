@@ -33,11 +33,12 @@
 */
 
 #include "Ms5607.h"
+
 configuration Ms5607C {
   provides interface Read<uint32_t> as ReadPressure;
   provides interface Read<uint32_t> as ReadTemperature;
   //You can't use the following interfaces if you're waiting for any readDone
-  //the calibration data is always the same on the same chip, but this driver doesn't buffering it
+  //the calibration data stays the same for the same chip, but we do not cache it
   provides interface ReadRef<calibration_t> as ReadCalibration;
   provides interface Set<uint8_t> as SetPrecision;
 }
@@ -56,3 +57,4 @@ implementation {
   Ms5607P.BusPowerManager -> HplMs5607C;
   Ms5607P.Init <- MainC.SoftwareInit;
 }
+

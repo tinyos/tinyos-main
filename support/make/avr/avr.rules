@@ -31,7 +31,7 @@ endif
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SET_ID = tos-set-symbols
-PROGRAMMER ?= uisp
+PROGRAMMER ?= avrdude
 NCC = ncc
 LIBS = -lm
 

@@ -1,0 +1,126 @@
+<div style='
+     font-family: Georgia, serif;
+     font-size: 17px;
+     line-height: 1.2em;'
+>
+<pre>
+
+</pre>
+<p><b>
+MSPGCC 4.6.3 LTS20120406 Release
+<br>Long Term Support (LTS)
+</b></p>
+
+This release is the primary MSP430 toolchain for the TinyOS T2.1.2 release.  It also can be used
+for the TinyOS development trunk.
+
+<p><b>It is intended that over time, these packages will become available via the
+normal distribution channels for your distribution.</b></p>
+
+
+<p>Last update: 20121019, cire</p>
+<p>(Changelog at end)</p>
+
+
+<p>The 4.6.3-LTS20120406 repository contains the following packages for the <i>i386</i>
+(32 bit) and <i>amd64</i> (64 bit) architectures:</p>
+
+<ul>
+<li>msp430-46: 20121019
+<li>msp430-binutils-46: 2.21.1-LTS20120406-tinyprod
+<li>msp430-gcc-46: 4.6.3-LTS20120406+20120911-tinyprod
+<li>msp430-gdb-46: 7.2-LTS20120406-tinyprod
+<li>msp430-libc-46: 20120224-LTS20120406+20120502-tinyprod
+<li>msp430mcu-46: 20120406-LTS20120406+20120502-tinyprod
+
+</ul>
+
+Release notes can be found at <a href='http://tinyprod.net/repos/debian/ReleaseNotes-46.txt'>
+Release Notes 46</a>
+
+<p>To use this repository you need to:</p>
+
+<ol>
+<li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
+<pre>
+  deb http://tinyprod.net/repos/debian squeeze   main
+  deb http://tinyprod.net/repos/debian msp430-46 main
+</pre>
+<pre>
+
+  $ cd /etc/apt/sources.list.d
+  $ sudo echo "deb http://tinyprod.net/repos/debian squeeze main" >> tinyprod-debian.list
+  $ sudo echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
+
+</pre>
+
+<li>Install the new packages:
+<pre>
+  $ sudo apt-get update
+  $ sudo apt-get install msp430-46 nesc tinyos-tools
+</pre>
+
+</ol>
+
+<p>If you want to uninstall the packages you can do it like this:</p>
+
+<pre>
+  $ sudo apt-get autoremove --purge msp430-46
+</pre>
+
+<b>Note:</b>
+
+<p>
+<ol>
+<li>
+Other packages from the main tinyprod debian repository (<b>squeeze</b>) are needed to make a functioning nesc
+development sytem.  In particular, you will need <b>nesc</b> and <b>tinyos-tools</b>.  These have been included
+in the instructions above.
+<br><br>
+<li>Experimental msp430 toolchains install into /opt/msp430-<ver>.  4.6.3 is the released default toolchain for
+the msp430 cpus for tinyos 2.1.2.  It installs into the /usr heirarchy.
+</ol>
+</p>
+<pre>
+
+</pre>
+
+<div style='
+     border: 1px solid red;
+     padding: 10px;
+     background-color: #FFC2C2;
+     width: 45em;'>
+
+<div style='font-family: sans-serif; font-weight: bold;'>Note</div>
+
+<p>This repository is signed with the following key:</p>
+<pre>
+  pub   2048R/34EC655A 2011-02-28
+        Key fingerprint = 2ADB 95E2 E116 3F0C 0B55  73F0 DB53 87FB 34EC 655A
+  uid                  Eric Decker <cire831@gmail.com>
+</pre>
+
+<p>To install the key in the local apt keyring you have to do the following:</p>
+
+<pre>
+  $ gpg --keyserver keyserver.ubuntu.com --recv-keys 34EC655A
+  $ gpg -a --export 34EC655A | sudo apt-key add -
+</pre>
+
+</div>
+
+<p>-- cire (October 19, 2012)</p>
+
+
+<pre>
+
+
+</pre>
+
+<p><b>Changelog:</b></p>
+<pre>
+  20121019, cire: move 4.6.3 toolchain to /usr
+  20120716, cire: rebuild tinyprod repository
+</pre>
+
+</div>

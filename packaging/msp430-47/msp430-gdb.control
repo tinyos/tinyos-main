@@ -1,0 +1,8 @@
+Package: msp430-gdb-47
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, libncurses5
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Experimental MSP430 gdb 4.7

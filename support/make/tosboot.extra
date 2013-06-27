@@ -14,6 +14,17 @@ ifeq ($(BOOTLOADER),tosboot)
     CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos
     ifeq ($(filter docs,$(GOALS)),)
       CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
+      # Pull back in mspgcc CRT code discarded by the redefinition of
+      # _reset_vector__.
+      CFLAGS += -Wl,--undefined=__init_stack
+      CFLAGS += -Wl,--undefined=__low_level_init
+      CFLAGS += -Wl,--undefined=__do_copy_data
+      CFLAGS += -Wl,--undefined=__do_clear_bss
+      CFLAGS += -Wl,--undefined=__stop_progExec__
+      CFLAGS += -Wl,--undefined=_endless_loop__
+      ifeq ("$(shell expr `msp430-gcc -dumpversion` \>= '4.6.3')","1")
+        CFLAGS += -Wl,--undefined=__watchdog_support
+      endif
     endif
     ifeq ($(TARGETS),telosb)
 	CFLAGS += -I$(DELUGE_EXTRA)/telosb

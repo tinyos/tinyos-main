@@ -1,0 +1,14 @@
+Package: avr-gcc-tinyos
+Version: %{version}
+Architecture: %{architecture}
+Depends: avr-binutils-tinyos, avr-tinyos-base
+Provides: gcc-avr
+Conflicts: gcc-avr
+Recommends: avr-tinyos, avr-optional-tinyos
+Maintainer: Andras Biro, Janos Sallai
+Priority: optional
+Section: devel
+Description: The GNU C compiler (cross compiler for avr) (TinyOS version)
+  This is the GNU C compiler, a fairly portable optimizing compiler
+  which supports multiple languages. This package includes support for C. 
+  This version is patched and tested with TinyOS.

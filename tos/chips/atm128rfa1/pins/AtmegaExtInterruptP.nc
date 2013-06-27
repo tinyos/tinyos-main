@@ -34,7 +34,7 @@
 
 #include "HplAtmegaExtInterrupt.h"
 
-generic module AtmegaExtInterruptP(){
+generic module AtmegaExtInterruptP(bool lowLevel){
   uses interface HplAtmegaExtInterrupt;
   provides interface GpioInterrupt;
 }
@@ -51,7 +51,7 @@ implementation{
   
   async command error_t GpioInterrupt.enableFallingEdge(){
     atomic{
-      call HplAtmegaExtInterrupt.setMode(ATMEGA_EXTINT_FALLING_EDGE);
+      call HplAtmegaExtInterrupt.setMode(lowLevel ? ATMEGA_EXTINT_LOW_LEVEL : ATMEGA_EXTINT_FALLING_EDGE);
       call HplAtmegaExtInterrupt.enable();
       call HplAtmegaExtInterrupt.reset();
     }

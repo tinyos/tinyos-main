@@ -117,16 +117,43 @@ implementation {
     return SUCCESS;
   }
   
+//default clockrate: 4000 kHz
+#ifndef SPI_CLOCKRATE
+#define SPI_CLOCKRATE 4000
+#endif
+  
   void startSpi() {
     call Spi.enableSpi(FALSE);
     atomic {
       call Spi.initMaster();
       call Spi.enableInterrupt(FALSE);
-      call Spi.setMasterDoubleSpeed(TRUE);
       call Spi.setClockPolarity(FALSE);
       call Spi.setClockPhase(FALSE);
-      call Spi.setClock(0);
       call Spi.enableSpi(TRUE);
+
+      //calculating prescaler for desired spi clockrate with floor function to the nearest available clockrate
+      #if (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=64
+        call Spi.setMasterDoubleSpeed(FALSE);
+        call Spi.setClock(3);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=32
+        call Spi.setMasterDoubleSpeed(FALSE);
+        call Spi.setClock(2);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=16
+        call Spi.setMasterDoubleSpeed(TRUE);
+        call Spi.setClock(2);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=8
+        call Spi.setMasterDoubleSpeed(FALSE);
+        call Spi.setClock(1);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=4
+        call Spi.setMasterDoubleSpeed(TRUE);
+        call Spi.setClock(1);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=2
+        call Spi.setMasterDoubleSpeed(FALSE);
+        call Spi.setClock(0);
+      #else
+        call Spi.setMasterDoubleSpeed(TRUE);
+        call Spi.setClock(0);
+      #endif
     }
     call McuPowerState.update();
   }

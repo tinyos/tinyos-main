@@ -51,7 +51,6 @@ module DispatchUnslottedCsmaP
   provides
   {
     interface Init as Reset;
-    interface MLME_START;
     interface FrameTx as FrameTx;
     interface FrameRx as FrameRx[uint8_t frameType];
     interface FrameExtracted as FrameExtracted[uint8_t frameType];
@@ -65,7 +64,6 @@ module DispatchUnslottedCsmaP
     interface GetNow<token_requested_t> as IsRadioTokenRequested;
     interface GetNow<bool> as IsRxEnableActive; 
     interface Set<ieee154_macSuperframeOrder_t> as SetMacSuperframeOrder;
-    interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;     
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
     interface Notify<const void*> as PIBUpdateMacRxOnWhenIdle;
@@ -122,7 +120,6 @@ implementation
   task void signalTxDoneTask();
   task void wasRxEnabledTask();
   task void startIndirectTxTimerTask();
-  task void signalStartConfirmTask();
 
   command error_t Reset.init()
   {
@@ -133,53 +130,6 @@ implementation
     m_currentFrame = m_lastFrame = NULL;
     call IndirectTxWaitTimer.stop();
     return SUCCESS;
-  }
-
-  command ieee154_status_t MLME_START.request  (
-                          uint16_t panID,
-                          uint8_t logicalChannel,
-                          uint8_t channelPage,
-                          uint32_t startTime,
-                          uint8_t beaconOrder,
-                          uint8_t superframeOrder,
-                          bool panCoordinator,
-                          bool batteryLifeExtension,
-                          bool coordRealignment,
-                          ieee154_security_t *coordRealignSecurity,
-                          ieee154_security_t *beaconSecurity)
-  {
-    ieee154_status_t status;
-    ieee154_macShortAddress_t shortAddress = call MLME_GET.macShortAddress();
-
-    // check parameters
-    if ((coordRealignSecurity && coordRealignSecurity->SecurityLevel) ||
-        (beaconSecurity && beaconSecurity->SecurityLevel))
-      status = IEEE154_UNSUPPORTED_SECURITY;
-    else if (shortAddress == 0xFFFF) 
-      status = IEEE154_NO_SHORT_ADDRESS;
-    else if (logicalChannel > 26 ||
-        (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
-        !(IEEE154_SUPPORTED_CHANNELS & ((uint32_t) 1 << logicalChannel)))
-      status =  IEEE154_INVALID_PARAMETER;
-    else if (beaconOrder != 15) 
-      status = IEEE154_INVALID_PARAMETER;
-    else {
-      call MLME_SET.macPANId(panID);
-      call MLME_SET.phyCurrentChannel(logicalChannel);
-      call MLME_SET.macBeaconOrder(beaconOrder);
-      call SetMacPanCoordinator.set(panCoordinator);
-      //TODO: check realignment
-      post signalStartConfirmTask();
-      status = IEEE154_SUCCESS;
-    }      
-    dbg_serial("DispatchUnslottedCsmaP", "MLME_START.request -> result: %lu\n", (uint32_t) status);
-    dbg_serial_flush();
-    return status;
-  }
-
-  task void signalStartConfirmTask()
-  {
-    signal MLME_START.confirm(IEEE154_SUCCESS);
   }
 
   command ieee154_status_t FrameTx.transmit(ieee154_txframe_t *frame)
@@ -525,7 +475,6 @@ implementation
 
   command error_t WasRxEnabled.enable() {return FAIL;}
   command error_t WasRxEnabled.disable() {return FAIL;}
-  default event void MLME_START.confirm(ieee154_status_t status) {}
   async event void RadioToken.transferredFrom(uint8_t fromClientID) {ASSERT(0);}
   async event void RadioTokenRequested.requested(){ updateState(); }
   async event void RadioTokenRequested.immediateRequested(){ updateState(); }

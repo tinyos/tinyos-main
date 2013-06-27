@@ -48,7 +48,7 @@ module Hmc5843P {
   }
   uses {
     interface I2CPacket<TI2CBasicAddr> as I2CPacket;
-
+    interface Init as I2CInit;
     interface HplMsp430I2C as HplI2C;
     interface HplMsp430Usart as Usart;
     interface HplMsp430UsartInterrupts as UsartInterrupts;
@@ -62,8 +62,9 @@ implementation {
   extern int sprintf(char *str, const char *format, ...) __attribute__ ((C));
   extern int snprintf(char *str, size_t len, const char *format, ...) __attribute__ ((C));
 
-  uint8_t readbuff[7], testPhase;
+  uint8_t readbuff[8], testPhase;
   uint8_t packet[2], readSize, * readDataBuffer;
+  bool enabled;
 
   msp430_i2c_union_config_t msp430_i2c_my_config = { 
     {
@@ -94,6 +95,8 @@ implementation {
 
     TOSH_uwait(5000); // 5 ms for mag
 
+    atomic enabled = FALSE;
+
     call Magnetometer.enableBus();
 
     testPhase = 0;
@@ -103,10 +106,15 @@ implementation {
 
   command void Magnetometer.enableBus() {
     call HplI2C.setModeI2C(&msp430_i2c_my_config);
+    call I2CInit.init();
+
+    atomic enabled = TRUE;
   }
 
   command void Magnetometer.disableBus() {
-    call HplI2C.disableI2C();
+    call HplI2C.clearModeI2C();
+
+    atomic enabled = FALSE;
   }
 
   error_t writeRegValue(uint8_t reg_addr, uint8_t val) {
@@ -124,6 +132,7 @@ implementation {
     readSize = size;
     readDataBuffer = data;
 
+    call I2CInit.init();
     call I2CPacket.read(I2C_START | I2C_STOP, 0x1e, size, data);
     return SUCCESS;
   }
@@ -318,7 +327,7 @@ implementation {
 
   // call after readDone event
   command uint16_t Magnetometer.readHeading(uint8_t * readBuf){
-    int16_t realVals[3];
+    int16_t realVals[4];
     uint16_t heading;
 
     call Magnetometer.convertRegistersToData(readBuf, realVals);
@@ -329,11 +338,13 @@ implementation {
   }
 
   async event void I2CPacket.readDone(error_t success, uint16_t addr, uint8_t length, uint8_t* data) {
-    signal Magnetometer.readDone(data, success);
+    if(enabled)
+      signal Magnetometer.readDone(data, success);
   }
 
   async event void I2CPacket.writeDone(error_t success, uint16_t addr, uint8_t length, uint8_t* data) {
-    signal Magnetometer.writeDone(success);
+    if(enabled)
+      signal Magnetometer.writeDone(success);
   }
 }
   

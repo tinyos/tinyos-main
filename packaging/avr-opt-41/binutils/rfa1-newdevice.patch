@@ -1,0 +1,9 @@
+diff -ruN binutils-2.17-orig/gas/config/tc-avr.c binutils-2.17/gas/config/tc-avr.c
+--- gas/config/tc-avr.c	2008-01-24 14:41:48.000000000 -0800
++++ gas/config/tc-avr.c	2008-01-24 14:43:07.000000000 -0800
+@@ -145,4 +145,5 @@
+  {"atmega1280",AVR_ISA_M128,     bfd_mach_avr5},
+  {"atmega1281",AVR_ISA_M128,     bfd_mach_avr5},
++  {"atmega128rfa1",AVR_ISA_M128,     bfd_mach_avr5},
+  {"atmega645", AVR_ISA_M323,     bfd_mach_avr5},
+  {"atmega649", AVR_ISA_M323,     bfd_mach_avr5},

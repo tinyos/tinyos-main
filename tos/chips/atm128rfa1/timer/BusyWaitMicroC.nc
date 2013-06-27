@@ -41,15 +41,9 @@ configuration BusyWaitMicroC
 
 implementation
 {
-	components new BusyWaitCounterC(TMicro, uint16_t); 
-	BusyWait = BusyWaitCounterC;
-	BusyWaitCounterC.Counter -> CounterMicro16C;
+	components BusyWaitMicroP;
+	BusyWait = BusyWaitMicroP;
 
-#if MCU_TIMER_MHZ_LOG2 == 0
-	components CounterMcu16C as CounterMicro16C;
-#else
-	components new TransformCounterC(TMicro, uint16_t, TMcu, uint16_t, MCU_TIMER_MHZ_LOG2, uint8_t) as CounterMicro16C;
-	components CounterMcu16C;
-	CounterMicro16C.CounterFrom -> CounterMcu16C;
-#endif
+	components CounterMcu32C;
+	BusyWaitMicroP.Counter -> CounterMcu32C;
 }

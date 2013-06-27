@@ -38,9 +38,9 @@ configuration HplAtmRfa1TimerMacC
 {
 	provides
 	{
-		interface AtmegaCounter<uint32_t> as Counter;
-		interface AtmegaCompare<uint32_t> as Compare[uint8_t id];
-		interface AtmegaCapture<uint32_t> as SfdCapture;
+		interface HplAtmegaCounter<uint32_t> as Counter;
+		interface HplAtmegaCompare<uint32_t> as Compare[uint8_t id];
+		interface HplAtmegaCapture<uint32_t> as SfdCapture;
 	}
 }
 

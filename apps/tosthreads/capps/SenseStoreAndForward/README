@@ -18,7 +18,7 @@ To run this application install it on a mote via the command:
   
 Valid platforms are currently: tmote, telosb with onboard sensors
 
-Readings are taken from each of the 4 oboard sensors and logged to flash as one
+Readings are taken from three  oboard sensors and logged to flash as one
 record in an infinite loop. Records are then read out of flash and and sent out
 over the radio interface in separate infinite loop. Before the application
 starts running, the entire contents of the flash drive are erased.

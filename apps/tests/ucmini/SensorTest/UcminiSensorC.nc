@@ -31,13 +31,15 @@
 *
 * Author: Andras Biro
 */ 
+
 #include "UcminiSensor.h"
+
 configuration UcminiSensorC { }
 implementation {
   components UcminiSensorP, MainC, LedsC, new TimerMilliC();
   components new AtmegaTemperatureC(), new AtmegaVoltageC(),
              new LightC(),
-             new PressureC(), new Ms5607RawTemperatureC() as Temperature1C,
+             new PressureC(), new Ms5607TemperatureC() as Temperature1C, new Ms5607CalibrationC(),
              new TemperatureC(), new HumidityC();
   components SerialStartC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend, new SerialAMSenderC(AM_CALIB) as CalibSend, new SerialAMReceiverC(AM_CALIB);
 
@@ -47,7 +49,7 @@ implementation {
   UcminiSensorP.LightRead -> LightC;
   UcminiSensorP.PressRead -> PressureC;
   UcminiSensorP.Temp2Read -> Temperature1C;
-  UcminiSensorP.ReadRef -> PressureC.ReadCalibration;
+  UcminiSensorP.ReadRef -> Ms5607CalibrationC;
   UcminiSensorP.Temp3Read -> AtmegaTemperatureC;
   UcminiSensorP.VoltageRead -> AtmegaVoltageC;
   UcminiSensorP.Timer->TimerMilliC;
@@ -57,3 +59,4 @@ implementation {
   UcminiSensorP.Packet->MeasSend;
   UcminiSensorP.Leds -> LedsC;
 }
+

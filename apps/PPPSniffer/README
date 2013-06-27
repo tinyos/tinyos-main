@@ -1,0 +1,155 @@
+ #############################################
+ # README for PPPSniffer                     #
+ # Author: Markus Becker                     #
+ # Email: mab@comnets.uni-bremen.de          #
+ #############################################
+
+ The PPPSniffer application is similar to blip's PppRouter.
+
+ This application receives/snoops packets on a specified IEEE 802.15.4
+ channel and forwards the packets to the computer using the
+ Point-to-Point Protocol.  The received packets can be visualized
+ using Wireshark.
+
+ Wireshark version 1.6 and higher should be able to dissect 802.15.4,
+ 6LoWPAN, RPL, CoAP. So the following bracketed description should not
+ be necessary anymore. It is left here for reference, since newer SVN
+ versions might have better dissectors for the non-RFC protocols.
+
+ ((((
+ OLD: Since the standard Wireshark does not contain the dissector for
+ IEEE 802.15.4 packets yet, the development version of Wireshark has
+ to be used.
+
+ #############################################
+ # Compile and install Wireshark
+ #############################################
+
+ Install the build dependencies of wireshark with:
+
+ $ sudo apt-get build-dep wireshark
+ $ sudo apt-get install omniidl4 snacc cdbs libsnacc0c2 omniidl
+
+ In order to get yourself the latest copy of the source code of the
+ development version of Wireshark, go to
+
+ http://www.wireshark.org/download.html
+
+ and choose Development releases -> Source Code
+
+ Unpack the tar.gz file and run './configure' in the Wireshark
+ distribution directory.  Run "make install" and create debian package
+ with:
+
+ $ make debian-package
+
+ To install the new debian packages, change to the folder which
+ contains the .deb files and type:
+
+ $ sudo dpkg -i *.deb
+
+ ))))
+
+ #############################################
+ # PPPSniffer
+ #############################################
+
+ Install the PPPSniffer:
+
+ $ cd $TOS_ROOT/apps/PPPSniffer
+ $ make telosb cc2420x_32khz install,1 bsl,/dev/ttyUSB0
+
+ Connect PPP to the mote:
+ $ sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB0 nocrtscts \
+ nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::23,::24
+
+ You should get the following output:
+
+ """
+ using channel 10
+ Using interface ppp0
+ Connect: ppp0 <--> /dev/ttyUSB0
+ sent [LCP ConfReq id=0x1 <asyncmap 0x0> <magic 0x3a27e13e> <pcomp> <accomp>]
+ rcvd [LCP ConfRej id=0x1 <magic 0x3a27e13e> <pcomp>]
+ sent [LCP ConfReq id=0x2 <asyncmap 0x0> <accomp>]
+ rcvd [LCP ConfAck id=0x2 <asyncmap 0x0> <accomp>]
+ rcvd [LCP ConfReq id=0x2 <mru 1280> <asyncmap 0x0> <accomp>]
+ sent [LCP ConfAck id=0x2 <mru 1280> <asyncmap 0x0> <accomp>]
+ sent [IPV6CP ConfReq id=0x1 <addr fe80::0000:0000:0000:0023>]
+ rcvd [IPV6CP ConfReq id=0x1 <addr fe80::0000:0000:0000:0000>]
+ sent [IPV6CP ConfNak id=0x1 <addr fe80::0000:0000:0000:0024>]
+ rcvd [IPV6CP ConfReq id=0x2 <addr fe80::0000:0000:0000:0000>]
+ sent [IPV6CP ConfNak id=0x2 <addr fe80::8cb7:7648:a713:bed5>]
+ rcvd [IPV6CP ConfReq id=0x3 <addr fe80::0000:0000:0000:0024>]
+ sent [IPV6CP ConfAck id=0x3 <addr fe80::0000:0000:0000:0024>]
+ sent [IPV6CP ConfReq id=0x1 <addr fe80::0000:0000:0000:0023>]
+ rcvd [IPV6CP ConfAck id=0x1 <addr fe80::0000:0000:0000:0023>]
+ local  LL address fe80::0000:0000:0000:0023
+ remote LL address fe80::0000:0000:0000:0024
+ Script /etc/ppp/ipv6-up started (pid 7464)
+ rcvd [proto=0x404f] 0d 50 50 50 3a 20 6c 69 6e 6b 20 75 70 0a
+ Unsupported protocol 0x404f received
+ sent [LCP ProtRej id=0x3 40 4f 0d 50 50 50 3a 20 6c 69 6e 6b 20 75 70 0a]
+ Script /etc/ppp/ipv6-up finished (pid 7464), status = 0x0
+ """
+
+ #############################################
+ # blip based applications
+ #############################################
+
+ Install the applications:
+
+ Install UDPEcho:
+
+ cd $TOS_ROOT/apps/UDPEcho
+ make telosb blip install.2 bsl,/dev/ttyUSB2
+
+ Install PppRouter:
+
+ (It is important to assign the same mote address like the
+ PPPSniffer application which is in our case: 1)
+
+ cd $TOS_ROOT/apps/PppRouter
+ make telosb blip install.1 bsl,/dev/ttyUSB1
+
+ Connect PPP to the PppRouter:
+
+ sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB1 nocrtscts \
+ nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::25,::26
+
+ Assign the ppp interface an IPv6 address
+ sudo ifconfig ppp1 add fec0::101/64
+
+ #############################################
+ # Run Wireshark
+ #############################################
+
+ Start wireshark:
+ $ sudo wireshark
+
+ To decode the received packets as 802.15.4 packets instead of IP
+ packets, apply the dissector for IEEE 802.15.4 format:
+
+ - if you run Wireshark the first time and you use TelosB,
+   Epic, Z1 or CM3300 mote, you have to enable the Frame Check
+   Sequence format from TI CC24XX:
+   In Wireshark -> select "Edit"
+                -> select "Peferences"
+                -> open protocols
+                -> choose IEEE802.15.4
+                -> set the check mark "TI CC24xx FCS format"
+
+ - start capturing on ppp0 capture interface (double check with
+   the standard ppp1 interface used for the 6LoWPAN Border Router)
+
+ - now some packets should be visible from PppRouter and UdpEcho
+   with an Info "Malformed Packet"
+
+ - In order to apply the IEEE 802.15.4 dissector -> right mouse
+   button on a packet
+     -> select "Decode As"
+     -> select IEEE 802.15.4
+
+ Now the MAC Layer starting with the Frame Control Field is
+ visible in the IEEE 802.15.4 Frame Format.  6LoWPAN, RPL and CoAP
+ should be dissected by Wireshark as well.

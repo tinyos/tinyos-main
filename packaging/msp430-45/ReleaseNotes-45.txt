@@ -1,0 +1,51 @@
+
+Last Updated: 2012-07-16
+
+Older 4.5.3 based toolchain.    DEPRECATED.   You should be using the 4.6.3
+toolchain.
+
+MSP430 repo:
+
+The MSP430 toolchain is a gcc 4.5.3 toolchain with msp430 modifications.  The 
+following patches have been included.  Package names include a date specifier
+that indicates that all patches up to and including that date have been
+included.
+
+Bugs are tracked at: http://sourceforge.net/tracker/?group_id=42303&atid=432701
+
+
+msp430-45: (msp430-45_20120715)
+  pulls in all msp430-45 packages and tinyos-tools
+
+msp430-binutils: (msp430-binutils-45_2.21.1-LTS20110716+20110830)
+  base: 2.21.1a
+3379341 (2011/07/27) non-empty ARCH environment variable results unusable ld - ID: 3379341
+3386145 (2011/08/04) gc-sections broken in LTS 20110716 - ID: 3386145
+3143071 (2011/08/04) msp430-ld -r : error in addend of relocation enty in output - ID: 3143071
+3400750 (2011/08/30) infomemnobits missing from LTS 20110716 - ID: 3400750
+3400711 (2011/08/30) consts placed in RAM instead of ROM with -fdata-sections - ID: 3400711
+
+msp430-gcc: (msp430-gcc-45_4.5.3-LTS20110716+20120311)
+  base: 4.5.3
+3370978 (2011/07/27) ICE on shift with 32-bit count - ID: 3370978
+3390964 (2011/08/13) broken optimization with emulated multiply libcalls - ID: 3390964
+3396639 (2011/08/22) restore lost source listings (and perhaps debugger support) - ID: 3396639
+3394176 (2011/08/22) unrecognizable insn error subtracting addresses - ID: 3394176
+3409864 (2011/09/21) Args overwritten after call involving int64 - ID: 3409864
+3417263 (2011/10/07) GDB: Wrong address for variables ??? - ID: 3417263
+3431602 (2011/11/03) Incorrect comparison to 32-bit literal - ID: 3431602
+3433730 (2011/11/05) Bug when casting function parameters - ID: 3433730
+3420924 (2012/03/11) gdb can't find local variables in unoptimized main - ID: 3420924
+3500740 (2012/03/11) Array indexing/bounds bug in msp430-gcc (GCC) 4.5.3 - ID: 3500740
+    also fixes 3486882 (2012/03/11) msp430-gcc (LTS) -O1 optimization broken - ID: 3486882
+
+msp430-gdb: (msp430-gdb-45_7.2-LTS20110716)
+
+msp430-libc: (msp430-libc-45_20110612-LTS20110716+20110902)
+3387164 (2011/08/06) put BV macro back - ID: 3387164
+3402836 (2011/09/02) new printf lacks precision support - ID: 3402836
+
+msp430mcu: (msp430mcu-45_20110613-LTS20110716+20110830)
+3384550 (2011/08/04) Missing __ASSEMBLER__ guard in msp430.h - ID: 3384550
+3379189 (2011/08/04) Wrong permission on installed files - ID: 3379189
+3400714 (2011/08/30) __delay_cycles missing from in430.h - ID: 3400714

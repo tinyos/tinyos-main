@@ -46,7 +46,7 @@ push( @includes, qw(
 # The @opts list contains parameters that are passed to ncc.
 @opts = qw(
   -gcc=msp430-gcc
-  -mmcu=msp430x1611
+  -mmcu=msp430f1611
   -fnesc-target=msp430
   -fnesc-no-debug
 );

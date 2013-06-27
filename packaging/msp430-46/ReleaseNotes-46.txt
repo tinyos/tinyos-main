@@ -1,0 +1,35 @@
+
+Last Updated: 2012-10-19
+
+Current status of the msp430 toolchain and packages for Ubuntu/Debian.
+
+MSP430-46 repo: Long Term Support 20120406
+
+The MSP430 toolchain is a gcc 4.6.3 toolchain with msp430 modifications.  The 
+following patches have been included.  Packages that have patches include
+a date modifier that indicates all patches up to and including that date have been
+included.
+
+4.6.3 is the default msp430 toolchain for TinyOS 2.1.2 and gets installed into
+the /usr heirarchy.
+
+Bugs are tracked at: http://sourceforge.net/tracker/?group_id=42303&atid=432701
+
+
+all: (2012-10-19) install into /usr
+
+msp430-46: (msp430-46_20121019)
+  pulls in all msp430-46 packages and tinyos-tools
+
+msp430-binutils: (msp430-binutils-46_2.21.1-LTS20120406-tinyprod)
+  base: 2.21.1a
+
+msp430-gcc: (msp430-gcc-46_4.6.3-LTS20120406+20120911-tinyprod)
+
+msp430-gdb: (msp430-gdb-46_7.2-LTS20120406-tinyprod)
+
+msp430-libc: (msp430-libc-46_20120224-LTS20120406+20120502)
+3522752 (2012/05/01) malloc return null problem
+
+msp430mcu: (msp430mcu-46_20120406-LTS20120406+20120502)
+3522088 (2012/04/27) msp430mcu install.sh misses a mkdir

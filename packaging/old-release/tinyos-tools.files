@@ -1,0 +1,23 @@
+NAME="$1"
+VERSION="$2"
+OUTPUT_FILE="$3"
+
+pushd ../../
+./packaging/old-release/extractor $NAME-$VERSION $OUTPUT_FILE <<'EOF'
+!^./apps
+!^./doc
+!^./support
+!^./packaging
+!^./tos
+!^./README|overall-todo.txt|release-notes.txt
+!/.cvsignore
+!/CVS/
+!/CVS$
+!/.svn/
+!/.svn$
+!/.git/
+!/.git$
+!~$
+!#
+EOF
+popd

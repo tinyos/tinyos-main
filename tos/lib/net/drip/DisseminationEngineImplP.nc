@@ -118,7 +118,7 @@ implementation {
   void sendProbe( uint16_t key ) {
     dissemination_probe_message_t* dpMsg = 
       (dissemination_probe_message_t*) call ProbeAMSend.getPayload( &m_buf, sizeof(dissemination_probe_message_t));
-    if (dpMsg != NULL) {
+    if (dpMsg != NULL && !m_bufBusy) {
       m_bufBusy = TRUE;
       
       dpMsg->key = key;
@@ -140,7 +140,7 @@ implementation {
 
     dMsg = 
       (dissemination_message_t*) call AMSend.getPayload( &m_buf, sizeof(dissemination_message_t) );
-    if (dMsg != NULL) {
+    if (dMsg != NULL && !m_bufBusy) {
       m_bufBusy = TRUE;
       
       dMsg->key = key;

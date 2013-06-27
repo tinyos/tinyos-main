@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2010/07/28 17:20:27 $
+ * @version $Revision: 1.6 $ $Date: 2012-05-25 19:29:48 $
  */
 
 #include <I2C.h>
@@ -39,15 +39,16 @@
 module Msp430I2CP {
   
   provides interface I2CPacket<TI2CBasicAddr> as I2CBasicAddr;
-  
+
+  provides interface Init as I2CInit;
+
   uses interface HplMsp430I2C as HplI2C;
   uses interface HplMsp430I2CInterrupts as I2CInterrupts;
-  uses interface Leds;
   
 }
 
 implementation {
-  
+
 #ifndef I2CDR_
 #define I2CDR I2CDRW
 #endif
@@ -61,18 +62,18 @@ implementation {
     PACKET_READ
   };
 
-  /*
-    norace uint8_t* m_buf;
-    norace uint8_t m_len;
-    norace uint8_t m_pos;
-    norace i2c_flags_t m_flags;
-  */
   norace uint8_t stateI2C = IDLE;
   uint8_t length;
   uint8_t ptr;
   norace error_t result;
-  uint8_t* data;
-  
+  uint8_t * data;
+
+
+  command error_t I2CInit.init() {
+    atomic stateI2C = IDLE;
+    return SUCCESS;
+  }
+
   task void readDone() {
     // variables protected from change by the stateI2C state machine
     error_t _result;
@@ -103,7 +104,7 @@ implementation {
 
     // wait for the module to finish its transmission
     // spin only lasts ~4bit times == 4us.
-    while (I2CDCTL & I2CBUSY) ;
+    while (I2CDCTL & I2CBUSY) nop();
 
     atomic stateI2C = IDLE;
     signal I2CBasicAddr.writeDone(_result, _addr, _length, _data);
@@ -198,7 +199,7 @@ implementation {
     if (_state == IDLE) {
       stateI2C = PACKET_WRITE;
     }
-    
+
     if (_state == IDLE) {
       // perform register modifications with interrupts disabled
       atomic {
@@ -289,7 +290,6 @@ implementation {
   async event void I2CInterrupts.fired() {
     volatile uint16_t value = I2CIV;
 
-    //    call Leds.led0Toggle();
     switch (value) {
     case 0x0000:
       break;

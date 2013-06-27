@@ -1,0 +1,8 @@
+Package: msp430-47
+Version: @version@
+Architecture: @architecture@
+Depends: msp430-binutils-47, msp430-gcc-47, msp430-libc-47, msp430mcu-47, msp430-gdb-47, tinyos-tools
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Dummy package to pull in all the Experimental MSP430 packages 4.7

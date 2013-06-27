@@ -37,7 +37,7 @@
 
 // ------- 8-bit timers -------
 
-// constants for AtmegaTimer.setMode
+// constants for HplAtmegaTimer.setMode
 enum
 {
 	// timer control register (TCCR), clock select bits (CS)
@@ -64,7 +64,7 @@ enum
 	ATMRFA1_ASYNC_EXT = 3 << 6,
 };
 
-// constants for AtmegaCompare.setMode
+// constants for HplAtmegaCompare.setMode
 enum
 {
 	// timer control register (TCCR), compare output mode (COM)
@@ -77,7 +77,7 @@ enum
 
 // ------- 16-bit timers -------
 
-// constants for AtmegaTimer.setMode
+// constants for HplAtmegaTimer.setMode
 enum
 {
 	// timer control register (TCCR), clock select bits (CS)
@@ -109,7 +109,7 @@ enum
 	ATMRFA1_WGM16_PWM_FAST_COMPARE = 15 << 3,
 };
 
-// constants for AtmegaCompare.setMode
+// constants for HplAtmegaCompare.setMode
 enum
 {
 	// timer control register (TCCR), compare output mode (COM)
@@ -119,7 +119,7 @@ enum
 	ATMRFA1_COM16_SET
 };
 
-// constants for AtmegaCapture.setMode
+// constants for HplAtmegaCapture.setMode
 enum
 {
 	ATMRFA1_CAP16_RISING_EDGE = 0x01,
@@ -129,7 +129,7 @@ enum
 
 // ------- MAC symbol counter -------
 
-// constants for AtmegaTimer.setMode
+// constants for HplAtmegaTimer.setMode
 enum
 {
 	ATMRFA1_CLKSC_DISABLE = 0,
@@ -137,14 +137,14 @@ enum
 	ATMRFA1_CLKSC_RTC = (1 << SCEN) | (1 << SCCKSEL),	// 32 KHz RTC
 };
 
-// constants for AtmegaCompare.setMode
+// constants for HplAtmegaCompare.setMode
 enum
 {
 	ATMRFA1_COMSC_ABSOLUTE = 0,
 	ATMRFA1_COMSC_RELATIVE = 1,
 };
 
-// constants for AtmegaCapture.setMode
+// constants for HplAtmegaCapture.setMode
 enum
 {
 	ATMRFA1_CAPSC_OFF = 0,

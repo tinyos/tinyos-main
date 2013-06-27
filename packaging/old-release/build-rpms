@@ -1,0 +1,24 @@
+#!/bin/bash
+
+RPMS="`rpm --eval=\"%_topdir\"`"
+
+TOS_NAME="tinyos-2.1.2"
+TOS_VERSION=2.1.2
+
+TOS_TOOLS_NAME="tinyos-tools"
+TOS_TOOLS_VERSION=1.4.2
+
+TOS_DEPUTY_NAME="tinyos-deputy"
+TOS_DEPUTY_VERSION=1.1-1
+
+echo "*** Building tarballs"
+bash tinyos.files $TOS_NAME $TOS_VERSION $RPMS/SOURCES/$TOS_NAME-$TOS_VERSION.tar.gz
+#bash tinyos-tools.files $TOS_TOOLS_NAME $TOS_TOOLS_VERSION $RPMS/SOURCES/$TOS_TOOLS_NAME-$TOS_TOOLS_VERSION.tar.gz
+#sh deputy.files
+
+echo "*** Creating rpms"
+rpmbuild -bb tinyos.spec
+#rpmbuild -bb tinyos-tools.spec
+#rpmbuild -bb deputy.spec
+
+

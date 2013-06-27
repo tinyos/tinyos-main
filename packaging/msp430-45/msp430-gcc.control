@@ -1,0 +1,8 @@
+Package: msp430-gcc-45
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, msp430-binutils-45
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430 4.5 gcc  DEPRECATED

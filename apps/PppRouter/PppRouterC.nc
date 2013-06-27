@@ -57,7 +57,7 @@ configuration PppRouterC {
   components UDPShellC;
 
   // prints the routing table
-  components RouteCmdC;
+  // components RouteCmdC;
 
 #ifndef IN6_PREFIX
   components Dhcp6ClientC;

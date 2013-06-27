@@ -12,7 +12,7 @@ dnl -*- m4 -*-
 # force autoconf 2.5 on Debian systems
 AC_PREREQ(2.50)
 
-AC_INIT(tinyos-tools, 1.2.4)
+AC_INIT(tinyos-tools, 1.4.2)
 AC_CONFIG_AUX_DIR(config-aux)
 AM_INIT_AUTOMAKE
 AC_CANONICAL_HOST
@@ -120,7 +120,6 @@ AC_SUBST(INSTALLJNI)
 AC_SUBST(JNIPREFIX)
 AC_SUBST(JNISUFFIX)
 
-AC_CONFIG_SUBDIRS(platforms/mica/uisp)
 
 AC_OUTPUT(
 	Makefile

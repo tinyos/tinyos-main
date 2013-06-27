@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# You have to run this script in a completely pristine checkout with
+# no build files. In particular, do NOT run the Bootstrap and configure
+# scripts in the tools directory
+
+TOS_TOOLS_NAME="tinyos-tools"
+TOS_TOOLS_VERSION=1.4.2
+HERE=$PWD
+
+echo "*** Building tinyos-tools tarball"
+cd ../../old-release
+bash tinyos-tools.files $TOS_TOOLS_NAME $TOS_TOOLS_VERSION $HERE/$TOS_TOOLS_NAME-$TOS_TOOLS_VERSION.tar.gz
+cd $HERE
+

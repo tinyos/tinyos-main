@@ -41,9 +41,16 @@ configuration CounterMcu32C
 
 implementation
 {
+#if MCU_TIMER_NO == 1
+	components HplAtmRfa1Timer1C as HplAtmegaTimerC;
+#elif MCU_TIMER_NO == 3
+	components HplAtmRfa1Timer3C as HplAtmegaTimerC;
+#endif
+
+	components new AtmegaCounterC(TMcu, uint16_t, MCU_TIMER_MODE);
+	AtmegaCounterC.HplAtmegaCounter -> HplAtmegaTimerC;
+
 	components new TransformCounterC(TMcu, uint32_t, TMcu, uint16_t, 0, uint16_t);
 	Counter = TransformCounterC;
-	TransformCounterC.CounterFrom -> CounterMcu16C;
-
-	components CounterMcu16C;
+	TransformCounterC.CounterFrom -> AtmegaCounterC;
 }

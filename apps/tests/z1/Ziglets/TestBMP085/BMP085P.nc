@@ -80,11 +80,17 @@ implementation{
   int16_t ac1, ac2, ac3, b1, b2, mb, mc, md = 0;
   uint16_t ac4, ac5, ac6 = 0;
 
+  task void stopTimeout(){
+    call TimeoutTimer.stop();
+  }
+
   task void signalEvent(){
     if (error_return == SUCCESS){
       if (call TimeoutTimer.isRunning()) call TimeoutTimer.stop();
     }
+
     if (call Resource.isOwner()) call Resource.release();
+
     switch(bmp085cmd){
       case BMPCMD_READ_CALIB:
         if (error_return == SUCCESS) state = S_STARTED;
@@ -254,10 +260,12 @@ implementation{
   async event void I2CBasicAddr.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t *data){
     int16_t utemp = 0;
     int32_t upres = 0;
+
     if (call Resource.isOwner()){
       switch(bmp085cmd){
         case BMPCMD_READ_CALIB:
           if (error == SUCCESS){
+            post stopTimeout();
             atomic {
               ac1 = (data[0]<<8) + data[1];
               ac2 = (data[2]<<8) + data[3];

@@ -71,14 +71,8 @@ implementation {
       do{
 	CLR_FLAG(IFG1, OFIFG);
 
-	/*
-	 * delay_cycles is a proper replacement for delay loop, which optimizers don't like
-	 * this is for msp430-gcc-4.5.x forward only though
-	 */
-	//__delay_cycles(50);  
+	__delay_cycles(50);  
 
-	// this is a stopgap included in shimmer* msp430hardware.h
-	TOSH_uwait(64);
       }
       while(READ_FLAG(IFG1, OFIFG));
       call Leds.led0Off();

@@ -24,7 +24,7 @@
 #ifndef PLATFORM_MESSAGE_H
 #define PLATFORM_MESSAGE_H
 
-#include <Cc2420XRadio.h>
+#include <CC2420XRadio.h>
 #include <Serial.h>
 
 typedef union message_header {

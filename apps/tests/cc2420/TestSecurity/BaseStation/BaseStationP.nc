@@ -150,7 +150,7 @@ implementation
   uint8_t count = 0;
 
   message_t* ONE receive(message_t* ONE msg, void* payload, uint8_t len);
-  
+
   event message_t *RadioSnoop.receive[am_id_t id](message_t *msg,
 						    void *payload,
 						    uint8_t len) {
