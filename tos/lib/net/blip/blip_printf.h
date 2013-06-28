@@ -67,11 +67,11 @@ int printf_ieee154addr(ieee154_addr_t *in) {
 #if defined (_H_msp430hardware_h) || defined (_H_atmega128hardware_H)
   #include <stdio.h>
 #else
-#ifdef __M16C60HARDWARE_H__ 
+#ifdef __M16C60HARDWARE_H__
   #include "m16c60_printf.h"
 #else
   #include "generic_printf.h"
-#endif 
+#endif
 #endif
 #undef putchar
 
@@ -81,6 +81,7 @@ int printf_ieee154addr(ieee154_addr_t *in) {
 #define printf_in6addr(a) ;
 #define printf_buf(buf, len) ;
 #define iov_print(iov) ;
+#define printf_ieee154addr(in) ;
 
 #endif /* PRINTFUART_ENABLED */
 
