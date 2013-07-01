@@ -31,72 +31,76 @@
 *
 * Author: Andras Biro
 */ 
-
 #include "Ms5607.h"
+#include "Bma180.h"
+#include "UserButton.h"
 
 module UcminiSensorP {
   uses {
     interface Boot;
-    interface Read<int16_t> as TempRead;
+    interface Read<int16_t> as TempShtRead;
     interface Read<int16_t> as HumiRead;
     interface Read<uint16_t> as LightRead;
     interface Read<uint32_t> as PressRead;
-    interface Read<int16_t> as Temp2Read;
-    interface Read<int16_t> as Temp3Read;
+    interface Read<int16_t> as TempMsRead;
+    interface Read<int16_t> as TempAtRead;
     interface Read<uint16_t> as VoltageRead;
-    interface ReadRef<calibration_t>;
+    interface Read<uint8_t> as SwitchRead;
+    interface Get<button_state_t>;
     interface DiagMsg;
-    interface AMSend as CalibSend;
     interface AMSend as MeasSend;
-    interface Receive;
     interface Packet;
     interface Timer<TMilli>;
     interface Leds;
+    interface SplitControl;
   }
 }
 implementation {  
   measurement_t *meas;
-  message_t message, calibmessage;
-  calibration_t *calib;
+  message_t message[2];
+  message_t *currentMessage = &message[0];
   bool starting=TRUE;
 
   event void Boot.booted() {
-    calib = (calibration_t*)call Packet.getPayload(&calibmessage, sizeof(calibration_t));
-    meas = (measurement_t*)call Packet.getPayload(&message, sizeof(measurement_t));
-    call ReadRef.read(calib);
+    meas = (measurement_t*)call Packet.getPayload(currentMessage, sizeof(measurement_t));
+    call Timer.startPeriodic(512);
   }
   
-  event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    if(!starting)
-      call CalibSend.send(AM_BROADCAST_ADDR, &calibmessage, sizeof(calibration_t));
-    return msg;
-  }
-  
-  event void ReadRef.readDone(error_t error, calibration_t *data){
-		call Timer.startPeriodic(100);
-  }
-  
-  event void CalibSend.sendDone(message_t* msg, error_t error){
-  }
 
   event void Timer.fired(){
-    if(!starting)
-      call MeasSend.send(AM_BROADCAST_ADDR, &message, sizeof(measurement_t));
-    else
+    if(!starting) {
+      if( currentMessage == &message[0] ){
+        currentMessage = &message[1];
+      } else {
+        currentMessage = &message[0];
+      }
+      meas = (measurement_t*)call Packet.getPayload(currentMessage, sizeof(measurement_t));
+      call SplitControl.start();
+    } else
       starting=FALSE;
-    
-    call TempRead.read();
+    call SwitchRead.read();
+    call TempShtRead.read();
     call HumiRead.read();
     call LightRead.read();
     call PressRead.read();
-    call Temp2Read.read();
-    call Temp3Read.read();
+    call TempMsRead.read();
+    call TempAtRead.read();
     call VoltageRead.read();
+		meas->button = call Get.get();
   }
   
-  event void TempRead.readDone(error_t error, int16_t data){
+  event void SwitchRead.readDone(error_t error, uint8_t data){
     if(error==SUCCESS){
-      meas->temp=data;
+      meas->batswitch=data;
+    } else
+      call Leds.led3Toggle();
+  }
+  
+
+  
+  event void TempShtRead.readDone(error_t error, int16_t data){
+    if(error==SUCCESS){
+      meas->temp_sht21=data;
     } else
       call Leds.led3Toggle();
   }
@@ -124,9 +128,9 @@ implementation {
     
   }
   
-  event void Temp2Read.readDone(error_t error, int16_t data) { 
+  event void TempMsRead.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
-      meas->temp2=data;
+      meas->temp_ms5607=data;
     } else
       call Leds.led3Toggle();
     
@@ -139,13 +143,25 @@ implementation {
       call Leds.led3Toggle();
   }
   
-  event void Temp3Read.readDone(error_t error, int16_t data) { 
+  event void TempAtRead.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
-      meas->temp3=data;
+      meas->temp_atmel=data;
     } else
       call Leds.led3Toggle();
   }
   
-  event void MeasSend.sendDone(message_t* msg, error_t error){}
+  event void SplitControl.startDone(error_t err){
+    if( currentMessage == &message[0] ){
+      call MeasSend.send(AM_BROADCAST_ADDR, &message[1], sizeof(measurement_t));
+    } else {
+      call MeasSend.send(AM_BROADCAST_ADDR, &message[0], sizeof(measurement_t));
+    }
+  }
+  
+  event void MeasSend.sendDone(message_t* msg, error_t error){
+    call SplitControl.stop();
+  }
+  
+  event void SplitControl.stopDone(error_t err){}
+    
 }
-

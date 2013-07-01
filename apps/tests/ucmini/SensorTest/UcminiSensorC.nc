@@ -37,25 +37,32 @@
 configuration UcminiSensorC { }
 implementation {
   components UcminiSensorP, MainC, LedsC, new TimerMilliC();
-  components new AtmegaTemperatureC(), new AtmegaVoltageC(),
+  components new AtmegaTemperatureC(),
+             new VoltageC(),
              new LightC(),
-             new PressureC(), new Ms5607TemperatureC() as Temperature1C, new Ms5607CalibrationC(),
-             new TemperatureC(), new HumidityC();
-  components SerialStartC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend, new SerialAMSenderC(AM_CALIB) as CalibSend, new SerialAMReceiverC(AM_CALIB);
+             new PressureC(), new Ms5607TemperatureC(), new Ms5607CalibrationC(),
+             new TemperatureC(), new HumidityC(),
+             BatterySwitchC,
+             UserButtonC;
+#ifdef SERIAL_SEND
+  components SerialActiveMessageC as ActiveMessageC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend;
+#else
+  components ActiveMessageC, new AMSenderC(AM_MEASUREMENT) as MeasSend;
+#endif
 
   UcminiSensorP.Boot -> MainC;
-  UcminiSensorP.TempRead -> TemperatureC;
+  UcminiSensorP.SplitControl -> ActiveMessageC;
+  UcminiSensorP.TempShtRead -> TemperatureC;
   UcminiSensorP.HumiRead -> HumidityC;
   UcminiSensorP.LightRead -> LightC;
   UcminiSensorP.PressRead -> PressureC;
-  UcminiSensorP.Temp2Read -> Temperature1C;
-  UcminiSensorP.ReadRef -> Ms5607CalibrationC;
-  UcminiSensorP.Temp3Read -> AtmegaTemperatureC;
-  UcminiSensorP.VoltageRead -> AtmegaVoltageC;
+  UcminiSensorP.TempMsRead -> Ms5607TemperatureC;
+  UcminiSensorP.TempAtRead -> AtmegaTemperatureC;
+  UcminiSensorP.VoltageRead -> VoltageC;
+  UcminiSensorP.SwitchRead -> BatterySwitchC;
+  UcminiSensorP.Get -> UserButtonC;
   UcminiSensorP.Timer->TimerMilliC;
   UcminiSensorP.MeasSend->MeasSend;
-  UcminiSensorP.CalibSend->CalibSend;
-  UcminiSensorP.Receive->SerialAMReceiverC;
   UcminiSensorP.Packet->MeasSend;
   UcminiSensorP.Leds -> LedsC;
 }

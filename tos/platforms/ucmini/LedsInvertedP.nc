@@ -41,7 +41,7 @@
  * @date   March 21, 2005
  */
 
-module LedsP @safe() {
+module LedsInvertedP @safe() {
   provides {
     interface Init;
     interface Leds;
@@ -57,15 +57,14 @@ implementation {
   command error_t Init.init() {
     atomic {
       dbg("Init", "LEDS: initialized.\n");
-      
       call Led0.makeOutput();
       call Led1.makeOutput();
       call Led2.makeOutput();
       call Led3.makeOutput();
-      call Led0.set();
-      call Led1.set();
-      call Led2.set();
-      call Led3.set();
+      call Led0.clr();
+      call Led1.clr();
+      call Led2.clr();
+      call Led3.clr();
     }
     return SUCCESS;
   }
@@ -76,12 +75,12 @@ implementation {
   dbg("LedsC", "LEDS: Led" #n " %s.\n", call Led ## n .get() ? "off" : "on");
 
   async command void Leds.led0On() {
-    call Led0.clr();
+    call Led0.set();
     DBGLED(0);
   }
 
   async command void Leds.led0Off() {
-    call Led0.set();
+    call Led0.clr();
     DBGLED(0);
   }
 
@@ -91,12 +90,12 @@ implementation {
   }
 
   async command void Leds.led1On() {
-    call Led1.clr();
+    call Led1.set();
     DBGLED(1);
   }
 
   async command void Leds.led1Off() {
-    call Led1.set();
+    call Led1.clr();
     DBGLED(1);
   }
 
@@ -106,12 +105,12 @@ implementation {
   }
 
   async command void Leds.led2On() {
-    call Led2.clr();
+    call Led2.set();
     DBGLED(2);
   }
 
   async command void Leds.led2Off() {
-    call Led2.set();
+    call Led2.clr();
     DBGLED(2);
   }
 
@@ -121,12 +120,12 @@ implementation {
   }
 
   async command void Leds.led3On() {
-    call Led3.clr();
+    call Led3.set();
     DBGLED(2);
   }
 
   async command void Leds.led3Off() {
-    call Led3.set();
+    call Led3.clr();
     DBGLED(3);
   }
 
@@ -139,16 +138,16 @@ implementation {
     uint8_t rval;
     atomic {
       rval = 0;
-      if (! call Led0.get()) {
+      if (call Led0.get()) {
 	rval |= LEDS_LED0;
       }
-      if (! call Led1.get()) {
+      if (call Led1.get()) {
 	rval |= LEDS_LED1;
       }
-      if (! call Led2.get()) {
+      if (call Led2.get()) {
 	rval |= LEDS_LED2;
       }
-      if (! call Led3.get()) {
+      if (call Led3.get()) {
 	rval |= LEDS_LED3;
       }
     }

@@ -14,7 +14,7 @@ AVR_FUSE_L ?= 0xE2
 #AVR_FUSE_E ?= 0xFF
 
 reset:
-	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -baudrate $(AVR109_BAUDRATE) -reset -sleep 2  -askforreset
+	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -reset -sleep 2  -askforreset
 
 $(call TOSMake_include_platform,avr)
 

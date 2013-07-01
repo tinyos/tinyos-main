@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
+/* Copyright (c) 2007 Johns Hopkins University.
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -11,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of Crossbow Technology nor the names of
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -27,41 +27,30 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * Battery Voltage. The returned value represents the difference
+ * between the battery voltage and V_BG (1.23V). The formula to convert
+ * it to mV is: 1223 * 1024 / value.
  *
- * @author Martin Turon <mturon@xbow.com>
- * @author Miklos Maroti
+ * @author Razvan Musaloiu-E.
  */
 
-#include "hardware.h"
-
-module PlatformP @safe()
+configuration SingleVoltageC
 {
-  provides interface Init;
-
-  uses
-  {
-    interface Init as McuInit;
-    interface Init as LedsInit;
-    interface Init as Stm25pInit; 
-    #ifndef DISABLE_BATTRY_CHECK
-    interface Init as BatteryWarning;
-    #endif
-  }
+  provides interface Read<uint16_t>;
 }
 
 implementation
 {
-  command error_t Init.init()
-  {
-    error_t ok;
-
-    ok = call McuInit.init();
-    ok = ecombine(ok, call LedsInit.init());
-    ok = ecombine(ok, call Stm25pInit.init());
-    ok = ecombine(ok, call BatteryWarning.init());
-    
-    return ok;
-  }
-
-  default command error_t LedsInit.init() { return SUCCESS; }
+  components new AdcReadClientC(), VoltageP;
+  VoltageP.AdcRaw -> AdcReadClientC.Read;
+	
+	components AtmegaGeneralIOC, new TimerMilliC();
+	VoltageP.MeasureBridge -> AtmegaGeneralIOC.PortF0;
+	VoltageP.Timer -> TimerMilliC;
+  
+  AdcReadClientC.Atm128AdcConfig -> VoltageP;
+  
+  Read = VoltageP.VoltageMilliVolts;
 }

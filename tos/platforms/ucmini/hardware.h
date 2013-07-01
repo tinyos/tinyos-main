@@ -42,6 +42,9 @@
 #include <atm128hardware.h>
 #include <Atm128Adc.h>
 
+#ifndef PLATFORM_MHZ
+#define PLATFORM_MHZ 16
+#endif
 
 // enum so components can override power saving, 
 // as per TEP 112. 
@@ -55,5 +58,9 @@ enum {
 
 // we have no external pullups
 #define ATM128_I2C_EXTERNAL_PULLDOWN TRUE
+#ifndef UCMINI_REV
+#define UCMINI_REV 200
+#endif
+
 
 #endif //HARDWARE_H
