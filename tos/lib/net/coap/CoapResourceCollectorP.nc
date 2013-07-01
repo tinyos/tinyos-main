@@ -33,78 +33,75 @@
 #include "tinyos_coap_resources.h"
 
 module CoapResourceCollectorP {
-  provides interface Read<val_all_t> as ReadAll;
-  uses interface Read<uint16_t> as ReadTemp;
-  uses interface Read<uint16_t> as ReadHum;
-  uses interface Read<uint16_t> as ReadVolt;
-
+    provides interface Read<val_all_t> as ReadAll;
+    uses interface Read<uint16_t> as ReadTemp;
+    uses interface Read<uint16_t> as ReadHum;
+    uses interface Read<uint16_t> as ReadVolt;
 } implementation {
 
-  bool temp_finished;
-  bool hum_finished;
-  bool volt_finished;
+    bool temp_finished;
+    bool hum_finished;
+    bool volt_finished;
 
-  val_all_t val_r;
+    val_all_t val_r;
 
-  command error_t ReadAll.read() {
-    val_r.id_t = KEY_TEMP;
-    val_r.id_h = KEY_HUM;
-    val_r.id_v = KEY_VOLT;
-    val_r.temp = SENSOR_NOT_AVAILABLE;
-    val_r.hum = SENSOR_NOT_AVAILABLE;
-    val_r.volt = SENSOR_NOT_AVAILABLE;
+    command error_t ReadAll.read() {
+	val_r.id_t = INDEX_TEMP;
+	val_r.id_h = INDEX_HUM;
+	val_r.id_v = INDEX_VOLT;
+	val_r.temp = SENSOR_NOT_AVAILABLE;
+	val_r.hum = SENSOR_NOT_AVAILABLE;
+	val_r.volt = SENSOR_NOT_AVAILABLE;
 
-    temp_finished = FALSE;
-    hum_finished  = FALSE;
-    volt_finished = FALSE;
+	temp_finished = FALSE;
+	hum_finished  = FALSE;
+	volt_finished = FALSE;
 
-    call ReadHum.read();
-    call ReadTemp.read();
-    call ReadVolt.read();
-    return SUCCESS;
-  }
-
-  void areAllDone() {
-
-    if ((temp_finished == TRUE) &&
-	(hum_finished  == TRUE) &&
-	(volt_finished == TRUE)
-	) {
-      signal ReadAll.readDone(SUCCESS, val_r);
-
+	call ReadHum.read();
+	call ReadTemp.read();
+	call ReadVolt.read();
+	return SUCCESS;
     }
-  }
 
-  event void ReadTemp.readDone(error_t result, uint16_t val) {
-    temp_finished = TRUE;
-    if (result == SUCCESS) {
-      val_r.length_t = sizeof(val);
-      val_r.temp = ntohs(val);
-    } else {
-      val_r.temp = SENSOR_VALUE_INVALID;
+    void areAllDone() {
+	if ((temp_finished == TRUE) &&
+	    (hum_finished  == TRUE) &&
+	    (volt_finished == TRUE)
+	    ) {
+	    signal ReadAll.readDone(SUCCESS, val_r);
+	}
     }
-    areAllDone();
-  }
 
-  event void ReadHum.readDone(error_t result, uint16_t val) {
-    hum_finished  = TRUE;
-    if (result == SUCCESS) {
-      val_r.length_h = sizeof(val);
-      val_r.hum = ntohs(val);
-    } else {
-      val_r.hum = SENSOR_VALUE_INVALID;
+    event void ReadTemp.readDone(error_t result, uint16_t val) {
+	temp_finished = TRUE;
+	if (result == SUCCESS) {
+	    val_r.length_t = sizeof(val);
+	    val_r.temp = ntohs(val);
+	} else {
+	    val_r.temp = SENSOR_VALUE_INVALID;
+	}
+	areAllDone();
     }
-    areAllDone();
-  }
 
-  event void ReadVolt.readDone(error_t result, uint16_t val) {
-    volt_finished  = TRUE;
-    if (result == SUCCESS) {
-      val_r.length_v = sizeof(val);
-      val_r.volt = ntohs(val);
-    } else {
-      val_r.volt = SENSOR_VALUE_INVALID;
+    event void ReadHum.readDone(error_t result, uint16_t val) {
+	hum_finished  = TRUE;
+	if (result == SUCCESS) {
+	    val_r.length_h = sizeof(val);
+	    val_r.hum = ntohs(val);
+	} else {
+	    val_r.hum = SENSOR_VALUE_INVALID;
+	}
+	areAllDone();
     }
-    areAllDone();
-  }
-  }
+
+    event void ReadVolt.readDone(error_t result, uint16_t val) {
+	volt_finished  = TRUE;
+	if (result == SUCCESS) {
+	    val_r.length_v = sizeof(val);
+	    val_r.volt = ntohs(val);
+	} else {
+	    val_r.volt = SENSOR_VALUE_INVALID;
+	}
+	areAllDone();
+    }
+}

@@ -1,0 +1,47 @@
+A CoAP applicationbased on the TinyOS blip stack (without Radio) and libcoap.
+
+Prepare libcoap:
+
+$ cd $TOSROOT/support/sdk/c/coap
+$ autoconf
+$ ./configure --with-tinyos
+$ make
+
+$ cd $TOSROOT/apps/CoapPpp/
+$ make telosb blip coap install,1
+
+# Initiate PPP connection
+$ sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB0 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::23,::24
+using channel 78
+Using interface ppp0
+Connect: ppp0 <--> /dev/ttyUSB0
+sent [LCP ConfReq id=0x1 <asyncmap 0x0> <magic 0x7aa74ae7> <pcomp> <accomp>]
+rcvd [LCP ConfReq id=0xb <mru 1280> <asyncmap 0x0> <accomp>]
+sent [LCP ConfAck id=0xb <mru 1280> <asyncmap 0x0> <accomp>]
+rcvd [LCP ConfRej id=0x1 <magic 0x7aa74ae7> <pcomp>]
+sent [LCP ConfReq id=0x2 <asyncmap 0x0> <accomp>]
+rcvd [LCP ConfAck id=0x2 <asyncmap 0x0> <accomp>]
+sent [IPV6CP ConfReq id=0x1 <addr fe80::0000:0000:0000:0023>]
+rcvd [IPV6CP ConfReq id=0x1 <addr fe80::0000:0000:0000:0000>]
+sent [IPV6CP ConfNak id=0x1 <addr fe80::0000:0000:0000:0024>]
+rcvd [IPV6CP ConfAck id=0x1 <addr fe80::0000:0000:0000:0023>]
+rcvd [IPV6CP ConfReq id=0x2 <addr fe80::0000:0000:0000:0000>]
+sent [IPV6CP ConfNak id=0x2 <addr fe80::818a:702d:f803:81b7>]
+rcvd [IPV6CP ConfReq id=0x3 <addr fe80::0000:0000:0000:0024>]
+sent [IPV6CP ConfAck id=0x3 <addr fe80::0000:0000:0000:0024>]
+local  LL address fe80::0000:0000:0000:0023
+remote LL address fe80::0000:0000:0000:0024
+Script /etc/ppp/ipv6-up started (pid 3053)
+Script /etc/ppp/ipv6-up finished (pid 3053), status = 0x0
+
+# In a different terminal
+$ sudo ifconfig ppp0 add fec0::100/64
+
+# Check reachability
+$ ping6 fec0::1
+
+# Do CoAP:
+$ cd $TOSROOT/support/sdk/c/coap/examples
+$ ./coap-client -m get coap://[fec0::1]/l -T bb -v 20
+$ echo -e -n \\x07  | ./coap-client -m put coap://[fec0::1]/l -T bb -v 20 -t binary -f -
+$ ./coap-client -m get coap://[fec0::1]/l -T bb -v 20

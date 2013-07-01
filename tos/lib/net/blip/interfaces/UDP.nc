@@ -15,10 +15,10 @@ interface UDP {
    * send a payload to the socket address indicated
    * once the call returns, the stack has no claim on the buffer pointed to
    */ 
-  command error_t sendto(struct sockaddr_in6 *dest, void *payload, 
+  command error_t sendto(const struct sockaddr_in6 *dest, void *payload, 
                          uint16_t len);
 
-  command error_t sendtov(struct sockaddr_in6 *dest, 
+  command error_t sendtov(const struct sockaddr_in6 *dest, 
                           struct ip_iovec *iov);
 
   /*

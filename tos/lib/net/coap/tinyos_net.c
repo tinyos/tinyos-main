@@ -33,72 +33,6 @@
 #include <tinyos_net.h>
 
 int
-coap_read(coap_context_t *ctx,
-	  struct sockaddr_in6 *src, void *buf,
-	  uint16_t bytes_read, struct ip6_metadata *meta) {
-  coap_queue_t *node;
-  coap_opt_t *opt;
-
-  if ( bytes_read < 0 || bytes_read>=COAP_MAX_PDU_SIZE) {
-    return -1;
-  }
-
-  if ( bytes_read < sizeof(coap_hdr_t) || ((coap_hdr_t *)buf)->version != COAP_DEFAULT_VERSION ) {
-#ifndef NDEBUG
-    //fprintf(stderr, "coap_read: discarded invalid frame\n" );
-#endif
-    return -1;
-  }
-  node = coap_new_node();
-  if ( !node )
-    return -1;
-
-  node->pdu = coap_new_pdu();
-  if ( !node->pdu ) {
-    coap_delete_node( node );
-    return -1;
-  }
-
-  /*printf("** coap: coap_read pointers %p %p, %p %p\n",
-    &node->remote,
-    node->remote,
-    src,
-    *src,
-    sizeof(src),
-    sizeof(*src));*/
-
-  memcpy( &node->remote, src, sizeof( *src ) );
-
-  /* "parse" received PDU by filling pdu structure */
-  memcpy( node->pdu->hdr, buf, bytes_read );
-  node->pdu->length = bytes_read;
-
-  /* finally calculate beginning of data block */
-  options_end( node->pdu, &opt );
-
-  if ( (unsigned char *)node->pdu->hdr + node->pdu->length <
-       (unsigned char *)opt )
-    node->pdu->data = (unsigned char *)node->pdu->hdr + node->pdu->length;
-  else
-    node->pdu->data = (unsigned char *)opt;
-
-  /* and add new node to receive queue */
-  coap_insert_node( &ctx->recvqueue, node, order_transaction_id );
-
-#ifndef NDEBUG
-  if ( inet_ntop(src.sin6_family, &src.sin6_addr, addr, INET6_ADDRSTRLEN) == 0 ) {
-    //perror("coap_read: inet_ntop");
-  } else {
-    printf( "** received from [%s]:%d:\n  ",addr,ntohs(src.sin6_port));
-  }
-  coap_show_pdu( node->pdu );
-#endif
-
-  return 0;
-}
-
-//CLIENT:
-int
 order_opts(void *a, void *b) {
   if (!a || !b)
     return a < b ? -1 : 1;
@@ -109,7 +43,6 @@ order_opts(void *a, void *b) {
   return COAP_OPTION_KEY(*(coap_option *)a) == COAP_OPTION_KEY(*(coap_option *)b);
 }
 
-//CLIENT:
 coap_list_t *
 new_option_node(unsigned short key, unsigned int length, char *data) {
   coap_option *option;

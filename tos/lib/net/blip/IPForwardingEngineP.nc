@@ -204,6 +204,7 @@ module IPForwardingEngineP {
     if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) &&
         pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
       printf("Forwarding -- send with local unicast address!\n");
+
       return FAIL;
     } else if (call IPAddress.isLLAddress(&pkt->ip6_hdr.ip6_dst) &&
                (!next_hop_entry || next_hop_entry->prefixlen < 128)) {
@@ -336,7 +337,7 @@ module IPForwardingEngineP {
       }
     }
     printf("\n");
-    printfflush();
+    //printfflush();
   }
 #endif
 

@@ -6,7 +6,9 @@ module Ieee154AddressP {
   }
   uses {
     interface LocalIeeeEui64;
+#ifndef BLIP_NO_RADIO
     interface CC2420Config;
+#endif
   }
 } implementation {
   ieee154_saddr_t m_saddr;
@@ -40,11 +42,15 @@ module Ieee154AddressP {
 
   command error_t Ieee154Address.setShortAddr(ieee154_saddr_t addr) {
     m_saddr = addr;
+#ifndef BLIP_NO_RADIO
     call CC2420Config.setShortAddr(addr);
     call CC2420Config.sync();
+#endif
     signal Ieee154Address.changed();
     return SUCCESS;
   }
 
+#ifndef BLIP_NO_RADIO
   event void CC2420Config.syncDone(error_t err) {}
+#endif
 }
