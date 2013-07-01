@@ -7,7 +7,7 @@ COMPONENT=CoapBlipC
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
 
-DEFAULT_LOCAL_GROUP = 0x1A
+#DEFAULT_LOCAL_GROUP = 0x1A
 
 # Enable Low Power Listening
 #CFLAGS += -DLOW_POWER_LISTENING
@@ -31,9 +31,9 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 # if you set this, the stack won't use dhcp to assign addresses -- it
 # will use this prefix combined with TOS_NODE_ID
 #PFLAGS += -DIN6_PREFIX=\"2001:638:708:1156::\"
-PFLAGS += -DIN6_PREFIX=\"fec0::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:198:56c:1000::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212d::\"
+PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
 # printf debugs. works only on telosb/tmote sky.
 # CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
@@ -51,8 +51,10 @@ CFLAGS += -DMAX_SENSOR_NAME_LENGTH=12
 
 # set available resources:
 
+# resource for POST and DELETE support
 #CFLAGS += -DCOAP_RESOURCE_DEFAULT
 
+# resources to access sensors
 #CFLAGS += -DCOAP_RESOURCE_TEMP
 #CFLAGS += -DCOAP_RESOURCE_HUM
 #CFLAGS += -DCOAP_RESOURCE_VOLT
