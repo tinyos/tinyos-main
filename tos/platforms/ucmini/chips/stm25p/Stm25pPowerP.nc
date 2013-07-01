@@ -46,7 +46,11 @@ implementation{
   
   command error_t Init.init(){
     call Power.makeOutput();
-    call Power.clr();
+    #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+      call Power.set();
+    #else
+      call Power.clr();
+    #endif
     return SUCCESS;
   }
   
@@ -57,7 +61,11 @@ implementation{
   
   command error_t Init.init(){
     call Power.makeOutput();
-    call Power.set();
+    #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+      call Power.clr();
+    #else
+      call Power.set();
+    #endif
     powerOn=FALSE;
     return SUCCESS;
   }
@@ -70,7 +78,11 @@ implementation{
       return EBUSY;
     err=call SpiControl.start();
     if(err==SUCCESS){
-      call Power.clr();
+      #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+        call Power.set();
+      #else
+        call Power.clr();
+      #endif
       call Timer.startOneShot(10);
     }
     return err;
@@ -89,7 +101,11 @@ implementation{
         signal SplitControl.startDone(SUCCESS);
     } else {
       call Timer.stop();
-      call Power.set();
+      #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+        call Power.clr();
+      #else
+        call Power.set();
+      #endif
       signal SplitControl.startDone(err);
     }
   }
@@ -109,7 +125,11 @@ implementation{
   event void SpiControl.stopDone(error_t err){
     if(err==SUCCESS){
       spiOn=FALSE;
-      call Power.set();
+      #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+        call Power.clr();
+      #else
+        call Power.set();
+      #endif
       powerOn=FALSE;
     }
     signal SplitControl.stopDone(err);
