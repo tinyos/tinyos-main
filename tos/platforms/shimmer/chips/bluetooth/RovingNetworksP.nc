@@ -69,6 +69,9 @@ implementation {
     setSvcClassRequest, setDevClassRequest, setSvcNameRequest, setRawBaudrate, setBaudrate, disableRemoteConfig, newMode,
     setCustomInquiryTime, setCustomPagingTime;
 
+  char commandbuf[32];  //needs to be global for persistance (as it's passed into Bluetooth.write())
+
+
   /* master mode stuff */
   int masterStep;
   bool deviceConn, btConnected, runningMasterCommands;
@@ -78,18 +81,19 @@ implementation {
   char expectedCommandResponse[8], newName[17], newPIN[17], newSvcClass[5], newDevClass[5], newSvcName[17], newRawBaudrate[5],
     newBaudrate[5], newInquiryTime[5], newPagingTime[5];
   
-  norace struct Message outgoingMsg;
   norace struct Message incomingMsg;
+  uint8_t *outgoingMsg, outgoingMsgLen;
+      
 
   task void sendNextChar() {
-    if(charsSent < outgoingMsg.length) {
-      call UARTControl.tx(msg_get_uint8(&outgoingMsg, charsSent));
+    if(charsSent < outgoingMsgLen) {
+      call UARTControl.tx(*(outgoingMsg+charsSent));
       atomic charsSent++;
     } 
     else{
       messageInProgress = FALSE;
       atomic if(!*expectedCommandResponse)
-	signal Bluetooth.writeDone();
+	     signal Bluetooth.writeDone();
     }	    
   }
   
@@ -100,8 +104,8 @@ implementation {
 
     messageInProgress = TRUE;
     atomic charsSent = 0;
-    msg_clear(&outgoingMsg);
-    msg_append_buf(&outgoingMsg, buf, len);
+    outgoingMsg = buf;
+    outgoingMsgLen = len;
 
     if(!transmissionOverflow){
       post sendNextChar();
@@ -144,25 +148,26 @@ implementation {
     call UARTControl.setModeUart(&RN_uart_config); // set to UART mode
 
 #ifdef USE_8MHZ_CRYSTAL           // we need exact divisors, else the thing acts unpredictably
+#ifdef USE_230400_BAUD
+    //230400
+    call UARTControl.setUbr(0x04);
+    call UARTControl.setUmctl(0x82);
+#else
+    //115200
     call UARTControl.setUbr(0x08);
     call UARTControl.setUmctl(0xee);
-
-    /* 4000000hz smclk
-    call UARTControl.setUbr(0x22);
-    call UARTControl.setUmctl(0xdd);
-    */
-#endif
-
+#endif //USE_230400_BAUD
+#elif (defined USE_230400_BAUD)
     /*
      * to run the bt module at 230k, first the application must configure it
      * using its default uart speed of 115200, then reset the uart to 230k here
      * see accompanying bluetoothBaudrateConfiguration.pdf doc for details
      * yes, doc is written for tos-1.x, but setClockRate() is just broken into
      * two calls here in tos-2.x
-     *
-     call UARTControl.setUbr(0x04);
-     call UARTControl.setUmctl(0x82);
-    */
+     */
+    call UARTControl.setUbr(UBR_1MHZ_230400);
+    call UARTControl.setUmctl(UMCTL_1MHZ_230400);
+#endif
     
     call UARTControl.enableTxIntr();
     call UARTControl.enableRxIntr();
@@ -296,7 +301,6 @@ implementation {
    */
   task void runMasterCommands()
   {
-    char commandbuf[32];
     switch(masterStep){
     case 0:
       masterStep++;
@@ -306,20 +310,20 @@ implementation {
       masterStep++;
       // Connect
       if(deviceConn && (!btConnected)){
-	masterStep = -1;
-	sprintf(commandbuf, "C,%s\r", targetBt);
-	writeCommandNoRsp(commandbuf);
-	runningMasterCommands = FALSE;
-	break;
+	     masterStep = -1;
+	     sprintf(commandbuf, "C,%s\r", targetBt);
+	     writeCommandNoRsp(commandbuf);
+	     runningMasterCommands = FALSE;
+	     break;
       }
     case 2:
       masterStep++;
       // Disconnect
       if((!deviceConn) && (btConnected)) {
-	masterStep = -1;
-	writeCommandNoRsp("K,\r");
-	runningMasterCommands = FALSE;          
-	break;
+	     masterStep = -1;
+	     writeCommandNoRsp("K,\r");
+	     runningMasterCommands = FALSE;          
+	     break;
       }
     case 3:
       /* not needed for connect and disconnect commands */
@@ -370,8 +374,6 @@ implementation {
    * until we find it, eventually hitting end.
    */
   task void runSetCommands() {
-    char commandbuf[32];
-
     switch(setupStep) {
     case 0:
       setupStep++;
@@ -381,16 +383,16 @@ implementation {
       setupStep++;
       // reset factory defaults
       if(resetDefaultsRequest){
-	writeCommand("SF,1\r", "AOK");
-	break;
+	     writeCommand("SF,1\r", "AOK");
+	     break;
       }
     case 2:
       setupStep++;
       // default is slave (== 0), otherwise set mode
       if(newMode){
-	sprintf(commandbuf, "SM,%d\r", radioMode);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SM,%d\r", radioMode);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 3:
       setupStep++;
@@ -399,99 +401,99 @@ implementation {
        * default "time" is 0x0200 (units unspecified)
        */
       if(!discoverable){
-	writeCommand("SI,0000\r", "AOK");
-	break;
+	     writeCommand("SI,0000\r", "AOK");
+	     break;
       }
     case 4:
       setupStep++;
       // device default is off
       if(authenticate){
-	writeCommand("SA,1\r", "AOK");
-	break;
+	     writeCommand("SA,1\r", "AOK");
+	     break;
       }
     case 5:
       setupStep++;
       // device default is off
       if(encrypt){
-	writeCommand("SE,1\r", "AOK");
-	break;
+	     writeCommand("SE,1\r", "AOK");
+	     break;
       }
     case 6:
       setupStep++;
       // default is none
       if(setNameRequest){
-	sprintf(commandbuf, "SN,%s\r", newName);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SN,%s\r", newName);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 7:
       setupStep++;
       // default is none
       if(setPINRequest){
-	sprintf(commandbuf, "SP,%s\r", newPIN);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SP,%s\r", newPIN);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 8:
       setupStep++;
       if(setSvcClassRequest){
-	sprintf(commandbuf, "SC,%s\r", newSvcClass);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SC,%s\r", newSvcClass);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 9:
       setupStep++;
       if(setDevClassRequest){
-	sprintf(commandbuf, "SD,%s\r", newDevClass);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SD,%s\r", newDevClass);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 10:
       setupStep++;
       if(setSvcNameRequest){
-	sprintf(commandbuf, "SS,%s\r", newSvcName);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     sprintf(commandbuf, "SS,%s\r", newSvcName);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 11:
       setupStep++;
       if(setRawBaudrate){
-	// set the baudrate to suit the MSP430 running at 8Mhz
-	sprintf(commandbuf, "SZ,%s\r", newRawBaudrate);
-	writeCommand(commandbuf, "AOK");
-	break;
+	     // set the baudrate to suit the MSP430 running at 8Mhz
+	     sprintf(commandbuf, "SZ,%s\r", newRawBaudrate);
+	     writeCommand(commandbuf, "AOK");
+	     break;
       }
     case 12:
       setupStep++;
       if(disableRemoteConfig){
-	// disable remote configuration to enhance throughput
-	writeCommand("ST,0\r", "AOK");
+	     // disable remote configuration to enhance throughput
+	     writeCommand("ST,0\r", "AOK");
       }
       else{
-	// disable remote configuration to enhance throughput
-	writeCommand("ST,60\r", "AOK");
+	     // disable remote configuration to enhance throughput
+	     writeCommand("ST,60\r", "AOK");
       }
       break;
     case 13:
       setupStep++;
       if(setCustomInquiryTime){
-	sprintf(commandbuf, "SI,%s\r", newInquiryTime);
-	writeCommand(commandbuf, "AOK");
+	     sprintf(commandbuf, "SI,%s\r", newInquiryTime);
+	     writeCommand(commandbuf, "AOK");
       }
       else{
-	// to save power only leave inquiry on for approx 40msec (every 1.28 secs)
-	writeCommand("SI,0040\r", "AOK");
+	     // to save power only leave inquiry on for approx 40msec (every 1.28 secs)
+	     writeCommand("SI,0040\r", "AOK");
       }
       break;
     case 14:
       setupStep++;
       if(setCustomPagingTime){
-	sprintf(commandbuf, "SJ,%s\r", newPagingTime);
-	writeCommand(commandbuf, "AOK");
+	     sprintf(commandbuf, "SJ,%s\r", newPagingTime);
+	     writeCommand(commandbuf, "AOK");
       }
       else{
-	// to save power only leave paging on for approx 80msec (every 1.28 secs)
-	writeCommand("SJ,0080\r", "AOK");
+	     // to save power only leave paging on for approx 80msec (every 1.28 secs)
+	     writeCommand("SJ,0080\r", "AOK");
       }
       break;
     case 15:
@@ -591,23 +593,23 @@ implementation {
     }
     else{
       if(isalpha(data)){
-	msg_append_uint8(&incomingMsg, data);
-	if(msg_cmp_buf(&incomingMsg,            // which is affirmative
+        msg_append_uint8(&incomingMsg, data);
+	     if(msg_cmp_buf(&incomingMsg,            // which is affirmative
 		       0, 
 		       expectedCommandResponse,
 		       strlen(expectedCommandResponse))){
-	  msg_clear(&incomingMsg);	
-	  if(!strcmp(expectedCommandResponse, "END"))
-	    signal Bluetooth.commandModeEnded();  //call Leds.greenOn();
-	  else if(runningMasterCommands)  
-	    post runMasterCommands();
-	  else
-	    post runSetCommands();
-	  atomic *expectedCommandResponse = '\0';
-	}
+          msg_clear(&incomingMsg);	
+	       if(!strcmp(expectedCommandResponse, "END"))
+	         signal Bluetooth.commandModeEnded();  //call Leds.greenOn();
+	       else if(runningMasterCommands)  
+	         post runMasterCommands();
+	       else
+	         post runSetCommands();
+	       atomic *expectedCommandResponse = '\0';
+	     }
       }
       else
-	msg_clear(&incomingMsg);
+	     msg_clear(&incomingMsg);
     }
   }
 

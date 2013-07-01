@@ -330,7 +330,18 @@ to_type func_name(from_type x) @safe() { union {from_type f; to_type t;} c = {f:
 #define __msp430_have_adc12
 #endif
 
-// backwards compatibility to older versions of the header files
+/*
+ * backwards compatibility to older versions of the header files
+ *
+ * Note: TI in their infinite wisdom uses __MSP430_HAS_I2C__ to
+ * denote an x1 processor with I2C.   This is on USART0 only.
+ * yes confusing.
+ *
+ * Later processors, such as the 5438A, have USCIs.  A USCI of
+ * a particular flavor (B) implies that it has I2C.   Very strange
+ * way of doing things.
+ */
+
 #ifdef __MSP430_HAS_I2C__
 #define __msp430_have_usart0_with_i2c
 #endif

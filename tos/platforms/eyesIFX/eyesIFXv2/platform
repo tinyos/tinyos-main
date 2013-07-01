@@ -1,0 +1,16 @@
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.  
+
+push( @includes, qw(
+
+  %T/platforms/eyesIFX/eyesIFXv2
+  %T/platforms/eyesIFX/eyesIFXv2/chips/at45db
+  %T/chips/at45db
+) );
+
+push ( @opts, qw(
+
+  -mmcu=msp430f1611
+) );

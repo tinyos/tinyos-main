@@ -63,5 +63,5 @@ implementation {
   NetProgM.Leds -> LedsC;
 
   components ActiveMessageAddressC;
-  NetProgM.setAmAddress -> ActiveMessageAddressC;
+  NetProgM.initAmAddress -> ActiveMessageAddressC;
 }

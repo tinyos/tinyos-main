@@ -79,6 +79,20 @@ generic configuration CC2420SpiC() {
   provides interface CC2420Register as MANAND;
   provides interface CC2420Register as MANOR;
   provides interface CC2420Register as AGCCTRL;
+
+  provides interface CC2420Register as AGCTST0;
+  provides interface CC2420Register as AGCTST1;
+  provides interface CC2420Register as AGCTST2;
+  provides interface CC2420Register as FSTST0;
+  provides interface CC2420Register as FSTST1;
+  provides interface CC2420Register as FSTST2;
+  provides interface CC2420Register as FSTST3;
+  provides interface CC2420Register as RXBPFTST;
+  provides interface CC2420Register as FSMSTATE;
+  provides interface CC2420Register as ADCTST;
+  provides interface CC2420Register as DACTST;
+  provides interface CC2420Register as TOPTST;
+  provides interface CC2420Register as TXFIFO_REGISTER;
   provides interface CC2420Register as RXFIFO_REGISTER;
 
   // ram
@@ -149,6 +163,20 @@ implementation {
   MANAND = Spi.Reg[ CC2420_MANAND ];
   MANOR = Spi.Reg[ CC2420_MANOR ];
   AGCCTRL = Spi.Reg[ CC2420_AGCCTRL ];
+
+  AGCTST0	  = Spi.Reg[ CC2420_AGCTST0 ];
+  AGCTST1	  = Spi.Reg[ CC2420_AGCTST1 ];
+  AGCTST2	  = Spi.Reg[ CC2420_AGCTST2 ];
+  FSTST0	  = Spi.Reg[ CC2420_FSTST0 ];
+  FSTST1	  = Spi.Reg[ CC2420_FSTST1 ];
+  FSTST2	  = Spi.Reg[ CC2420_FSTST2 ];
+  FSTST3	  = Spi.Reg[ CC2420_FSTST3 ];
+  RXBPFTST	  = Spi.Reg[ CC2420_RXBPFTST ];
+  FSMSTATE	  = Spi.Reg[ CC2420_FSMSTATE ];
+  ADCTST	  = Spi.Reg[ CC2420_ADCTST ];
+  DACTST	  = Spi.Reg[ CC2420_DACTST ];
+  TOPTST	  = Spi.Reg[ CC2420_TOPTST ];
+  TXFIFO_REGISTER = Spi.Reg[ CC2420_TXFIFO ];
   RXFIFO_REGISTER = Spi.Reg[ CC2420_RXFIFO ];
   
   // ram

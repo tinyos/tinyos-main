@@ -37,12 +37,12 @@
 module UcminiSensorP {
   uses {
     interface Boot;
-    interface Read<uint16_t> as TempRead;
-    interface Read<uint16_t> as HumiRead;
+    interface Read<int16_t> as TempRead;
+    interface Read<int16_t> as HumiRead;
     interface Read<uint16_t> as LightRead;
     interface Read<uint32_t> as PressRead;
     interface Read<int16_t> as Temp2Read;
-    interface Read<uint16_t> as Temp3Read;
+    interface Read<int16_t> as Temp3Read;
     interface Read<uint16_t> as VoltageRead;
     interface ReadRef<calibration_t>;
     interface DiagMsg;
@@ -73,12 +73,10 @@ implementation {
   }
   
   event void ReadRef.readDone(error_t error, calibration_t *data){
-    call CalibSend.send(AM_BROADCAST_ADDR, &calibmessage, sizeof(calibration_t));
+		call Timer.startPeriodic(100);
   }
   
   event void CalibSend.sendDone(message_t* msg, error_t error){
-    if(starting)
-      call Timer.startPeriodic(512);
   }
 
   event void Timer.fired(){
@@ -96,14 +94,14 @@ implementation {
     call VoltageRead.read();
   }
   
-  event void TempRead.readDone(error_t error, uint16_t data){
+  event void TempRead.readDone(error_t error, int16_t data){
     if(error==SUCCESS){
       meas->temp=data;
     } else
       call Leds.led3Toggle();
   }
 
-  event void HumiRead.readDone(error_t error, uint16_t data) { 
+  event void HumiRead.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
       meas->humi=data;
     } else
@@ -141,7 +139,7 @@ implementation {
       call Leds.led3Toggle();
   }
   
-  event void Temp3Read.readDone(error_t error, uint16_t data) { 
+  event void Temp3Read.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
       meas->temp3=data;
     } else

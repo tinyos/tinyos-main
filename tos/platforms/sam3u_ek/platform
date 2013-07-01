@@ -1,0 +1,109 @@
+# Copyright (c) 2011 University of Utah
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the
+#   distribution.
+# - Neither the name of the copyright holders nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+# WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.
+
+push ( @includes,
+  "%P/spi",
+  "%P/lcd",
+  "%P/chips/cc2420",
+  "%P/chips/sd",
+  "%P/chips/nandflash",
+  "%T/platforms/shimmer/chips/sd/fatfs",
+  "%T/chips/cortex/m3",
+  "%T/chips/cortex/m3/sam3",
+  "%T/chips/cortex/m3/sam3/u",
+  "%T/chips/cortex/m3/sam3/pins",
+  "%T/chips/cortex/m3/sam3/u/pins",
+  "%T/chips/cortex/m3/sam3/timer",
+  "%T/chips/cortex/m3/sam3/u/timer",
+  "%T/chips/cortex/m3/sam3/nvic",
+  "%T/chips/cortex/m3/sam3/u/nvic",
+  "%T/chips/cortex/m3/sam3/uart",
+  "%T/chips/cortex/m3/sam3/u/uart",
+  "%T/chips/cortex/m3/sam3/u/usart",
+  "%T/chips/cortex/m3/sam3/supc",
+  "%T/chips/cortex/m3/sam3/u/supc",
+  "%T/chips/cortex/m3/sam3/pmc",
+  "%T/chips/cortex/m3/sam3/u/pmc",
+  "%T/chips/cortex/m3/sam3/eefc",
+  "%T/chips/cortex/m3/sam3/u/eefc",
+  "%T/chips/cortex/m3/sam3/wdtc",
+  "%T/chips/cortex/m3/sam3/u/wdtc",
+  "%T/chips/cortex/m3/sam3/matrix",
+  "%T/chips/cortex/m3/sam3/u/matrix",
+  "%T/chips/cortex/m3/sam3/u/mpu",
+  "%T/chips/cortex/m3/sam3/spi",
+  "%T/chips/cortex/m3/sam3/u/spi",
+  "%T/chips/cortex/m3/sam3/smc",
+  "%T/chips/cortex/m3/sam3/u/smc",
+  "%T/chips/cortex/m3/sam3/u/adc12b",
+  "%T/chips/cortex/m3/sam3/u/dma",
+  "%T/chips/cortex/m3/sam3/pdc",
+  "%T/chips/cortex/m3/sam3/u/pdc",
+  "%T/chips/cortex/m3/sam3/u/twi",
+  "%T/chips/cortex/m3/sam3/u/hsmci",
+  "%T/chips/cortex/m3/sam3/u/usb",
+  "%T/chips/cortex/m3/sam3/u/usb/peripherals",
+  "%T/chips/cortex/m3/sam3/u/usb/board",
+  "%T/chips/cc2420",
+  "%T/chips/cc2420/alarm",
+  "%T/chips/cc2420/control",
+  "%T/chips/cc2420/csma",
+  "%T/chips/cc2420/interfaces",
+  "%T/chips/cc2420/link",
+  "%T/chips/cc2420/lowpan",
+  "%T/chips/cc2420/lpl",
+  "%T/chips/cc2420/packet",
+  "%T/chips/cc2420/receive",
+  "%T/chips/cc2420/spi",
+  "%T/chips/cc2420/transmit",
+  "%T/chips/cc2420/unique",
+  "%T/lib/timer",
+  "%T/lib/serial",
+  "%T/lib/power",
+);
+
+@opts = qw(
+
+  -gcc=arm-none-eabi-gcc
+  -mcpu=cortex-m3
+  -nostartfiles
+  -fnesc-target=env
+  -fnesc-no-debug
+
+);
+
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
+push @opts, "-mingw-gcc" if $cygwin;
+
+$ENV{NESC_MACHINE} = "structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true";

@@ -46,8 +46,8 @@ interface RPLRoutingEngine{
   command bool validInstance(uint8_t instanceID);
   command struct in6_addr* getDodagId(); // returns the default dodagid
   // below is called when sub type 4 DIOs are received
-  command void setDODAGConfig(uint8_t DIOIntDouble, uint8_t DIOIntMin, 
-			      uint8_t DIORedun, uint8_t MaxRankInc, uint8_t MinHopRankInc);
+  command void setDODAGConfig(uint8_t DIOIntDouble, uint8_t DIOIntMin,
+                              uint8_t DIORedun, uint8_t MaxRankInc, uint8_t MinHopRankInc);
 
   command uint8_t getMOP();
   command void setDTSN(uint8_t dtsn);

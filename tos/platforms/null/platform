@@ -1,0 +1,27 @@
+#
+# FILE: null/.platform
+# 
+# A do-nothing platform. A good target for mig when using external types.
+#
+# $Id: .platform,v 1.6 2009-11-14 06:51:21 razvanm Exp $
+#
+push( @includes, qw(
+
+  %T/lib/timer
+  %T/lib/serial
+
+) );
+
+@opts = qw(
+
+  -fnesc-target=pc
+  -fnesc-no-debug
+
+);
+
+if (defined($ENV{"GCC"})) {
+  push @opts, "-gcc=$ENV{'GCC'}";
+} else {
+  push @opts, "-gcc=gcc";
+}
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;

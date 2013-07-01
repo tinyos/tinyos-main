@@ -1,0 +1,67 @@
+push( @includes, qw(
+  %T/platforms/mulle/fix
+  %T/platforms/mulle
+  %T/platforms/mulle/chips/rf230
+  %T/chips/rf230
+  %T/lib/rfxlink/layers
+  %T/lib/rfxlink/util
+  %T/chips/at45db
+  %T/platforms/mulle/button
+  %T/platforms/mulle/lib
+  %T/platforms/mulle/i2c
+  %T/platforms/mulle/spi
+  %T/platforms/mulle/chips/rv8564
+  %T/platforms/mulle/chips/at45db
+  %T/platforms/mulle/chips/m16c60
+  %T/platforms/mulle/chips/mma7261qt
+  %T/platforms/mulle/chips/ds2782
+  %T/platforms/mulle/system
+  %T/platforms/mulle/timers
+  %T/platforms/mulle/timers/stop
+  %T/platforms/mulle/timers/wait
+  %T/platforms/mulle/timers/rf230
+  %T/chips/m16c60
+  %T/chips/m16c60/62p
+  %T/chips/m16c60/control
+  %T/chips/m16c60/adc
+  %T/chips/m16c60/dac
+  %T/chips/m16c60/pins
+  %T/chips/m16c60/timer
+  %T/chips/m16c60/uart
+  %T/chips/m16c60/printf
+  %T/chips/mma7261qt
+  %T/chips/ds2782
+  %T/lib/power
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/diagmsg
+  %T/lib/net/Deluge
+) );
+
+@opts = qw(
+  -gcc=m32c-elf-gcc
+  -mcpu=m16c
+  -fnesc-target=env
+);
+
+
+# gcc-4.5.0/gcc/config/m32c/m32c.h
+# in the order of nesc/src/machine/env_machine.c
+$ENV{NESC_MACHINE}="".
+"big_endian=false " . # m16c is little endian only 
+"pcc_bitfield_type_matters=false " . # m32c.h (all)
+"empty_field_boundary=8 " .
+"structure_size_boundary=8 " . 
+"word_size=1 " .
+"pointer=2,1 " . # m32c.h (TARGET_A16 == m8 or m16c)
+"float=4,1 " . # m32c.h (all)
+"double=8,1 " . # m32c.h (all)
+"long_double=8,1 " . # m32c.h (all)
+"short=2,1 " . # m32c.h (all)
+"int=2,1 " . # m32c.h (all)
+"long=4,1 " . # m32c.h (all)
+"long_long=8,1 " . # m32c.h (all)
+"int1248_align=1,1,1,1 " .
+"wchar_size_size=2,2 " .
+"char_wchar_signed=true,true " . # m32c.h char defined
+"" # several undefined fields... 

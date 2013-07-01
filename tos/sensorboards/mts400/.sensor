@@ -1,4 +1,1 @@
-
-push( @includes, qw(
-  %T/chips/sht11
-) );
+sensor

@@ -1,0 +1,54 @@
+push( @includes, qw(
+  %T/platforms/z1
+  %T/platforms/z1/chips/msp430
+  %T/platforms/z1/chips/msp430/adc12
+  %T/platforms/z1/chips/msp430/usci
+  %T/platforms/z1/chips/msp430/timer
+  %T/platforms/z1/chips/adxl345
+  %T/platforms/z1/chips/cc2420
+  %T/platforms/z1/chips/sht11
+  %T/platforms/z1/chips/stm25p
+  %T/platforms/z1/chips/tmp102
+  %T/chips/cc2420
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
+  %T/chips/cc2420/security
+  %T/chips/msp430
+  %T/chips/msp430/adc12
+  %T/chips/msp430/dma
+  %T/chips/msp430/pins
+  %T/chips/msp430/timer
+  %T/chips/msp430/sensors
+  %T/chips/msp430/x2xxx
+  %T/chips/msp430/x2xxx/usci
+  %T/chips/stm25p
+  %T/chips/sht11
+  %T/chips/tmp102
+  %T/chips/adxl345
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/power
+) );
+
+@opts = qw(
+  -gcc=msp430-gcc
+  -fnesc-target=msp430
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+);
+
+if (`msp430-gcc --version | grep 3.2.3`){
+  push (@opts, "-mmcu=msp430x2617", "-mdisable-hwmul");
+} else {
+  push (@opts, "-mmcu=msp430f2617");
+}

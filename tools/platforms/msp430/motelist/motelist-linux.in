@@ -7,7 +7,7 @@ use strict;
 my $help = <<'EOF';
 usage: motelist [options]
 
-  $Revision: 1.4 $
+  $Revision: 1.5 $
 
 options:
   -h  display this help
@@ -61,7 +61,7 @@ sub scan_sysfs {
 
   #  Scan /sys/bus/usb/drivers/usb for FTDI or CP210X devices 
   my @ftdidevs =
-    grep { (($_->{UsbVendor}||"") eq "0403" && ($_->{UsbProduct}||"") eq "6001") 
+    grep { (($_->{UsbVendor}||"") eq "0403" && ((($_->{UsbProduct}||"") eq "6001") || (($_->{UsbProduct}||"") eq "6010")))
        || (($_->{UsbVendor}||"") eq "10c4" && ($_->{UsbProduct}||"") eq "ea60")}
     map { {
       SysPath => $_,
@@ -126,7 +126,7 @@ sub scan_procfs {
       SerialDevNum => $_->{usbserial}{tts},
       SerialDevName => getSerialDevName($_->{usbserial}{tts}) || "  (none)",
     } }
-    grep { ($_->{Vendor}||"") eq "0403" && ($_->{ProdID}||"") eq "6001" }
+    grep { ($_->{Vendor}||"") eq "0403" && ((($_->{ProdID}||"") eq "6001") || (($_->{ProdID}||"") eq "6010")) }
     values %usbtree;
 
   return @ftdidevs;

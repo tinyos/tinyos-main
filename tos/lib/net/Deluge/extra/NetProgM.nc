@@ -54,7 +54,7 @@ module NetProgM {
 #if !defined(PLATFORM_TINYNODE) && !defined(PLATFORM_MULLE)
     interface CC2420Config;
 #endif
-    async command void setAmAddress(am_addr_t a);
+    async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr);
     interface ReprogramGuard;
   }
 }
@@ -71,7 +71,7 @@ implementation {
     // Update the local node ID
     if (bootArgs.address != 0xFFFF) {
       TOS_NODE_ID = bootArgs.address;
-      call setAmAddress(bootArgs.address);
+      call initAmAddress(TOS_AM_GROUP, bootArgs.address);
     }
 #if !defined(PLATFORM_TINYNODE) && !defined(PLATFORM_MULLE)
     call CC2420Config.setShortAddr(bootArgs.address);

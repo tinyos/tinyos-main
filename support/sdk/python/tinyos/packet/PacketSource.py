@@ -34,6 +34,7 @@ import traceback
 
 from IO import *
 from ThreadTask import *
+from threading import Semaphore
 
 DEBUG = False
 
@@ -54,6 +55,8 @@ class PacketSource(ThreadTask):
         global runner
         ThreadTask.__init__(self, runner)
         self.dispatcher = dispatcher
+        self.semaphore = Semaphore(1)
+        self.semaphore.acquire()
 
     def __call__(self):
         try:
@@ -68,6 +71,8 @@ class PacketSource(ThreadTask):
             if DEBUG:
                 print "Unknown exception while opening packet source"
             self.done = True
+        finally:
+            self.semaphore.release()
 
         while not self.isDone():
             try:
@@ -116,7 +121,6 @@ class PacketSource(ThreadTask):
 
     def start(self):
         global runner
-
         runner.start(self)
 
     def open(self):

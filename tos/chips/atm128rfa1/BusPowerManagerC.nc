@@ -40,10 +40,10 @@ generic configuration BusPowerManagerC(bool highIsOn, bool initPin)
 
 implementation
 {
- 	components new BusPowerManagerP(highIsOn, initPin), new TimerMilliC(), RealMainP;
+ 	components new BusPowerManagerP(1, highIsOn, initPin), new TimerMilliC(), RealMainP;
 
 	BusPowerManager = BusPowerManagerP;
-	GeneralIO = BusPowerManagerP;
+	GeneralIO = BusPowerManagerP.PowerPin[0];
 	BusPowerManagerP.Timer -> TimerMilliC;
 	BusPowerManagerP.Init <- RealMainP.PlatformInit;
 }

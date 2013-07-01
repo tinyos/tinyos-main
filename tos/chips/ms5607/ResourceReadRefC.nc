@@ -8,7 +8,7 @@
  * 94704.  Attention:  Intel License Inquiry.
  */
 /**
- * Implement arbitrated access to a Read interface, based on an
+ * Implement arbitrated access to a ReadRef interface, based on an
  * underlying arbitrated Resource interface.
  *
  * Note that this code does not deal with unexpected events: it assumes
@@ -16,9 +16,10 @@
  * made. See tos/chips/atm128/adc for an example of using ArbitratedReadC 
  * in a safe way.
  *
- * @param width_t Width of the underlying Read interface.
+ * @param width_t Width of the underlying ReadRef interface.
  *
  * @author David Gay
+ * @author Andras Biro (slightly modified for ReadRef)
  */
 
 generic module ResourceReadRefC(typedef width_t) @safe() {

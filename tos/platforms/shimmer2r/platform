@@ -1,0 +1,96 @@
+# SHIMMER2 - platform includes
+# Steve Ayer, June 2009; derived from Konrad Lorincz's SHIMMER platform
+#
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.
+
+push( @includes, qw(
+
+      .
+  %T/platforms/shimmer2r
+  %T/platforms/shimmer2r/chips/cc2420
+  %T/platforms/shimmer2r/chips/mma7361
+  %T/platforms/shimmer2
+  %T/platforms/shimmer2/chips/sd
+  %T/platforms/shimmer2/chips/bluetooth
+  %T/platforms/shimmer2/chips/tilt
+  %T/platforms/shimmer2/chips/gyro
+  %T/platforms/shimmer2/chips/gyromag
+  %T/platforms/shimmer2/chips/fgpmmopa6b
+  %T/platforms/shimmer2/chips/bmp085
+  %T/platforms/shimmer2/chips/hmc5843
+  %T/platforms/shimmer2/chips/straingauge
+  %T/platforms/shimmer
+  %T/platforms/shimmer/chips/msp430
+  %T/platforms/shimmer/chips/mma7260
+  %T/platforms/shimmer/chips/sd
+  %T/platforms/shimmer/chips/sd/fatfs
+  %T/platforms/shimmer/chips/bluetooth
+  %T/platforms/shimmer/chips/ds2411
+  %T/platforms/shimmer/chips/gsr
+  %T/platforms/shimmer/chips/rmcm01
+  %T/chips/cc2420
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
+  %T/chips/cc2420/security
+  %T/chips/msp430
+  %T/chips/msp430/adc12
+  %T/chips/msp430/dma
+  %T/chips/msp430/pins
+  %T/chips/msp430/timer
+  %T/chips/msp430/usart
+  %T/chips/msp430/sensors
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/adc
+  %T/lib/power
+  ) );
+
+@opts = qw(
+
+  -gcc=msp430-gcc
+  -mmcu=msp430f1611
+  -fnesc-target=msp430
+  -fnesc-no-debug
+);
+
+push @opts, "-mdisable-hwmul" if `msp430-gcc --version | grep 3.2.3`;
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
+push @opts, "-mingw-gcc" if $cygwin;
+
+$ENV{'CIL_MACHINE'} =
+    "version_major=3 " .
+    "version_minor=2 " .
+    "version=msp430-3.2.3 " .
+    "short=2,2 " .
+    "int=2,2 " .
+    "long=4,2 " .
+    "long_long=8,2 " .
+    "pointer=2,2 " .
+    "enum=2,2 " .
+    "float=4,2 " .
+    "double=4,2 " .
+    "long_double=4,2 " .
+    "void=1,1 " .
+    "fun=1,2 " .
+    "wchar_size_size=2,2 " .
+    "alignof_string=1 " .
+    "max_alignment=1 " .
+    "char_wchar_signed=true,true " .
+    "const_string_literals=true " .
+    "big_endian=false " .
+    "underscore_name=false " .
+    "__builtin_va_list=true " .
+    "__thread_is_keyword=true";

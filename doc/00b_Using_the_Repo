@@ -314,7 +314,7 @@ and the rh branch has been moved to the tip of master.
 
 ** add a remote that you can use to push to the main trunk.  Make sure current.
 
-    git add tos git@github.com:tinyos/tinyos-main
+    git remote add tos git@github.com:tinyos/tinyos-main
     git fetch tos
 
     # note the current local master branch should match remotes/tos/master.
