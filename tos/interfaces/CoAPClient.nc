@@ -30,24 +30,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <lib6lowpan/ip.h>
-typedef uint8_t method_t;
+//typedef uint8_t method_t;
+
+#include <net.h>
+#include <coap_list.h>
 
 interface CoAPClient {
-  /**
-   * Sends a new CoAP request.
-   *
-   * The CoAP library handles PDU retransmissions automatically.
-   * If/when a response is received, @c request_done will be called.
-   * Only a single CoAP request can be handled at a time.
-   *
-   * @param dest Address of CoAP server to send the request to.
-   * @param method CoAP method type (COAP_REQUEST_GET, COAP_REQUEST_PUT).
-   * @param optlist All CoAP options to include, ordered correctly.
-   * @param len Payload length, if the request will have a payload.
-   * @param data Payload data. May be NULL if len is zero.
-   * @returns SUCCESS if the request is sent.
-   */
-  command error_t request(struct sockaddr_in6 *dest, method_t method, coap_list_t *optlist, uint16_t len, void *data);
+    /*
+     * Set up the libcoap context for the client.
+     */
+    command error_t setupContext(uint16_t port);
+
+    /**
+     * Sends a new CoAP request.
+     *
+     * The CoAP library handles PDU retransmissions automatically.
+     * If/when a response is received, @c request_done will be called.
+     * Only a single CoAP request can be handled at a time.
+     *
+     * @param dest Address of CoAP server to send the request to.
+     * @param method CoAP method type (COAP_REQUEST_GET, COAP_REQUEST_PUT).
+     * @param optlist All CoAP options to include, ordered correctly.
+     * @param len Payload length, if the request will have a payload.
+     * @param data Payload data. May be NULL if len is zero.
+     * @returns SUCCESS if the request is sent.
+     */
+    command error_t request(const coap_address_t *dest,
+			    uint8_t method,
+			    coap_list_t *optlist,
+			    uint16_t len,
+			    void * data);
 
   /**
    * Similar to @c request, but can handle large payloads in the request via
@@ -64,7 +76,9 @@ interface CoAPClient {
    * @param optlist All CoAP options to include, ordered correctly.
    * @returns SUCCESS if the request is sent.
    */
-  command error_t streamed_request(struct sockaddr_in6 *dest, method_t method, coap_list_t *optlist);
+  command error_t streamed_request(struct sockaddr_in6 *dest,
+				   uint8_t method,
+				   coap_list_t *optlist);
 
   /**
    * Called in response to a @c streamed_request to obtain payload data.
@@ -77,8 +91,9 @@ interface CoAPClient {
    * @param data Receives the pointer to the next block of payload data.
    * @returns SUCCESS if the payload data block could be provided.
    */
-  event error_t streamed_next_block(uint16_t blockno, uint16_t *len, void **data);
-
+  event error_t streamed_next_block(uint16_t blockno,
+				    uint16_t *len,
+				    void **data);
 
   /**
    * Called when a response is received.
@@ -93,5 +108,8 @@ interface CoAPClient {
    *   further data blocks expected. The final block does not have this flag
    *   set.
    */
-  event void request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more);
+  /*event void request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more);*/
+  event void request_done(uint8_t code,
+			  uint16_t len,
+			  void *data);
 }

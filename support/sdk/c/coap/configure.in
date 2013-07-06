@@ -1,31 +1,39 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
-# 
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+# Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
+#
+# This file is part of the CoAP library libcoap. Please see
+# README for terms of use. 
 
 AC_PREREQ([2.65])
-AC_INIT([libcoap], [0.07])
+AC_INIT([libcoap], [4.0.2])
 AC_CONFIG_SRCDIR([coap.h])
+
+# First check for Contiki build to quit configure before any other test
+AC_ARG_WITH(contiki,
+  [AS_HELP_STRING([--with-contiki],[build libcoap for the Contiki OS])],
+  [cp -p Makefile.contiki Makefile
+   cp -p config.h.contiki config.h
+   AC_MSG_NOTICE([Contiki build prepared])
+   exit 0], 
+  [])
+
+# And check for TinyOS build to quit configure before any further test
+AC_ARG_WITH(tinyos,
+  [AS_HELP_STRING([--with-tinyos],[build libcoap for TinyOS])],
+  [cp -p Makefile.tinyos Makefile
+   cp -p config.h.tinyos config.h
+   AC_MSG_NOTICE([TinyOS build prepared])
+   exit 0], 
+  [])
 
 # Checks for programs.
 AC_PROG_MAKE_SET
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_PATH_PROG(DOXYGEN, doxygen, [:])
+AC_PATH_PROG(ETAGS, etags, [/bin/false])
 
 AC_C_BIGENDIAN
 
@@ -35,8 +43,44 @@ AC_CHECK_LIB([coap], [coap_new_pdu])
 AC_SEARCH_LIBS([gethostbyname], [nsl])
 AC_SEARCH_LIBS([socket], [socket])
 
+# configuration options that may change compile flags 
+AC_ARG_WITH(debug,
+  [AS_HELP_STRING([--without-debug],[disable all debug output and assertions])],
+  [CPPFLAGS="${CPPFLAGS} -DNDEBUG"], 
+  [])
+
+AC_ARG_WITH(async,
+  [AS_HELP_STRING([--without-async],[disable handling of asynchronous transactions and observe])],
+  [CPPFLAGS="${CPPFLAGS} -DWITHOUT_ASYNC"], 
+  [])
+
+AC_ARG_WITH(block,
+  [AS_HELP_STRING([--without-block],[disable block transfer])],
+  [CPPFLAGS="${CPPFLAGS} -DWITHOUT_BLOCK"], 
+  [])
+
+AC_ARG_WITH(observe,
+  [AS_HELP_STRING([--without-observe],[disable resource observation])],
+  [CPPFLAGS="${CPPFLAGS} -DWITHOUT_OBSERVE"], 
+  [])
+
+AC_ARG_WITH(query-filter,
+  [AS_HELP_STRING([--without-query-filter],[disable support for filters on /.well-known/core])],
+  [CPPFLAGS="${CPPFLAGS} -DWITHOUT_QUERY_FILTER"], 
+  [])
+
+AC_ARG_WITH(tests,
+  [AS_HELP_STRING([--with-tests],[enable unit tests (requires cunit)])],	
+  [TESTS="tests"],
+  [])
+
+AC_ARG_WITH(shared,
+  [AS_HELP_STRING([--with-shared],[build shared library])],	
+  [BUILD_SO="BUILD_SO=1"],
+  [])
+
 # Checks for header files.
-AC_CHECK_HEADERS([assert.h arpa/inet.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([assert.h arpa/inet.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h time.h unistd.h sys/unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
@@ -46,10 +90,14 @@ AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset select socket strcasecmp strrchr getaddrinfo strnlen])
 
+AC_SUBST(TESTS)
+AC_SUBST(BUILD_SO)
+
 AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/Doxyfile
-                 examples/Makefile])
+                 examples/Makefile
+                 tests/Makefile])
 AC_OUTPUT

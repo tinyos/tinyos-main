@@ -34,8 +34,18 @@
 #include <lib6lowpan/lib6lowpan.h>
 #include <lib6lowpan/ip.h>
 #include "blip_printf.h"
+
+#include "net.h"
+#include "resource.h"
+
 #ifdef COAP_CLIENT_ENABLED
 #include "tinyos_net.h"
+#include "option.h"
+#include "address.h"
+#endif
+
+#ifndef COAP_SERVER_PORT
+#define COAP_SERVER_PORT COAP_DEFAULT_PORT
 #endif
 
 module CoapBlipP {
@@ -57,21 +67,13 @@ module CoapBlipP {
 #endif
   }
 
-  provides interface Init;
-
 } implementation {
 #ifdef COAP_CLIENT_ENABLED
   uint8_t node_integrate_done = FALSE;
 #endif
 
-  command error_t Init.init() {
-    return SUCCESS;
-  }
-
   event void Boot.booted() {
-#ifdef COAP_SERVER_ENABLED
-    uint8_t i;
-#endif
+
     call RadioControl.start();
     printf("booted %i start\n", TOS_NODE_ID);
 #ifdef COAP_SERVER_ENABLED
@@ -80,18 +82,16 @@ module CoapBlipP {
       printf("CoapBlipP.Mount successful\n");
     }
 #endif
-    // needs to be before registerResource to setup context:
-    call CoAPServer.bind(COAP_SERVER_PORT);
 
-    call CoAPServer.registerWellknownCore();
-    for (i=0; i < NUM_URIS; i++) {
-      call CoAPServer.registerResource(uri_key_map[i].uri,
-				       uri_key_map[i].urilen - 1,
-				       uri_key_map[i].mediatype,
-				       uri_key_map[i].writable,
-				       uri_key_map[i].splitphase,
-				       uri_key_map[i].immediately);
-    }
+    // needs to be before registerResource to setup context:
+    call CoAPServer.setupContext(COAP_SERVER_PORT);
+    call CoAPServer.registerResources();
+
+#endif
+
+#ifdef COAP_CLIENT_ENABLED
+    // needs to be before registerResource to setup context:
+    call CoAPClient.setupContext(COAP_CLIENT_PORT);
 #endif
 
   }
@@ -110,19 +110,21 @@ module CoapBlipP {
 
 #ifdef COAP_CLIENT_ENABLED
   event void ForwardingTableEvents.defaultRouteAdded() {
-    struct sockaddr_in6 sa6;
-    coap_list_t *optlist = NULL;
+      //struct sockaddr_in6 sa6;
+      coap_address_t dest;
+      coap_list_t *optlist = NULL;
 
-    if (node_integrate_done == FALSE) {
-      node_integrate_done = TRUE;
+      if (node_integrate_done == FALSE) {
+	  node_integrate_done = TRUE;
 
-      inet_pton6(COAP_CLIENT_DEST, &sa6.sin6_addr);
-      sa6.sin6_port = htons(COAP_CLIENT_PORT);
+	  inet_pton6(COAP_CLIENT_DEST, &dest.addr.sin6_addr);
+	  dest.addr.sin6_port = htons(COAP_CLIENT_PORT);
 
-      coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
+	  coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
 
-      call CoAPClient.request(&sa6, COAP_REQUEST_PUT, optlist, 0, NULL);
-    }
+	  // this stuff should most likely be POST!
+	  call CoAPClient.request(&dest, COAP_REQUEST_PUT, optlist, 0, NULL);
+      }
   }
 
   event void ForwardingTableEvents.defaultRouteRemoved() {
@@ -133,7 +135,8 @@ module CoapBlipP {
     return FAIL;
   }
 
-  event void CoAPClient.request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more) {
+  event void CoAPClient.request_done(uint8_t code, uint16_t len, void *data) {
+      //event void CoAPClient.request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more) {
     //TODO: handle the request_done
   };
 #endif

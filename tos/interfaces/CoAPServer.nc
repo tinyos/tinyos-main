@@ -32,23 +32,32 @@
 #include "tinyos_coap_resources.h"
 
 interface CoAPServer {
-  /*
-   * bind a local address.
-   */
-  command error_t bind(uint16_t port);
+    /*
+     * Set up the libcoap context for the server. Also binds to the port.
+     */
+    command error_t setupContext(uint16_t port);
 
-  /*
-   * register the .wellknown/core resource
-   */
-  command error_t registerWellknownCore();
+    /*
+     * register a TinyOS resource with libcoap
+     */
+    command error_t registerResources();
 
-  /*
-   * register a TinyOS resource with libcoap
-   */
-  command error_t registerResource(char uri[MAX_URI_LENGTH],
-				   unsigned int uri_length,
-				   unsigned char mediatype,
-				   unsigned int writable,
-				   unsigned int splitphase,
-				   unsigned int immediately);
+
+    /*
+     * register one resource dynamically (on POST)
+     */
+    command coap_resource_t* registerDynamicResource(unsigned char* uri, unsigned int uri_len,
+						     unsigned int supported_methods);
+
+    /*
+     * deregister one resource dynamically (on DELETE)
+     */
+    command error_t deregisterDynamicResource(coap_resource_t* r);
+
+    /*
+     * check if resource already exists
+     */
+    command error_t findResource(coap_key_t key);
+    
+    
 }

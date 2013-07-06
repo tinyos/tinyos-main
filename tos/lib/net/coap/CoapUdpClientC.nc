@@ -31,14 +31,11 @@
  */
 
 configuration CoapUdpClientC {
-  provides interface CoAPClient;
-  provides interface Init;
-  uses interface LibCoAP as LibCoapClient;
+    provides interface CoAPClient;
+    uses interface LibCoAP as LibCoapClient;
 } implementation {
-  components CoapUdpClientP, RandomC;
+    components CoapUdpClientP;
 
-  CoAPClient    = CoapUdpClientP.CoAPClient;
-  LibCoapClient = CoapUdpClientP.LibCoapClient;
-  Init          = CoapUdpClientP.Init;
-  CoapUdpClientP.Random -> RandomC;
-  }
+    CoAPClient    = CoapUdpClientP.CoAPClient;
+    LibCoapClient = CoapUdpClientP.LibCoapClient;
+}

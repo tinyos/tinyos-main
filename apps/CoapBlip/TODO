@@ -1,0 +1,35 @@
+TODO for TinyOS port of libcoap:
+================================
+
+* URI-Query (see Google Issue #94) IMPORTANT!
+* retransmission timer IMPORTANT!
+
+* handle content-types in the resources correctly
+* implement logging over serial
+* optimize memory usage
+* add rt, obs, if, etc.
+* do the real(TM) thing on POST/DELETE
+* listen on multiple ports (well-known on standard port, others on
+   compressed port)
+* compilation warning
+   * message_id
+   * multicast
+* add author information to CoapBlip files
+* ...
+
+CHECK:
+=====
+* port client to libcoap -08
+* ..
+
+DONE:
+=====
+* implement POST/DELETE resource, only correct code
+* implement ETSI IOT Plugtest resources
+  * /test GET/PUT/POST/DELETE DONE
+  * /separate GET/PUT DONE
+  * /.well-known/core DONE
+* adapt non-ETSI resources to changes in Read/WriteResource
+* unify the handlers (code mostly replicated)
+* derive last NUM_URIS in Makefile automatically
+* integrate the GPIO resource (see Google Issue #127/128)

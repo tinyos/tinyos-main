@@ -1,20 +1,9 @@
 /* coap.h -- main header file for CoAP stack
  *
- * Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
+ *
+ * This file is part of the CoAP library libcoap. Please see
+ * README for terms of use. 
  */
 
 #ifndef _COAP_H_
@@ -23,10 +12,16 @@
 #include "config.h"
 #include "debug.h"
 #include "mem.h"
-#include "list.h"
+#include "coap_list.h"
 #include "pdu.h"
+#include "option.h"
 #include "net.h"
 #include "encode.h"
+#include "str.h"
 #include "uri.h"
+#include "async.h"
+#include "resource.h"
+#include "subscribe.h"
+#include "block.h"
 
 #endif /* _COAP_H_ */

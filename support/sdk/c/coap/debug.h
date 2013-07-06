@@ -1,31 +1,68 @@
 /* debug.h -- debug utilities
  *
- * Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
+ *
+ * This file is part of the CoAP library libcoap. Please see
+ * README for terms of use. 
  */
 
 #ifndef _COAP_DEBUG_H_
 #define _COAP_DEBUG_H_
 
+#include "config.h"
+
+#ifndef COAP_DEBUG_FD
+#define COAP_DEBUG_FD stdout
+#endif
+
+#ifndef COAP_ERR_FD
+#define COAP_ERR_FD stderr
+#endif
+
+/** Pre-defined log levels akin to what is used in \b syslog. */
+typedef enum { LOG_EMERG=0, LOG_ALERT, LOG_CRIT, LOG_WARN, 
+       LOG_NOTICE, LOG_INFO, LOG_DEBUG
+} coap_log_t;
+
+/** Returns the current log level. */
+coap_log_t coap_get_log_level();
+
+/** Sets the log level to the specified value. */
+void coap_set_log_level(coap_log_t level);
+
+/** 
+ * Writes the given text to @c COAP_ERR_FD (for @p level <= @c
+ * LOG_CRIT) or @c COAP_DEBUG_FD (for @p level >= @c LOG_WARN). The
+ * text is output only when @p level is below or equal to the log
+ * level that set by coap_set_log_level().
+ */
+void coap_log_impl(coap_log_t level, const char *format, ...);
+
+#ifndef coap_log
+#define coap_log(...) coap_log_impl(__VA_ARGS__)
+#endif
+
 #ifndef NDEBUG
 
-void debug(char *,...);
+/* A set of convenience macros for common log levels. */
+#define info(...) coap_log(LOG_INFO, __VA_ARGS__)
+#define warn(...) coap_log(LOG_WARN, __VA_ARGS__)
+#define debug(...) coap_log(LOG_DEBUG, __VA_ARGS__)
 
 #include "pdu.h"
-extern void coap_show_pdu(coap_pdu_t *);
+void coap_show_pdu(const coap_pdu_t *);
+
+struct __coap_address_t;
+size_t coap_print_addr(const struct __coap_address_t *, unsigned char *, size_t);
+
+#else
+
+#define debug(...)
+#define info(...)
+#define warn(...)
+
+#define coap_show_pdu(x)
+#define coap_print_addr(...)
 
 #endif
 

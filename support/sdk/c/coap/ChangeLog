@@ -1,0 +1,107 @@
+2013-02-01  Olaf Bergmann  <bergmann@tzi.org>
+
+	* coap_time.h (coap_clock_init_impl): fix invalid preprocessor
+	directive. #warning is now only used for gcc only (close sf bug #15)
+
+	* net.c (wellknown_response): applied patch from chrysn to
+	fix bug in generation of .well-known/core representation
+
+2013-01-21  Olaf Bergmann  <bergmann@tzi.org>
+
+	* option.h: renamed option field in coap_opt_iterator_t to
+	next_option to detect erroneous use in old code
+
+2013-01-18  Olaf Bergmann  <bergmann@tzi.org>
+
+	* configure.in: new option --with-tests to enable unit tests
+
+	* tests/testdriver.c: unit tests for parser functions
+
+	* pdu.c (coap_pdu_parse): new PDU parser for Klaus-encoding
+	according to coap-13
+
+	* net.c (coap_read): call coap_pdu_parse() to check PDU integrity
+
+	* option.c: Klaus-encoding for coap-13, including new option
+	iterator interface
+
+2012-11-20  Olaf Bergmann  <bergmann@tzi.org>
+
+	* net.c (next_option_safe): made option parsing more robust in
+	presence of option jumps
+
+	* pdu.h: new option codes from draft-ietf-core-coap-12
+
+	* option.c (coap_opt_setlength): new function to set option length
+
+	* uri.c (make_decoded_option): use coap_opt_setlength() instead of
+	obsolete macro COAP_OPT_SETLENGTH.
+
+2012-11-19  Olaf Bergmann  <bergmann@tzi.org>
+
+	* uri.c (make_decoded_option): use coap_opt_encode() instead of writing
+
+2012-11-03  Olaf Bergmann  <bergmann@tzi.org>
+
+	* net.c (coap_read): read new option encoding
+
+2012-11-01  Olaf Bergmann  <bergmann@tzi.org>
+
+	* option.c (coap_opt_size, coap_opt_value, coap_opt_length):
+	several functions to access fields of options (possibly preceeded
+	by option jump)
+
+2012-10-25  Olaf Bergmann  <bergmann@tzi.org>
+
+	* option.c (coap_opt_encode): new function for option encoding
+	with option jumps
+
+2012-03-23  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/client.c (clear_obs): clear observation relationship after
+	user-specified duration
+
+2012-03-21  Olaf Bergmann  <bergmann@tzi.org>
+
+	* resource.c (print_wellknown): filtering by attributes
+
+2012-03-19  Olaf Bergmann  <bergmann@tzi.org>
+
+	* pdu.c (coap_add_option): allow more than 15 options.
+
+2012-03-15  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/client.c (cmdline_uri): split path and query here to
+	make it easier to include these options in subsequent requests for
+	block transfer.
+
+2012-03-14  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/etsi_iot_01.c: Support for POST, PUT, DELETE on /test
+
+2012-03-13  Olaf Bergmann  <bergmann@tzi.org>
+
+	* encode.c (coap_encode_var_bytes): more efficient coding for 0
+
+2012-03-11  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/etsi_iot_01.c: Test cases for 1st ETSI CoAP Plugtest,
+	March 24/25, 2012 in Paris, France.
+
+2012-03-10  Olaf Bergmann  <bergmann@tzi.org>
+
+	* block.c: support for block transfer.
+
+2012-03-07  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/client.c (usage): new command line options
+	-B to set timeout after which the main loop is left.
+	-e to specify a payload (incompatible with -f)
+	(message_handler): bugfixes
+
+	* resource.h: (coap_method_handler_t): new API for method handlers.
+
+
+Copyright 2012 Olaf Bergmann, TZI
+Copying and distribution of this file, with or without modification, are
+permitted provided the copyright notice and this notice are preserved.

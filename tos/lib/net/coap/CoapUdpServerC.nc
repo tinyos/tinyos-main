@@ -32,20 +32,16 @@
 
 configuration CoapUdpServerC {
   provides interface CoAPServer;
-  provides interface Init;
   uses interface LibCoAP as LibCoapServer;
-  uses interface ReadResource[uint8_t uri];
-  uses interface WriteResource[uint8_t uri];
+  uses interface CoapResource[uint8_t uri];
 }
 implementation {
-  components CoapUdpServerP, LedsC, RandomC;
+  components CoapUdpServerP, LedsC;
 
   CoAPServer    = CoapUdpServerP.CoAPServer;
   LibCoapServer = CoapUdpServerP.LibCoapServer;
-  ReadResource  = CoapUdpServerP.ReadResource;
-  WriteResource = CoapUdpServerP.WriteResource;
-  Init          = CoapUdpServerP.Init;
 
-  CoapUdpServerP.Random -> RandomC;
+  CoapResource  = CoapUdpServerP.CoapResource;
+
   CoapUdpServerP.Leds -> LedsC;
 }

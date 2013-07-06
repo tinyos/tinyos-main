@@ -112,7 +112,7 @@ module UdpP {
    * @msg an IP datagram with header fields (except for length)
    * @plen the length of the data payload added after the headers.
    */
-  command error_t UDP.sendto[uint8_t clnt](struct sockaddr_in6 *dest, void *payload, 
+  command error_t UDP.sendto[uint8_t clnt](const struct sockaddr_in6 *dest, void *payload, 
                                            uint16_t len) {
     struct ip_iovec v[1];
     v[0].iov_base = payload;
@@ -121,7 +121,7 @@ module UdpP {
     return call UDP.sendtov[clnt](dest, &v[0]);
   }
 
-  command error_t UDP.sendtov[uint8_t clnt](struct sockaddr_in6 *dest, 
+  command error_t UDP.sendtov[uint8_t clnt](const struct sockaddr_in6 *dest, 
                                             struct ip_iovec *iov) {
     error_t rc;
     struct ip6_packet pkt;
