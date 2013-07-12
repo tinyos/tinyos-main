@@ -33,7 +33,6 @@
  * @author Thomas Schmid
  */
 
-uint32_t clocks = 0;
 generic module HplSam3GeneralIOPortP(uint32_t pio_addr)
 {
     provides
@@ -49,6 +48,7 @@ generic module HplSam3GeneralIOPortP(uint32_t pio_addr)
 }
 implementation
 {
+    uint32_t clocks = 0;
     uint32_t isr = 0;
 
     bool isPending(uint8_t bit)
