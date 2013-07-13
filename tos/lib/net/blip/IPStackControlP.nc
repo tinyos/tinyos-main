@@ -1,6 +1,14 @@
+/*
+ * Module provides interfaces for turning on and off different parts of the
+ * networking stack.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
 
 module IPStackControlP {
-  provides interface SplitControl;
+  provides {
+    interface SplitControl;
+  }
   uses {
     interface StdControl;
     interface StdControl as RoutingControl;

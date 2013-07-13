@@ -64,7 +64,7 @@ System Services:
 
 Network:
 
-BLIP/6lowpan:
+BLIP/6lowpan: Brad Campbell
 Active Messaging:
 
 

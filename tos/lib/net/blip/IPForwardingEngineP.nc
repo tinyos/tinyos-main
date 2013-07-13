@@ -33,7 +33,6 @@ module IPForwardingEngineP {
 #ifdef PRINTFUART_ENABLED
     interface Timer<TMilli> as PrintTimer;
 #endif
-    interface Leds;
   }
 } implementation {
 
@@ -355,10 +354,6 @@ module IPForwardingEngineP {
   default command error_t IPForward.send[uint8_t ifindex](struct in6_addr *next_hop,
                                                           struct ip6_packet *pkt,
                                                           void *data) {
-//     if (ifindex == ROUTE_IFACE_ALL) {
-//       call IPForward.send[ROUTE_IFACE_PPP](next_hop, pkt, data);
-//       call IPForward.send[ROUTE_IFACE_154](next_hop, pkt, data);
-//     }
     return SUCCESS;
   }
 

@@ -41,15 +41,15 @@
 module IPDispatchP {
   provides {
     interface SplitControl;
+    interface Init @exactlyonce();
+
     // interface for protocols not requiring special hand-holding
     interface IPLower;
 
     interface BlipStatistics<ip_statistics_t>;
-
   }
   uses {
     interface Boot;
-
 
     /* link-layer wiring */
     interface SplitControl as RadioControl;
@@ -75,9 +75,7 @@ module IPDispatchP {
     interface Timer<TMilli> as ExpireTimer;
 
     interface Leds;
-
   }
-  provides interface Init;
 } implementation {
 
 #define HAVE_LOWPAN_EXTERN_MATCH_CONTEXT
@@ -127,8 +125,6 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
   //
   //
   ////////////////////////////////////////
-
-  // task void sendTask();
 
   void reconstruct_clear(void *ent) {
     struct lowpan_reconstruct *recon = (struct lowpan_reconstruct *)ent;
@@ -209,7 +205,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
   /*
    *  Receive-side code.
-   */ 
+   */
   void deliver(struct lowpan_reconstruct *recon) {
     struct ip6_hdr *iph = (struct ip6_hdr *)recon->r_buf;
 
@@ -229,10 +225,10 @@ void SENDINFO_DECR(struct send_info *si) {
   /*
    * Bulletproof recovery logic is very important to make sure we
    * don't get wedged with no free buffers.
-   * 
+   *
    * The table is managed as follows:
    *  - unused entries are marked T_UNUSED
-   *  - entries which 
+   *  - entries which
    *     o have a buffer allocated
    *     o have had a fragment reception before we fired
    *     are marked T_ACTIVE
@@ -247,12 +243,12 @@ void SENDINFO_DECR(struct send_info *si) {
    *     prevents us from allocating a buffer for a packet which we
    *     have already dropped fragments from.
    *
-   */ 
+   */
   void reconstruct_age(void *elt) {
     struct lowpan_reconstruct *recon = (struct lowpan_reconstruct *)elt;
-    if (recon->r_timeout != T_UNUSED) 
-      printf("recon src: 0x%x tag: 0x%x buf: %p recvd: %i/%i\n", 
-                 recon->r_source_key, recon->r_tag, recon->r_buf, 
+    if (recon->r_timeout != T_UNUSED)
+      printf("recon src: 0x%x tag: 0x%x buf: %p recvd: %i/%i\n",
+                 recon->r_source_key, recon->r_tag, recon->r_buf,
                  recon->r_bytes_rcvd, recon->r_size);
     switch (recon->r_timeout) {
     case T_ACTIVE:
@@ -277,7 +273,7 @@ void SENDINFO_DECR(struct send_info *si) {
 #ifdef PRINTFUART_ENABLED
     bndrt_t *cur = (bndrt_t *)heap;
     while (((uint8_t *)cur)  - heap < IP_MALLOC_HEAP_SIZE) {
-      printf ("heap region start: %p length: %u used: %u\n", 
+      printf ("heap region start: %p length: %u used: %u\n",
                   cur, (*cur & IP_MALLOC_LEN), (*cur & IP_MALLOC_INUSE) >> 15);
       cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
     }
@@ -287,7 +283,6 @@ void SENDINFO_DECR(struct send_info *si) {
   event void ExpireTimer.fired() {
     table_map(&recon_cache, reconstruct_age);
 
-    
     printf("Frag pool size: %i\n", call FragPool.size());
     printf("SendInfo pool size: %i\n", call SendInfoPool.size());
     printf("SendEntry pool size: %i\n", call SendEntryPool.size());
@@ -304,15 +299,13 @@ void SENDINFO_DECR(struct send_info *si) {
     struct lowpan_reconstruct *ret = NULL;
     int i;
 
-    // printf("get_reconstruct: %x %i\n", key, tag);
-
     for (i = 0; i < N_RECONSTRUCTIONS; i++) {
       struct lowpan_reconstruct *recon = (struct lowpan_reconstruct *)&recon_data[i];
 
       if (recon->r_tag == tag &&
           recon->r_source_key == key) {
 
-        if (recon->r_timeout > T_UNUSED) {          
+        if (recon->r_timeout > T_UNUSED) {
           recon->r_timeout = T_ACTIVE;
           ret = recon;
           goto done;
@@ -324,20 +317,20 @@ void SENDINFO_DECR(struct send_info *si) {
           goto done;
         }
       }
-      if (recon->r_timeout == T_UNUSED) 
+      if (recon->r_timeout == T_UNUSED)
         ret = recon;
     }
   done:
-    // printf("got%p\n", ret);
     return ret;
   }
 
-  event message_t *Ieee154Receive.receive(message_t *msg, void *msg_payload, uint8_t len) {
+  /* Event is triggered when a packet is received fromt the radio */
+  event message_t *Ieee154Receive.receive(message_t *msg,
+                                          void *msg_payload,
+                                          uint8_t len) {
     struct packed_lowmsg lowmsg;
     struct ieee154_frame_addr frame_address;
     uint8_t *buf = msg_payload;
-
-    // printf(" -- RECEIVE -- len : %i\n", len);
 
     BLIP_STATS_INCR(stats.rx_total);
 
@@ -345,7 +338,7 @@ void SENDINFO_DECR(struct send_info *si) {
     buf  = unpack_ieee154_hdr(msg_payload, &frame_address);
     len -= buf - (uint8_t *)msg_payload;
 
-    /* unpack and 6lowpan headers */
+    /* unpack any 6lowpan headers */
     lowmsg.data = buf;
     lowmsg.len  = len;
     lowmsg.headers = getHeaderBitmap(&lowmsg);
@@ -379,7 +372,7 @@ void SENDINFO_DECR(struct send_info *si) {
       } else {
         rv = lowpan_recon_add(recon, buf, len);
       }
-        
+
       if (rv < 0) {
         recon->r_timeout = T_FAILED1;
         goto fail;
@@ -400,7 +393,7 @@ void SENDINFO_DECR(struct send_info *si) {
       struct lowpan_reconstruct recon;
 
       /* fill in metadata */
-      memcpy(&recon.r_meta.sender, &frame_address.ieee_src, 
+      memcpy(&recon.r_meta.sender, &frame_address.ieee_src,
              sizeof(ieee154_addr_t));
       recon.r_meta.lqi = call ReadLqi.readLqi(msg);
       recon.r_meta.rssi = call ReadLqi.readRssi(msg);
@@ -431,8 +424,6 @@ void SENDINFO_DECR(struct send_info *si) {
   task void sendTask() {
     struct send_entry *s_entry;
 
-    // printf("sendTask() - sending\n");
-
     if (radioBusy || state != S_RUNNING) return;
     if (call SendQueue.empty()) return;
     // this does not dequeue
@@ -449,7 +440,7 @@ void SENDINFO_DECR(struct send_info *si) {
     }
 
     if ((call Ieee154Send.send(s_entry->msg,
-                               call BarePacket.payloadLength(s_entry->msg))) != SUCCESS) {
+                     call BarePacket.payloadLength(s_entry->msg))) != SUCCESS) {
       dbg("Drops", "drops: sendTask: send failed\n");
       goto fail;
     } else {
@@ -470,7 +461,7 @@ void SENDINFO_DECR(struct send_info *si) {
     call SendEntryPool.put(s_entry);
     call SendQueue.dequeue();
   }
-  
+
 
   /*
    *  it will pack the message into the fragment pool and enqueue
@@ -569,7 +560,7 @@ void SENDINFO_DECR(struct send_info *si) {
       call PacketLink.setRetryDelay(s_entry->msg, BLIP_L2_DELAY);
 
       SENDINFO_INCR(s_info);}
-       
+
     // printf("got %i frags\n", s_info->link_fragments);
   done:
     BLIP_STATS_INCR(stats.sent);
@@ -584,19 +575,17 @@ void SENDINFO_DECR(struct send_info *si) {
 
     radioBusy = FALSE;
 
-    // printf("sendDone: %p %i\n", msg, error);
-
     if (state == S_STOPPING) {
       call RadioControl.stop();
       state = S_STOPPED;
       goto done;
     }
-    
+
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
     s_entry->info->link_fragment_attempts++;
 
     if (!call PacketLink.wasDelivered(msg)) {
-      printf("sendDone: was not delivered! (%i tries)\n", 
+      printf("sendDone: was not delivered! (%i tries)\n",
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;
       signal IPLower.sendDone(s_entry->info);
@@ -604,7 +593,7 @@ void SENDINFO_DECR(struct send_info *si) {
 /*         dbg("Drops", "drops: sendDone: frag was not delivered\n"); */
       // need to check for broadcast frames
       // BLIP_STATS_INCR(stats.tx_drop);
-    } else if (s_entry->info->link_fragment_attempts == 
+    } else if (s_entry->info->link_fragment_attempts ==
                s_entry->info->link_fragments) {
       signal IPLower.sendDone(s_entry->info);
     }
@@ -618,21 +607,6 @@ void SENDINFO_DECR(struct send_info *si) {
 
     post sendTask();
   }
-
-#if 0
-  command struct tlv_hdr *IPExtensions.findTlv(struct ip6_ext *ext, uint8_t tlv_val) {
-    int len = ext->len - sizeof(struct ip6_ext);
-    struct tlv_hdr *tlv = (struct tlv_hdr *)(ext + 1);
-    while (len > 0) {
-      if (tlv->type == tlv_val) return tlv;
-      if (tlv->len == 0) return NULL;
-      tlv = (struct tlv_hdr *)(((uint8_t *)tlv) + tlv->len);
-      len -= tlv->len;
-    }
-    return NULL;
-  }
-#endif
-
 
   /*
    * BlipStatistics interface
@@ -659,13 +633,4 @@ void SENDINFO_DECR(struct send_info *si) {
     memclr((uint8_t *)&stats, sizeof(ip_statistics_t));
   }
 
-/*   default event void IP.recv[uint8_t nxt_hdr](struct ip6_hdr *iph, */
-/*                                               void *payload, */
-/*                                               struct ip_metadata *meta) { */
-/*   } */
-
-/*   default event void Multicast.recv[uint8_t scope](struct ip6_hdr *iph, */
-/*                                                    void *payload, */
-/*                                                    struct ip_metadata *meta) { */
-/*   } */
 }
