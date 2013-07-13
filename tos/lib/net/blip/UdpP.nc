@@ -1,3 +1,7 @@
+/* UDP protocol implementation.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
 
 #include <lib6lowpan/in_cksum.h>
 #include <BlipStatistics.h>
@@ -5,11 +9,15 @@
 #include "blip_printf.h"
 
 module UdpP {
-  provides interface UDP[uint8_t clnt];
-  provides interface Init;
-  provides interface BlipStatistics<udp_statistics_t>;
-  uses interface IP;
-  uses interface IPAddress;
+  provides {
+    interface UDP[uint8_t clnt];
+    interface Init @exactlyonce();
+    interface BlipStatistics<udp_statistics_t>;
+  }
+  uses {
+    interface IP;
+    interface IPAddress;
+  }
 } implementation {
 
   enum {
@@ -61,7 +69,10 @@ module UdpP {
     return SUCCESS;
   }
 
-  event void IP.recv(struct ip6_hdr *iph, void *packet, size_t len, struct ip6_metadata *meta) {
+  event void IP.recv(struct ip6_hdr *iph,
+                     void *packet,
+                     size_t len,
+                     struct ip6_metadata *meta) {
     uint8_t i;
     struct sockaddr_in6 addr;
     struct udp_hdr *udph = (struct udp_hdr *)packet;
@@ -92,7 +103,7 @@ module UdpP {
     printf("rx_cksum: 0x%x my_cksum: 0x%x\n", rx_cksum, my_cksum);
     if (rx_cksum != my_cksum) {
       BLIP_STATS_INCR(stats.cksum);
-      printf("udp ckecksum computation failed: mine: 0x%x theirs: 0x%x [0x%x]\n", 
+      printf("udp ckecksum computation failed: mine: 0x%x theirs: 0x%x [0x%x]\n",
                  my_cksum, rx_cksum, len);
       printf_buf((void *)iph, sizeof(struct ip6_hdr));
       // iov_print(&v);
@@ -112,7 +123,8 @@ module UdpP {
    * @msg an IP datagram with header fields (except for length)
    * @plen the length of the data payload added after the headers.
    */
-  command error_t UDP.sendto[uint8_t clnt](const struct sockaddr_in6 *dest, void *payload, 
+  command error_t UDP.sendto[uint8_t clnt](struct sockaddr_in6 *dest,
+                                           void *payload,
                                            uint16_t len) {
     struct ip_iovec v[1];
     v[0].iov_base = payload;
@@ -121,7 +133,7 @@ module UdpP {
     return call UDP.sendtov[clnt](dest, &v[0]);
   }
 
-  command error_t UDP.sendtov[uint8_t clnt](const struct sockaddr_in6 *dest, 
+  command error_t UDP.sendtov[uint8_t clnt](struct sockaddr_in6 *dest,
                                             struct ip_iovec *iov) {
     error_t rc;
     struct ip6_packet pkt;
@@ -134,8 +146,8 @@ module UdpP {
     memclr((uint8_t *)&udp, sizeof(udp));
     memcpy(&pkt.ip6_hdr.ip6_dst, dest->sin6_addr.s6_addr, 16);
     call IPAddress.setSource(&pkt.ip6_hdr);
-    
-    if (local_ports[clnt] == 0 && 
+
+    if (local_ports[clnt] == 0 &&
         (local_ports[clnt] = alloc_lport(clnt)) == 0) {
       return FAIL;
     }
@@ -155,13 +167,13 @@ module UdpP {
     v[0].iov_len  = sizeof(struct udp_hdr);
     v[0].iov_next = iov;
     pkt.ip6_data = &v[0];
-    
+
     udp.chksum = htons(msg_cksum(&pkt.ip6_hdr, v, IANA_UDP));
 
     rc = call IP.send(&pkt);
     BLIP_STATS_INCR(stats.sent);
     return rc;
-    
+
   }
 
 
@@ -177,9 +189,9 @@ module UdpP {
 #endif
   }
 
-  default event void UDP.recvfrom[uint8_t clnt](struct sockaddr_in6 *from, 
+  default event void UDP.recvfrom[uint8_t clnt](struct sockaddr_in6 *from,
                                                 void *payload,
-                                                uint16_t len, 
+                                                uint16_t len,
                                                 struct ip6_metadata *meta) {}
 
   event void IPAddress.changed(bool global_valid) {}
