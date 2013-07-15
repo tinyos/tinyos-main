@@ -112,8 +112,9 @@ module IPNeighborDiscoveryP {
       printf("IPND - next-hop address resolution failed\n");
       return FAIL;
     }
-    printf("l2 source: "); printf_buf(fr_addr.ieee_src.i_laddr.data, 8);
-    printf("l2 dest: "); printf_buf(fr_addr.ieee_dst.i_laddr.data, 8);
+    printf("l2 source: "); printf_ieee154addr(&fr_addr.ieee_src);
+    printf("\n");
+    printf("l2 dest: "); printf_ieee154addr(&fr_addr.ieee_dst);
     printf("\n");
 
     return call IPLower.send(&fr_addr, msg, ptr);
