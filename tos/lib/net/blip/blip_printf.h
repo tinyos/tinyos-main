@@ -40,7 +40,7 @@ void iov_print(struct ip_iovec *iov) {
 void printf_in6addr(struct in6_addr *a) {
   static char print_buf[64];
   inet_ntop6(a, print_buf, 64);
-  printf(print_buf);
+  printf("%s", print_buf);
 }
 
 int printf_ieee154addr(ieee154_addr_t *in) {

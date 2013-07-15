@@ -239,6 +239,12 @@ module IPForwardingEngineP {
 
       return do_send(next_hop_entry->ifindex, &next_hop_entry->next_hop, pkt);
     }
+
+    printf("Forwarding -- no route found for packet. FAIL.\n");
+    printf("Forwarding -- dest addr: ");
+    printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+    printf("\n");
+
     return FAIL;
   }
 
@@ -326,14 +332,27 @@ module IPForwardingEngineP {
 
 #ifdef PRINTFUART_ENABLED
   event void PrintTimer.fired() {
-    int i;
-    printf("\ndestination                 gateway            interface\n");
+    int i, ctr=0;
+    static char print_buf[44];
+    char* buf;
+    printf("\n#    ");
+    printf("destination                                ");
+    printf("gateway                   ");
+    printf("iface\n");
     for (i = 0; i < ROUTE_TABLE_SZ; i++) {
       if (routing_table[i].valid) {
-        printf_in6addr(&routing_table[i].prefix);
-        printf("/%i\t\t", routing_table[i].prefixlen);
-        printf_in6addr(&routing_table[i].next_hop);
-        printf("\t\t%i\n", routing_table[i].ifindex);
+        buf = print_buf;
+
+        printf("%-5i", ctr++);
+
+        buf += inet_ntop6(&routing_table[i].prefix, print_buf, 44) - 1;
+        sprintf(buf, "/%i", routing_table[i].prefixlen);
+        printf("%-43s", print_buf);
+
+        inet_ntop6(&routing_table[i].next_hop, print_buf, 30);
+        printf("%-26s", print_buf);
+
+        printf("%i\n", routing_table[i].ifindex);
       }
     }
     printf("\n");
