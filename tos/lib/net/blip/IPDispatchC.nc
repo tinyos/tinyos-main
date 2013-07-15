@@ -52,7 +52,6 @@ configuration IPDispatchC {
   IPLower = IPDispatchP.IPLower;
   BlipStatistics = IPDispatchP.BlipStatistics;
 
-  IPDispatchP.Boot -> MainC.Boot;
   IPDispatchP.Init <- MainC.SoftwareInit;
 
   /* Wire to the bare interfaces from the radio. Bare Ieee154 interfaces provide
