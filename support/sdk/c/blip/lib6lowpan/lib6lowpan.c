@@ -2,7 +2,7 @@
 /* @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu> */
 
 /* Each function in this file should have an associated set of test
- * cases in tests/ 
+ * cases in tests/
  *
  * The library is built up from small functions which take care of one
  * element of compressor or decompression.  This way, we can unit-test
@@ -124,7 +124,7 @@ inline uint8_t *pack_tcfl(uint8_t *buf, struct ip6_hdr *hdr, uint8_t *dispatch) 
     *dispatch |= LOWPAN_IPHC_TF_ECN_DSCP_FL;
     *buf  = (tc >> 2) & 0xff;
     *buf |= (tc << 6) & 0xff;
-    
+
     *(buf + 1)  = (flow >> 16) & 0x0f;
     *(buf + 2)  = (flow >> 8)  & 0xff;
     *(buf + 3)  = (flow)       & 0xff;
@@ -183,10 +183,10 @@ uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len
                (addr->s6_addr16[4] == htons(letohs(pan) & ~0x0200) &&
                 addr->s6_addr16[5] == htons(0x00ff) &&
                 addr->s6_addr16[6] == htons(0xfe00) &&
-                (((l2addr->ieee_mode == IEEE154_ADDR_SHORT) && 
+                (((l2addr->ieee_mode == IEEE154_ADDR_SHORT) &&
                   addr->s6_addr16[7] == htons(letohs(l2addr->i_saddr))))) ||
                /* no?  Maybe it's just a straight-up 64-bit EUI64 */
-                 ((l2addr->ieee_mode == IEEE154_ADDR_EXT) && 
+                 ((l2addr->ieee_mode == IEEE154_ADDR_EXT) &&
                   (iid_eui_cmp(&addr->s6_addr[8], l2addr->i_laddr.data)))) {
       /* in either case we can elide the addressing from the packet. */
       *flags |= LOWPAN_IPHC_AM_0;
@@ -207,9 +207,20 @@ uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len
       memcpy(buf, &addr->s6_addr[14], 2);
       extra = 2;
     } else if (bit_range_zero_p(&addr->s6_addr[0], context_match_len, 64) == 0) {
-      *flags |= LOWPAN_IPHC_AM_64;
-      memcpy(buf, &addr->s6_addr[8], 8);
-      extra = 8;
+      // The upper 64 bits of this address either match the global prefix or
+      // are zero. Either of which the receiving node can figure out with
+      // its own prefix.
+      if ((l2addr->ieee_mode == IEEE154_ADDR_EXT) &&
+          (iid_eui_cmp(&addr->s6_addr[8], l2addr->i_laddr.data))) {
+        // The lower 64 bits of the address match the EUI64 from the 802.15.4
+        // header. Therefore we can elide the entire address.
+        *flags |= LOWPAN_IPHC_AM_0;
+      } else {
+        // Need to include the lower 64 bits in the packet.
+        *flags |= LOWPAN_IPHC_AM_64;
+        memcpy(buf, &addr->s6_addr[8], 8);
+        extra = 8;
+      }
     } else {
       *flags |= LOWPAN_IPHC_AM_128;
       *flags &= ~LOWPAN_IPHC_AC_CONTEXT;
@@ -264,8 +275,8 @@ int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset) {
   if (cnt < 7) {
     return -1;
   }
-  
-  if (iov_read(packet->ip6_data, offset, sizeof(struct udp_hdr), (void *)&udp) != 
+
+  if (iov_read(packet->ip6_data, offset, sizeof(struct udp_hdr), (void *)&udp) !=
       sizeof(struct udp_hdr)) {
     return -1;
   }
@@ -300,7 +311,7 @@ uint8_t __ipnh_real_length(uint8_t type, struct ip_iovec *pkt, int offset) {
   offset += 2;
   for (;;) {
     if (offset >= (ext.ip6e_len + 1) * 8) break;
-    if (iov_read(pkt, offset, 2, (void *)&tlv) != 2) 
+    if (iov_read(pkt, offset, 2, (void *)&tlv) != 2)
       return -1;
 
     if (tlv.type == IPV6_TLV_PAD1) {
@@ -383,7 +394,7 @@ int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet) {
   /* @return offset is the offset into the unpacked ipv6 datagram */
   /* dest is updated to show how far we have gotten in the packed data */
 
-  
+
   while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
          nxt == IPV6_DEST || nxt == IPV6_MOBILITY || nxt == IPV6_IPV6) {
     int extra;
@@ -418,7 +429,7 @@ uint8_t * lowpan_pack_headers(struct ip6_packet *packet,
   if ((packet->ip6_hdr.ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION) {
     return NULL;
   }
-  
+
   /* Packing strategy: */
   /*   1. we never create 6lowpan broadcast or mesh frames */
   /*   2. first, pack the IP headers and any other compressible header into the frame */
@@ -427,7 +438,7 @@ uint8_t * lowpan_pack_headers(struct ip6_packet *packet,
   /* We'll then test the whole thing as a unit. */
   /* There is no support for using more then a single context, and no
      support for stateful packing of multicast addresses.
-     
+
      These things are only supported in decompression, for compatibility.
    */
   dispatch = buf;
@@ -458,12 +469,12 @@ uint8_t * lowpan_pack_headers(struct ip6_packet *packet,
     buf = pack_multicast(buf, &packet->ip6_hdr.ip6_dst, &temp_dispatch);
     *(dispatch + 1) |= (temp_dispatch << LOWPAN_IPHC_DAM_SHIFT) | LOWPAN_IPHC_AM_M;
   }
-  
+
   return buf;
 }
 
 uint8_t *unpack_tcfl(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf) {
-  uint8_t  fl[3] = {0,0,0}; 
+  uint8_t  fl[3] = {0,0,0};
   uint8_t  tc = 0;
 
   switch (dispatch & LOWPAN_IPHC_TF_MASK) {
@@ -489,9 +500,9 @@ uint8_t *unpack_tcfl(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf) {
     break;
   }
 
-  hdr->ip6_flow = htonl(((uint32_t)0x6 << 28) | 
-                        ((uint32_t)tc << 20) | 
-                        ((uint32_t)fl[2] << 16) | 
+  hdr->ip6_flow = htonl(((uint32_t)0x6 << 28) |
+                        ((uint32_t)tc << 20) |
+                        ((uint32_t)fl[2] << 16) |
                         ((uint32_t)fl[1] << 8) | fl[0]);
   return buf;
 }
@@ -523,7 +534,7 @@ uint8_t *unpack_hlim(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf) {
   return buf;
 }
 
-uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch, 
+uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
                         int context, uint8_t *buf,
                         ieee154_addr_t *frame, ieee154_panid_t pan) {
   memset(addr, 0, 16);
@@ -589,7 +600,7 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
   return NULL;
 }
 
-uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch, 
+uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch,
                           int context, uint8_t *buf) {
   memset(addr->s6_addr, 0, 16);
 
@@ -627,7 +638,7 @@ uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf) {
 
   *nxt_hdr = IANA_UDP;
 
-  // MUST be elided  
+  // MUST be elided
   udp->len = 0;
   // MAY be elided if sufficient conditions are met
   udp->chksum = 0;
@@ -667,7 +678,7 @@ uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf) {
 
 /**
  * Unpack a single header that has been encoded using LOWPAN_NHC
- *  compression 
+ *  compression
  *
  */
 uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) {
@@ -731,7 +742,7 @@ uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) 
 }
 
 uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
-                          uint8_t **dest, size_t cnt, 
+                          uint8_t **dest, size_t cnt,
                           uint8_t *nxt_hdr, uint8_t *buf) {
   uint8_t *dispatch;
   int has_nhc = 1;
@@ -749,10 +760,10 @@ uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
       *dest += (ext->ip6e_len+1)*8;
       cnt  -= (ext->ip6e_len+1)*8;
 
-      if ((*dispatch & LOWPAN_NHC_NH)) { 
+      if ((*dispatch & LOWPAN_NHC_NH)) {
         nxt_hdr = &ext->ip6e_nxt;
       } else {
-        has_nhc = 0; 
+        has_nhc = 0;
       }
     } else if (((*dispatch) & LOWPAN_NHC_UDP_MASK) == LOWPAN_NHC_UDP_PATTERN) {
       struct udp_hdr *udp = (struct udp_hdr *)*dest;
@@ -791,12 +802,12 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
   buf = unpack_tcfl(hdr, *dispatch, buf);
   buf = unpack_nh(hdr, *dispatch, buf);
   buf = unpack_hlim(hdr, *dispatch, buf);
-  
+
   /* source address is always unicast compressed */
   // printf("unpack source: %p (%x)\n", buf, *buf);
   buf = unpack_address(&hdr->ip6_src,
-                       ((*(dispatch + 1) >> LOWPAN_IPHC_SAM_SHIFT)), 
-                       contexts[0], 
+                       ((*(dispatch + 1) >> LOWPAN_IPHC_SAM_SHIFT)),
+                       contexts[0],
                        buf,
                        &frame->ieee_src,
                        frame->ieee_dstpan);
@@ -808,13 +819,13 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
   if (*(dispatch + 1) & LOWPAN_IPHC_M) {
     // printf("unpack multicast: %p\n", buf);
     buf = unpack_multicast(&hdr->ip6_dst,
-                           ((*(dispatch + 1) >> LOWPAN_IPHC_DAM_SHIFT)), 
+                           ((*(dispatch + 1) >> LOWPAN_IPHC_DAM_SHIFT)),
                            contexts[1],
                            buf);
     // printf("unpack multicast: %p (%x)\n", buf, *buf);
   } else {
     buf = unpack_address(&hdr->ip6_dst,
-                         ((*(dispatch + 1) >> LOWPAN_IPHC_DAM_SHIFT)), 
+                         ((*(dispatch + 1) >> LOWPAN_IPHC_DAM_SHIFT)),
                          contexts[1],
                          buf,
                          &frame->ieee_dst,
@@ -830,9 +841,9 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
   unpack_end = (uint8_t *)(hdr + 1);
   if ((*dispatch) & LOWPAN_IPHC_NH_MASK) {
     buf = unpack_nhc_chain(recon,
-                           &unpack_end, 
+                           &unpack_end,
                            dst_cnt - sizeof(struct ip6_hdr),
-                           &hdr->ip6_nxt, 
+                           &hdr->ip6_nxt,
                            buf);
     if (!buf) {
       return NULL;
@@ -842,7 +853,7 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
 
   /* copy any remaining payload into the unpack region */
   memcpy(unpack_end, buf, cnt - (buf - unpack_start));
-  
+
   /* return a pointer to the end of the unpacked data */
   return unpack_end + (cnt - (buf - unpack_start));
 }
