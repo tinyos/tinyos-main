@@ -17,6 +17,7 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
                        uint8_t *pkt, size_t len) {
   uint8_t *unpack_point, *unpack_end;
   struct packed_lowmsg msg;
+  uint8_t recalculate_checksum = 0;
 
   msg.data = pkt;
   msg.len  = len;
@@ -46,9 +47,10 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
     unpack_end = recon->r_buf + len;
   } else {
     /* unpack the first fragment */
-    unpack_end = lowpan_unpack_headers(recon, 
+    unpack_end = lowpan_unpack_headers(recon,
                                        frame_addr,
-                                       unpack_point, len);
+                                       unpack_point, len,
+                                       &recalculate_checksum);
   }
 
   if (!unpack_end) {
@@ -60,14 +62,43 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
     recon->r_size = (unpack_end - recon->r_buf);
   }
   recon->r_bytes_rcvd = unpack_end - recon->r_buf;
-  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen = 
+  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen =
     htons(recon->r_size - sizeof(struct ip6_hdr));
   /* fill in any elided app data length fields */
   if (recon->r_app_len) {
-    *recon->r_app_len = 
+    *recon->r_app_len =
       htons(recon->r_size - (recon->r_transport_header - recon->r_buf));
   }
-  
+
+  /* Check if we used stateful uncompression with the ipv6 source or destination
+   * addresses. If so, we probably need to recalculate checksums because when
+   * the checksum was originally calculated the full source or destination
+   * address may not have been known. In that case, the checksum will fail
+   * at the packet's destination.
+   */
+  if (recalculate_checksum) {
+    struct ip6_hdr *hdr = (struct ip6_hdr *) recon->r_buf;
+
+    /* Right now only handle the only header being UDP */
+    if (hdr->ip6_nxt == IANA_UDP) {
+      struct ip_iovec v[2];
+      struct udp_hdr *udph;
+
+      udph = (struct udp_hdr *) recon->r_transport_header;
+      udph->chksum = 0;
+
+      v[0].iov_base = (uint8_t *) udph;
+      v[0].iov_len  = sizeof(struct udp_hdr);
+      v[0].iov_next = v+1;
+      v[1].iov_base = (uint8_t*) (udph + 1);
+      v[1].iov_len  = ntohs(*recon->r_app_len) - sizeof(struct udp_hdr);
+      v[1].iov_next = NULL;
+
+      udph->chksum = htons(msg_cksum(hdr, v, IANA_UDP));
+    }
+
+  }
+
   /* done, updated all the fields */
   /* reconstruction is complete if r_bytes_rcvd == r_size */
   return 0;
@@ -132,7 +163,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     /* may need to fragment -- insert a FRAG1 header if so */
     if (extra_payload > len - (buf - ieee_buf)) {
       struct packed_lowmsg lowmsg;
-      memmove(lowpan_buf + LOWMSG_FRAG1_LEN, 
+      memmove(lowpan_buf + LOWMSG_FRAG1_LEN,
                 lowpan_buf,
                 buf - lowpan_buf);
 
@@ -150,7 +181,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
       extra_payload -= (extra_payload % 8);
 
     }
-    
+
     if (iov_read(packet->ip6_data, offset, extra_payload, buf) != extra_payload) {
       return -3;
     }

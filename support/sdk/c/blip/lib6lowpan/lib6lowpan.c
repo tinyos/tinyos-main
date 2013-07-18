@@ -534,9 +534,28 @@ uint8_t *unpack_hlim(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf) {
   return buf;
 }
 
+/* Unpacks a compressed address from a buffer.
+ * @addr     Output address struct
+ * @dispatch Shifted bits corresponding to the dispatch byte. The raw dispatch
+ *           byte will have to shift depending on if this is the src or dest
+ *           address.
+ * @context  Length (in bits) of the context to get the address from in stateful
+ *           mode.
+ * @buf      Buffer to parse the address from
+ * @frame    802.15.4 header
+ * @pan      PAN id of the network
+ * @stateful Return bool that is set to TRUE when stateful address uncompression
+ *           with context was used. It will not be changed if stateless is used.
+ *           Knowing this is useful in the case where a checksum may need
+ *           to be recalculated.
+ *
+ * Return:   Pointer to buffer immediately after the bytes relevant to this
+ *           address.
+ */
 uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
                         int context, uint8_t *buf,
-                        ieee154_addr_t *frame, ieee154_panid_t pan) {
+                        ieee154_addr_t *frame, ieee154_panid_t pan,
+                        uint8_t *stateful) {
   memset(addr, 0, 16);
   if(!((dispatch & LOWPAN_IPHC_AC_CONTEXT))) {
     /* stateless compression */
@@ -574,6 +593,7 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
       return buf;
     } else {
       int ctxlen = lowpan_extern_read_context(addr, context);
+      *stateful = 1;
       switch (dispatch & LOWPAN_IPHC_AM_MASK) {
       case LOWPAN_IPHC_AM_64:
         memcpy(&addr->s6_addr[8], buf, 8);
@@ -777,12 +797,14 @@ uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
 
 uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
                                struct ieee154_frame_addr *frame,
-                               uint8_t *buf, size_t cnt) {
+                               uint8_t *buf, size_t cnt,
+                               uint8_t *recalculate_checksum) {
   uint8_t *dispatch, *unpack_start = buf, *unpack_end;
   int contexts[2] = {0, 0};
   uint8_t *dest = recon->r_buf;
   size_t dst_cnt = recon->r_size;
   struct ip6_hdr *hdr = (struct ip6_hdr *)dest;
+  *recalculate_checksum = 0;
 
   dispatch = buf;
   buf += 2;
@@ -810,7 +832,8 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
                        contexts[0],
                        buf,
                        &frame->ieee_src,
-                       frame->ieee_dstpan);
+                       frame->ieee_dstpan,
+                       recalculate_checksum);
   if (!buf) {
     return NULL;
   }
@@ -829,7 +852,8 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
                          contexts[1],
                          buf,
                          &frame->ieee_dst,
-                         frame->ieee_dstpan);
+                         frame->ieee_dstpan,
+                         recalculate_checksum);
   }
   if (!buf) {
     return NULL;
@@ -849,7 +873,6 @@ uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
       return NULL;
     }
   }
-
 
   /* copy any remaining payload into the unpack region */
   memcpy(unpack_end, buf, cnt - (buf - unpack_start));
