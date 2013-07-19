@@ -6,7 +6,7 @@ configuration HplDs2411C {
 implementation {
   components HplMsp430GeneralIOC as Hpl;
   components new Msp430GpioC() as MspGpio;
-  MspGpio.HplGeneralIO -> Hpl.Port24;
+  MspGpio.HplGeneralIO -> Hpl.Port47;
 
   Gpio = MspGpio.GeneralIO;
 }

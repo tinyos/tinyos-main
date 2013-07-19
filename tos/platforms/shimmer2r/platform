@@ -22,6 +22,7 @@ push( @includes, qw(
   %T/platforms/shimmer2/chips/bmp085
   %T/platforms/shimmer2/chips/hmc5843
   %T/platforms/shimmer2/chips/straingauge
+  %T/platforms/shimmer2/chips/ds2411
   %T/platforms/shimmer
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/mma7260
@@ -52,10 +53,12 @@ push( @includes, qw(
   %T/chips/msp430/timer
   %T/chips/msp430/usart
   %T/chips/msp430/sensors
+  %T/chips/ds2411
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc
   %T/lib/power
+  %T/lib/onewire
   ) );
 
 @opts = qw(

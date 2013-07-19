@@ -36,11 +36,12 @@ push( @includes, qw(
   %T/chips/msp430/usart
   %T/chips/msp430/sensors
   %T/chips/at45db
-  %T/chips/ds2401
+  %T/chips/ds2411
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc
   %T/lib/power
+  %T/lib/onewire
 ) );
 
 # The @opts list contains parameters that are passed to ncc.

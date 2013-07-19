@@ -64,7 +64,10 @@ implementation
 
     printf("IEEE 64-bit UID: ");
     for(i=0;i<8;i++) {
-      printf("%d ", id.data[i]);
+      printf("%02x", id.data[i]);
+      if (i < 7) {
+        printf(":");
+      }
     }
     printf("\n");
   	printfflush();

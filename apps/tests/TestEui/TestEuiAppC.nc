@@ -50,5 +50,8 @@ implementation {
   TestEuiC -> LedsC.Leds;
 
   TestEuiC.LocalIeeeEui64 -> LocalIeeeEui64C;
+
+  components PrintfC;
+  components SerialStartC;
 }
 
