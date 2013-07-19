@@ -2,9 +2,9 @@
 # Copyright (c) 2005 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 dnl -*- m4 -*-
@@ -23,26 +23,18 @@ AC_PROG_RANLIB
 
 AC_PATH_PROG(pathperl, perl)
 if test -z "$pathperl" ; then
-  AC_MSG_ERROR(I can't find perl); 
+  AC_MSG_ERROR(I can't find perl);
 fi
 
 AC_PATH_PROGS(pathpython, [python2 python])
 if test -z "$pathpython" ; then
-  AC_MSG_ERROR(I can't find python); 
+  AC_MSG_ERROR(I can't find python);
 fi
 
-if test -z "$NESCC_PREFIX"; then
-  AC_PATH_PROG(pathnescc, nescc)
-  if test -z "$pathnescc"; then
-    AC_MSG_ERROR(I can't find nescc)
-  else
-    NESCC_PREFIX=`dirname "$pathnescc"`
-    NESCC_PREFIX=`dirname "$NESCC_PREFIX"`
-  fi
+AC_PATH_PROG(pathnescc, nescc)
+if test -z "$pathnescc"; then
+  AC_MSG_ERROR(I can't find nescc)
 fi
-nescc_prefix=`(cd $NESCC_PREFIX;pwd)`
-AC_SUBST(nescc_prefix)
-
 
 if test -z "$DEFAULT_TARGET"; then
   DEFAULT_TARGET=mica
