@@ -21,7 +21,7 @@
  */
 
 /**
- * 
+ *
  *
  */
 #include "IPDispatch.h"
@@ -40,7 +40,8 @@ configuration IPDispatchC {
 
   /* IPDispatchP wiring -- fragment rassembly and lib6lowpan bindings */
   components IPDispatchP;
-  components CC2420RadioC as MessageC;
+  components Ieee154BareC as MessageC;
+  components RadioPacketMetadataC as PacketMetaC;
   components ReadLqiC;
   components new TimerMilliC();
 
@@ -62,11 +63,11 @@ configuration IPDispatchC {
   IPDispatchP.Ieee154Receive -> MessageC.BareReceive;
 
 #ifdef LOW_POWER_LISTENING
-   IPDispatchP.LowPowerListening -> MessageC;
+   IPDispatchP.LowPowerListening -> PacketMetaC.LowPowerListening;
 #endif
   MainC.SoftwareInit -> IPDispatchP.Init;
 
-  IPDispatchP.PacketLink -> MessageC;
+  IPDispatchP.PacketLink -> PacketMetaC.PacketLink;
   IPDispatchP.ReadLqi -> ReadLqiC;
   IPDispatchP.Leds -> LedsC;
   IPDispatchP.ExpireTimer -> TimerMilliC;
