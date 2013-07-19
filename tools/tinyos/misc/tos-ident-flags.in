@@ -3,6 +3,7 @@
 #@author Cory Sharp <cssharp@eecs.berkeley.edu>
 
 use strict;
+use File::Basename;
 
 my $MaxNameLength = 16;
 
@@ -11,7 +12,7 @@ if( @ARGV != 1 ) {
   exit 0;
 }
 
-my $name = $ARGV[0];
+my $name = basename($ARGV[0]);
 my $time = sprintf( "0x%08x", `date +%s` );
 
 (my $whoami = `whoami`) =~ s/\s//g;
