@@ -36,11 +36,12 @@ push( @includes, qw(
   %T/chips/msp430/sensors
   %T/chips/stm25p
   %T/chips/sht11
-  %T/chips/ds2401
+  %T/chips/ds2411
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc
   %T/lib/power
+  %T/lib/onewire
 ) );
 
 @opts = qw(

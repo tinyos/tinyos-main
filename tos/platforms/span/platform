@@ -11,6 +11,7 @@ push( @includes, qw(
       .
   %T/platforms/span
   %T/platforms/span/chips/cc2420
+  %T/platforms/span/chips/ds2411
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/ds2411
   %T/chips/cc2420
@@ -27,6 +28,7 @@ push( @includes, qw(
   %T/chips/cc2420/transmit
   %T/chips/cc2420/unique
   %T/chips/cc2420/security
+  %T/chips/ds2411
   %T/chips/msp430
   %T/chips/msp430/adc12
   %T/chips/msp430/dma
@@ -38,6 +40,7 @@ push( @includes, qw(
   %T/lib/serial
   %T/lib/adc
   %T/lib/power
+  %T/lib/onewire
   ) );
 
 @opts = qw(
