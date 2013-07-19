@@ -29,7 +29,7 @@ void inet_pton6(char *addr, struct in6_addr *dest) {
     }
     p++;
     if (*p == '\0') {
-      dest->s6_addr16[block++] = htons(cur);      
+      dest->s6_addr16[block++] = htons(cur);
       return;
     }
     if (*(p - 1) == ':' && *p == ':') {
@@ -79,9 +79,10 @@ int inet_ntop6(struct in6_addr *addr, char *buf, int cnt) {
     if (addr->s6_addr16[j] != 0 && compressed == 1) compressed++;
 
     if (j < 7 && compressed != 1) *buf++ = ':';
+
   }
-  if (compressed == 1)
-    *buf++ = ':';
+  //if (compressed == 1)
+  //  *buf++ = ':';
  done:
   *buf++ = '\0';
   return buf - (end - cnt);
@@ -92,7 +93,7 @@ uint16_t ieee154_hashaddr(ieee154_addr_t *addr) {
     return addr->i_saddr;
   } else if (addr->ieee_mode == IEEE154_ADDR_EXT) {
     uint16_t i, hash = 0, *current = (uint16_t *)addr->i_laddr.data;
-    for (i = 0; i < 4; i++) 
+    for (i = 0; i < 4; i++)
       hash += *current ++;
     return hash;
   } else {
@@ -114,10 +115,10 @@ uint8_t *ip_memcpy(uint8_t *dst0, const uint8_t *src0, uint16_t len) {
   uint8_t *dst = (uint8_t *) dst0;
   uint8_t *src = (uint8_t *) src0;
   uint8_t *ret = dst0;
-  
+
   for (; len > 0; len--)
     *dst++ = *src++;
-  
+
   return ret;
 }
 
@@ -185,7 +186,7 @@ int ieee154_print(ieee154_addr_t *in, char *out, size_t cnt) {
 void fprint_buffer(FILE *fp, uint8_t *buf, int len) {
   int i;
   for (i = 0; i < len; i++) {
-    if ((i % 16) == 0 && i > 0) 
+    if ((i % 16) == 0 && i > 0)
       fprintf(fp, "\n");
     if (i % 16 == 0) {
       fprintf(fp, "%i:\t", i);
