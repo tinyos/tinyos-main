@@ -268,13 +268,13 @@ configuration CoapBlipC {
    * $ stty -F /dev/ttyUSB0 115200
    * $ tail -f /dev/ttyUSB0
   */
-  components SerialPrintfC;
+  // components SerialPrintfC;
 
   /* This is the alternative printf implementation which puts the
    * output in framed tinyos serial messages.  This lets you operate
    * alongside other users of the tinyos serial stack.
    */
-  // components PrintfC;
-  // components SerialStartC;
+  components PrintfC;
+  components SerialStartC;
 #endif
   }
