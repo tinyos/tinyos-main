@@ -26,20 +26,56 @@ uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt,
                              struct ieee154_frame_addr *frame);
 
 /* unpacking */
-uint8_t *unpack_ieee154_hdr(uint8_t *buf, struct ieee154_frame_addr *frame);
-uint8_t *unpack_tcfl(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_nh(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_hlim(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
-                        int context, uint8_t *buf,
-                        ieee154_addr_t *frame, ieee154_panid_t pan,
-                        uint8_t *stateful);
-uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch,
-                          int context, uint8_t *buf);
-uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
-                          uint8_t **dest, size_t cnt,
-                          uint8_t *nxt_hdr, uint8_t *buf);
+int unpack_ieee154_hdr(uint8_t **buf,
+                      size_t *len,
+                      struct ieee154_frame_addr *frame);
+int unpack_context(uint8_t dispatch,
+                   int *contexts,
+                   uint8_t **buf,
+                   size_t *len);
+int unpack_tcfl(struct ip6_hdr *hdr,
+                uint8_t dispatch,
+                uint8_t **buf,
+                size_t *len);
+int unpack_nh(struct ip6_hdr *hdr,
+              uint8_t dispatch,
+              uint8_t **buf,
+              size_t *len);
+int unpack_hlim(struct ip6_hdr *hdr,
+                uint8_t dispatch,
+                uint8_t **buf,
+                size_t *len);
+int unpack_address(struct in6_addr *addr,
+                   uint8_t dispatch,
+                   int context,
+                   uint8_t **buf,
+                   size_t *len,
+                   ieee154_addr_t *frame,
+                   ieee154_panid_t pan,
+                   uint8_t *stateful);
+int unpack_multicast(struct in6_addr *addr,
+                     uint8_t dispatch,
+                     int context,
+                     uint8_t **buf,
+                     size_t *len);
+int unpack_nhc_udp(struct lowpan_reconstruct *recon,
+                   uint8_t **dest,
+                   size_t *dlen,
+                   uint8_t *nxt_hdr,
+                   uint8_t dispatch,
+                   uint8_t **buf,
+                   size_t *len);
+int unpack_nhc_ipv6_ext(uint8_t **dest,
+                        size_t *dlen,
+                        uint8_t **nxt_hdr,
+                        uint8_t dispatch,
+                        uint8_t **buf,
+                        size_t *len);
+int unpack_nhc_chain(struct lowpan_reconstruct *recon,
+                     uint8_t **dest,
+                     size_t *dlen,
+                     uint8_t *nxt_hdr,
+                     uint8_t **buf,
+                     size_t *len);
 
 #endif
