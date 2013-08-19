@@ -44,7 +44,6 @@ PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212f::\"
 # uncomment this line if you are having problems displaying the new printf semantics
 # CFLAGS += -DPRINTF_BUFFER_SIZE=1024
 
-PFLAGS += -DBLIP_NO_RADIO
 #PFLAGS += -DROUTE_TABLE_SZ=1
 
 ################ CoAP Server ###############################

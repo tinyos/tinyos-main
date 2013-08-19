@@ -45,17 +45,13 @@ configuration IPStackC {
     components IPProtocolsP,
 	IPForwardingEngineP as FwdP,
 	IPNeighborDiscoveryC as NdC;
-#ifndef BLIP_NO_RADIO
-    components IPDispatchC;
-#endif
+  components IPDispatchC;
   components IPStackControlP;
 
   SplitControl = IPStackControlP;
   IPStackControlP.StdControl = StdControl;
   IPStackControlP.RoutingControl = RoutingControl;
-#ifndef BLIP_NO_RADIO
   IPStackControlP.SubSplitControl -> IPDispatchC;
-#endif
 
   ForwardingTable = FwdP;
   ForwardingTableEvents = FwdP;
@@ -64,11 +60,9 @@ configuration IPStackC {
   /* wiring up of the IP stack */
   IP = IPProtocolsP;            /* top layer - dispatch protocols */
   IPProtocolsP.SubIP -> FwdP.IP; /* routing layer - provision next hops */
-#ifndef BLIP_NO_RADIO
   /* this wiring for an 802.15.4 stack */
   FwdP.IPForward[ROUTE_IFACE_154] -> NdC; /* this layer translates L3->L2 addresses */
   NdC.IPLower -> IPDispatchC.IPLower; /* wire to the 6lowpan engine */
-#endif
   IPRaw = FwdP.IPRaw;
 
   /* wire in core protocols -- this is only protocol included by default */

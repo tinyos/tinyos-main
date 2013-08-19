@@ -4,24 +4,15 @@ module IPStackControlP {
   uses {
     interface StdControl;
     interface StdControl as RoutingControl;
-#ifndef BLIP_NO_RADIO
     interface SplitControl as SubSplitControl;
-#endif
     interface IPAddress;
   }
 } implementation {
 
   command error_t SplitControl.start() {
-#ifndef BLIP_NO_RADIO
     return call SubSplitControl.start();
-#else
-    call StdControl.start();
-    signal SplitControl.startDone(SUCCESS);
-    return SUCCESS;
-#endif
   }
 
-#ifndef BLIP_NO_RADIO
   event void SubSplitControl.startDone(error_t error) {
     struct in6_addr addr;
     if (error == SUCCESS) {
@@ -35,24 +26,17 @@ module IPStackControlP {
 
     signal SplitControl.startDone(error);
   }
-#endif
 
   command error_t SplitControl.stop() {
     call StdControl.stop();
     call RoutingControl.stop();
 
-#ifndef BLIP_NO_RADIO
     return call SubSplitControl.stop();
-#else
-    return SUCCESS;
-#endif
   }
 
-#ifndef BLIP_NO_RADIO
   event void SubSplitControl.stopDone(error_t error) {
     signal SplitControl.stopDone(error);
   }
-#endif
 
   event void IPAddress.changed(bool valid) {
     if (valid)
