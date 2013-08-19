@@ -37,7 +37,7 @@ void *ip_malloc(uint16_t sz) {
   sz += sizeof(bndrt_t) * 2;
   sz += (sz % IP_MALLOC_ALIGN);
 
-  while (((*cur & IP_MALLOC_LEN) < sz || (*cur & IP_MALLOC_INUSE) != 0) 
+  while (((*cur & IP_MALLOC_LEN) < sz || (*cur & IP_MALLOC_INUSE) != 0)
          && (uint8_t *)cur - heap < IP_MALLOC_HEAP_SIZE) {
     cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
   }
@@ -67,7 +67,7 @@ void ip_free(void *ptr) {
     next = (bndrt_t *)((*cur & IP_MALLOC_LEN) + ((uint8_t *)cur));
 
     *cur &= ~IP_MALLOC_INUSE;
-    if ((((uint8_t *)next) - heap) < IP_MALLOC_HEAP_SIZE && 
+    if ((((uint8_t *)next) - heap) < IP_MALLOC_HEAP_SIZE &&
         (*next & IP_MALLOC_INUSE) == 0) {
       *cur = (*cur & IP_MALLOC_LEN) + (*next & IP_MALLOC_LEN);
     }
@@ -105,7 +105,7 @@ void dump_heap() {
 void ip_print_heap() {
   bndrt_t *cur = (bndrt_t *)heap;
   while (((uint8_t *)cur)  - heap < IP_MALLOC_HEAP_SIZE) {
-    printf ("heap region start: 0x%x length: %i used: %i\n", 
+    printf ("heap region start: %p length: %i used: %i\n",
             cur, (*cur & IP_MALLOC_LEN), (*cur & IP_MALLOC_INUSE) >> 15);
     if ((*cur & IP_MALLOC_LEN) == 0) {
       printf("ERROR: zero length cell detected!\n");

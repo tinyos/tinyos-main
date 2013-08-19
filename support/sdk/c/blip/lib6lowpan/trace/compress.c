@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
       c = c - '0';
     } else if (c == '\n' || c == '\r') {
       if (v->iov_len > 0) {
-        fprintf(stderr, "Making new (%i)\n", v->iov_len);
+        fprintf(stderr, "Making new (%i)\n", (int) v->iov_len);
         struct ip_iovec *v2 = malloc(sizeof(struct ip_iovec));
         v2->iov_next = NULL;
         v2->iov_len = 0;
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     return 1;
 
   memset(&ctx, 0, sizeof(ctx));
-  iov_read(v, 0, sizeof(struct ip6_hdr), &pkt.ip6_hdr);
+  iov_read(v, 0, sizeof(struct ip6_hdr), (void*) &pkt.ip6_hdr);
   pkt.ip6_data = iov_shorten(v, sizeof(struct ip6_hdr));
   pkt.ip6_hdr.ip6_plen = htons(iov_len(pkt.ip6_data));
   // iov_print(v);
@@ -124,5 +124,5 @@ int main(int argc, char **argv) {
     fprintf(stderr, "fragment [%i]\n", rv);
     fprint_buffer(stderr, fragment, rv);
     printf("\n");
-  }  
+  }
 }
