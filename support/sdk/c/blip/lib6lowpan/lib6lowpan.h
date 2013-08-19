@@ -138,7 +138,8 @@ int lowpan_extern_read_context(struct in6_addr *addr, int context);
 int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet);
 /*
  * Pack the header fields of msg into buffer 'buf'.
- *  it returns the number of bytes written to 'buf', or zero if it encountered a problem.
+ *  it returns the number of bytes written to 'buf', or zero if it encountered
+ *  a problem.
  *
  * it will pack the IP header and all headers in the header chain of
  * msg into the buffer; the only thing it will not pack is the
@@ -155,10 +156,12 @@ uint8_t *lowpan_pack_headers(struct ip6_packet *packet,
                              uint8_t *buf, size_t cnt);
 
 
-uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
-                               struct ieee154_frame_addr *frame,
-                               uint8_t *buf, size_t cnt,
-                               uint8_t *recalculate_checksum);
+int lowpan_unpack_headers(struct lowpan_reconstruct *recon,
+                          struct ieee154_frame_addr *frame,
+                          uint8_t **buf,
+                          size_t *len,
+                          uint8_t *recalculate_checksum,
+                          uint16_t *unpacked_len);
 
 /*
  *  this function writes the next fragment which needs to be sent into

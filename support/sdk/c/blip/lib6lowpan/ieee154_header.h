@@ -3,7 +3,12 @@
 
 #include "Ieee154.h"
 
-uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt, struct ieee154_frame_addr *frame) ;
-uint8_t *unpack_ieee154_hdr(uint8_t *buf, struct ieee154_frame_addr *frame);
+uint8_t *pack_ieee154_header(uint8_t *buf,
+                             size_t cnt,
+                             struct ieee154_frame_addr *frame);
+
+int unpack_ieee154_hdr(uint8_t **buf,
+                      size_t *len,
+                      struct ieee154_frame_addr *frame);
 
 #endif

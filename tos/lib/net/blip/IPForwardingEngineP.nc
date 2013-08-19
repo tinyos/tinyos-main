@@ -120,7 +120,8 @@ module IPForwardingEngineP {
 
     entry->prefixlen = prefix_len_bits;
     entry->ifindex = ifindex;
-    memcpy(&entry->prefix, prefix, prefix_len_bits / 8);
+    if (prefix_len_bits >= 8)
+      memcpy(&entry->prefix, prefix, prefix_len_bits / 8);
     if (next_hop)
       memcpy(&entry->next_hop, next_hop, sizeof(struct in6_addr));
     return entry->key;

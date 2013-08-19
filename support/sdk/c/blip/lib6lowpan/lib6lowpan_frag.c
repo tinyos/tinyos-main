@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -14,19 +13,26 @@
 
 int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
                        struct lowpan_reconstruct *recon,
-                       uint8_t *pkt, size_t len) {
-  uint8_t *unpack_point, *unpack_end;
+                       uint8_t *pkt,
+                       size_t len) {
+  uint8_t *unpack_point;
   struct packed_lowmsg msg;
   uint8_t recalculate_checksum = 0;
+  int ret;
+  uint16_t unpacked_len = 0;
 
   msg.data = pkt;
   msg.len  = len;
   msg.headers = getHeaderBitmap(&msg);
   if (msg.headers == LOWMSG_NALP) return -1;
 
-  /* remove the 6lowpan headers from the payload */
+  /* remove the 6lowpan frag headers from the payload */
   unpack_point = getLowpanPayload(&msg);
   len -= (unpack_point - pkt);
+
+  if (len <= 0) {
+    return -4;
+  }
 
   /* set up the reconstruction, or just fill in the packet length */
   if (hasFrag1Header(&msg)) {
@@ -40,28 +46,34 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   memset(recon->r_buf, 0, recon->r_size);
   recon->r_app_len = NULL;
 
+  if (len < 1) return -5;
   if (*unpack_point == LOWPAN_IPV6_PATTERN) {
     /* uncompressed header... no need to un-hc */
-    unpack_point++; len --;
+    unpack_point++; len--;
+    if (len > recon->r_size) {
+      ip_free(recon->r_buf);
+      return -6;
+    }
     memcpy(recon->r_buf, unpack_point, len);
-    unpack_end = recon->r_buf + len;
+    unpacked_len = len;
   } else {
     /* unpack the first fragment */
-    unpack_end = lowpan_unpack_headers(recon,
-                                       frame_addr,
-                                       unpack_point, len,
-                                       &recalculate_checksum);
-  }
-
-  if (!unpack_end) {
-    ip_free(recon->r_buf);
-    return -3;
+    ret = lowpan_unpack_headers(recon,
+                                frame_addr,
+                                &unpack_point,
+                                &len,
+                                &recalculate_checksum,
+                                &unpacked_len);
+    if (ret < 0) {
+      ip_free(recon->r_buf);
+      return -3;
+    }
   }
 
   if (!hasFrag1Header(&msg)) {
-    recon->r_size = (unpack_end - recon->r_buf);
+    recon->r_size = unpacked_len;
   }
-  recon->r_bytes_rcvd = unpack_end - recon->r_buf;
+  recon->r_bytes_rcvd = unpacked_len;
   ((struct ip6_hdr *)(recon->r_buf))->ip6_plen =
     htons(recon->r_size - sizeof(struct ip6_hdr));
   /* fill in any elided app data length fields */

@@ -287,7 +287,7 @@ void SENDINFO_DECR(struct send_info *si) {
   }
 
   /*
-   * allocate a structure for recording information about incomming fragments.
+   * Return a structure for recording information about incoming fragments.
    */
 
   struct lowpan_reconstruct *get_reconstruct(uint16_t key, uint16_t tag) {
@@ -326,16 +326,22 @@ void SENDINFO_DECR(struct send_info *si) {
     struct packed_lowmsg lowmsg;
     struct ieee154_frame_addr frame_address;
     uint8_t *buf = msg_payload;
+    size_t buflen = len;
+    int ret;
 
     BLIP_STATS_INCR(stats.rx_total);
 
     /* unpack the 802.15.4 address fields */
-    buf  = unpack_ieee154_hdr(msg_payload, &frame_address);
-    len -= buf - (uint8_t *)msg_payload;
+    ret = unpack_ieee154_hdr(&buf, &buflen, &frame_address);
+
+    if (ret < 0) {
+      // If there isn't any more data this is a malformed 6LoWPAN packet
+      goto fail;
+    }
 
     /* unpack any 6lowpan headers */
     lowmsg.data = buf;
-    lowmsg.len  = len;
+    lowmsg.len  = buflen;
     lowmsg.headers = getHeaderBitmap(&lowmsg);
     if (lowmsg.headers == LOWMSG_NALP) {
       goto fail;
@@ -362,10 +368,15 @@ void SENDINFO_DECR(struct send_info *si) {
       recon->r_meta.rssi = call ReadLqi.readRssi(msg);
 
       if (hasFrag1Header(&lowmsg)) {
+        // Fail if the buffer is already allocated. In that case we have already
+        // received the Frag1 header.
         if (recon->r_buf != NULL) goto fail;
-        rv = lowpan_recon_start(&frame_address, recon, buf, len);
+        rv = lowpan_recon_start(&frame_address, recon, buf, buflen);
       } else {
-        rv = lowpan_recon_add(recon, buf, len);
+        // Fail if we try to reconstruct a packet without receiving the Frag1
+        // header first.
+        if (recon->r_buf == NULL) goto fail;
+        rv = lowpan_recon_add(recon, buf, buflen);
       }
 
       if (rv < 0) {
@@ -394,7 +405,7 @@ void SENDINFO_DECR(struct send_info *si) {
       recon.r_meta.rssi = call ReadLqi.readRssi(msg);
 
       buf = getLowpanPayload(&lowmsg);
-      if ((rv = lowpan_recon_start(&frame_address, &recon, buf, len)) < 0) {
+      if ((rv = lowpan_recon_start(&frame_address, &recon, buf, buflen)) < 0) {
         goto fail;
       }
 
