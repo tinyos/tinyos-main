@@ -41,12 +41,12 @@ struct {
   {"fe80::1:00ff:fe00:2", 0, "1", 8, 8, {0, 1, 0, 0xff, 0xfe, 0x0, 0, 02}, LOWPAN_IPHC_AM_64},
 
   // matching with the L2 addr
-  {"fe80::aabb:ccdd:eeff:0011", 0, "a8:bb:cc:dd:ee:ff:00:11", 
+  {"fe80::aabb:ccdd:eeff:0011", 0, "a8:bb:cc:dd:ee:ff:00:11",
    8, 0, {}, LOWPAN_IPHC_AM_0},
 
   // matching 64-bit L2 addr, but prefix isn't all zero
-  {"fe80::1:aabb:ccdd:eeff:0011", 0, "aa:bb:cc:dd:ee:ff:00:11", 
-   8, 16, 
+  {"fe80::1:aabb:ccdd:eeff:0011", 0, "aa:bb:cc:dd:ee:ff:00:11",
+   8, 16,
    {0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11}
    , LOWPAN_IPHC_AM_128},
 
@@ -70,12 +70,12 @@ struct {
 
   {"2002::1:1", 128, "12", 1, 0, {0}, LOWPAN_IPHC_AM_0 | LOWPAN_IPHC_AC_CONTEXT},
 
-  // global addresses, derived from L2.  
+  // global addresses, derived from L2.
   // contiki packs this to zero bytes using the L2 info; however hc-06
   // is a little vague on this point so I don't do this.  We will win fact
   // decompress that right now.
   {"2002::226:bbff:fe11:478b", 64, "00:26:bb:ff:fe:11:47:8b", 1,
-   8, {0x2, 0x26, 0xbb, 0xff, 0xfe, 0x11, 0x47, 0x8b}, LOWPAN_IPHC_AM_64 | LOWPAN_IPHC_AC_CONTEXT},
+   0, {0x2, 0x26, 0xbb, 0xff, 0xfe, 0x11, 0x47, 0x8b}, LOWPAN_IPHC_AM_0 | LOWPAN_IPHC_AC_CONTEXT},
 };
 
  int run_tests() {
@@ -93,7 +93,7 @@ struct {
     ieee154_print(&l2addr, buf, 512);
     printf("%s\n", buf);
     printf("in6_addr: %s\n", test_cases[i].in6_addr);
-    rv = pack_address(buf, &addr, test_cases[i].context_match_len, &l2addr, 
+    rv = pack_address(buf, &addr, test_cases[i].context_match_len, &l2addr,
                       test_cases[i].panid, &flags);
 
     printf("flags: 0x%x(0x%x) len: %li\n", flags, test_cases[i].result_rv, rv - buf );

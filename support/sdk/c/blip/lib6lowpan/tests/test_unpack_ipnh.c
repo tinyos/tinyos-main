@@ -13,7 +13,6 @@
 struct {
   uint8_t  nxt_hdr;
   uint16_t unpacked_length;
-
   int pack_len;
   uint8_t pack[2];
   int data_length;
@@ -21,7 +20,6 @@ struct {
   {IPV6_HOP, 0, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_HOP | LOWPAN_NHC_NH}, 8},
   {IPV6_MOBILITY, 1, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_MOBILE | LOWPAN_NHC_NH}, 13},
   {IPV6_IPV6, 14, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6 | LOWPAN_NHC_NH}, 120},
-
   {IPV6_IPV6, 1, 2, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6, IANA_UDP}, 12},
 };
 
@@ -31,8 +29,12 @@ int run_tests() {
   int success = 0, total = 0;
   for (i = 0; i < (sizeof(test_cases) / sizeof(test_cases[0])); i++) {
     uint8_t nxt_hdr;
+    uint8_t *nhdr = &nxt_hdr;
     uint8_t buf[512], result[512];
-    uint8_t *rv, *pack;
+    uint8_t *bptr = buf+1, *rptr = result;
+    size_t dlen = 512;
+    size_t len = 512;
+    uint8_t rv, *pack;
     total++;
 
     memset(buf, 0, 512);        /* this fills in pad1 options for any weird sized options */
@@ -48,7 +50,7 @@ int run_tests() {
       printf("0x%x ", buf[j]);
     printf("\n");
 
-    rv = unpack_ipnh(result, sizeof(result), &nxt_hdr, buf);
+    rv = unpack_nhc_ipv6_ext(&rptr, &len, &nhdr, buf[0], &bptr, &len);
 
     printf("ip6_ext nxt: %i length: %i\n", nxt_hdr, result[1]);
     for (j = 0; j < (result[1] +1)*8; j++) {

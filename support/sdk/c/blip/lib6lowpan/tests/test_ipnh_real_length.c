@@ -65,11 +65,11 @@ int main() {
     total++;
     printf("starting test 3\n");
     memset(buf, 0, 8);
-    tlv = ext + 1;
+    tlv = (struct tlv_hdr *) (ext + 1);
     tlv->type = IPV6_TLV_PADN;
     tlv->len = 4;
     rv = __ipnh_real_length(IPV6_HOP, vec, 0);
-    if (rv == 2) 
+    if (rv == 2)
       success ++;
     else
       fprintf(stderr, "FAIL: test 3: %i\n", rv);
@@ -81,11 +81,11 @@ int main() {
     total++;
     printf("starting test 4\n");
     memset(buf, 0, 8);
-    tlv = ext + 1;
+    tlv = (struct tlv_hdr *) (ext + 1);
     tlv->type = 47;
     tlv->len = 4;
     rv = __ipnh_real_length(IPV6_HOP, vec, 0);
-    if (rv == 8) 
+    if (rv == 8)
       success ++;
     else {
       fprintf(stderr, "FAIL: test 4: %i\n", rv);
@@ -98,11 +98,11 @@ int main() {
     printf("starting test 5\n");
     memset(buf, 0, 16);
     ext->ip6e_len = 1;
-    tlv = ext + 1;
+    tlv = (struct tlv_hdr *) (ext + 1);
     tlv->type = 47;
     tlv->len = 11;
     rv = __ipnh_real_length(IPV6_HOP, vec, 0);
-    if (rv == 15) 
+    if (rv == 15)
       success ++;
     else {
       fprintf(stderr, "FAIL: test 5: %i\n", rv);
@@ -116,14 +116,14 @@ int main() {
     printf("starting test 6\n");
     memset(buf, 0, 24);
     ext->ip6e_len = 2;
-    tlv = ext + 1;
+    tlv = (struct tlv_hdr *) (ext + 1);
     tlv->type = 47;
     tlv->len = 11;
-    tlv = &buf[16];
+    tlv = (struct tlv_hdr *) (&buf[16]);
     tlv->type = 48;
     tlv->len = 6;
     rv = __ipnh_real_length(IPV6_HOP, vec, 0);
-    if (rv == 24) 
+    if (rv == 24)
       success ++;
     else {
       fprintf(stderr, "FAIL: test 5: %i\n", rv);

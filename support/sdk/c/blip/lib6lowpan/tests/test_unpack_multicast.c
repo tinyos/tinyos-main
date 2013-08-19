@@ -7,9 +7,8 @@
 #include "lib6lowpan.h"
 #include "nwbyte.h"
 #include "6lowpan.h"
+#include "internal.h"
 
-uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch, 
-                          int context, uint8_t *buf);
 
 struct {
   char   *prefix;
@@ -46,18 +45,24 @@ struct {
   for (i = 0; i < (sizeof(test_cases) / sizeof(test_cases[0])); i++) {
     struct in6_addr addr, correct;
     uint8_t buf[512];
-    uint8_t *rv;
+    uint8_t *bptr = test_cases[i].buf;
+    size_t len = 32;
+    int rv;
     total++;
 
     inet_pton6(test_cases[i].address, &correct);
 
     printf("in6_addr: %s\n", test_cases[i].address);
-    rv = unpack_multicast(&addr, test_cases[i].dispatch, test_cases[i].context, test_cases[i].buf);
+    rv = unpack_multicast(&addr,
+                          test_cases[i].dispatch,
+                          test_cases[i].context,
+                          &bptr,
+                          &len);
 
     inet_ntop6(&addr, buf, 512);
-    printf("result: %s length: %li\n", buf, rv - test_cases[i].buf);
+    printf("result: %s length: %li\n", buf, 32 - len);
 
-    if (test_cases[i].len != rv - test_cases[i].buf)
+    if (test_cases[i].len != 32 - len)
       continue;
 
     if (memcmp(&addr, &correct, 16) != 0)
