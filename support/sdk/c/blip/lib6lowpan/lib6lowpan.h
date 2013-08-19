@@ -135,7 +135,7 @@ int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id);
 int lowpan_extern_read_context(struct in6_addr *addr, int context);
 
 
-int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet);
+int pack_nhc_chain(uint8_t **dest, size_t *dlen, struct ip6_packet *packet);
 /*
  * Pack the header fields of msg into buffer 'buf'.
  *  it returns the number of bytes written to 'buf', or zero if it encountered

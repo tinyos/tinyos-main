@@ -153,6 +153,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
   buf = lowpan_buf = pack_ieee154_header(frag, len, frame);
   if (ctx->offset == 0) {
     int offset = 0;
+    size_t buflen;
 
 #if LIB6LOWPAN_HC_VERSION == -1
     /* just copy the ipv6 header around... */
@@ -165,7 +166,8 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     if (!buf) return -1;
 
     /* pack the next headers */
-    offset = pack_nhc_chain(&buf, len - (buf - ieee_buf), packet);
+    buflen = len - (buf - ieee_buf);
+    offset = pack_nhc_chain(&buf, &buflen, packet);
     if (offset < 0) return -2;
 #endif
 

@@ -19,9 +19,16 @@ inline uint8_t *pack_hlim(uint8_t *buf, struct ip6_hdr *hdr, uint8_t *dispatch);
 uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len,
                       ieee154_addr_t *l2addr, ieee154_panid_t pan, uint8_t *flags);
 uint8_t *pack_multicast(uint8_t *buf, struct in6_addr *addr, uint8_t *flags);
-int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset);
-int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packet, int offset);
-int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet);
+int pack_nhc_udp(uint8_t **dest,
+                 size_t *dlen,
+                 struct ip6_packet *packet,
+                 int offset);
+int pack_nhc_ipv6_ext(uint8_t **dest,
+                      size_t *dlen,
+                      uint8_t *type,
+                      struct ip6_packet *packet,
+                      int offset);
+int pack_nhc_chain(uint8_t **dest, size_t *dlen, struct ip6_packet *packet);
 uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt,
                              struct ieee154_frame_addr *frame);
 
