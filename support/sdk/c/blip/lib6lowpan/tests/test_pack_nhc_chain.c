@@ -16,8 +16,8 @@
 struct {
   uint8_t hdr[128];
 } ip_hdrs[] = {
-  {IPV6_DEST, 8,  0,1,2,3,4,5},
-  {IANA_UDP,  10, 0,1,2,3,4,5,6,7},
+  {IPV6_DEST, 15,  0x1F,4,2,3,4,5},
+  {IANA_UDP,  15, 0x03,1,2, 0x04,2,5,6, 0x0E,7,1,2,3,4,5,6,7},
 };
 
 
@@ -36,48 +36,78 @@ int main() {
   uint8_t nxt;
   uint8_t buf[512], result[512], *bufp;
   uint8_t *bptr = buf;
+  uint8_t *bptr2 = buf;
   uint8_t *rptr = result;
   size_t rlen = 512;
   int i, len;
-  size_t blen = 128;
+  size_t blen = 512;
+  size_t blen2 = 0;
   struct lowpan_reconstruct recon;
   int ret;
+  struct ip_iovec v[1];
+  struct ip6_packet pkt2;
+  uint8_t outbuf[512];
+  uint8_t *outbufptr = outbuf;
+  size_t outbuflen = 512;
+  uint8_t success = 0;
+  uint8_t total = 0;
 
   bufp = buf;
   packet.ip6_hdr.ip6_nxt = IPV6_HOP;
 
   iov_prefix(NULL, &vec[2], (uint8_t *)&udppkt, sizeof(udppkt));
-  iov_prefix(&vec[2], &vec[1], ip_hdrs[1].hdr, 10);
-  iov_prefix(&vec[1], &vec[0], ip_hdrs[0].hdr, 8);
+  iov_prefix(&vec[2], &vec[1], ip_hdrs[1].hdr, 128);
+  iov_prefix(&vec[1], &vec[0], ip_hdrs[0].hdr, 128);
 
   packet.ip6_data = vec;
 
   for (i=0; i<128; i++) {
-    printf("%02x", ip_hdrs[0].hdr[i]);
+    printf("%02x", vec[0].iov_base[i]);
   }
   printf("\n");
 
-  len = pack_nhc_chain(&bufp, 512, &packet);
-  printf("[%i] ", len);
+  len = pack_nhc_chain(&bufp, &blen, &packet);
+  printf("used %i bytes from source\n", len);
+  printf("[%i] ", 512-blen);
   if (len < 0) {
     printf("ERROR: packing chain failed\n");
     return 1;
   }
-  for (i = 0; i < len; i++) {
-    printf("0x%hhx ", buf[i]);
+  printf("packed: 0x");
+  for (i = 0; i < 512-blen; i++) {
+    printf("%02x", buf[i]);
   }
   printf("\n\n");
 
-  unpack_nhc_chain(&recon, &rptr, &rlen, &nxt, &bptr, &blen);
-  for (i = 0; i < 26; i++)
-    printf("0x%hhx ", result[i]);
+  blen2 = 512-blen;
+  unpack_nhc_chain(&recon, &rptr, &rlen, &nxt, &bptr2, &blen2);
+  printf("unpacked: 0x");
+  for (i = 0; i < 512-rlen; i++)
+    printf("%02x", result[i]);
   printf("\n");
 
-  ret = memcmp(packet.ip6_data, rptr, 18 + sizeof(udppkt));
+  v->iov_base = result;
+  v->iov_len = 512-rlen;
+  v->iov_next = NULL;
+
+  pkt2.ip6_data = v;
+  pkt2.ip6_hdr.ip6_nxt = IPV6_HOP;
+  len = pack_nhc_chain(&outbufptr, &outbuflen, &pkt2);
+  printf("[xx] packed: 0x");
+  for (i = 0; i < 512-outbuflen; i++) {
+    printf("%02x", outbuf[i]);
+  }
+  printf("\n");
+
+  total++;
+
+  ret = memcmp(outbuf, buf, 512-outbuflen);
   if (ret != 0) {
     printf("ERROR: did not unpack what we packed.\n");
     return 1;
+  } else {
+    success++;
   }
 
-  printf("Done!\n");
+  printf("%s: %i/%i tests succeeded\n", __FILE__, success, total);
 }

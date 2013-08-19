@@ -288,23 +288,30 @@ uint8_t *pack_multicast(uint8_t *buf, struct in6_addr *addr, uint8_t *flags) {
   }
 }
 
-/* never pack the ports */
-int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset) {
+/* Compress the udp header.
+ * Never pack the ports, currently.
+ *
+ * Returns the amount read out of the packet.
+ */
+int pack_nhc_udp(uint8_t **dest,
+                 size_t *dlen,
+                 struct ip6_packet *packet,
+                 int offset) {
   struct udp_hdr udp;
 
-  if (cnt < 7) {
-    return -1;
-  }
+  if (*dlen < 7) return -1;
 
   if (iov_read(packet->ip6_data, offset, sizeof(struct udp_hdr), (void*)&udp) !=
       sizeof(struct udp_hdr)) {
     return -1;
   }
 
-  *buf = LOWPAN_NHC_UDP_PATTERN | LOWPAN_NHC_UDP_PORT_FULL;
-  memcpy(buf + 1, &udp.srcport, 4);
-  memcpy(buf + 5, &udp.chksum, 2);
-  return 7;
+  (*dest)[0] = LOWPAN_NHC_UDP_PATTERN | LOWPAN_NHC_UDP_PORT_FULL;
+  memcpy(*dest + 1, &udp.srcport, 4);
+  memcpy(*dest + 5, &udp.chksum, 2);
+  *dest += 7; *dlen -= 7;
+
+  return sizeof(struct udp_hdr);
 }
 
 
@@ -321,17 +328,17 @@ uint8_t __ipnh_real_length(uint8_t type, struct ip_iovec *pkt, int offset) {
   struct ip6_ext ext;
   struct tlv_hdr tlv;
   if (iov_read(pkt, offset, 2, (void *)&ext) != 2)
-    return -1;
+    return 0;
 
-  /* if it's neither of these two types, the header length is
-     contained in the header. */
-  /* bradjc: Really? I can't find this anywhere. */
+  /* If it's neither of these two types, the length of valid data is contained
+   * in the header. Otherwise, we need to find where real data ends and
+   * padding begins. */
   if (type != IPV6_HOP && type != IPV6_DEST)
     return (ext.ip6e_len + 1) * 8;
 
   offset += 2;
   for (;;) {
-    if (offset >= (ext.ip6e_len + 1) * 8) break;
+    if (offset >= ((ext.ip6e_len + 1) * 8) + start_offset) break;
     if (iov_read(pkt, offset, 2, (void *)&tlv) != 2)
       return -1;
 
@@ -346,19 +353,20 @@ uint8_t __ipnh_real_length(uint8_t type, struct ip_iovec *pkt, int offset) {
   }
 
   /* the length of the TLVs didn't match the length in the enclosing header */
-  if (offset - start_offset != (ext.ip6e_len + 1) * 8)
+  if (offset - start_offset != (ext.ip6e_len + 1) * 8) {
     return 0;
+  }
 
   /* length up to the first padding option encountered which was not
      followed by a non-padding option. */
   return end_offset - start_offset;
 }
 
-int pack_ipnh(uint8_t *dest,
-              size_t cnt,
-              uint8_t *type,
-              struct ip6_packet *packet,
-              int offset) {
+int pack_nhc_ipv6_ext(uint8_t **dest,
+                      size_t *dlen,
+                      uint8_t *type,
+                      struct ip6_packet *packet,
+                      int offset) {
   struct ip6_ext ext;
   uint8_t real_len;
 
@@ -367,28 +375,20 @@ int pack_ipnh(uint8_t *dest,
     return -1;
   }
 
-  if (ext.ip6e_len > cnt)
-    return -1;
+  if (ext.ip6e_len > *dlen) return -1;
 
-  *dest = LOWPAN_NHC_IPV6_PATTERN;
+  (*dest)[0] = LOWPAN_NHC_IPV6_PATTERN;
   switch (*type) {
-  case IPV6_HOP:
-    *dest |= LOWPAN_NHC_EID_HOP; break;
-  case IPV6_ROUTING:
-    *dest |= LOWPAN_NHC_EID_ROUTING; break;
-  case IPV6_FRAG:
-    *dest |= LOWPAN_NHC_EID_FRAG; break;
-  case IPV6_DEST:
-    *dest |= LOWPAN_NHC_EID_DEST; break;
-  case IPV6_MOBILITY:
-    *dest |= LOWPAN_NHC_EID_MOBILE; break;
-  default:
-    return -1;
+  case IPV6_HOP:      (*dest)[0] |= LOWPAN_NHC_EID_HOP; break;
+  case IPV6_ROUTING:  (*dest)[0] |= LOWPAN_NHC_EID_ROUTING; break;
+  case IPV6_FRAG:     (*dest)[0] |= LOWPAN_NHC_EID_FRAG; break;
+  case IPV6_DEST:     (*dest)[0] |= LOWPAN_NHC_EID_DEST; break;
+  case IPV6_MOBILITY: (*dest)[0] |= LOWPAN_NHC_EID_MOBILE; break;
+  default: return -1;
   }
 
   real_len = __ipnh_real_length(*type, packet->ip6_data, offset);
-  if (real_len == 0)
-    return -1;
+  if (real_len == 0) return -1;
 
   /* store the next header type */
   /*  if it's compressable, we will compress it */
@@ -397,54 +397,51 @@ int pack_ipnh(uint8_t *dest,
       ext.ip6e_nxt == IPV6_FRAG     || ext.ip6e_nxt == IPV6_DEST     ||
       ext.ip6e_nxt == IPV6_MOBILITY || ext.ip6e_nxt == IPV6_IPV6     ||
       ext.ip6e_nxt == IANA_UDP) {
-    *dest |= LOWPAN_NHC_NH;
+    (*dest)[0] |= LOWPAN_NHC_NH;
   } else {
     /* include the next header value if it's not compressible */
-    dest++;
-    *dest = ext.ip6e_nxt;
+    *dest += 1; *dlen -= 1;
+    (*dest)[0] = ext.ip6e_nxt;
   }
+  *dest += 1; *dlen -= 1;
 
-  dest ++;
-  *dest++ = real_len;
+  /* Insert the length (in bytes) of the header */
+  /* The length field "indicates the number of octets that pertain to the
+   * (compressed) extension header following the Length field" so we subtract
+   * 2 for the next header and length bytes. */
+  (*dest)[0] = real_len - 2;
+  *dest += 1; *dlen -= 1;
 
-  /* copy the payload */
-  if (iov_read(packet->ip6_data, offset+2, real_len-2, dest) != real_len - 2)
+  /* Copy the payload */
+  if (iov_read(packet->ip6_data, offset+2, real_len-2, *dest) != real_len - 2)
     return -1;
+  *dest += real_len - 2; *dlen -= real_len - 2;
 
-  /* continue processing at the next header; which will ignore any padding
+  /* Continue processing at the next header; which will ignore any padding
      options */
   return (ext.ip6e_len + 1) * 8;
 }
 
-int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet) {
+int pack_nhc_chain(uint8_t **dest, size_t *dlen, struct ip6_packet *packet) {
   uint8_t nxt = packet->ip6_hdr.ip6_nxt;
   int offset = 0, rv;
   /* @return offset is the offset into the unpacked ipv6 datagram */
   /* dest is updated to show how far we have gotten in the packed data */
 
-
   while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
          nxt == IPV6_DEST || nxt == IPV6_MOBILITY || nxt == IPV6_IPV6) {
-    int extra;
-    rv = pack_ipnh(*dest, cnt, &nxt, packet, offset);
-
+    rv = pack_nhc_ipv6_ext(dest, dlen, &nxt, packet, offset);
     if (rv < 0) return -1;
-    /* it just so happens that LOWPAN_IPNH doesn't change the length
-       of the headers */
-    /* SDH : right... it actually can change the length depending on
-       whether the next header value is elided or not.*/
-    extra = (**dest & LOWPAN_NHC_NH) ? 0 : 1;
-    *dest  += rv + extra;
+
+    /* Increment the offset past the header we just compressed. */
     offset += rv;
-    cnt    -= rv;
   }
 
   if (nxt == IANA_UDP) {
-    rv = pack_udp(*dest, cnt, packet, offset);
-
+    rv = pack_nhc_udp(dest, dlen, packet, offset);
     if (rv < 0) return -1;
-    offset += sizeof(struct udp_hdr);
-    *dest  += rv;
+
+    offset += rv;
   }
   return offset;
 }
@@ -869,14 +866,16 @@ int unpack_nhc_ipv6_ext(uint8_t **dest,
   *buf += 1; *len -= 1;
 
   // Calculate the padding required after this extension header
-  extra = (8 - (length % 8)) % 8;
+  // The IPv6 length includes the next header and length bytes, whereas
+  // the NHC length does not. Therefore, we add two.
+  extra = (8 - ((length+2) % 8)) % 8;
 
   // Copy the extension header contents into the uncompressed buffer
-  if (*dlen < length + extra - 2) return -2;
-  if (*len < length - 2) return -1;
-  memcpy(*dest, *buf, length - 2);
-  *dest += length - 2; *dlen -= length - 2;
-  *buf += length - 2; *len -= length - 2;
+  if (*dlen < length + extra) return -2;
+  if (*len < length) return -1;
+  memcpy(*dest, *buf, length);
+  *dest += length; *dlen -= length;
+  *buf += length; *len -= length;
 
   /* pad out to units of 8 octets if necessary */
   if (**nxt_hdr == IPV6_HOP || **nxt_hdr == IPV6_DEST) {
@@ -890,7 +889,7 @@ int unpack_nhc_ipv6_ext(uint8_t **dest,
       *dest += extra; *dlen -= extra;
     }
   }
-  ext->ip6e_len = ((length + extra) / 8) - 1;
+  ext->ip6e_len = (((length+2) + extra) / 8) - 1;
 
   // Set the next header pointer to now point to this header's next header
   // byte.
