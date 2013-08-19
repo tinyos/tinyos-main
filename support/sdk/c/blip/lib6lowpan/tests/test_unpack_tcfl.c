@@ -7,8 +7,9 @@
 #include "lib6lowpan.h"
 #include "nwbyte.h"
 #include "6lowpan.h"
+#include "internal.h"
 
-uint8_t *unpack_tcfl(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
+
 
 struct {
   uint32_t result;
@@ -38,16 +39,21 @@ int run_tests() {
   int success = 0, total = 0;
   for (i = 0; i < (sizeof(test_cases) / sizeof(test_cases[0])); i++) {
     struct ip6_hdr hdr;
-    uint8_t *rb;
+    int rb;
+    uint8_t *bptr = test_cases[i].test;
+    size_t len = 4;;
 
     total ++;
 
-    rb = unpack_tcfl(&hdr, test_cases[i].test_dispatch, test_cases[i].test);
+    rb = unpack_tcfl(&hdr,
+                     test_cases[i].test_dispatch,
+                     &bptr,
+                     &len);
     printf("result: 0x%x correct: 0x%x\n", ntohl(hdr.ip6_flow), test_cases[i].result);
 
-    printf("length: %li\n", rb - test_cases[i].test);
+    printf("length: %li\n", 4-len);
 
-    if (test_cases[i].test_len != rb - test_cases[i].test)
+    if (test_cases[i].test_len !=  4-len)
       continue;
 
     if (test_cases[i].result != ntohl(hdr.ip6_flow))

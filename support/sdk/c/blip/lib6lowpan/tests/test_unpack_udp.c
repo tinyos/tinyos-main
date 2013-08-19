@@ -46,15 +46,26 @@ int run_tests() {
   for (i = 0; i < (sizeof(test_cases) / sizeof(test_cases[0])); i++) {
     uint8_t nxt_hdr = 0;
     uint8_t result[512];
-    uint8_t *rv;
+    uint8_t *rptr = result;
+    uint8_t *bptr = test_cases[i].pack+1;
+    size_t dlen = 512;
+    uint8_t pack_len = test_cases[i].pack_len;
+    int rv;
+    struct lowpan_reconstruct recon;
     struct udp_hdr *udp = (struct udp_hdr *)result;
     total++;
 
-    rv = unpack_udp(result, &nxt_hdr, test_cases[i].pack);
+    rv = unpack_nhc_udp(&recon,
+                    &rptr,
+                    &dlen,
+                    &nxt_hdr,
+                    test_cases[i].pack[0],
+                    &bptr,
+                    &test_cases[i].pack_len);
 
-    if (test_cases[i].pack_len != rv - test_cases[i].pack) {
-      printf("ERROR: wrong unpack length: %li %p %p\n", 
-             (rv - test_cases[i].pack), test_cases[i].pack, rv);
+    if (test_cases[i].pack_len != 1) {
+      printf("ERROR: wrong unpack length: %p %i\n", test_cases[i].pack,
+        test_cases[i].pack_len);
       continue;
     }
 
@@ -80,6 +91,16 @@ int run_tests() {
 
     if (nxt_hdr != IANA_UDP) {
       printf("ERROR: nxt_hdr should be UDP! was 0x%02x\n", nxt_hdr);
+      continue;
+    }
+
+    if (recon.r_app_len != &udp->len) {
+      printf("ERROR: recon app len should point to udp len!\n");
+      continue;
+    }
+
+    if (dlen != 512 - sizeof(struct udp_hdr)) {
+      printf("ERROR: dest len not decremented properly. %i\n", (int) dlen);
       continue;
     }
 

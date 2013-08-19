@@ -9,6 +9,8 @@
 #include "../ip_malloc.h"
 
 uint8_t frame[1500];
+uint8_t *frame_prt = frame;
+size_t frame_len = 1500;
 
 int lowpan_extern_read_context(struct in6_addr *addr, int context) {
   memset(addr->s6_addr, 0, 0);
@@ -53,6 +55,7 @@ int main(int argc, char **argv) {
   char print_buf[256];
   uint8_t *cur;
   int idx = 0, rv;
+  int ret;
 
   ip_malloc_init();
   memset(&recon, 0, sizeof(recon));
@@ -61,7 +64,9 @@ int main(int argc, char **argv) {
     print_buffer(frame, rv);
     printf("\n");
 
-    cur = unpack_ieee154_hdr(frame, &frame_address);
+    frame_len = rv;
+
+    ret = unpack_ieee154_hdr(&frame_prt, &frame_len, &frame_address);
     ieee154_print(&frame_address.ieee_src, print_buf, sizeof(print_buf));
     printf("802.15.4 source: %s\n", print_buf);
     ieee154_print(&frame_address.ieee_dst, print_buf, sizeof(print_buf));
@@ -71,9 +76,9 @@ int main(int argc, char **argv) {
 
     if (recon.r_bytes_rcvd == 0) {
       rv = lowpan_recon_start(&frame_address, &recon,
-                              cur, rv - (cur - frame) );
+                              frame_prt, frame_len);
     } else {
-      rv = lowpan_recon_add(&recon, cur, rv - (cur - frame));
+      rv = lowpan_recon_add(&recon, frame_prt, frame_len);
     }
 
     printf("[%i] %i %i\n", rv, recon.r_size, recon.r_bytes_rcvd);
