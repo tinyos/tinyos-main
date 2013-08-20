@@ -30,43 +30,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+/**
+ * Component for doing compile-time address allocation. Wired by the
+ * stack, sets a static address based on IN6_PREFIX and the EUI64 on
+ * boot. Useful for development or of you want to hard-code addresses.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
+ */
+#include <lib6lowpan/ip.h>
 
-#include "dhcp6.h"
-
-module Dhcp6P {
-  provides interface StdControl;
+module StaticIPAddressP {
   uses {
-    interface UDP;
-    interface Timer<TMilli>;
-    interface Random;
+    interface Boot;
+    interface IPAddress;
+    interface LocalIeeeEui64;
   }
 } implementation {
-  int m_state;
-  uint32_t m_txid;
-  
-  command error_t StdControl.start() {
-    m_state = DH6_SOLICIT;
-    m_txid = call Random.rand32();
-    call UDP.bind(DH6PORT_DOWNSTREAM);
+
+  event void Boot.booted() {
+    struct in6_addr addr;
+    ieee154_laddr_t ext;
+
+    call IPAddress.getLLAddr(&addr);
+
+    inet_pton6(IN6_PREFIX, &addr);
+
+    // Set the lower 64 bits as the link-local 64 bits
+    ext = call LocalIeeeEui64.getId();
+    memcpy(addr.s6_addr+8, ext.data, 8);
+    addr.s6_addr[8] ^= 0x2;
+
+    call IPAddress.setAddress(&addr);
   }
 
-  command error_t StdControl.stop() { }
-
-  void sendSolicit() {
-    struct dh6_solicit sol;
-    sol.dh6_hdr.dh6_type_txid = htonl((DHCP_SOLICIT << 16) | m_txid);
-    sol.dh6_id.type = htons(DH6OPT_CLIENTID);
-    sol.dh6_id.len = htons(8);
-    sol.dh6_id.duid_ll.duid_type = 3;
-    sol.dh6_id.duid_ll.hw_type = HWTYPE_EUI64;
-    
-  }
-
-  event void Timer.fired() {
-    switch (m_state) {
-    case DH6_SOLICIT:
-      sendSolicit();
-      break;
-    }
-  }
+  event void IPAddress.changed(bool valid) {}
 }

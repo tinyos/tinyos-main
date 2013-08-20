@@ -42,63 +42,61 @@ configuration IPStackC {
   }
 } implementation {
 
-    components IPProtocolsP,
-	IPForwardingEngineP as FwdP,
-	IPNeighborDiscoveryC as NdC;
-#ifndef BLIP_NO_RADIO
-    components IPDispatchC;
-#endif
+  components IPProtocolsP,
+    IPForwardingEngineP as FwdP,
+    IPNeighborDiscoveryC as NdC,
+    IPDispatchC;
   components IPStackControlP;
-
-  SplitControl = IPStackControlP;
+  SplitControl = IPStackControlP.SplitControl;
   IPStackControlP.StdControl = StdControl;
   IPStackControlP.RoutingControl = RoutingControl;
-#ifndef BLIP_NO_RADIO
   IPStackControlP.SubSplitControl -> IPDispatchC;
-#endif
 
-  ForwardingTable = FwdP;
-  ForwardingTableEvents = FwdP;
-  ForwardingEvents = FwdP;
+  ForwardingTable = FwdP.ForwardingTable;
+  ForwardingTableEvents = FwdP.ForwardingTableEvents;
+  ForwardingEvents = FwdP.ForwardingEvents;
 
   /* wiring up of the IP stack */
-  IP = IPProtocolsP;            /* top layer - dispatch protocols */
+  IP = IPProtocolsP.IP;          /* top layer - dispatch protocols */
   IPProtocolsP.SubIP -> FwdP.IP; /* routing layer - provision next hops */
-#ifndef BLIP_NO_RADIO
   /* this wiring for an 802.15.4 stack */
-  FwdP.IPForward[ROUTE_IFACE_154] -> NdC; /* this layer translates L3->L2 addresses */
+  FwdP.IPForward[ROUTE_IFACE_154] -> NdC.IPForward; /* this layer translates
+                                                     * L3->L2 addresses */
   NdC.IPLower -> IPDispatchC.IPLower; /* wire to the 6lowpan engine */
-#endif
   IPRaw = FwdP.IPRaw;
 
-  /* wire in core protocols -- this is only protocol included by default */
-  /* it pretty much just replies to pings... */
-  components ICMPCoreP, LedsC;
-  components IPAddressC, IPPacketC;
+  /* Wire in core protocols.
+   * ICMP is only protocol included by default. It pretty much just replies to
+   * pings. */
+  components ICMPCoreP;
   ICMPCoreP.IP -> IPProtocolsP.IP[IANA_ICMP];
-  ICMPCoreP.Leds -> LedsC;
-  ICMPCoreP.IPAddress -> IPAddressC;
 
-  FwdP.IPAddress -> IPAddressC;
-  FwdP.IPPacket -> IPPacketC;
-  IPProtocolsP.IPPacket -> IPPacketC;
-  IPStackControlP.IPAddress -> IPAddressC;
-  FwdP.Leds -> LedsC;
+  /* Connect the address and packet helper components. */
+  components IPAddressC, IPPacketC;
+  ICMPCoreP.IPAddress -> IPAddressC.IPAddress;
+  FwdP.IPAddress -> IPAddressC.IPAddress;
+  FwdP.IPPacket -> IPPacketC.IPPacket;
+  IPProtocolsP.IPPacket -> IPPacketC.IPPacket;
+  IPStackControlP.IPAddress -> IPAddressC.IPAddress;
 
   components new PoolC(struct in6_iid, N_CONCURRENT_SENDS) as FwdAddrPoolC;
   FwdP.Pool -> FwdAddrPoolC;
-#if defined(IN6_PREFIX)
-  components MainC, NoDhcpC;
-  NoDhcpC.Boot -> MainC;
-  NoDhcpC.IPAddress -> IPAddressC;
-#elif ! defined(IN6_NO_GLOBAL)
-  components Dhcp6RelayC;
-  components Dhcp6ClientC;
+
+  /* Choose how this node should get its IP address based on whether or not
+   * it knows its own prefix. */
+#ifdef IN6_PREFIX
+  components StaticIPAddressC;
+#else
+  components Dhcp6C;
 #endif
 
 #ifdef PRINTFUART_ENABLED
   components new TimerMilliC();
-  FwdP.PrintTimer -> TimerMilliC;
+  FwdP.PrintTimer -> TimerMilliC.Timer;
+#endif
+
+#ifdef DELUGE
+  components NWProgC;
 #endif
 
 }

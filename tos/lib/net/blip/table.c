@@ -25,9 +25,9 @@
 
 void table_init(table_t *table, void *data,
                 uint16_t elt_len, uint16_t n_elts) {
-  table->data = data;
-  table->elt_len  = elt_len;
-  table->n_elts   = n_elts;
+  table->data    = data;
+  table->elt_len = elt_len;
+  table->n_elts  = n_elts;
 }
 
 void *table_search(table_t *table, int (*pred)(void *)) {
@@ -49,4 +49,3 @@ void table_map(table_t *table, void(*fn)(void *)) {
   for (i = 0; i < table->n_elts; i++)
     fn(table->data + (i * table->elt_len));
 }
-

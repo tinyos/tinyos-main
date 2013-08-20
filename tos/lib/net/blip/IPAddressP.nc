@@ -20,6 +20,10 @@
  *
  */
 
+/*
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
+
 #include <lib6lowpan/lib6lowpan.h>
 #include <lib6lowpan/6lowpan.h>
 
@@ -64,7 +68,7 @@ module IPAddressP {
 
   command bool IPAddress.setSource(struct ip6_hdr *hdr) {
     enum { LOCAL, GLOBAL } type = GLOBAL;
-      
+
     if (hdr->ip6_dst.s6_addr[0] == 0xff) {
       // link-local multicast sent from local address
       if ((hdr->ip6_dst.s6_addr[1] & 0x0f) <= 0x2) {
@@ -91,16 +95,16 @@ module IPAddressP {
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       // link-local
-      if (m_short_addr && 
+      if (m_short_addr &&
           addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
-        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x200) && 
+        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x200) &&
             ntohs(addr->s6_addr16[7]) == saddr) {
           return TRUE;
         } else {
           return FALSE;
         }
-      } 
+      }
 
       return (addr->s6_addr[8] == (eui.data[7] ^ 0x2) && /* invert U/L bit */
               addr->s6_addr[9] == eui.data[6] &&
