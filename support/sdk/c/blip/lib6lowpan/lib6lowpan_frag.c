@@ -46,10 +46,18 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   memset(recon->r_buf, 0, recon->r_size);
   recon->r_app_len = NULL;
 
-  if (len < 1) return -5;
+  if (len < 1) {
+    ip_free(recon->r_buf);
+    return -5;
+  }
   if (*unpack_point == LOWPAN_IPV6_PATTERN) {
     /* uncompressed header... no need to un-hc */
     unpack_point++; len--;
+    if (len < sizeof(struct ip6_hdr)) {
+      // Uncompressed packet must be at least the size of the ipv6 header
+      ip_free(recon->r_buf);
+      return -7;
+    }
     if (len > recon->r_size) {
       ip_free(recon->r_buf);
       return -6;
