@@ -36,7 +36,7 @@
  * Implements "am_address" collision detection and renumbering.
  *
  * @author Martin Cerveny
- */
+ */ 
 
 #include "Timer.h"
 #include "MH.h"
@@ -49,9 +49,9 @@
 #define xdbg_inline_BABEL(s, args...) printf(args)
 #define xdbg_flush_BABEL(s) printfflush()
 #else
-#define xdbg_BABEL(s,args...) 
-#define xdbg_inline_BABEL(s, args...) 
-#define xdbg_flush_BABEL(s) 
+#define xdbg_BABEL(s,args...)
+#define xdbg_inline_BABEL(s, args...)
+#define xdbg_flush_BABEL(s)
 #endif
 
 module BabelRoutingM {
@@ -94,7 +94,7 @@ implementation {
 	AckDB ackdb[BABEL_ACKDB_SIZE]; // FIFO
 	uint8_t cnt_ackdb = 0;
 
-	// local state	
+	// local state
 
 	uint16_t hello_seqno = 0;
 	uint16_t hello_interval = BABEL_HELLO_INTERVAL / 8;
@@ -147,7 +147,7 @@ implementation {
 	event void AMControl.startDone(error_t err) {
 		if(err == SUCCESS) {
 			call Timer.startPeriodic(10);
-			send();
+			// first send delayed (addr change)
 		}
 		else {
 			call AMControl.start();
@@ -296,6 +296,11 @@ implementation {
 				BABEL_WRITE_MSG_BEGIN(bptr, aptr);
 				xdbg(BABEL, "txbegin == ");
 
+				if(ndb[self].dest_nodeid != call ActiveMessageAddress.amAddress()) {
+					xdbg_inline(BABEL, "tx nh - L2=%04X DB=%04X - ", call ActiveMessageAddress.amAddress(), ndb[self].dest_nodeid);
+					BABEL_WRITE_MSG_NH(bptr, aptr, ndb[self].dest_nodeid);
+				}
+
 				if(pending & BABEL_PENDING_ACK) {
 					// pending ack response (unicast send)					
 					xdbg_inline(BABEL, "tx ack - ");
@@ -314,10 +319,9 @@ implementation {
 					destaddr = AM_BROADCAST_ADDR;
 
 					if(pending & BABEL_ADDR_CHANGED) {
-						xdbg_inline(BABEL, "upd: nh=%04X oldaddress - ", ndb[self].dest_nodeid);
-						BABEL_WRITE_MSG_NH(bptr, aptr, ndb[self].dest_nodeid); // use old nodeid to invalidate routes 
+						xdbg_inline(BABEL, "upd: addrchange - ");
 						for(i = 0; i < cnt_ndb;) {
-							xdbg_inline(BABEL, "upd: dest=%04X addrchaged (%u,%u)- ", ndb[i].dest_nodeid, i, self);
+							xdbg_inline(BABEL, "upd: dest=%04X retract - ", ndb[i].dest_nodeid);
 							if(BABEL_WRITE_MSG_ROUTER_ID(bptr, aptr, ndb[i].eui)&& BABEL_WRITE_MSG_UPDATE(bptr, aptr, 1, ndb[i].seqno, BABEL_INFINITY, ndb[i].dest_nodeid)) {
 								if(i != self) 
 									remove_ndb(i);
@@ -334,9 +338,9 @@ implementation {
 						}
 					}
 					else {
-						// process hello_timer 
+						// process hello_timer
 						if(pending & BABEL_PENDING_HELLO) {
-							xdbg_inline(BABEL, "tx hello seq=%04X - ", hello_seqno);
+							xdbg_inline(BABEL, "tx hello h_seq=%04X - ", hello_seqno);
 							pending &= ~BABEL_PENDING_HELLO;
 							if(hello_interval < BABEL_HELLO_INTERVAL) {
 								hello_interval *= 2;
@@ -368,7 +372,7 @@ implementation {
 							}
 						}
 
-						// process route update (maybe more messages) 
+						// process route update (maybe more messages)
 						if(pending & BABEL_PENDING_UPDATE) {
 							bool more = FALSE;
 							xdbg_inline(BABEL, "tx upd - ");
@@ -390,7 +394,7 @@ implementation {
 								pending &= ~ BABEL_PENDING_UPDATE;
 						}
 
-						// process sq request (maybe more messages) 
+						// process sq request (maybe more messages)
 						if(pending & BABEL_PENDING_SQ_REQUEST) {
 							bool more = FALSE;
 							xdbg_inline(BABEL, "tx sqrq - ");
@@ -467,12 +471,13 @@ implementation {
 	event message_t * Receive.receive(message_t * msg, void * payload, uint8_t len) {
 		bool send_immediate = FALSE;
 		void * bptr = payload, *aptr = payload;
-		uint16_t msg_nodeid;
 
+		//+++ debug code
 		//		if(block == call AMPacket.source(msg)) {
 		//			xdbg(BABEL, "rxbegin %04X== BLOCKED \n", call AMPacket.source(msg));
 		//			return msg;
-		//		} 
+		//		}
+		//+++
 
 		if(len < 4) {
 			xdbg(BABEL, "rx packet too small\n");
@@ -480,24 +485,23 @@ implementation {
 			return msg;
 		}
 
-		//call Leds.led1On(); 
+		//call Leds.led1On();
 
 		xdbg(BABEL, "rxbegin %04X == ", call AMPacket.source(msg));
-		msg_nodeid = call AMPacket.source(msg);
 
 		if(BABEL_READ_MSG_BEGIN(bptr, aptr, len)) {
 			bool err = FALSE;
 			ieee_eui64_t last_eui;
-			uint16_t last_nodeid = msg_nodeid;
+			uint16_t last_nodeid = call AMPacket.source(msg);
 
-			uint8_t msg_idx = search_neighdb(msg_nodeid);
-			if(msg_idx != BABEL_NOT_FOUND) {
+			uint8_t neighdb_idx = search_neighdb(last_nodeid);
+			if(neighdb_idx != BABEL_NOT_FOUND) {
 				// do some average smoothing
 				//TODO: recompute by http://www.hindawi.com/journals/jcnc/2012/790374/
-				neighdb[msg_idx].lqi /= 2;
-				neighdb[msg_idx].lqi += getLqi(msg) / 2;
-				neighdb[msg_idx].rssi /= 2;
-				neighdb[msg_idx].rssi += getRssi(msg) / 2;
+				neighdb[neighdb_idx].lqi /= 2;
+				neighdb[neighdb_idx].lqi += getLqi(msg) / 2;
+				neighdb[neighdb_idx].rssi /= 2;
+				neighdb[neighdb_idx].rssi += getRssi(msg) / 2;
 			}
 
 			while(( ! err)&&( ! BABEL_READ_MSG_END(bptr, aptr, len))) {
@@ -523,7 +527,7 @@ implementation {
 					case BABEL_ACK_REQ : //  4.4.3.  Acknowledgement Request
 					{
 						uint16_t _nonce, _interval;
-						xdbg_inline(BABEL, "rx ACKRQ %04X - ", msg_nodeid);
+						xdbg_inline(BABEL, "rx ACKRQ %04X - ", last_nodeid);
 						if( ! BABEL_READ_MSG_ACK_REQ(bptr, aptr, len, _nonce, _interval)) {
 							err = TRUE;
 							xdbg(BABEL, "rx ACK REQ error\n");
@@ -532,13 +536,13 @@ implementation {
 							uint8_t i;
 							xdbg_inline(BABEL, "ackrq: non=%04X - ", _nonce);
 							for(i = 0; i < cnt_ackdb; i++){	// ignore duplicities
-								if((ackdb[i].nodeid == msg_nodeid)&&(ackdb[i].nonce == _nonce)) 
+								if((ackdb[i].nodeid == last_nodeid)&&(ackdb[i].nonce == _nonce)) 
 									break;
 							}
 							if(i == cnt_ackdb) {
 								if(cnt_ackdb < sizeof(ackdb)) {
 									cnt_ackdb++;
-									ackdb[i].nodeid = msg_nodeid;
+									ackdb[i].nodeid = last_nodeid;
 									ackdb[i].nonce = _nonce;
 									pending |= BABEL_PENDING_ACK;
 									send_immediate = TRUE;
@@ -575,9 +579,9 @@ implementation {
 							xdbg(BABEL, "rx HELLO error\n");
 						}
 						else {
-							xdbg_inline(BABEL, "hello: seq=%04X - ", _seqno);
-							if(msg_idx != BABEL_NOT_FOUND) {
-								uint16_t hello_history = neighdb[msg_idx].hello_history;
+							xdbg_inline(BABEL, "hello: h_seq=%04X - ", _seqno);
+							if(neighdb_idx != BABEL_NOT_FOUND) {
+								uint16_t hello_history = neighdb[neighdb_idx].hello_history;
 								uint8_t hello_timer_lost = 0, i;
 								uint16_t hello_seqno_lost;
 
@@ -591,29 +595,29 @@ implementation {
 								}
 
 								// eval seqno
-								hello_seqno_lost = seqnodiff(_seqno, neighdb[msg_idx].hello_seqno);
+								hello_seqno_lost = seqnodiff(_seqno, neighdb[neighdb_idx].hello_seqno);
 
 								if(hello_seqno_lost > 16){ // large lost
-									neighdb[msg_idx].hello_history = 0;
+									neighdb[neighdb_idx].hello_history = 0;
 								}
 								else {
 									if(hello_timer_lost < hello_seqno_lost) {
-										neighdb[msg_idx].hello_history >>= hello_seqno_lost - hello_timer_lost;
+										neighdb[neighdb_idx].hello_history >>= hello_seqno_lost - hello_timer_lost;
 									}
 									else {
-										neighdb[msg_idx].hello_history <<= hello_timer_lost - hello_seqno_lost;
+										neighdb[neighdb_idx].hello_history <<= hello_timer_lost - hello_seqno_lost;
 									}
 								}
 
-								neighdb[msg_idx].hello_history |= 0x8000;
-								neighdb[msg_idx].hello_seqno = _seqno;
-								neighdb[msg_idx].hello_timer = 2 * _interval;
-								xdbg_inline(BABEL, "hello: history=%04X - ", neighdb[msg_idx].hello_history);
+								neighdb[neighdb_idx].hello_history |= 0x8000;
+								neighdb[neighdb_idx].hello_seqno = _seqno;
+								neighdb[neighdb_idx].hello_timer = 2 * _interval;
+								xdbg_inline(BABEL, "hello: history=%04X - ", neighdb[neighdb_idx].hello_history);
 							}
 							else {
 								NeighborDB data;
 
-								data.neigh_nodeid = msg_nodeid;
+								data.neigh_nodeid = last_nodeid;
 								data.hello_history = 0x8000;
 								data.hello_seqno = _seqno;
 								data.hello_timer = 2 * _interval;
@@ -630,7 +634,7 @@ implementation {
 										ndb[i].flags |= BABEL_FLAG_UPDATE;
 									pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 									hello_interval = BABEL_HELLO_INTERVAL / 8;
-									msg_idx = search_neighdb(msg_nodeid);
+									neighdb_idx = search_neighdb(last_nodeid);
 								}
 								else {
 									err = TRUE;
@@ -652,14 +656,14 @@ implementation {
 						else {
 							if(_nodeid == ndb[self].dest_nodeid){	// process only our IHU message data
 								xdbg_inline(BABEL, "ihu: my txcost %d - ", _cost);
-								if(msg_idx != BABEL_NOT_FOUND) {
-									neighdb[msg_idx].ihu_tx_cost = _cost;
-									neighdb[msg_idx].ihu_timer = _interval * BABEL_IHU_THRESHOLD;
+								if(neighdb_idx != BABEL_NOT_FOUND) {
+									neighdb[neighdb_idx].ihu_tx_cost = _cost;
+									neighdb[neighdb_idx].ihu_timer = _interval * BABEL_IHU_THRESHOLD;
 								}
 								else {
 									NeighborDB data;
 
-									data.neigh_nodeid = msg_nodeid;
+									data.neigh_nodeid = last_nodeid;
 									data.hello_history = 0x0000;
 									data.hello_seqno = 0;
 									data.hello_timer = 0;
@@ -676,7 +680,7 @@ implementation {
 											ndb[i].flags |= BABEL_FLAG_UPDATE;
 										pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 										hello_interval = BABEL_HELLO_INTERVAL / 8;
-										msg_idx = search_neighdb(msg_nodeid);
+										neighdb_idx = search_neighdb(last_nodeid);
 									}
 									else {
 										err = TRUE;
@@ -699,10 +703,28 @@ implementation {
 					}
 					case BABEL_NH : // 4.4.8.  Next Hop
 					{
+						uint16_t _last_nodeid;
+
 						xdbg_inline(BABEL, "rx NH - ");
-						if( ! BABEL_READ_MSG_NH(bptr, aptr, len, last_nodeid)) {
+						if( ! BABEL_READ_MSG_NH(bptr, aptr, len, _last_nodeid)) {
 							err = TRUE;
 							xdbg(BABEL, "rx NH error\n");
+						}
+						xdbg_inline(BABEL, "nh=%04X - ", _last_nodeid);
+
+						if(_last_nodeid != last_nodeid) {
+							xdbg_inline(BABEL, "nh updated - ");
+
+							last_nodeid = _last_nodeid;
+							neighdb_idx = search_neighdb(last_nodeid);
+							if(neighdb_idx != BABEL_NOT_FOUND) {
+								// do some average smoothing
+								//TODO: recompute by http://www.hindawi.com/journals/jcnc/2012/790374/
+								neighdb[neighdb_idx].lqi /= 2;
+								neighdb[neighdb_idx].lqi += getLqi(msg) / 2;
+								neighdb[neighdb_idx].rssi /= 2;
+								neighdb[neighdb_idx].rssi += getRssi(msg) / 2;
+							}
 						}
 						break;
 					}
@@ -717,9 +739,10 @@ implementation {
 						else {
 							uint16_t idx;
 							xdbg_inline(BABEL, "upd: dest=%04X seq=%04X metr=%04X - ", _destnodeid, _seqno, _metric);
-							if(_destnodeid == ndb[self].dest_nodeid){// reverse echo ?  
+							if(_destnodeid == ndb[self].dest_nodeid){// reverse echo ?
 								xdbg_inline(BABEL, "upd: me  -");
 								if(*(uint64_t * )&last_eui < *(uint64_t * )&ndb[self].eui) {
+									// someone else has my nodeid, change my nodeid
 									am_addr_t new_nodeid = ndb[self].dest_nodeid + 1;
 									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0)) 
 										new_nodeid++;
@@ -727,7 +750,7 @@ implementation {
 									xdbg(BABEL, "NODEID collision, new nodeid %04X\n", new_nodeid);
 									break;
 								}
-								if(seqnograter(_seqno, ndb[self].seqno, BABEL_SEQNO_GRATER)) {
+								if(((*(uint64_t * )&last_eui == *(uint64_t * )&ndb[self].eui))&& seqnograter(_seqno, ndb[self].seqno, BABEL_SEQNO_GRATER)) {
 									// boot sequence sync to network
 									ndb[self].seqno = _seqno + 1;
 									ndb[self].flags |= BABEL_FLAG_UPDATE;
@@ -736,6 +759,12 @@ implementation {
 									xdbg_inline(BABEL, "upd: my NEW seq=%04X -", ndb[self].seqno);
 								}
 								break;
+							}
+							else {
+								if((*(uint64_t * )&last_eui == *(uint64_t * )&ndb[self].eui)) {
+									xdbg_inline(BABEL, "upd: me with different nodeid, ignore - ");
+									break;
+								}
 							}
 							idx = search_ndb(_destnodeid);
 							if(idx != BABEL_NOT_FOUND) {
@@ -769,6 +798,9 @@ implementation {
 											pending |= BABEL_PENDING_RT_REQUEST;
 											send_immediate = TRUE;
 											xdbg_inline(BABEL, "upd: retracted - ");
+										}
+										else {
+											xdbg_inline(BABEL, "upd: NH(%04X) not match ndb(%04X) ignore - ", last_nodeid, ndb[idx].nexthop_nodeid);
 										}
 									}
 									else {// test feasible
@@ -858,7 +890,7 @@ implementation {
 									ndb[idx].flags |= BABEL_FLAG_UPDATE;
 								}
 								else {
-									// TODO: send retraction route 3.8.1.1/1 
+									// TODO: send retraction route 3.8.1.1/1
 									// ??? what about loop ?
 									xdbg_inline(BABEL, "rtrq: unknown (RETRACTION NOT SEND) - ");
 								}
@@ -880,7 +912,7 @@ implementation {
 						}
 						else {
 							xdbg_inline(BABEL, "sqrq: dest=%04X seq=%04X - ", _destnodeid, _seqno);
-							if(_destnodeid == ndb[self].dest_nodeid){ // is for me  
+							if(_destnodeid == ndb[self].dest_nodeid){ // is for me
 								if(*(uint64_t * )&_eui < *(uint64_t * )&ndb[self].eui) {
 									am_addr_t new_nodeid = ndb[self].dest_nodeid + 1;
 									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0)) 
@@ -912,7 +944,7 @@ implementation {
 										break;
 									}
 
-									// 3.8.1.2. /4-7, send with broadcast, hopcount barriers infinite broadcast loop 
+									// 3.8.1.2. /4-7, send with broadcast, hopcount barriers infinite broadcast loop
 									if(_hopcount >= 2) {
 										_hopcount--;
 										// add new or updated sq request
@@ -952,7 +984,7 @@ implementation {
 		if(send_immediate) 
 			send(); // or post ?
 
-		//call Leds.led1Off(); 
+		//call Leds.led1Off();
 
 		return msg;
 	}
@@ -964,7 +996,7 @@ implementation {
 
 		for(i = 0; i < cnt_neighdb; i++) {
 			if(neighdb[i].hello_timer) 
-				if( ! (--neighdb[i].hello_timer)){	// nonfatal lost "hello" 
+				if( ! (--neighdb[i].hello_timer)){	// nonfatal lost "hello"
 				neighdb[i].hello_timer = neighdb[i].hello_interval;
 				neighdb[i].hello_history >>= 1;
 				xdbg(BABEL, "lost hello %04X\n", neighdb[i].neigh_nodeid);
@@ -1006,7 +1038,7 @@ implementation {
 
 					if( ! ndb[i].timer){ // route update timeout
 
-						// PHASE 1: try to change to other feasible route (next_node switch) 
+						// PHASE 1: try to change to other feasible route (next_node switch)
 						// BABEL_FLAG_RT_SWITCH
 
 						if( ! (ndb[i].flags & BABEL_FLAG_RT_SWITCH)) {
@@ -1144,14 +1176,16 @@ implementation {
 	task void addrchanged() {
 		xdbg(BABEL, "addr changed %04X\n", call ActiveMessageAddress.amAddress());
 
-		//		switch(call ActiveMessageAddress.amAddress()) {
-		//			case 0xE4FC : block = 0xE4C6;
-		//			break;
-		//			case 0xE4C6 : block = 0xE4FC;
-		//			break;
-		//			default : break;
-		//		}
-		//		xdbg(BABEL, "BLOCKING %04X\n", block); 
+		//+++ debug code
+		//				switch(call ActiveMessageAddress.amAddress()) {
+		//					case 0xE4FC : block = 0xE4C6;
+		//					break;
+		//					case 0xE4C6 : block = 0xE4FC;
+		//					break;
+		//					default : break;
+		//				}
+		//				xdbg(BABEL, "BLOCKING %04X\n", block);
+		//+++
 
 		pending |= BABEL_ADDR_CHANGED;
 		if(call Timer.isRunning())
@@ -1286,5 +1320,4 @@ implementation {
 			default : return FAIL;
 		}
 	}
-
 }
