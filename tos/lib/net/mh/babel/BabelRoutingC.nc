@@ -76,11 +76,11 @@ implementation {
 	BabelRoutingM.AMSend->AMSenderC;
 	BabelRoutingM.Receive->AMReceiverC;
 
-	components ActiveMessageC, RF230ActiveMessageC, LocalIeeeEui64C, ActiveMessageAddressC;
+	components ActiveMessageC, LocalIeeeEui64C, ActiveMessageAddressC;
 
 	BabelRoutingM.AMControl->ActiveMessageC;
-	BabelRoutingM.PacketRSSI->RF230ActiveMessageC.PacketRSSI;
-	BabelRoutingM.PacketLinkQuality->RF230ActiveMessageC.PacketLinkQuality;
+	BabelRoutingM.PacketRSSI->ActiveMessageC.PacketRSSI;
+	BabelRoutingM.PacketLinkQuality->ActiveMessageC.PacketLinkQuality;
 
 	BabelRoutingM.LocalIeeeEui64->LocalIeeeEui64C;
 
