@@ -638,7 +638,7 @@ implementation
 		return SUCCESS;
 	}
 
-	// TODO: turn on SFD capture when turning off radio
+
 	tasklet_async command error_t RadioState.turnOn()
 	{
 		if( cmd != CMD_NONE || (state == STATE_PD && ! call RadioAlarm.isFree()) )
