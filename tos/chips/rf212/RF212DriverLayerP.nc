@@ -382,6 +382,8 @@ implementation
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			call IRQ.disable();
+			radioIrq = FALSE;
+			
 			writeRegister(RF212_TRX_STATE, RF212_FORCE_TRX_OFF);
 			state = STATE_TRX_OFF;
 		}

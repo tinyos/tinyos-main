@@ -306,6 +306,8 @@ implementation
       TRX_STATE = CMD_FORCE_TRX_OFF;
 
       IRQ_MASK = 0;
+      radioIrq = IRQ_NONE;
+
       call McuPowerState.update();
 
       state = STATE_TRX_OFF;
