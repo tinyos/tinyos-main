@@ -17,13 +17,18 @@ module IPStackControlP {
   }
 } implementation {
 
+  // Keep track of whether the BLIP stack has been started (using SplitControl)
+  bool blip_started = FALSE;
+
   command error_t SplitControl.start() {
+    if (blip_started) return EALREADY;
     return call SubSplitControl.start();
   }
 
   event void SubSplitControl.startDone(error_t error) {
     struct in6_addr addr;
     if (error == SUCCESS) {
+      blip_started = TRUE;
       call StdControl.start();
     }
 
@@ -43,6 +48,9 @@ module IPStackControlP {
   }
 
   event void SubSplitControl.stopDone(error_t error) {
+    if (error == SUCCESS) {
+      blip_started = FALSE;
+    }
     signal SplitControl.stopDone(error);
   }
 

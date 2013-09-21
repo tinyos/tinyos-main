@@ -52,12 +52,10 @@ configuration IPDispatchC {
   IPLower = IPDispatchP.IPLower;
   BlipStatistics = IPDispatchP.BlipStatistics;
 
-  IPDispatchP.Boot -> MainC.Boot;
-  IPDispatchP.Init <- MainC.SoftwareInit;
-
   /* Wire to the bare interfaces from the radio. Bare Ieee154 interfaces provide
    * full access to raw 802.15.4 packet and require that all fields of the
    * packet be set except for the sequence number and the CRC at the end. */
+  IPDispatchP.Init <- MainC.SoftwareInit;
   IPDispatchP.RadioControl -> MessageC.SplitControl;
   IPDispatchP.BarePacket -> MessageC.BarePacket;
   IPDispatchP.Ieee154Send -> MessageC.BareSend;
