@@ -1,6 +1,6 @@
 COMPONENT=TestRPLAppC
 
-# NB : 
+# NB :
 # DEFAULT_LOCAL_GROUP=0xabcd
 
 # radio settings

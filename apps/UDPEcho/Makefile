@@ -13,7 +13,7 @@ COMPONENT=UDPEchoC
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
 PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TOSDIR)/lib/net/rpl
-# PFLAGS += -DRPL_OF_MRHOF 
+# PFLAGS += -DRPL_OF_MRHOF
 
 # tell the 6lowpan layer to not generate hc-compressed headers
 # PFLAGS += -DLIB6LOWPAN_HC_VERSION=-1
@@ -31,8 +31,8 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TOSDIR)/lib/net/rpl
 # EUI will be used in either case.
 PFLAGS += -DBLIP_DERIVE_SHORTADDRS
 
-# this disables dhcp and statically chooses a prefix.  the motes form
-# their ipv6 address by combining this with TOS_NODE_ID
+# Set this when you want to use statically assigned addresses. The stack will
+# not use DHCP in that case.
 PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
 PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED

@@ -28,8 +28,8 @@ COMPONENT=CoapBlipC
 PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 #PFLAGS += -DRPL_OF_MRHOF -DRPL_ROOT_ADDR=1
 
-# if you set this, the stack won't use dhcp to assign addresses -- it
-# will use this prefix combined with TOS_NODE_ID
+# Set this when you want to use statically assigned addresses. The stack will
+# not use DHCP in that case.
 #PFLAGS += -DIN6_PREFIX=\"2001:638:708:1156::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:198:56c:1000::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212d::\"

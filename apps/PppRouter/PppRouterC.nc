@@ -59,7 +59,10 @@ configuration PppRouterC {
   // prints the routing table
   // components RouteCmdC;
 
-#ifndef IN6_PREFIX
+#ifdef IN6_PREFIX
+  components StaticIpAddressC;
+#else
+  components Dhcp6C;
   components Dhcp6ClientC;
   PppRouterP.Dhcp6Info -> Dhcp6ClientC;
 #endif
