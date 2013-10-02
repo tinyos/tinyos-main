@@ -124,6 +124,8 @@ AC_SUBST(INSTALLJNI)
 AC_SUBST(JNIPREFIX)
 AC_SUBST(JNISUFFIX)
 
+AC_CHECK_LIB(popt, poptGetNextOpt)
+AM_CONDITIONAL([POPT_CPPBSL], [test "$ac_cv_lib_popt_poptGetNextOpt" == yes])
 
 AC_OUTPUT(
 	Makefile
@@ -131,6 +133,8 @@ AC_OUTPUT(
 	platforms/mica/Makefile
 	platforms/mica/cc1000-channelgen/Makefile
 	platforms/msp430/Makefile
+	platforms/msp430/cppbsl/Makefile
+	platforms/msp430/cppbsl/src/Makefile
 	platforms/msp430/motelist/motelist-linux
 	platforms/msp430/motelist/motelist-macos
 	platforms/msp430/motelist/Makefile
