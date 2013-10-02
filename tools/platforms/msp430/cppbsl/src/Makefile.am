@@ -1,5 +1,4 @@
-## Makefile.am -- Process this file with automake to produce Makefile.in
-## src/Makefile.am
+AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS=cppbsl
 cppbsl_SOURCES=\
@@ -9,4 +8,4 @@ cppbsl_SOURCES=\
 	Serial.cc \
 	Bsl.h \
 	Bsl.cc \
-	cppbsl.cc 
+	cppbsl.cc

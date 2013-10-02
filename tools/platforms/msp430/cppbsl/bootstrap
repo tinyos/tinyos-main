@@ -1,8 +1,0 @@
-#!/bin/sh
-set -x
-aclocal -I config
-# libtoolize --force --copy
-aclocal -I config
-autoheader 
-automake --gnu --add-missing --copy
-autoconf 
