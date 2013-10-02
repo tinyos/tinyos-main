@@ -60,3 +60,8 @@ tinyos/java/serial/toscomm-32.dll
 tinyos/java/serial/toscomm-64.dll
 tinyos/misc/tos-serial-debug.exe
 
+#cppbsl
+platforms/msp430/cppbsl/src/.deps/
+platforms/msp430/cppbsl/stamp-h1
+platforms/msp430/cppbsl/src/cppbsl
+
