@@ -55,7 +55,7 @@ implementation
   components Stm25pOffC;
   PlatformP.Stm25pInit -> Stm25pOffC;
 
-  #ifndef DISABLE_BATTRY_CHECK
+  #ifndef DISABLE_BATTERY_CHECK
   components BatteryWarningC;
   PlatformP.BatteryWarning -> BatteryWarningC;
   #endif

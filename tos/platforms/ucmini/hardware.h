@@ -62,5 +62,9 @@ enum {
 #define UCMINI_REV 200
 #endif
 
+#if defined(UCMINI_REV) && UCMINI_REV<110
+#define DISABLE_BATTERY_CHECK
+#endif
+
 
 #endif //HARDWARE_H
