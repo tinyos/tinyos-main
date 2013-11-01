@@ -119,7 +119,6 @@ implementation
   async event void HplAtm128Compare.fired() {
     call HplAtm128Compare.stop();
     dbg("Atm128AlarmC", " Compare fired, signal alarm above.\n");
-    __nesc_enable_interrupt();
     signal Alarm.fired();
   }
 

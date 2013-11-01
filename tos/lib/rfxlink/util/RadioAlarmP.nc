@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013, Eric B. Decker
  * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
  *
@@ -30,6 +31,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Author: Miklos Maroti
+ * Author: Eric B. Decker <cire831@gmail.com>
+ *
+ * The rfxlink stack is primarily intended to be run using tasklets with
+ * interrupts on.  Tasklets provide for reasonable mutual exclusion (like
+ * tasks with run to completion) while having the response latency from
+ * running at interrupt level.
+ *
+ * RadioAlarm want to have interrupts reenabled.  This is done in Alarm.fired
+ * which is the handler that initially gets notified when a timer interrupt
+ * has fired.
  */
 
 #include <Tasklet.h>
@@ -64,6 +75,7 @@ implementation
 
 	async event void Alarm.fired()
 	{
+                __nesc_enable_interrupt();
 		atomic
 		{
 			if( state == STATE_WAIT )
