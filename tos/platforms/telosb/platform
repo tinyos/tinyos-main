@@ -7,6 +7,7 @@ push( @includes, qw(
 
   %T/platforms/telosb
   %T/platforms/telosb/chips/stm25p
+  %T/platforms/telosb/chips/msp430
   %T/platforms/telosa
   %T/platforms/telosa/chips/cc2420
   %T/platforms/telosa/chips/s1087
