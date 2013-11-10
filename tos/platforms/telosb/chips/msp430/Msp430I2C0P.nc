@@ -34,7 +34,7 @@
  * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  *
  * Small modifications for telosb:
- * @author Fabian Knapp <fabian.knapp@kom.tu-darmstadt.de>
+ * @author Fabian Knapp <fabian.knapp@kom.tu-darmstadt.de> 
  * @version $Date: 2013-10-11 02:30:11 $
  */
 
