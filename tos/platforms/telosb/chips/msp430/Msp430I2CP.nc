@@ -32,6 +32,10 @@
 /**
  * @author Jonathan Hui <jhui@archrock.com>
  * @version $Revision: 1.7 $ $Date: 2013/04/09 14:28:58 $
+ * 
+ * Minor modification for telosb:
+ * @author Fabian Knapp <fabian.knapp@kom.tu-darmstadt.de>
+ * @version $Revision: 1.7 $ $Date: 2013/10/11 02:30:58 $
  */
 
 #include <I2C.h>
