@@ -64,7 +64,7 @@ implementation {
   }  
   
   async command bool RoundRobinQueue.isEmpty() {
-    int i;
+    unsigned int i;
     atomic {
       for (i = 0; i<sizeof(resQ); i++)
         if(resQ[i] > 0) return FALSE;
