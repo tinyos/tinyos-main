@@ -60,7 +60,7 @@ configuration PppRouterC {
   // components RouteCmdC;
 
 #ifdef IN6_PREFIX
-  components StaticIpAddressC;
+  components StaticIPAddressC;
 #else
   components Dhcp6C;
   components Dhcp6ClientC;
