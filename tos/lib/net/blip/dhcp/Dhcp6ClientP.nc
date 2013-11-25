@@ -56,6 +56,7 @@ module Dhcp6ClientP {
     interface Timer<TMilli>;
     interface Random;
     interface IPAddress;
+    interface SetIPAddress;
     interface Ieee154Address;
     interface Leds;
   }
@@ -67,7 +68,7 @@ module Dhcp6ClientP {
   // t1: time after which to renew the current IA binding from the original server
   // t2: time after which to renew using any available server
   // m_time: timeout clock used for state machine transitions
-  // valid_lifetime: valid life of address obtained 
+  // valid_lifetime: valid life of address obtained
   uint32_t m_txid, t1, t2, m_time = 0, valid_lifetime = 0;
 
   // the dhcp6 server we are currently interacting with
@@ -85,13 +86,13 @@ module Dhcp6ClientP {
     // my IAID for all transactions
     IAID = 1,
     VALID_WAIT = 0xff,
-    
+
     // how long to send requests before hopping back to SOLICIT
     REQUEST_TIMEOUT = 120,
 
     TIMER_PERIOD = 15,
   };
-  
+
   command error_t StdControl.start() {
     m_state = DH6_SOLICIT;
     call UDP.bind(DH6PORT_DOWNSTREAM);
@@ -99,8 +100,8 @@ module Dhcp6ClientP {
     call Timer.startOneShot((1024L * TIMER_PERIOD) % (call Random.rand16()));
     return SUCCESS;
   }
-  
-  command error_t StdControl.stop() { 
+
+  command error_t StdControl.stop() {
     call Timer.stop();
     valid_lifetime = 0;
     call UDP.bind(0);
@@ -148,15 +149,15 @@ module Dhcp6ClientP {
     req->dh6_ia.iaid = ntohl(IAID);
     req->dh6_ia.t1 = 0xffffffff;
     req->dh6_ia.t2 = 0xffffffff;
-    
-    memcpy(msg + sizeof(struct dh6_request), 
+
+    memcpy(msg + sizeof(struct dh6_request),
            m_serverid,
            sizeof(m_serverid));
 
     if (!m_serverid_valid) {
       return;
     }
-    
+
     if (ntohs(hdr->len) > sizeof(m_serverid)) {
       return;
     }
@@ -167,7 +168,7 @@ module Dhcp6ClientP {
   }
 
   void sendRenew() {
-    char msg[sizeof(struct dh6_request) + 
+    char msg[sizeof(struct dh6_request) +
              sizeof(m_serverid) +
              sizeof(struct dh6_iaaddr)];
     struct dh6_request *req = (struct dh6_request *)msg;
@@ -177,7 +178,7 @@ module Dhcp6ClientP {
     void *msg_srvid = (iaaddr + 1);
 
     // request and server DUID
-    len = sizeof(struct dh6_request) + 
+    len = sizeof(struct dh6_request) +
       sizeof(struct dh6_opt_header) + ntohs(srvid->len);
     setup(req, DH6_RENEW);
 
@@ -186,7 +187,7 @@ module Dhcp6ClientP {
     req->dh6_ia.iaid = ntohl(IAID);
     req->dh6_ia.t1 = t1;
     req->dh6_ia.t2 = t2;
-    
+
     len += sizeof(struct dh6_iaaddr);
     iaaddr->type = htons(5);
     iaaddr->len = htons(24);
@@ -232,20 +233,20 @@ module Dhcp6ClientP {
       }
       break;
     }
-    if (m_time > 0) 
+    if (m_time > 0)
       m_time += TIMER_PERIOD;
 
     // address expirations are separate from the state machine
     // transitions
-    if (valid_lifetime > TIMER_PERIOD && 
+    if (valid_lifetime > TIMER_PERIOD &&
         valid_lifetime <= TIMER_PERIOD * 2) {
       // lease really expired
       m_state = DH6_SOLICIT;
       call IPAddress.removeAddress();
       valid_lifetime = 0;
-    } 
+    }
 
-    if (valid_lifetime > 0) 
+    if (valid_lifetime > 0)
       valid_lifetime -= TIMER_PERIOD;
   }
 
@@ -257,7 +258,7 @@ module Dhcp6ClientP {
       } else if (opt->len == 0) {
         break;
       } else {
-        msg = 
+        msg =
           ((char*)msg) + ntohs(opt->len) + sizeof(struct dh6_opt_header);
         len -= ntohs(opt->len) + sizeof(struct dh6_opt_header);
       }
@@ -265,7 +266,7 @@ module Dhcp6ClientP {
     return NULL;
   }
 
-  event void UDP.recvfrom(struct sockaddr_in6 *src, void *payload, 
+  event void UDP.recvfrom(struct sockaddr_in6 *src, void *payload,
                           uint16_t len, struct ip6_metadata *meta) {
     struct dh6_header *hdr = payload;
     struct dh6_opt_header *opt;
@@ -273,27 +274,27 @@ module Dhcp6ClientP {
     uint16_t type = ntohl(hdr->dh6_type_txid) >> 24;
     uint32_t txid = ntohl(hdr->dh6_type_txid) & 0xffffff;
 
-    if (txid != m_txid) 
-      return;      
+    if (txid != m_txid)
+      return;
 
     switch (m_state) {
     case DH6_SOLICIT:
       switch (type) {
       case DH6_ADVERTISE:
-        opt = id = findOption(hdr + 1, len - sizeof(struct dh6_header), 
+        opt = id = findOption(hdr + 1, len - sizeof(struct dh6_header),
                               DH6OPT_SERVERID);
         if (id) {
           // save the server DUID for use in reply messages and start
           // requesting an address.
           if (ntohs(opt->len) + sizeof(struct dh6_opt_header) < sizeof(m_serverid)) {
             m_serverid_valid = TRUE;
-            memcpy(m_serverid, id, ntohs(opt->len) + 
+            memcpy(m_serverid, id, ntohs(opt->len) +
                    sizeof(struct dh6_opt_header));
             // we can unicast to this guy now
             // memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
             m_time = 1;
             m_state = DH6_REQUEST;
-            if (m_unicast) 
+            if (m_unicast)
               memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
             // don't wait a long while before we send our request
             if (!call Timer.isOneShot ())
@@ -311,7 +312,7 @@ module Dhcp6ClientP {
       if (id) {
         // check that the serverid is the one we asked for
         if (memcmp(m_serverid, id, ntohs(opt->len) +
-                   sizeof(struct dh6_opt_header)) != 0) 
+                   sizeof(struct dh6_opt_header)) != 0)
           return;
         // TODO : check client id
       }
@@ -347,7 +348,7 @@ module Dhcp6ClientP {
           // got an address... save it and wait for it to expire
           struct dh6_iaaddr *addr = addr_opt;
           if (m_state != DH6_RENEW) // only set it if it changed
-            call IPAddress.setAddress(&addr->addr);
+            call SetIPAddress.setAddress(&addr->addr);
           t1 = ia->t1;
           t2 = ia->t2;
           m_time = 1;

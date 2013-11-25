@@ -31,35 +31,27 @@
  *
  */
 /**
+ * Component for doing compile-time address allocation. Wired by the
+ * stack, sets a static address based on IN6_PREFIX and the TOS_NODE_ID on
+ * boot. Useful for development or of you want to hard-code addresses.
+ *
  * @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
  * @author Brad Campbell <bradjc@umich.edu>
  */
 #include <lib6lowpan/ip.h>
 
-module StaticIPAddressP {
+module StaticIPAddressTosIdP {
   uses {
     interface Boot;
-    interface IPAddress;
     interface SetIPAddress;
-    interface LocalIeeeEui64;
   }
 } implementation {
 
   event void Boot.booted() {
     struct in6_addr addr;
-    ieee154_laddr_t ext;
-
-    call IPAddress.getLLAddr(&addr);
-
+    memset(&addr, 0, sizeof(addr));
     inet_pton6(IN6_PREFIX, &addr);
-
-    // Set the lower 64 bits as the link-local 64 bits
-    ext = call LocalIeeeEui64.getId();
-    memcpy(addr.s6_addr+8, ext.data, 8);
-    addr.s6_addr[8] ^= 0x2;
-
+    addr.s6_addr16[7] = htons(TOS_NODE_ID);
     call SetIPAddress.setAddress(&addr);
   }
-
-  event void IPAddress.changed(bool valid) {}
 }

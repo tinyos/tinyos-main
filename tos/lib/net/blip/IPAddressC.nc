@@ -27,11 +27,13 @@
 
 configuration IPAddressC {
   provides {
-  	interface IPAddress;
+    interface IPAddress;
+    interface SetIPAddress @exactlyonce();
   }
 } implementation {
   components IPAddressP, Ieee154AddressC;
 
   IPAddress = IPAddressP.IPAddress;
+  SetIPAddress = IPAddressP.SetIPAddress;
   IPAddressP.Ieee154Address -> Ieee154AddressC.Ieee154Address;
 }

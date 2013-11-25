@@ -82,14 +82,6 @@ configuration IPStackC {
   components new PoolC(struct in6_iid, N_CONCURRENT_SENDS) as FwdAddrPoolC;
   FwdP.Pool -> FwdAddrPoolC;
 
-  /* Choose how this node should get its IP address based on whether or not
-   * it knows its own prefix. */
-#ifdef IN6_PREFIX
-  components StaticIPAddressC;
-#else
-  components Dhcp6C;
-#endif
-
 #ifdef PRINTFUART_ENABLED
   components new TimerMilliC();
   FwdP.PrintTimer -> TimerMilliC.Timer;

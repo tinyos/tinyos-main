@@ -60,7 +60,8 @@ configuration PppRouterC {
   // components RouteCmdC;
 
 #ifdef IN6_PREFIX
-  components StaticIPAddressC;
+  components StaticIPAddressTosIdC; // Use TOS_NODE_ID in address
+  //components StaticIPAddressC; // Use LocalIeee154 in address
 #else
   components Dhcp6C;
   components Dhcp6ClientC;

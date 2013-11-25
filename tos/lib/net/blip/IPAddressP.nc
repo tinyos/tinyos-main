@@ -30,6 +30,7 @@
 module IPAddressP {
   provides {
     interface IPAddress;
+    interface SetIPAddress @exactlyonce();
   }
   uses {
     interface Ieee154Address;
@@ -137,7 +138,7 @@ module IPAddressP {
     return FALSE;
   }
 
-  command error_t IPAddress.setAddress(struct in6_addr *addr) {
+  command error_t SetIPAddress.setAddress(struct in6_addr *addr) {
     m_addr = *addr;
 #ifdef BLIP_DERIVE_SHORTADDRS
     if (m_addr.s6_addr[8] == 0 &&

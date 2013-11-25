@@ -60,7 +60,8 @@ configuration Dhcp6ClientC {
   Dhcp6ClientP.UDP -> UdpSocketC;
   Dhcp6ClientP.Timer -> TimerMilliC;
   Dhcp6ClientP.Ieee154Address -> Ieee154AddressC;
-  Dhcp6ClientP.IPAddress -> IPAddressC;
+  Dhcp6ClientP.IPAddress -> IPAddressC.IPAddress;
+  Dhcp6ClientP.SetIPAddress -> IPAddressC.SetIPAddress;
   Dhcp6ClientP.Random -> RandomC;
 
   components NoLedsC as LedsC;
