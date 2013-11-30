@@ -1,0 +1,119 @@
+
+Installing the TinyOS Toolchain on MacOS X.
+(currently msp430 toolchain)
+(last update: 2013-11-29)
+
+currently only tested on 10.7.5 (Lion) but should also work on 10.8
+and 10.9.   If you test it on these other version please let me know
+and I'll update this document (cire831@gmail.com).
+
+Uses MacPorts to install non-Apple Open Source tools.  You can use
+other mechanisms but this guide references MacPorts.  MacPorts typically
+requries local builds of the tools being installed.
+
+1) You will need Xcode.  Download and install the latest version of
+   Xcode for your version of the OS.  See Xcode 4.6.3 (for Lion) on:
+
+   https://developer.apple.com/downloads/index.action
+
+   You have to be a registered developer to get this, but signing up
+   is free.  Typically you will use an existing AppleId that you have.
+
+2) You will also want the Xcode command line tools which is a seperate
+   install.   For example, for Lion, we want Xcode 4.6.3 and Command
+   Line Tools (OS X Lion) for Xcode.
+
+   There are several different versions.  You want the one that matches
+   the version of Xcode that matches your OS version.
+
+3) Install MacPorts from http://www.macports.org/install.php.
+
+4) Install the following MacPorts ports:
+   (versions as of last update)
+
+   automake             (1.14)
+   autoconf             (2.69)
+   git-core             (1.8.4.3)
+   git-extras           (1.9.0)
+   git-flow             (0.4.1)
+   msp430-binutils      (2.21.1a-20120406)
+   msp430-gcc           (4.6.3-20120406)
+   msp430-libc          ?
+   mspdebug             (0.22)
+   msp430mcu            (20120406)
+
+5) The nesc port package is version 1.3.4 but it throws the internal
+   error problem.
+
+   Install nesc from the github repository...
+
+   cd ~/w
+   git clone https://github.com/tinyos/nesc.git
+   cd nesc
+   ./Bootstrap
+   ./configure
+   make
+   sudo make install
+
+   [If you get errors about subst-ksc not being available, be sure to
+   unset your EMACSLOADPATH and try make again.]
+
+   [Alas, the current nesc 1.3.5 (from gh:tinyos/nesc(master)) also throws
+   the internal error.  A bug report has been submitted.]
+
+6) make sure your PATH variable includes /opt/local/bin or where ever
+   MacPorts is installing the ports.
+
+7) Install the tinyos source code from the tinyos-main repository.  Follow
+   the instructions at 00a_Getting_Started and 00b_Using_the_Repo (same
+   directory as this file).  Say your initials are 'rh'.  Then you might
+   do something like...   (see Using_the_Repo for details as to why)
+
+   cd
+   mkdir -p w/rh
+   cd w/rh
+   git clone https://github.com/tinyos/tinyos-main.git
+
+        note: the above creates a locally writeable, non-repo writeable
+        copy of the tinyos-main repository.  If you need to be able to
+        commit back to the main repository, you need a github login and
+        should follow the instructions in Using_the_Repo.
+
+        The above remote is known as 'origin'.  The repository will be
+        placed into the local directory '~/w/rh/tinyos-main'.
+
+8) See 00d_HowTo_Environment for details on how to set up your environment
+   so the toolchain knows where to find the sources.
+
+   [This is in the process of changing so keep an eye on the tip of the
+   trunk.  This file should be updated when this changes.]
+
+   TOSROOT=~/w/rh/tinyos-main
+   TOSDIR =$TOSROOT/tos
+   MAKERULES=$TOSROOT/support/make/Makerules
+   CLASSPATH=.:$TOSROOT/support/sdk/java/tinyos.jar
+   export MAKERULES TOSDIR TOSROOT CLASSPATH
+
+9) Install TinyOS tools.
+
+   cd ~/w/rh/tinyos-main/tools
+   ./Bootstrap
+   ./configure
+   make
+   sudo make install    (will install into /usr/local/bin)
+
+   [note: the port install of nesc went into /opt/local/bin.  You need both
+   /usr/local/bin and /opt/local/bin in your PATH
+
+   You may have to update tos-locate-jre (but on 10.7.5, it worked with a
+   fresh clone just fine.).  Looks like 1.7.0_45.
+   
+   See http://olafland.wordpress.com/2012/06/25/tinyos-on-mac-os-x-10-7-lion/
+   for details if you need to modify tos-locate-jre.  You may have to tweak
+   jhome and xcode_jdk.
+
+10) Install FTDI drivers (for motes that use FTDI USB chips).
+    http://www.ftdichip.com/Drivers/VCP/MacOSX/FTDIUSBSerialDriver_v2_2_18.dmg
+
+
+11) go to apps/Blink and give it a try...   make telosb
