@@ -50,6 +50,13 @@ interface Queue<t> {
   command bool empty();
 
   /**
+   * Returns if the queue is full.
+   *
+   * @return Whether the queue is full.
+   */
+  command bool full();
+
+  /**
    * The number of elements currently in the queue.
    * Always less than or equal to maxSize().
    *
