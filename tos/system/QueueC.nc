@@ -55,7 +55,7 @@ implementation {
   }
 
   command bool Queue.full() {
-    return size == QUEUE_SIZE;
+    return size >= QUEUE_SIZE;
   }
 
   command uint8_t Queue.size() {
