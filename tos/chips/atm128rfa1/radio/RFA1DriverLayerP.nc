@@ -497,6 +497,11 @@ implementation
   default tasklet_async event void RadioCCA.done(error_t error) { }
 
   /*----------------- RECEIVE -----------------*/
+  ieee154_simple_header_t* getieeeHeader(message_t* msg)
+  {
+      // first byte is length, hence +1 here
+      return ((void*)msg) + 1;
+  }
 
   //TODO: RX_SAFE_MODE with define
   inline void downloadMessage()
@@ -519,7 +524,21 @@ implementation
       // memory is fast, no point optimizing header check
       memcpy(data,(void*)&TRXFBST,length);
 
-      if( signal RadioReceive.header(rxMsg) )
+      /**
+       * There is no good place in rfxlink layers to add proper check if we have just received broken packet.
+       * Broken packets have correct CRC, however their header and/or payload might contain random data.
+       * Maybe someone is sending intentionally packets that might cause havoc if not handled properly.
+       * One of such packets is ACK that does not have ACK bit set in its fcf field.
+       * SoftwareAckLayerC interprets it as normal data and gives it to upper layers.
+       * ActiveMessageLayerP computes its payload length as: 5 - headerlength = 248.
+       * Therefore application layer actually sees ACK packet with payload length 248.
+       *
+       */
+      if (getHeader(rxMsg)->length == 5 && !(getieeeHeader(rxMsg)->fcf & (1<<1)))
+      {
+        sendSignal = FALSE;
+      }
+      else if( signal RadioReceive.header(rxMsg) )
       {
         call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST+TST_RX_LENGTH));
         sendSignal = TRUE;
