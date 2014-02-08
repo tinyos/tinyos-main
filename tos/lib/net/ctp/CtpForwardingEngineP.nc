@@ -712,12 +712,14 @@ implementation {
     }
 
     // If I'm the root, signal receive. 
-    else if (call RootControl.isRoot())
+    else if (call RootControl.isRoot()) {
+      call SentCache.insert(msg);
       return signal Receive.receive[collectid](msg, 
 					       call Packet.getPayload(msg, call Packet.payloadLength(msg)), 
 					       call Packet.payloadLength(msg));
     // I'm on the routing path and Intercept indicates that I
     // should not forward the packet.
+    }
     else if (!signal Intercept.forward[collectid](msg, 
 						  call Packet.getPayload(msg, call Packet.payloadLength(msg)), 
 						  call Packet.payloadLength(msg)))
