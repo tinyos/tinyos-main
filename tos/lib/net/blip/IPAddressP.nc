@@ -135,7 +135,14 @@ module IPAddressP {
   }
 
   command error_t SetIPAddress.setAddress(struct in6_addr *addr) {
+
+    if (m_valid_addr && memcmp(addr, &m_addr, sizeof(struct in6_addr)) == 0) {
+      // Setting to the same address we already have, don't bother
+      return EALREADY;
+    }
+
     m_addr = *addr;
+
 #ifdef BLIP_DERIVE_SHORTADDRS
     if (m_addr.s6_addr[8] == 0 &&
         m_addr.s6_addr[9] == 0 &&
@@ -150,6 +157,10 @@ module IPAddressP {
       m_short_addr = FALSE;
     }
 #endif
+
+    printf("IPAddress - Setting global address: ");
+    printf_in6addr(addr);
+    printf("\n");
 
     m_valid_addr = TRUE;
     signal IPAddress.changed(TRUE);

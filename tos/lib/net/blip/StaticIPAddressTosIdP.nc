@@ -44,13 +44,20 @@ module StaticIPAddressTosIdP {
   uses {
     interface Boot;
     interface SetIPAddress;
+    interface NeighborDiscovery;
   }
 } implementation {
+
+#ifndef IN6_PREFIX
+#error "Must define #IN6_PREFIX in order to use static addresses."
+#endif
 
   event void Boot.booted() {
     struct in6_addr addr;
     memset(&addr, 0, sizeof(addr));
     inet_pton6(IN6_PREFIX, &addr);
+    call NeighborDiscovery.setPrefix(&addr, 64, IP6_INFINITE_LIFETIME,
+      IP6_INFINITE_LIFETIME);
     addr.s6_addr16[7] = htons(TOS_NODE_ID);
     call SetIPAddress.setAddress(&addr);
   }

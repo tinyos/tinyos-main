@@ -3,6 +3,7 @@
  * networking stack.
  *
  * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 module IPStackControlP {
@@ -13,6 +14,7 @@ module IPStackControlP {
     interface StdControl;
     interface StdControl as RoutingControl;
     interface SplitControl as SubSplitControl;
+    interface StdControl as NeighborDiscoveryControl;
     interface IPAddress;
   }
 } implementation {
@@ -31,6 +33,8 @@ module IPStackControlP {
       blip_started = TRUE;
       call StdControl.start();
     }
+
+    call NeighborDiscoveryControl.start();
 
     // if we have a global address, we can start any routing protocols now.
     if (call IPAddress.getGlobalAddr(&addr)) {
@@ -55,10 +59,11 @@ module IPStackControlP {
   }
 
   event void IPAddress.changed(bool valid) {
-    if (valid)
+    if (valid) {
       call RoutingControl.start();
-    else
+    } else {
       call RoutingControl.stop();
+    }
   }
 
  default command error_t StdControl.start() { return SUCCESS; }

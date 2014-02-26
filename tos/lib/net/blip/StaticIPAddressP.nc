@@ -42,8 +42,13 @@ module StaticIPAddressP {
     interface IPAddress;
     interface SetIPAddress;
     interface LocalIeeeEui64;
+    interface NeighborDiscovery;
   }
 } implementation {
+
+#ifndef IN6_PREFIX
+#error "Must define #IN6_PREFIX in order to use static addresses."
+#endif
 
   event void Boot.booted() {
     struct in6_addr addr;
@@ -52,6 +57,8 @@ module StaticIPAddressP {
     call IPAddress.getLLAddr(&addr);
 
     inet_pton6(IN6_PREFIX, &addr);
+    call NeighborDiscovery.setPrefix(&addr, 64, IP6_INFINITE_LIFETIME,
+      IP6_INFINITE_LIFETIME);
 
     // Set the lower 64 bits as the link-local 64 bits
     ext = call LocalIeeeEui64.getId();
