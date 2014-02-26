@@ -36,20 +36,26 @@ enum {
 
   // send a maximum of three trickle messages
   TRICKLE_MAX = (TRICKLE_PERIOD << 5),
-  
+
 };
 #else  /* parameters for LPL */
 enum {
   // have a trickle timer with a period of 4
-  TRICKLE_PERIOD = 16384L, 
+  TRICKLE_PERIOD = 16384L,
   // jitter start requests by 10 seconds
   TRICKLE_JITTER = TRICKLE_PERIOD,
 
   // send a maximum of three trickle messages
   TRICKLE_MAX = (TRICKLE_PERIOD << 5),
-  
+
 };
 #endif
+
+struct icmpv6_header_t {
+  uint8_t type;
+  uint8_t code;
+  nx_uint16_t checksum;
+}__attribute__((packed));
 
 typedef nx_struct icmp6_echo_hdr {
   nx_uint8_t        type;     /* type field */

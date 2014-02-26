@@ -31,7 +31,7 @@
 
 /**
  * RPLDAORoutingEngineC.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 #include <RPL.h>
@@ -79,7 +79,4 @@ configuration RPLDAORoutingEngineC{
 
   components IPPacketC;
   DAORouting.IPPacket -> IPPacketC;
-
-  components LedsC;
-  DAORouting.Leds -> LedsC;
 }

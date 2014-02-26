@@ -31,7 +31,7 @@
 
 /**
  * RPLMRHOFP.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 /**
@@ -77,6 +77,10 @@ implementation{
     if (ocp == RPLOF_OCP_MRHOF)
       return TRUE;
     return FALSE;
+  }
+
+  command uint16_t RPLOF.getOCP(){
+    return RPLOF_OCP_MRHOF;
   }
 
   /* Which metrics does this implementation support */

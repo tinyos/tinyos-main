@@ -31,13 +31,13 @@
 
 /**
  * RPLRoutingEngine.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 #include <lib6lowpan/ip.h>
 #include <lib6lowpan/6lowpan.h>
 
-interface RPLRoutingEngine{
+interface RPLRoutingEngine {
   command void resetTrickle();
   command bool hasDODAG();
   command error_t getDefaultRoute(struct in6_addr *next_hop);
@@ -47,7 +47,8 @@ interface RPLRoutingEngine{
   command struct in6_addr* getDodagId(); // returns the default dodagid
   // below is called when sub type 4 DIOs are received
   command void setDODAGConfig(uint8_t DIOIntDouble, uint8_t DIOIntMin,
-                              uint8_t DIORedun, uint8_t MaxRankInc, uint8_t MinHopRankInc);
+                              uint8_t DIORedun, uint8_t MaxRankInc,
+                              uint8_t MinHopRankInc);
 
   command uint8_t getMOP();
   command void setDTSN(uint8_t dtsn);

@@ -29,11 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * RPLRankP.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
- */
-
 /*
  * Copyright (c) 2010 Stanford University. All rights reserved.
  *
@@ -66,7 +61,9 @@
  */
 
 /**
- * @ author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 #include <RPL.h>
@@ -78,7 +75,7 @@
 #include "blip_printf.h"
 #include "IPDispatch.h"
 
-module RPLRankP{
+module RPLRankP {
   provides{
     interface RPLRank as RPLRankInfo;
     interface StdControl;
@@ -89,11 +86,16 @@ module RPLRankP{
     interface IP as IP_DIO;
     interface IPPacket;
     interface RPLRoutingEngine as RouteInfo;
-    interface Leds;
     interface IPAddress;
     interface ForwardingTable;
     interface ForwardingEvents;
     interface RPLOF;
+    interface NeighborDiscovery;
+
+#if RPL_ADDR_AUTOCONF
+    interface SetIPAddress;
+    interface LocalIeeeEui64;
+#endif
   }
 }
 
@@ -134,7 +136,6 @@ implementation {
   void getNewRank();
 
 
-#define RPL_GLOBALADDR
 #define compare_ipv6(node1, node2) \
  (!memcmp((node1), (node2), sizeof(struct in6_addr)))
 
@@ -190,17 +191,10 @@ implementation {
     uint8_t indexset;
     struct in6_addr my_addr;
 
-#ifdef RPL_GLOBALADDR
     call IPAddress.getGlobalAddr(&my_addr);
-#else
-    call IPAddress.getLLAddr(&my_addr);
-#endif
 
     if (compare_ipv6(&my_addr, node)) {
-
-      if (ROOT) {
-        nodeRank = ROOT_RANK;
-      }
+      if (ROOT) return ROOT_RANK;
       return nodeRank;
     }
 
@@ -396,12 +390,11 @@ implementation {
     static struct ip_iovec v;
     static rpl_data_hdr_t data_hdr;
 
-#ifndef RPL_OF_MRHOF
+#if RPL_OF_0
     return TRUE;
 #endif
 
-    if (pkt->ip6_hdr.ip6_nxt == IANA_ICMP)
-      return TRUE;
+    if (pkt->ip6_hdr.ip6_nxt == IANA_ICMP) return TRUE;
 
     data_hdr.ip6_ext_outer.ip6e_nxt = pkt->ip6_hdr.ip6_nxt;
     data_hdr.ip6_ext_outer.ip6e_len = 0;
@@ -441,7 +434,7 @@ implementation {
    */
   event bool ForwardingEvents.approve(struct ip6_packet *pkt,
                                       struct in6_addr *next_hop) {
-#ifndef RPL_OF_MRHOF
+#if RPL_OF_0
     return TRUE;
 #else
     rpl_data_hdr_t data_hdr;
@@ -461,8 +454,9 @@ implementation {
                  off + sizeof(struct tlv_hdr),
                  sizeof(rpl_data_hdr_t) - offsetof(rpl_data_hdr_t, bitflag),
                  (void *)&data_hdr.bitflag) !=
-        sizeof(rpl_data_hdr_t) - offsetof(rpl_data_hdr_t, bitflag))
+        sizeof(rpl_data_hdr_t) - offsetof(rpl_data_hdr_t, bitflag)) {
       return TRUE;
+    }
     o_bit = (data_hdr.bitflag & RPL_DATA_O_BIT_MASK) >> RPL_DATA_O_BIT_SHIFT;
 //     printf("approve test: %d %d %d %d %d \n",
 //            data_hdr.senderRank, data_hdr.instance_id,
@@ -618,17 +612,16 @@ implementation {
     uint8_t tempPrf;
     bool newDodag = FALSE;
 
-    struct dio_base_t *dio = (struct dio_base_t *)buf;
-    struct dio_body_t* dio_body;
-    struct dio_metric_header_t* dio_metric_header;
-    struct dio_etx_t* dio_etx;
-    struct dio_dodag_config_t* dio_dodag_config;
-    // struct dio_prefix_t* dio_prefix;
+    struct dio_base_t* dio = (struct dio_base_t*) buf;
     struct ip_iovec v[2];
     struct ip6_ext dummy_ext;
     int hdr_off;
+
+    if (len < sizeof(struct dio_base_t)) return;
+
     buf += sizeof(struct dio_base_t);
     len -= sizeof(struct dio_base_t);
+
     dummy_ext.ip6e_len = (len - 8) / 8;
     v[0].iov_len = sizeof(dummy_ext);
     v[0].iov_base = (uint8_t *)&dummy_ext;
@@ -640,41 +633,23 @@ implementation {
     /* I am root */
     if (nodeRank == ROOT_RANK) return;
 
-    /* new iteration */
-    if (dio->version != VERSION && compare_ipv6(&dio->dodagID, &DODAGID)) {
-      parentNum = 0;
-      VERSION = dio->version;
-      call RPLOF.resetRank();
-      nodeRank = INFINITE_RANK;
-      minRank = INFINITE_RANK;
-      resetValid();
-    }
+    pParentRank = dio->rank;
+    tempPrf = dio->flags & DIO_PRF_MASK;
 
-    // if (dio->dagRank >= nodeRank && nodeRank != INFINITE_RANK) return;
-
-    // printf("DIO in Rank %d %d %d %d\n",
-    //        ntohs(iph->ip6_src.s6_addr16[7]),
-    //        dio->dagRank, nodeRank, parentNum);
-    // printf_in6addr(&iph->ip6_src);
-    // printf("\n");
-
-    pParentRank = dio->dagRank;
-    // DODAG ID in this DIO packet (received DODAGID)
-
-    ip_memcpy((uint8_t *)&rDODAGID,
-              (uint8_t *)&dio->dodagID,
+    // Note the DODAGID we receive
+    ip_memcpy((uint8_t*) &rDODAGID,
+              (uint8_t*) &dio->dodagID,
               sizeof(struct in6_addr));
-    tempPrf = dio->flags & DIO_PREF_MASK;
 
+    // Save state from this DIO based on the DODAGID
     if (!compare_ipv6(&DODAGID, &DODAG_MAX) &&
         !compare_ipv6(&DODAGID, &rDODAGID)) {
       // I have a DODAG but this packet is from a new DODAG
-      if (Prf < tempPrf) { // ignore
-        // printf("LESS PREFERENCE IGNORE \n");
+      if (Prf < tempPrf) {
+        // Our current network is more preferred, do not switch
         ignore = TRUE;
         return;
       } else if (Prf > tempPrf) { // move
-        // printf("MOVE TO NEW DODAG \n");
         Prf = tempPrf;
         ip_memcpy((uint8_t *)&DODAGID,
                   (uint8_t *)&rDODAGID,
@@ -684,17 +659,16 @@ implementation {
         call RPLOF.resetRank();
         nodeRank = INFINITE_RANK;
         minRank = INFINITE_RANK;
-        // desiredParent = MAX_PARENT;
         resetValid();
         newDodag = TRUE;
-      } else { // it depends
-        // printf("MOVE TO NEW DODAG %d %d\n",
-        //        compare_ipv6(&DODAGID, &DODAG_MAX),
-        //        compare_ipv6(&DODAGID, &rDODAGID));
-        newDodag = TRUE;
+      } else {
+        // Can stay or go, but for now just stay
+        ignore = TRUE;
+        return;
       }
-    } else if (compare_ipv6(&DODAGID, &DODAG_MAX)) { // not belong to a DODAG yet
-      //      printf("TOTALLY NEW DODAG \n");
+
+    } else if (compare_ipv6(&DODAGID, &DODAG_MAX)) {
+      // Don't have a DODAG yet, join this one
       Prf = tempPrf;
       ip_memcpy((uint8_t *)&DODAGID,
                 (uint8_t *)&rDODAGID,
@@ -707,62 +681,64 @@ implementation {
       //desiredParent = MAX_PARENT;
       newDodag = TRUE;
       resetValid();
-    } else { // same DODAG
-      //printf("FROM SAME DODAG \n");
-      //Prf = tempPrf; // update prf
+    } else {
+      // same DODAG
+      if (dio->version != VERSION) {
+        // New version of the DODAG
+        parentNum = 0;
+        VERSION = dio->version;
+        call RPLOF.resetRank();
+        nodeRank = INFINITE_RANK;
+        minRank = INFINITE_RANK;
+        resetValid();
+      }
     }
 
-    /////////////////////////////Collect data from DIOs/////////////////////////////////
-    hdr_off = call IPPacket.findTLV(v, 0, RPL_DIO_TYPE_METRIC) -
+    /////////////////////////////Collect data from DIOs/////////////////////////
+
+    // Look for a Metric Container Option
+    hdr_off = call IPPacket.findTLV(v, 0, RPL_OPT_TYPE_METRIC) -
       sizeof(struct ip6_ext);
-    // printf("RPL: metric header off: %i\n", hdr_off);
     METRICID = 0;
     OCP = 0;
 
-    // SDH : TODO : make some #defs for DODAG constants
     if (hdr_off >= 0) {
-      // have a metric header
-      dio_body = (struct dio_body_t *)(buf + hdr_off);
-      dio_metric_header = (struct dio_metric_header_t *)(buf + hdr_off + 2);
-//       printf("metric header %i %i %i\n",
-//              dio_body->container_len, dio_metric_header->routing_obj_type,
-//              dio_metric_header->object_len);
-      if (dio_body->container_len >= sizeof(struct dio_metric_header_t) &&
-          dio_metric_header->routing_obj_type == RPL_ROUTE_METRIC_ETX &&
-          dio_metric_header->object_len == sizeof(struct dio_etx_t)) {
+      struct dio_metric_t* dio_metric;
+      struct dio_metric_header_t* dio_metric_header;
+      struct dio_etx_t* dio_etx;
+
+      dio_metric = (struct dio_metric_t*) (buf + hdr_off);
+      dio_metric_header = (struct dio_metric_header_t*) (buf + hdr_off +
+        sizeof(struct dio_metric_t*));
+      if (dio_metric->option_length >= sizeof(struct dio_metric_header_t) &&
+          dio_metric_header->routing_mc_type == RPL_ROUTE_METRIC_ETX &&
+          dio_metric_header->length == sizeof(struct dio_etx_t)) {
         // etx metric
-        dio_etx = (struct dio_etx_t*)(dio_metric_header + 1);
+        dio_etx = (struct dio_etx_t*) (((uint8_t*) dio_metric_header) +
+          sizeof(struct dio_metric_header_t));
         etx = dio_etx->etx;
-        printf("RPL: ETX RECV %d \n", etx);
         METRICID = RPL_ROUTE_METRIC_ETX;
       }
     } else {
       etx = pParentRank * divideRank;
-      //printf("No ETX %d \n", dio_body->type);
     }
 
-    /* SDH : This is a routing header.  apparently we don't look at this. */
-    // if (trackLength > 0 && dio_prefix->type == 3) {
-    //   trackLength -= sizeof(struct dio_prefix_t);
-    //   if (ignore == FALSE) {
-        /* SDH : this will be a call to NeighborDiscovery */
-        /* although we might want to make a PrefixManager component... */
-        // New Prefix!!!!
-        // TODO: Save prefix somewhere and make it a searchable command
-    //   }
-    // }
+    // Route Information Option
+//    hdr_off = call IPPacket.findTLV(v, 0, RPL_OPT_TYPE_ROUTING) -
+//      sizeof(struct ip6_ext);
+//    if (hdr_off >= 0) {
+//      struct dio_route_info_t* dio_route_info;
+//      // This dodag has a good route to this prefix
+//      // Not sure how to use this...
+//    }
 
-    /* SDH : type 4 is a configuration header. */
-    hdr_off = call IPPacket.findTLV(v, 0, RPL_DIO_TYPE_DODAG) -
+    // DODAG Configuration Option
+    hdr_off = call IPPacket.findTLV(v, 0, RPL_OPT_TYPE_DODAG) -
       sizeof(struct ip6_ext);
-    // printf("RPL: dodag header off: %i\n", hdr_off);
+    if (hdr_off >= 0) {
+      struct dio_dodag_config_t* dio_dodag_config;
 
-    if (hdr_off >= 0 && !ignore) {
-      dio_dodag_config = (struct dio_dodag_config_t *)(buf + hdr_off);
-      // this is configuration header
-
-      // printf("RPL: DODAG OPT > %d %d %d %d \n", METRICID,
-      //        dio_dodag_config->type, ignore, dio_dodag_config->ocp);
+      dio_dodag_config = (struct dio_dodag_config_t*) (buf + hdr_off);
 
       OCP = dio_dodag_config->ocp;
       MAX_RANK_INCREASE = dio_dodag_config->MaxRankInc;
@@ -776,10 +752,42 @@ implementation {
       call RPLOF.setMinHopRankIncrease(dio_dodag_config->MinHopRankInc);
     }
 
-    //////////////////////////////////////////////////////////////////////////
+    // Prefix Information Option
+    hdr_off = call IPPacket.findTLV(v, 0, RPL_OPT_TYPE_PREFIX) -
+      sizeof(struct ip6_ext);
+    if (hdr_off >= 0) {
+      struct dio_prefix_t* dio_prefix;
+      uint8_t A;
 
-    // printf("PR %d NR %d OCP %d MID %d \n",
-    //        pParentRank, nodeRank, OCP, METRICID);
+      dio_prefix = (struct dio_prefix_t*) (buf + hdr_off);
+      A = (dio_prefix->flags_reserved & DIO_PREFIX_A_MASK) >>
+          DIO_PREFIX_A_SHIFT;
+
+      // If we can use this prefix for autoconfiguration and the prefix bits
+      // are greater than 0, then use it as our prefix
+      if (A && dio_prefix->prefix_length > 0) {
+        call NeighborDiscovery.setPrefix(&dio_prefix->prefix,
+          dio_prefix->prefix_length, dio_prefix->valid_lifetime,
+          dio_prefix->preferred_lifetime);
+
+#if RPL_ADDR_AUTOCONF
+        {
+          struct in6_addr newaddr;
+          ieee154_laddr_t ext;
+
+          // Update IP address
+          memcpy(&newaddr, &dio_prefix->prefix, dio_prefix->prefix_length/8);
+          ext = call LocalIeeeEui64.getId();
+          memcpy(newaddr.s6_addr+8, ext.data, 8);
+          newaddr.s6_addr[8] ^= 0x2;
+          call SetIPAddress.setAddress(&newaddr);
+        }
+#endif
+      }
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////
 
     // temporaily keep the parent information first
     ip_memcpy((uint8_t*)&tempParent.parentIP,
@@ -789,26 +797,23 @@ implementation {
     tempParent.valid = TRUE;
     tempParent.etx = etx;
 
-    if ((!call RPLOF.objectSupported(METRICID) ||
-        !call RPLOF.OCP(OCP)) && parentNum == 0) {
-      // either I dont know the metric object or I don't support the OF
-      // printf("LEAF STATE! \n");
+    if ((!call RPLOF.objectSupported(METRICID) || !call RPLOF.OCP(OCP)) &&
+        parentNum == 0) {
+      // We don't know the metric object or we don't support the OF
+      // Can only be leaf because can't handle routing
       insertParent(tempParent);
       call RPLOF.recomputeRoutes();
-      //getNewRank(); no need to compute routes when I am going to stay as a leaf!
       nodeRank = INFINITE_RANK;
       leafState = TRUE;
       return;
     }
 
     if ((parentIndex = getParent(&iph->ip6_src)) != MAX_PARENT) {
-      // parent already there and the rank is useful
+      // The transmitter of this DIO is already one of our parents
 
-      //printf("HOW many parents 1 ? %d %d \n", parentNum, newDodag);
       if (newDodag) {
-        // old parent has to move to a new DODAG now
+        // Old parent has to move to a new DODAG now
         if (parentNum != 0) {
-          //chooseDesired();
           // we do this to make sure that this parent is still the
           // best and it is worth moving
           call RPLOF.recomputeRoutes();
@@ -860,20 +865,14 @@ implementation {
 
     } else {
       // this parent is not in my routing table
-      //      printf("HOW many parents? %d \n", parentNum);
 
-      if (parentNum > MAX_PARENT) // how do i share the parent count?
-        return;
+      if (parentNum > MAX_PARENT) return;
 
-      // at this point know that its a meaningful packet from a new
+      // At this point know that its a meaningful packet from a new
       // node and we have space to store
-
-      // printf("New parent %d %d %d\n",
-      //        ntohs(iph->ip6_src.s6_addr16[7]), tempParent.etx_hop, parentNum);
 
       if (newDodag) {
         // not only is this parent new but we have to move to a new DODAG now
-        //printf("New DODAG \n");
         if (parentNum != 0) {
           // make sure that I don't have an alternative path on this DODAG
           call RPLOF.recomputeRoutes();
@@ -921,31 +920,23 @@ implementation {
     }
   }
 
-  /*
-   * Processing for incomming DIO, DAO, and DIS messages.
-   *
-   * SDH : we should not snoop on these from the forwarding engine;
-   * instead we now go through the IPProtocols component to receive
-   * them the normal way through the ICMP stack.  Things like
-   * verifying the checksum can go in there.
-   *
-   */
   event void IP_DIO.recv(struct ip6_hdr *iph, void *payload,
                          size_t len, struct ip6_metadata *meta) {
     struct dio_base_t *dio;
-    dio = (struct dio_base_t *) payload;
+    dio = (struct dio_base_t*) payload;
 
     if (!m_running) return;
 
-    if (nodeRank != ROOT_RANK && dio->dagRank != 0xFFFF)
+    if (nodeRank != ROOT_RANK && dio->rank != 0xFFFF) {
       parseDIO(iph, payload, len);
+    }
 
     // evict parent if the node is advertizing 0xFFFF;
-    if (dio->dagRank == 0xFFFF && getParent(&iph->ip6_src) != MAX_PARENT)
+    if (dio->rank == 0xFFFF && getParent(&iph->ip6_src) != MAX_PARENT){
       evictParent(getParent(&iph->ip6_src));
+    }
 
-    // leafState = FALSE;
-    if (nodeRank > dio->dagRank || dio->dagRank == INFINITE_RANK) {
+    if (nodeRank > dio->rank || dio->rank == INFINITE_RANK) {
       if (!ignore) {
         /* SDH : where did this go? */
         signal IP_DIO_Filter.recv(iph, payload, len, meta);

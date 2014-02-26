@@ -28,7 +28,6 @@ module IPStackControlP {
   }
 
   event void SubSplitControl.startDone(error_t error) {
-    struct in6_addr addr;
     if (error == SUCCESS) {
       blip_started = TRUE;
       call StdControl.start();
@@ -36,10 +35,21 @@ module IPStackControlP {
 
     call NeighborDiscoveryControl.start();
 
-    // if we have a global address, we can start any routing protocols now.
-    if (call IPAddress.getGlobalAddr(&addr)) {
-      call RoutingControl.start();
+#if RPL_ADDR_AUTOCONF
+    // If we are using the routing layer to get our full address, then
+    // we must start the routing layer immediately.
+    call RoutingControl.start();
+#else
+    // Otherwise, check to see if we have a global address before starting
+    // the routing layer.
+    {
+      struct in6_addr addr;
+      // if we have a global address, we can start any routing protocols now.
+      if (call IPAddress.getGlobalAddr(&addr)) {
+        call RoutingControl.start();
+      }
     }
+#endif
 
     signal SplitControl.startDone(error);
   }

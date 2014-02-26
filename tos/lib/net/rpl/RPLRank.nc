@@ -29,11 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * RPLRank.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
- */
-
 /*
  * Copyright (c) 2010 Stanford University. All rights reserved.
  *
@@ -66,34 +61,35 @@
  */
 
 /**
- * @ author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 interface RPLRank {
 
   // declare the I am the root
   command void declareRoot();
-  
+
   // I am no longer a root
   command void cancelRoot();
 
   // I am the root?
   command bool isRoot();
-  
+
   // return the rank of the specified IP addr
   command uint16_t getRank(struct in6_addr *node);
 
   // return if IP is in parent set
   command bool isParent(struct in6_addr *node);
-  
+
   // new iteration has begun
   //command void notifyNewIteration();
-  
+
   // inconsistency is seen for the link with IP
   // record this as part of entry in table as well
   command void inconsistencyDetected();
 
-  /*new adding*/ 
+  /*new adding*/
   // ping rank component if there are parents
   command uint8_t hasParent();
   command bool isLeaf();
@@ -105,10 +101,7 @@ interface RPLRank {
 
   event void parentRankChange();
 
-  //////Feel free to add events or commands below this line//////
-  ///////////////////////////////////////////////////////////////
-
-  command void setQueuingDelay(uint32_t delay);    
+  command void setQueuingDelay(uint32_t delay);
 
   command error_t getDefaultRoute(struct in6_addr *next_hop);
 

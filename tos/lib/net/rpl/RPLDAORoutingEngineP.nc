@@ -31,7 +31,8 @@
 
 /**
  * RPLDAORoutingEngineP.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 #include <RPL.h>
@@ -56,11 +57,9 @@ generic module RPLDAORoutingEngineP() {
     interface RootControl;
     interface IPPacket;
     interface ForwardingTable;
-    interface Leds;
   }
 } implementation {
 
-#define RPL_GLOBALADDR
 #define INIT_DAO 10000
 
   uint8_t dao_double_count = 0;
@@ -83,6 +82,11 @@ generic module RPLDAORoutingEngineP() {
   uint8_t downwards_table_count = 0;
   bool m_running = FALSE;
 
+  uint32_t count = 0;
+
+  task void initDAO();
+
+
   bool memcmp_rpl(uint8_t* a, uint8_t* b, uint8_t len) {
     uint8_t i;
     for (i = 0 ; i < len ; i++)
@@ -102,19 +106,14 @@ generic module RPLDAORoutingEngineP() {
     return SUCCESS;
   }
 
-  uint32_t count = 0;
-
   task void sendDAO() {
     dao_entry_t* dao_msg;
-    // struct ieee154_frame_addr addr_struct;
 
     // for now the next hop for the DAO is ONLY the desired parent on
     // the path to the DODAG root
     struct in6_addr next_hop;
 
-    if (call RPLRouteInfo.getRank() == ROOT_RANK) {
-      return;
-    }
+    if (call RPLRouteInfo.getRank() == ROOT_RANK) return;
 
     if (call SendQueue.size() > 0 && call RPLRouteInfo.getMOP() != 0) {
       dao_msg = call SendQueue.dequeue();
@@ -137,9 +136,6 @@ generic module RPLDAORoutingEngineP() {
       call RPLRouteInfo.getDodagId(&dao_msg->s_pkt.ip6_hdr.ip6_dst);
 #endif
 
-      printf("RPL: >> sendDAO %d %lu \n", TOS_NODE_ID, ++count);
-      printfflush();
-
       call IP_DAO.send(&dao_msg->s_pkt);
       call SendPool.put(dao_msg);
 
@@ -156,12 +152,10 @@ generic module RPLDAORoutingEngineP() {
 #ifdef RPL_STORING_MODE
     call RemoveTimer.startPeriodic(remove_time);
 #else
-    if (call RPLRouteInfo.getRank() != ROOT_RANK) {
-    } else {
+    if (call RPLRouteInfo.getRank() = ROOT_RANK) {
       call RemoveTimer.startPeriodic(remove_time);
     }
 #endif
-    //call GenerateDAOTimer.startOneShot(dao_rate);
 
     // do we need this?
     call DelayDAOTimer.startOneShot(delay_dao + call Random.rand16()%100);
@@ -172,7 +166,7 @@ generic module RPLDAORoutingEngineP() {
       return SUCCESS;
     } else {
       call GenerateDAOTimer.startOneShot(dao_rate +
-                                         ((call Random.rand16()) % (dao_rate / 10)));
+        ((call Random.rand16()) % (dao_rate / 10)));
     }
     return SUCCESS;
   }
@@ -185,21 +179,10 @@ generic module RPLDAORoutingEngineP() {
 #endif
   }
 
-  task void initDAO();
-
   event void GenerateDAOTimer.fired() { // Initiate my own DAO messages
     uint32_t dao_next = dao_rate +
       ((call Random.rand16()) % (dao_rate / 10));
-    printf("RPL: DAO TIMER %lu %lu \n", dao_next, dao_rate);
-    /*
-    call GenerateDAOTimer.stop();
-    printfflush();
-    if (dao_double_count < dao_double_limit) {
-      dao_rate = (dao_rate * 2) + call Random.rand16()%100;
-      dao_double_count ++;
-    }
-    call GenerateDAOTimer.startOneShot(dao_rate + call Random.rand16()%50);
-    */
+
     post initDAO();
     call GenerateDAOTimer.startOneShot(dao_next);
   }
@@ -207,51 +190,50 @@ generic module RPLDAORoutingEngineP() {
   task void initDAO() {
     error_t error;
     dao_entry_t* dao_msg;
-    uint16_t length = sizeof(struct dao_base_t);
+    uint16_t length = sizeof(struct dao_full_t);
 
     if (!call RPLRouteInfo.hasDODAG() ||
         call RPLRouteInfo.getRank() == ROOT_RANK) {
-      printf("RPL: DAO: no DODOG or rank\n");
       return;
     }
 
     dao_msg = call SendPool.get();
-    if (dao_msg == NULL) {
-      printf("RPL: DAO: no message\n");
-      return;
-    }
+    if (dao_msg == NULL) return;
 
-    // call IPAddress.setSource(&dao_msg->s_pkt.ip6_hdr);
-    dao_msg->dao_base.icmpv6.type = ICMP_TYPE_RPL_CONTROL;
-    dao_msg->dao_base.icmpv6.code = ICMPV6_CODE_DAO;
-    dao_msg->dao_base.icmpv6.checksum = 0;
-    dao_msg->dao_base.DAOsequence = daoseq;
-    // get instance ID from Rtg eng
-    dao_msg->dao_base.instance_id.id = call RPLRouteInfo.getInstanceID();
+    dao_msg->dao_full.base.icmpv6.type = ICMP_TYPE_RPL_CONTROL;
+    dao_msg->dao_full.base.icmpv6.code = ICMPV6_CODE_DAO;
+    dao_msg->dao_full.base.icmpv6.checksum = 0;
+    dao_msg->dao_full.base.instance_id.id = call RPLRouteInfo.getInstanceID();
+    dao_msg->dao_full.base.flags = 0;
+    dao_msg->dao_full.base.flags |= (0 << DAO_K_SHIFT);
+    dao_msg->dao_full.base.flags |= (1 << DAO_D_SHIFT);
+    dao_msg->dao_full.base.reserved = 0;
+    dao_msg->dao_full.base.DAOsequence = daoseq;
+    memcpy(&dao_msg->dao_full.base.dodagID, call RPLRouteInfo.getDodagId(),
+      sizeof(struct in6_addr));
 
-    dao_msg->dao_base.target_option.type = RPL_TARGET_TYPE;
-    dao_msg->dao_base.target_option.option_length = 18;
-    // length of my address
-    dao_msg->dao_base.target_option.prefix_length = sizeof(struct in6_addr) * 8;
+    dao_msg->dao_full.target_option.type = RPL_OPT_TYPE_TARGET;
+    dao_msg->dao_full.target_option.option_length = 18;
+    dao_msg->dao_full.target_option.flags = 0;
+    dao_msg->dao_full.target_option.prefix_length = sizeof(struct in6_addr) * 8;
+    call IPAddress.getGlobalAddr(&dao_msg->dao_full.target_option.target_prefix);
 
-#ifdef RPL_GLOBALADDR
-    call IPAddress.getGlobalAddr(&dao_msg->dao_base.target_option.target_prefix);
-#else
-    call IPAddress.getLLAddr(&dao_msg->dao_base.target_option.target_prefix);
-#endif
+    dao_msg->dao_full.transit_info_option.type = RPL_OPT_TYPE_TRANSIT;
+    dao_msg->dao_full.transit_info_option.option_length = 20;
+    dao_msg->dao_full.transit_info_option.flags = 0;
+    dao_msg->dao_full.transit_info_option.flags |= (0 << DAO_TRANSIT_E_SHIFT);
+    dao_msg->dao_full.transit_info_option.path_control = PATH_CONTROL;
+    dao_msg->dao_full.transit_info_option.path_sequence = PATH_SEQUENCE;
+    dao_msg->dao_full.transit_info_option.path_lifetime = DEFAULT_LIFETIME;
+    error = call RPLRouteInfo.getDefaultRoute(
+      &dao_msg->dao_full.transit_info_option.parent_address);
 
-    dao_msg->dao_base.transit_info_option.type = RPL_TRANSIT_INFORMATION_TYPE;
-    dao_msg->dao_base.transit_info_option.option_length = 22;
-    dao_msg->dao_base.transit_info_option.path_sequence = PATH_SEQUENCE;
-    dao_msg->dao_base.transit_info_option.path_control = PATH_CONTROL;
-    dao_msg->dao_base.transit_info_option.path_lifetime = DEFAULT_LIFETIME;
-    if (call RPLRouteInfo.getDefaultRoute(&dao_msg->dao_base.transit_info_option.parent_address) != SUCCESS) {
-      printf("RPL: DAO: no default route\n");
+    if (error != SUCCESS) {
       call SendPool.put(dao_msg);
       return;
     }
 
-    dao_msg->v[0].iov_base = (uint8_t *)&dao_msg->dao_base;
+    dao_msg->v[0].iov_base = (uint8_t*) &dao_msg->dao_full;
     dao_msg->v[0].iov_len  = length;
     dao_msg->v[0].iov_next = NULL;
 
@@ -263,11 +245,9 @@ generic module RPLDAORoutingEngineP() {
     error = call SendQueue.enqueue(dao_msg);
 
     if (error != SUCCESS) {
-      printf("RPL: DAO: can't enqueue\n");
       call SendPool.put(dao_msg);
       return;
     } else {
-
       if (!call DelayDAOTimer.isRunning()) {
         call DelayDAOTimer.startOneShot(delay_dao);
       }
@@ -294,7 +274,7 @@ generic module RPLDAORoutingEngineP() {
           downwards_table[j] = downwards_table[j+1];
         }
         downwards_table[downwards_table_count-1].lifetime = 0;
-        downwards_table_count --;
+        downwards_table_count--;
       }
     }
   }
@@ -302,67 +282,113 @@ generic module RPLDAORoutingEngineP() {
   event void IP_DAO.recv(struct ip6_hdr *iph, void *payload,
                           size_t len, struct ip6_metadata *meta) {
     dao_entry_t* dao_msg;
+    size_t payload_len = len;
     error_t error;
-    struct in6_addr MYADDR;
-    // This is where the message is actually cast
-    struct dao_base_t *dao = (struct dao_base_t *)payload;
-    struct route_entry *entry;
+    struct in6_addr my_addr;
+
+    struct dao_base_t* dao = (struct dao_base_t*) payload;
+    struct target_option_t* dao_target = NULL;
+    struct transit_info_option_t* dao_transit = NULL;
+
+    uint8_t* cur = (uint8_t*) payload;
+
+    struct route_entry* entry;
     route_key_t new_key = ROUTE_INVAL_KEY;
 
-    printf("RPL: receive DAO\n");
-    printfflush();
+    struct in6_addr target_prefix;
+
     if (!m_running) return;
 
 #ifndef RPL_STORING_MODE
-    if (!call RPLDAORouteInfo.getStoreState())
-      return;
+    if (!call RPLDAORouteInfo.getStoreState()) return;
 #endif
-//     if (dao->target_option.prefix_length == 128)
-//       call Leds.led1Toggle();
+
+    // Length must be at least the first part of the DAO minus the DODAGID
+    if (len < (sizeof(struct dao_base_t) - sizeof(struct in6_addr))) return;
+
+    if ((dao->flags & DAO_D_MASK) >> DAO_D_SHIFT) {
+      // there is a DODAGID present
+      cur += sizeof(struct dao_base_t);
+      len -= sizeof(struct dao_base_t);
+    } else {
+      // no DODAGID was included
+      cur += sizeof(struct dao_base_t) - sizeof(struct in6_addr);
+      len -= sizeof(struct dao_base_t) - sizeof(struct in6_addr);
+    }
+
+    if (len < 2) return;
+
+    while (len > 2) {
+      if (*cur == RPL_OPT_TYPE_TARGET) {
+        dao_target = (struct target_option_t*) cur;
+        if (len < dao_target->option_length + 2) return;
+        cur += dao_target->option_length + 2;
+        len -= dao_target->option_length + 2;
+      } else if (*cur == RPL_OPT_TYPE_TRANSIT) {
+        dao_transit = (struct transit_info_option_t*) cur;
+        if (len < dao_transit->option_length + 2) return;
+        cur += dao_transit->option_length + 2;
+        len -= dao_transit->option_length + 2;
+      } else {
+        // unknown option
+        struct rpl_option_t* rpl_opt = (struct rpl_option_t*) cur;
+        if (len < rpl_opt->option_length + 2) return;
+        cur += rpl_opt->option_length + 2;
+        len -= rpl_opt->option_length + 2;
+      }
+    }
+
+    if (dao_target == NULL || dao_transit == NULL) return;
+
+    // Get the target prefix, need to pad with zeros if not all was sent
+    memset(&target_prefix, 0, sizeof(struct in6_addr));
+    memcpy(&target_prefix, &dao_target->target_prefix,
+      dao_target->prefix_length/8);
+
     /* SDH : the two cases are the same...  */
-    entry = call ForwardingTable.lookupRoute(dao->target_option.target_prefix.s6_addr,
-                                             dao->target_option.prefix_length);
+    entry = call ForwardingTable.lookupRoute(
+      target_prefix.s6_addr,
+      dao_target->prefix_length);
 
     if ((entry != NULL) &&
-        (entry->prefixlen == dao->target_option.prefix_length)) {
+        (entry->prefixlen == dao_target->prefix_length)) {
       /* exact match in the forwarding table */
       if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr,
                      (uint8_t*)iph->ip6_src.s6_addr, 16) == TRUE) {
         // same old destination with same DTSN
       } else {
-        /* SDH : shouldn't we, like, save the new route? */
         // new next hop for an existing downswards node
-        //call ForwardingTable.delRoute(entry.key);
         call RPLRouteInfo.setDTSN((call RPLRouteInfo.getDTSN()) + 1);
-        if (dao->target_option.prefix_length > 0)
-          new_key = call ForwardingTable.addRoute(dao->target_option.target_prefix.s6_addr,
-                                                  dao->target_option.prefix_length,
-                                                  &iph->ip6_src,
-                                                  RPL_IFACE);
+        if (dao_target->prefix_length > 0) {
+          new_key = call ForwardingTable.addRoute(
+            target_prefix.s6_addr,
+            dao_target->prefix_length,
+            &iph->ip6_src,
+            RPL_IFACE);
+        }
       }
     } else {
       /* new prefix */
 
-      call IPAddress.getGlobalAddr(&MYADDR);
-      if (downwards_table_count == ROUTE_TABLE_SZ || memcmp_rpl((void*)&MYADDR, dao->target_option.target_prefix.s6_addr, 16)) {
+      call IPAddress.getGlobalAddr(&my_addr);
+      if (downwards_table_count == ROUTE_TABLE_SZ ||
+          memcmp_rpl((void*)&my_addr, target_prefix.s6_addr, 16)) {
         // printf("RPL: Downward table full -- not adding route\n");
         // or this is my own address for some wierd reason
         return;
       }
-      printf("RPL: DAO: Add new route\n");
-      printfflush();
-      if (dao->target_option.prefix_length > 0) {
-        new_key = call ForwardingTable.addRoute(dao->target_option.target_prefix.s6_addr,
-                                                dao->target_option.prefix_length,
-                                                &iph->ip6_src,
-                                                RPL_IFACE);
+      if (dao_target->prefix_length > 0) {
+        new_key = call ForwardingTable.addRoute(
+          target_prefix.s6_addr,
+          dao_target->prefix_length,
+          &iph->ip6_src,
+          RPL_IFACE);
       }
 
       if (new_key != ROUTE_INVAL_KEY) {
-        //downwards_table[downwards_table_count].lifetime = dao->transit_info_option.path_lifetime;
         downwards_table[downwards_table_count].key = new_key;
         // for next element
-        downwards_table_count ++;
+        downwards_table_count++;
       }
 
     }
@@ -371,7 +397,7 @@ generic module RPLDAORoutingEngineP() {
       uint8_t i;
       for (i=0;i<downwards_table_count;i++){
         if (downwards_table[i].key == new_key){
-          downwards_table[i].lifetime = dao->transit_info_option.path_lifetime;
+          downwards_table[i].lifetime = dao_transit->path_lifetime;
         }
       }
     }
@@ -383,12 +409,6 @@ generic module RPLDAORoutingEngineP() {
       // no need to futher process packets
       return;
     }
-    /*
-    else{
-      if (!call GenerateDAOTimer.isRunning())
-      call GenerateDAOTimer.startOneShot(dao_rate);
-    }
-    */
 
     dao_msg = call SendPool.get();
 
@@ -402,9 +422,9 @@ generic module RPLDAORoutingEngineP() {
               (uint8_t*)iph, sizeof(struct ip6_hdr));
 
     // copy new payload information
-    ip_memcpy((uint8_t*)&dao_msg->dao_base,
-              (uint8_t*)payload, sizeof(struct dao_base_t));
-    dao_msg->v[0].iov_base = (uint8_t *)&dao_msg->dao_base;
+    ip_memcpy((uint8_t*)&dao_msg->dao_full,
+              (uint8_t*)payload, payload_len);
+    dao_msg->v[0].iov_base = (uint8_t*) &dao_msg->dao_full;
     dao_msg->v[0].iov_len = ntohs(iph->ip6_plen);
     dao_msg->v[0].iov_next = NULL;
     dao_msg->s_pkt.ip6_data = &dao_msg->v[0];
@@ -421,12 +441,6 @@ generic module RPLDAORoutingEngineP() {
   }
 
   command void RPLDAORouteInfo.newParent() {
-    /*
-    dao_rate = INIT_DAO;
-    dao_double_count = 0;
-    call GenerateDAOTimer.stop();
-    call GenerateDAOTimer.startOneShot(dao_rate);
-    */
     post initDAO();
   }
 

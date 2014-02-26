@@ -31,13 +31,18 @@
 
 /**
  * RPLDAORoutingEngine.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 #include <RPL.h>
 
-interface RPLDAORoutingEngine{
+interface RPLDAORoutingEngine {
+  // Start sending DAO messages
   command error_t startDAO();
+
+  // Check if this node is in RPL storing mode
   command bool getStoreState();
+
+  // Tell the DAO engine that the node has a new parent
   command void newParent();
 }
