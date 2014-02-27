@@ -24,7 +24,7 @@
 #include "nwbyte.h"
 
 /*
- *  Library implementation of packing of 6lowpan packets.  
+ *  Library implementation of packing of 6lowpan packets.
  *
  *  This should allow uniform code treatment between pc and mote code;
  *  the goal is to write ANSI C here...  This means no nx_ types,
@@ -74,7 +74,7 @@ inline uint16_t getHeaderBitmap(struct packed_lowmsg *lowmsg) {
   if (len > 0 && ((*buf) >> 6) == LOWPAN_NALP_PATTERN) {
     return LOWMSG_NALP;
   }
-  
+
 #if LIB6LOWPAN_FULL
   if (len > 0 && ((*buf) >> 6) == LOWPAN_MESH_PATTERN) {
     if (!(*buf & LOWPAN_MESH_V_MASK) ||
@@ -91,9 +91,7 @@ inline uint16_t getHeaderBitmap(struct packed_lowmsg *lowmsg) {
     buf += LOWMSG_BCAST_LEN;
     len -= LOWMSG_BCAST_LEN;
   }
-#endif 
-
-  // printf("dispatch: 0x%02x\n", *buf);
+#endif
 
   if (len > 0 && ((*buf) >> 3) == LOWPAN_FRAG1_PATTERN) {
     headers |= LOWMSG_FRAG1_HDR;
@@ -146,7 +144,7 @@ inline uint8_t setupHeaders(struct packed_lowmsg *packed, uint16_t headers) {
     *buf = LOWPAN_FRAGN_PATTERN << 3;
   }
   return 0;
-  
+
 }
 
 /*
@@ -201,7 +199,7 @@ inline uint8_t getMeshFinalAddr(struct packed_lowmsg *msg, ieee154_saddr_t *fina
 inline uint8_t setMeshHopsLeft(struct packed_lowmsg *msg, uint8_t hops) {
   uint8_t *buf = msg->data;
   if (!hasMeshHeader(msg) || msg->data == NULL) return 1;
-  
+
   *buf = 0xb0;
   *buf |= hops & LOWPAN_MESH_HOPS_MASK;
   return 0;
@@ -224,7 +222,7 @@ inline uint8_t setMeshFinalAddr(struct packed_lowmsg *msg, ieee154_saddr_t final
   *((uint16_t *)buf) = htons(final);
   return 0;
 }
- 
+
 /*
  * Broadcast header fields
  */
@@ -325,7 +323,7 @@ inline uint8_t setFragDgramTag(struct packed_lowmsg *msg, uint16_t tag) {
   if (hasMeshHeader(msg)) buf += LOWMSG_MESH_LEN;
   if (hasBcastHeader(msg)) buf += LOWMSG_BCAST_LEN;
 #endif
-  
+
   if ((*buf >> 3) != LOWPAN_FRAG1_PATTERN &&
       (*buf >> 3) != LOWPAN_FRAGN_PATTERN) return 1;
   buf += 2;
