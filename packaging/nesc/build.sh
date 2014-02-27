@@ -33,7 +33,7 @@ fi
 echo -e "\n*** TOSROOT: $TOSROOT"
 echo      "*** Destination: ${DEB_DEST}"
 
-NESC_VER=1.3.4
+NESC_VER=1.3.5
 NESC=nesc-${NESC_VER}
 
 setup_deb()
@@ -64,7 +64,7 @@ download()
 {
     echo -e "\n*** Downloading ... ${NESC}"
     [[ -a ${NESC}.tar.gz ]] \
-	|| wget http://downloads.sourceforge.net/project/nescc/nescc/v${NESC_VER}/${NESC}.tar.gz
+	|| wget https://github.com/tinyos/nesc/archive/v${NESC_VER}.tar.gz -O ${NESC}.tar.gz
 }
 
 build()
@@ -75,6 +75,7 @@ build()
     set -e
     (
 	cd ${NESC}
+	./Bootstrap
 	./configure --prefix=${PREFIX}
 	make ${MAKE_J}
 	make install-strip
