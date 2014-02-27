@@ -50,9 +50,9 @@ module UDPEchoP {
     interface UDP as Status;
 
     interface Leds;
-    
+
     interface Timer<TMilli> as StatusTimer;
-   
+
     interface BlipStatistics<ip_statistics_t> as IPStats;
     interface BlipStatistics<udp_statistics_t> as UDPStats;
 
@@ -90,12 +90,12 @@ module UDPEchoP {
 
   }
 
-  event void Status.recvfrom(struct sockaddr_in6 *from, void *data, 
+  event void Status.recvfrom(struct sockaddr_in6 *from, void *data,
                              uint16_t len, struct ip6_metadata *meta) {
 
   }
 
-  event void Echo.recvfrom(struct sockaddr_in6 *from, void *data, 
+  event void Echo.recvfrom(struct sockaddr_in6 *from, void *data,
                            uint16_t len, struct ip6_metadata *meta) {
 #ifdef PRINTFUART_ENABLED
     int i;

@@ -32,13 +32,10 @@
  */
 
 #include <IPDispatch.h>
-#include <lib6lowpan.h>
-#include <ip.h>
-#include <lib6lowpan.h>
-#include <ip.h>
+#include <lib6lowpan/lib6lowpan.h>
+#include <lib6lowpan/ip.h>
 
 #include "UDPReport.h"
-#include "PrintfUART.h"
 
 #define REPORT_PERIOD 75L
 
@@ -52,13 +49,11 @@ module TCPEchoP {
     interface Tcp as TcpEcho;
 
     interface Leds;
-    
+
     interface Timer<TMilli> as StatusTimer;
-   
-    interface Statistics<ip_statistics_t> as IPStats;
-    interface Statistics<route_statistics_t> as RouteStats;
-    interface Statistics<icmp_statistics_t> as ICMPStats;
-    interface Statistics<udp_statistics_t> as UDPStats;
+
+    interface BlipStatistics<ip_statistics_t> as IPStats;
+    interface BlipStatistics<udp_statistics_t> as UDPStats;
 
     interface Random;
 
@@ -82,9 +77,6 @@ module TCPEchoP {
     timerStarted = FALSE;
 
     call IPStats.clear();
-    call RouteStats.clear();
-    call ICMPStats.clear();
-    printfUART_init();
 
 
 #ifdef REPORT_DEST
@@ -107,21 +99,19 @@ module TCPEchoP {
 
   }
 
-  event void Status.recvfrom(struct sockaddr_in6 *from, void *data, 
-                             uint16_t len, struct ip_metadata *meta) {
+  event void Status.recvfrom(struct sockaddr_in6 *from, void *data,
+                             uint16_t len, struct ip6_metadata *meta) {
 
   }
 
-  event void Echo.recvfrom(struct sockaddr_in6 *from, void *data, 
-                           uint16_t len, struct ip_metadata *meta) {
+  event void Echo.recvfrom(struct sockaddr_in6 *from, void *data,
+                           uint16_t len, struct ip6_metadata *meta) {
     CHECK_NODE_ID;
     call Echo.sendto(from, data, len);
   }
 
   enum {
-    STATUS_SIZE = sizeof(ip_statistics_t) + 
-    sizeof(route_statistics_t) +
-    sizeof(icmp_statistics_t) + sizeof(udp_statistics_t),
+    STATUS_SIZE = sizeof(ip_statistics_t) + sizeof(udp_statistics_t),
   };
 
 
@@ -136,14 +126,12 @@ module TCPEchoP {
     stats.sender = TOS_NODE_ID;
 
     call IPStats.get(&stats.ip);
-    call RouteStats.get(&stats.route);
-    call ICMPStats.get(&stats.icmp);
     call UDPStats.get(&stats.udp);
 
     call Status.sendto(&route_dest, &stats, sizeof(stats));
   }
 
-  /* 
+  /*
    * Example code for setting up a TCP echo socket.
    */
 
@@ -157,7 +145,7 @@ module TCPEchoP {
     return TRUE;
   }
   event void TcpEcho.connectDone(error_t e) {
-    
+
   }
   event void TcpEcho.recv(void *payload, uint16_t len) {
     if (call TcpEcho.send(payload,len) != SUCCESS)

@@ -1,0 +1,3 @@
+#-*-Makefile-*-
+
+PFLAGS+=-I%T/lib/net/rpl
