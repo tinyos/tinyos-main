@@ -39,7 +39,7 @@
 
 /* This is the default value of the CHANNEL field of the FSCTRL register. */
 #ifndef CC2420X_DEF_CHANNEL
-#define CC2420X_DEF_CHANNEL	11
+#define CC2420X_DEF_CHANNEL	26
 #endif
 
 /* The number of microseconds a sending micaz mote will wait for an acknowledgement */
