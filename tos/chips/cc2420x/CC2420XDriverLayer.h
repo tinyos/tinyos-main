@@ -154,7 +154,7 @@ static const cc2420X_txctrl_t cc2420X_txctrl_default = {.f.pa_level = 31, .f.res
 
 
 #ifndef CC2420X_DEF_CHANNEL
-#define CC2420X_DEF_CHANNEL 11
+#define CC2420X_DEF_CHANNEL 26
 #endif
 
 #ifndef CC2420X_DEF_RFPOWER

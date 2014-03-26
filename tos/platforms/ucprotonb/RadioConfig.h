@@ -84,7 +84,7 @@ enum
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RFA1_DEF_CHANNEL
-#define RFA1_DEF_CHANNEL	11
+#define RFA1_DEF_CHANNEL	26
 #endif
 
 #ifndef RF212_GC_TX_OFFS
