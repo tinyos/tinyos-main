@@ -167,6 +167,7 @@ AC_OUTPUT(
 	tinyos/misc/tos-build-deluge-image
 	tinyos/misc/tos-mote-key
 	tinyos/misc/tos-check-env
+	tinyos/misc/tos-diagprint
 	tinyos/misc/Makefile
 	tinyos/ncc/Makefile
 	tinyos/ncc/mig
