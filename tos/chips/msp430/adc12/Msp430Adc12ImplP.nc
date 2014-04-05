@@ -65,7 +65,7 @@ implementation
 { 
 
 #ifdef ADC12_TIMERA_ENABLED
-  #warning Accessing TimerA for ADC12 
+  #warning Accessing TimerA for ADC12
 #endif
 
   enum {

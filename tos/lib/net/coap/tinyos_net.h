@@ -36,30 +36,9 @@
 #include <net.h>
 #include <mem.h>
 
-#define options_start(p) ((coap_opt_t *) ( (unsigned char *)p->hdr + sizeof ( coap_hdr_t ) ))
-
-#define options_end(p, opt) {						\
-    unsigned char opt_code = 0, cnt;					\
-    *opt = options_start( node->pdu );					\
-    for ( cnt = (p)->hdr->optcnt; cnt; --cnt ) {			\
-      opt_code += COAP_OPT_DELTA(**opt);				\
-      *opt = (coap_opt_t *)( (unsigned char *)(*opt) + COAP_OPT_SIZE(**opt)); \
-    }									\
-  }
-
-//CLIENT:
 int order_opts(void *a, void *b);
+
 coap_list_t* new_option_node(unsigned short key,
 			     unsigned int length,
 			     char *data);
-
-/**
- * Reads data from the network and tries to parse as CoAP PDU. On
- * success, 0 is returned and a new node with the parsed PDU is added
- * to the receive queue in the specified context object.
- */
-int coap_read(coap_context_t *ctx,
-	      struct sockaddr_in6 *src, void *buf,
-	      uint16_t bytes_read, struct ip6_metadata *meta);
-
 #endif

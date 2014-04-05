@@ -28,7 +28,7 @@ interface IPAddress {
    */
   command bool getLLAddr(struct in6_addr *addr);
 
-  /** 
+  /**
    * Get the preferred global IPv6 address for this node
    */
   command bool getGlobalAddr(struct in6_addr *addr);
@@ -48,8 +48,6 @@ interface IPAddress {
    * routing.
    */
   command bool isLLAddress(struct in6_addr *addr);
-
-  command error_t setAddress(struct in6_addr *addr);
 
   command error_t removeAddress();
 

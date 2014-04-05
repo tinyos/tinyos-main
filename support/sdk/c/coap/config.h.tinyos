@@ -1,0 +1,74 @@
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
+#define WITH_TINYOS 1
+
+//#define COAP_MAX_PDU_SIZE 127
+
+/** Number of resources that can be handled by a CoAP server in addition to
+ * @c /.well-known/core */
+#define COAP_MAX_RESOURCES 3
+
+/** Number of attributes that can be handled (should be at least
+ * @c 2 * COAP_MAX_RESOURCES. to carry the content type and the
+ * resource type. */
+#define COAP_MAX_ATTRIBUTES 4
+
+/**
+ * Number of PDUs that can be stored simultaneously. This number
+ * includes both, the PDUs stored for retransmission as well as the
+ * PDUs received. Beware that choosing a too small value can lead to
+ * many retransmissions to be dealt with.
+ */
+#define COAP_PDU_MAXCNT 4
+
+/**
+ * Maximum number of subscriptions. Every additional subscriber costs
+ * 36 B.
+ */
+#define COAP_MAX_SUBSCRIBERS 3
+
+/**
+ * Number of notifications that may be sent non-confirmable before a
+ * confirmable message is sent to detect if observers are alive. The
+ * maximum allowed value here is @c 15.
+ */
+#define COAP_OBS_MAX_NON   5
+
+/**
+ * Number of confirmable notifications that may fail (i.e. time out
+ * without being ACKed) before an observer is removed. The maximum
+ * value for COAP_OBS_MAX_FAIL is @c 3.
+ */
+#define COAP_OBS_MAX_FAIL  3
+
+#define DEBUG DEBUG_PRINT
+#define HAVE_STRNLEN 1
+//#define HAVE_SNPRINTF 1
+//#define HAVE_NETINET_IN_H 1
+
+/* there is no file-oriented output */
+#define COAP_DEBUG_FD NULL
+#define COAP_ERR_FD   NULL
+
+#define HASH_FUNCTION HASH_SAX
+/* #define HASH_FUNCTION HASH_BER */
+/* #define HASH_FUNCTION HASH_FNV */
+/* #define HASH_FUNCTION HASH_OAT */
+/* #define HASH_FUNCTION HASH_JEN_MIX */ /* compilation error */
+/* #define HASH_FUNCTION HASH_JEN */ /* compilation warnings */
+/* #define HASH_FUNCTION HASH_SFH */ /* compilation warnings */
+/* #define HASH_FUNCTION HASH_MUR_ALIGNED */ /* compilation error */
+
+#undef HAVE_ASSERT_H
+
+/* Define assert() as emtpy directive unless HAVE_ASSERT_H is given. */
+#ifndef HAVE_ASSERT_H
+# define assert(x)
+#endif
+
+#ifndef BYTE_ORDER
+#endif /* BYTE_ORDER */
+
+#endif /* _CONFIG_H_ */
+

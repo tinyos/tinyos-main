@@ -1,6 +1,14 @@
+/*
+ * Module provides interfaces for turning on and off different parts of the
+ * networking stack.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
 
 module IPStackControlP {
-  provides interface SplitControl;
+  provides {
+    interface SplitControl;
+  }
   uses {
     interface StdControl;
     interface StdControl as RoutingControl;
@@ -9,13 +17,18 @@ module IPStackControlP {
   }
 } implementation {
 
+  // Keep track of whether the BLIP stack has been started (using SplitControl)
+  bool blip_started = FALSE;
+
   command error_t SplitControl.start() {
+    if (blip_started) return EALREADY;
     return call SubSplitControl.start();
   }
 
   event void SubSplitControl.startDone(error_t error) {
     struct in6_addr addr;
     if (error == SUCCESS) {
+      blip_started = TRUE;
       call StdControl.start();
     }
 
@@ -35,13 +48,16 @@ module IPStackControlP {
   }
 
   event void SubSplitControl.stopDone(error_t error) {
+    if (error == SUCCESS) {
+      blip_started = FALSE;
+    }
     signal SplitControl.stopDone(error);
   }
-  
+
   event void IPAddress.changed(bool valid) {
     if (valid)
       call RoutingControl.start();
-    else 
+    else
       call RoutingControl.stop();
   }
 
@@ -49,5 +65,5 @@ module IPStackControlP {
  default command error_t StdControl.stop() { return SUCCESS; }
  default command error_t RoutingControl.start() { return SUCCESS; }
  default command error_t RoutingControl.stop() { return SUCCESS; }
-  
+
 }

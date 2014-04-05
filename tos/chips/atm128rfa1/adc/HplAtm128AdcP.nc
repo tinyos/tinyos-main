@@ -51,15 +51,16 @@ module HplAtm128AdcP @safe() {
 }
 implementation {
   async command void HplAtm128Adc.setChannel(uint8_t mux){
-    ADMUX = (ADMUX & 0xE0) | (mux & 0x1F); //upper 3 bits: unchanged; lower 5 bits: mux
+    // need to write MUX5 before MUX4:0 (atmega128rfa1 datasheet rev. 8266d-MCU section 27.6.1)    
     if(mux & 0x20)
       ADCSRB |= (1 << MUX5);
     else
-      ADCSRB &= ~(1 << MUX5);    
+      ADCSRB &= ~(1 << MUX5);
+    ADMUX = (ADMUX & 0xE0) | (mux & 0x1F); //upper 3 bits: unchanged; lower 5 bits: mux
   }
   
   async command uint8_t HplAtm128Adc.getChannel(){
-    return (ADMUX & 0x1F) | (((ADCSRB & MUX5) >> MUX5) << 5);
+    return (ADMUX & 0x1F) | (((ADCSRB & (1<<MUX5)) >> MUX5) << 5);
   }
   
   async command void HplAtm128Adc.setAdlar(bool adlarOn){

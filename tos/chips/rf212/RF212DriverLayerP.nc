@@ -137,6 +137,12 @@ implementation
 		CMD_SIGNAL_DONE = 8,		// signal the end of the state transition
 		CMD_DOWNLOAD = 9,		// download the received message
 	};
+	
+	
+	enum {
+		// this disables the RF212OffP component
+		RF212RADIOON = unique("RF212RadioOn"),
+	};
 
 	norace bool radioIrq;
 
@@ -376,6 +382,8 @@ implementation
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			call IRQ.disable();
+			radioIrq = FALSE;
+			
 			writeRegister(RF212_TRX_STATE, RF212_FORCE_TRX_OFF);
 			state = STATE_TRX_OFF;
 		}
@@ -544,6 +552,10 @@ implementation
 
 			*(timesync_absolute_t*)data = absolute;
 		}
+		
+		//dummy bytes for FCS. Otherwise we'll get an TRX_UR interrupt. It's strange though, the RF23x, doesn't need this
+		call FastSpiByte.splitReadWrite(0);
+		call FastSpiByte.splitReadWrite(0);
 
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();

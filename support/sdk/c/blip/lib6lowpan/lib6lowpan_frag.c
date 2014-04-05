@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -14,18 +13,26 @@
 
 int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
                        struct lowpan_reconstruct *recon,
-                       uint8_t *pkt, size_t len) {
-  uint8_t *unpack_point, *unpack_end;
+                       uint8_t *pkt,
+                       size_t len) {
+  uint8_t *unpack_point;
   struct packed_lowmsg msg;
+  uint8_t recalculate_checksum = 0;
+  int ret;
+  uint16_t unpacked_len = 0;
 
   msg.data = pkt;
   msg.len  = len;
   msg.headers = getHeaderBitmap(&msg);
   if (msg.headers == LOWMSG_NALP) return -1;
 
-  /* remove the 6lowpan headers from the payload */
+  /* remove the 6lowpan frag headers from the payload */
   unpack_point = getLowpanPayload(&msg);
   len -= (unpack_point - pkt);
+
+  if (len <= 0) {
+    return -4;
+  }
 
   /* set up the reconstruction, or just fill in the packet length */
   if (hasFrag1Header(&msg)) {
@@ -39,35 +46,79 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   memset(recon->r_buf, 0, recon->r_size);
   recon->r_app_len = NULL;
 
+  if (len < 1) {
+    ip_free(recon->r_buf);
+    return -5;
+  }
   if (*unpack_point == LOWPAN_IPV6_PATTERN) {
     /* uncompressed header... no need to un-hc */
-    unpack_point++; len --;
+    unpack_point++; len--;
+    if (len < sizeof(struct ip6_hdr)) {
+      // Uncompressed packet must be at least the size of the ipv6 header
+      ip_free(recon->r_buf);
+      return -7;
+    }
+    if (len > recon->r_size) {
+      ip_free(recon->r_buf);
+      return -6;
+    }
     memcpy(recon->r_buf, unpack_point, len);
-    unpack_end = recon->r_buf + len;
+    unpacked_len = len;
   } else {
     /* unpack the first fragment */
-    unpack_end = lowpan_unpack_headers(recon, 
-                                       frame_addr,
-                                       unpack_point, len);
-  }
-
-  if (!unpack_end) {
-    ip_free(recon->r_buf);
-    return -3;
+    ret = lowpan_unpack_headers(recon,
+                                frame_addr,
+                                &unpack_point,
+                                &len,
+                                &recalculate_checksum,
+                                &unpacked_len);
+    if (ret < 0) {
+      ip_free(recon->r_buf);
+      return -3;
+    }
   }
 
   if (!hasFrag1Header(&msg)) {
-    recon->r_size = (unpack_end - recon->r_buf);
+    recon->r_size = unpacked_len;
   }
-  recon->r_bytes_rcvd = unpack_end - recon->r_buf;
-  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen = 
+  recon->r_bytes_rcvd = unpacked_len;
+  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen =
     htons(recon->r_size - sizeof(struct ip6_hdr));
   /* fill in any elided app data length fields */
   if (recon->r_app_len) {
-    *recon->r_app_len = 
+    *recon->r_app_len =
       htons(recon->r_size - (recon->r_transport_header - recon->r_buf));
   }
-  
+
+  /* Check if we used stateful uncompression with the ipv6 source or destination
+   * addresses. If so, we probably need to recalculate checksums because when
+   * the checksum was originally calculated the full source or destination
+   * address may not have been known. In that case, the checksum will fail
+   * at the packet's destination.
+   */
+  if (recalculate_checksum) {
+    struct ip6_hdr *hdr = (struct ip6_hdr *) recon->r_buf;
+
+    /* Right now only handle the only header being UDP */
+    if (hdr->ip6_nxt == IANA_UDP) {
+      struct ip_iovec v[2];
+      struct udp_hdr *udph;
+
+      udph = (struct udp_hdr *) recon->r_transport_header;
+      udph->chksum = 0;
+
+      v[0].iov_base = (uint8_t *) udph;
+      v[0].iov_len  = sizeof(struct udp_hdr);
+      v[0].iov_next = v+1;
+      v[1].iov_base = (uint8_t*) (udph + 1);
+      v[1].iov_len  = ntohs(*recon->r_app_len) - sizeof(struct udp_hdr);
+      v[1].iov_next = NULL;
+
+      udph->chksum = htons(msg_cksum(hdr, v, IANA_UDP));
+    }
+
+  }
+
   /* done, updated all the fields */
   /* reconstruction is complete if r_bytes_rcvd == r_size */
   return 0;
@@ -110,6 +161,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
   buf = lowpan_buf = pack_ieee154_header(frag, len, frame);
   if (ctx->offset == 0) {
     int offset = 0;
+    size_t buflen;
 
 #if LIB6LOWPAN_HC_VERSION == -1
     /* just copy the ipv6 header around... */
@@ -122,7 +174,8 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     if (!buf) return -1;
 
     /* pack the next headers */
-    offset = pack_nhc_chain(&buf, len - (buf - ieee_buf), packet);
+    buflen = len - (buf - ieee_buf);
+    offset = pack_nhc_chain(&buf, &buflen, packet);
     if (offset < 0) return -2;
 #endif
 
@@ -132,7 +185,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     /* may need to fragment -- insert a FRAG1 header if so */
     if (extra_payload > len - (buf - ieee_buf)) {
       struct packed_lowmsg lowmsg;
-      memmove(lowpan_buf + LOWMSG_FRAG1_LEN, 
+      memmove(lowpan_buf + LOWMSG_FRAG1_LEN,
                 lowpan_buf,
                 buf - lowpan_buf);
 
@@ -150,7 +203,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
       extra_payload -= (extra_payload % 8);
 
     }
-    
+
     if (iov_read(packet->ip6_data, offset, extra_payload, buf) != extra_payload) {
       return -3;
     }

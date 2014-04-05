@@ -47,8 +47,12 @@ implementation {
 
   command error_t Stm25pOff.init() {
     #if !defined(UCMINI_REV) || (UCMINI_REV > 100)
-    call Toggle.makeOutput();
-    call Toggle.set();
+      call Toggle.makeOutput();
+      #if !defined(UCMINI_REV) || (UCMINI_REV > 101)
+        call Toggle.clr();
+      #else
+        call Toggle.set();
+      #endif
     #else
     call CSN.makeOutput();
     call Hold.makeOutput();

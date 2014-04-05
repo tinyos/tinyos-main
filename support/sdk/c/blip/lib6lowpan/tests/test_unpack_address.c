@@ -7,10 +7,7 @@
 #include "lib6lowpan.h"
 #include "nwbyte.h"
 #include "6lowpan.h"
-
-uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch, 
-                        int context, uint8_t *buf,
-                        ieee154_addr_t *frame, ieee154_panid_t pan);
+#include "internal.h"
 
 struct {
   char   *prefix;
@@ -39,35 +36,36 @@ struct {
   int   len;
   char  buf[32];
   char *l2addr;
-  ieee154_panid_t   panid;
-  
+  ieee154_panid_t panid;
+  uint8_t stateful;
+
 } test_cases[] = {
   // context-free tests
-  {"fe80::1", LOWPAN_IPHC_AM_16, 0, 2, {0, 1}, "1", 1},
-  {"fe80::ffff", LOWPAN_IPHC_AM_16, 0, 2, {0xff, 0xff}, "1", 1},
-  {"fe80::abde:f012", LOWPAN_IPHC_AM_64, 0, 8, {0, 0, 0, 0, 0xab, 0xde, 0xf0, 0x12}, "1", 1},
-  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_64, 0, 8, {0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0xf0, 0x12}, "1", 1},
-  {"fe80:1234:8765:abde:1234:8765:abde:f012", LOWPAN_IPHC_AM_128, 0, 16, 
-   {0xfe, 0x80, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0xf0, 0x12}, "1", 1},
+  {"fe80::1", LOWPAN_IPHC_AM_16, 0, 2, {0, 1}, "1", 1, 0},
+  {"fe80::ffff", LOWPAN_IPHC_AM_16, 0, 2, {0xff, 0xff}, "1", 1, 0},
+  {"fe80::abde:f012", LOWPAN_IPHC_AM_64, 0, 8, {0, 0, 0, 0, 0xab, 0xde, 0xf0, 0x12}, "1", 1, 0},
+  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_64, 0, 8, {0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0xf0, 0x12}, "1", 1, 0},
+  {"fe80:1234:8765:abde:1234:8765:abde:f012", LOWPAN_IPHC_AM_128, 0, 16,
+   {0xfe, 0x80, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0xf0, 0x12}, "1", 1, 0},
 
   // derived from the MAC address
-  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_0, 0, 0, {}, "10:34:87:65:ab:de:f0:12", 1},
+  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_0, 0, 0, {}, "10:34:87:65:ab:de:f0:12", 1, 0},
 
   // RFC4944-style addresses
-  {"fe80::1:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 1},
+  {"fe80::1:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 1, 0},
 
-  {"fe80::fdff:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 0xffff},
+  {"fe80::fdff:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 0xffff, 0},
 
-  {"fe80::fdff:00ff:fe00:abcd", LOWPAN_IPHC_AM_0, 0, 0, {}, "abcd", 0xffff},
+  {"fe80::fdff:00ff:fe00:abcd", LOWPAN_IPHC_AM_0, 0, 0, {}, "abcd", 0xffff, 0},
 
   // tests using context
-  {"2002::12", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_16, 0, 2, {0, 0x12}, "1", 1},
+  {"2002::12", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_16, 0, 2, {0, 0x12}, "1", 1, 1},
 
-  {"2002:1:2:3:4:5:6:7", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_0, 1, 0, {}, "1", 1},
+  {"2002:1:2:3:4:5:6:7", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_0, 1, 0, {}, "1", 1, 1},
 
-  {"2002::4:5:6:7", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_64, 0, 8, {0,4,0,5,0,6,0,7}, "1", 1},
+  {"2002::4:5:6:7", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_64, 0, 8, {0,4,0,5,0,6,0,7}, "1", 1, 1},
 
-  {"::", LOWPAN_IPHC_AC_CONTEXT | LOWPAN_IPHC_AM_128, 0, 0, {}, "1", 1},
+  {"::", LOWPAN_IPHC_AC_CONTEXT | LOWPAN_IPHC_AM_128, 0, 0, {}, "1", 1, 1},
 };
 
  int run_tests() {
@@ -77,6 +75,10 @@ struct {
     struct in6_addr addr, correct;
     uint8_t buf[512];
     char *rv;
+    uint8_t *btr = test_cases[i].buf;
+    size_t len = 32;
+    int ret;
+    uint8_t stateful;
     ieee154_addr_t l2addr;
     total++;
 
@@ -86,15 +88,21 @@ struct {
     ieee154_print(&l2addr, buf, 512);
     printf("%s\n", buf);
     printf("in6_addr: %s\n", test_cases[i].address);
-    rv = unpack_address(&addr, test_cases[i].dispatch, test_cases[i].context,
-                        test_cases[i].buf, &l2addr, test_cases[i].panid);
+    ret = unpack_address(&addr,
+                         test_cases[i].dispatch,
+                         test_cases[i].context,
+                         &btr,
+                         &len,
+                         &l2addr,
+                         test_cases[i].panid,
+                         &stateful);
 
     inet_ntop6(&addr, buf, 512);
-    printf("result: %s length: %li\n", buf, rv - test_cases[i].buf);
+    printf("result: %s length: %li\n", buf, 32 - len);
 
-    if (test_cases[i].len != rv - test_cases[i].buf) {
+    if (test_cases[i].len != 32 - len) {
       printf("case %u: result len: %li expected: %i\n",
-             i, rv - test_cases[i].buf, test_cases[i].len);
+             i, 32 - len, test_cases[i].len);
       continue;
     }
 
@@ -102,6 +110,11 @@ struct {
       printf("case %u: unexpected result\n", i);
       print_buffer(correct.s6_addr, 16);
       print_buffer(addr.s6_addr, 16);
+      continue;
+    }
+
+    if (test_cases[i].stateful != stateful) {
+      printf("case %u: stateful compression was used!\n", test_cases[i].stateful);
       continue;
     }
 

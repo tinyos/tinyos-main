@@ -1,6 +1,6 @@
-//$Id: BusyWaitCounterC.nc,v 1.5 2010-06-29 22:07:50 scipio Exp $
-
-/* Copyright (c) 2000-2003 The Regents of the University of California.
+/*
+ * Copyright (c) 2013 Eric B. Decker
+ * Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@
  *   BusyWait interface.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
 generic module BusyWaitCounterC(typedef precision_tag, typedef size_type @integer())
@@ -65,18 +66,19 @@ implementation
     atomic
     {
       // comparisons are <= to guarantee a wait at least as long as dt
+      // we need to make sure this works when sizeof(size_type) < sizeof(int)
 
       size_type t0 = call Counter.get();
 
       if(dt > HALF_MAX_SIZE_TYPE)
       {
         dt -= HALF_MAX_SIZE_TYPE;
-        while((call Counter.get() - t0) <= dt);
+        while((size_type) (call Counter.get() - t0) <= dt);
         t0 += dt;
         dt = HALF_MAX_SIZE_TYPE;
       }
 
-      while((call Counter.get() - t0) <= dt);
+      while((size_type) (call Counter.get() - t0) <= dt);
     }
   }
 

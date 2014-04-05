@@ -51,7 +51,7 @@ module NetProgM {
     interface InternalFlash as IFlash;
     interface Crc;
     interface Leds;
-    async command void setAmAddress(am_addr_t a);
+    async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr);
   }
 }
 
@@ -65,7 +65,7 @@ implementation {
     // Update the local node ID
     if (bootArgs.address != 0xFFFF) {
       TOS_NODE_ID = bootArgs.address;
-      call setAmAddress(bootArgs.address);
+      call initAmAddress(TOS_AM_GROUP, bootArgs.address);
     }
 
     return SUCCESS;

@@ -59,7 +59,11 @@ configuration PppRouterC {
   // prints the routing table
   // components RouteCmdC;
 
-#ifndef IN6_PREFIX
+#ifdef IN6_PREFIX
+  components StaticIPAddressTosIdC; // Use TOS_NODE_ID in address
+  //components StaticIPAddressC; // Use LocalIeee154 in address
+#else
+  components Dhcp6C;
   components Dhcp6ClientC;
   PppRouterP.Dhcp6Info -> Dhcp6ClientC;
 #endif

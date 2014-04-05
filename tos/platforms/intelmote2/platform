@@ -1,0 +1,62 @@
+#
+# FILE: intelmote2/.platform
+# 
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.  
+#
+# $Id: .platform,v 1.9 2009-12-18 23:31:09 jgko Exp $
+#
+
+push ( @includes, qw(
+
+  %T/platforms/intelmote2
+  %T/platforms/intelmote2/chips/cc2420
+  %T/platforms/intelmote2/chips/da9030
+  %T/platforms/intelmote2/chips/ds2745
+  %T/chips/cc2420
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
+  %T/chips/cc2420/security
+  %T/chips/pxa27x
+  %T/chips/pxa27x/lib
+  %T/chips/pxa27x/timer
+  %T/chips/pxa27x/gpio
+  %T/chips/pxa27x/dma
+  %T/chips/pxa27x/ssp
+  %T/chips/pxa27x/i2c
+  %T/chips/pxa27x/uart
+  %T/chips/pxa27x/p30
+  %T/chips/pxa27x/ds2745
+  %T/chips/pxa27x/cif
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/gpio
+) );
+
+@opts = qw(
+
+  -gcc=xscale-elf-gcc
+  -nostartfiles
+  -fnesc-target=env
+  -fnesc-no-debug
+
+);
+
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
+push @opts, "-mingw-gcc" if $cygwin;
+
+$ENV{NESC_MACHINE} = "structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true";
+
+

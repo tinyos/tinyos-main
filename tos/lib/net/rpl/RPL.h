@@ -85,8 +85,8 @@
 // Threshold at which to evict parent
 #define minHopRankIncrease 1
 // Divisor for the metric (for fixed-point repr)
-#define divideRank 10 
-#define INIT_ETX divideRank 
+#define divideRank 10
+#define INIT_ETX divideRank
 #define ETX_THRESHOLD (3 * divideRank)
 #else //  MRHOF
 #define minHopRankIncrease 128
@@ -131,9 +131,9 @@ enum {
 };
 
 struct icmpv6_header_t {
-  uint8_t	type;
-  uint8_t	code;
-  nx_uint16_t	checksum;
+  uint8_t type;
+  uint8_t code;
+  nx_uint16_t checksum;
 }__attribute__((packed));
 
 struct dis_base_t {
@@ -210,7 +210,7 @@ struct dio_dodag_config_t{ // type 4 ; contains DODAG configuration
   nx_uint16_t lifetime_unit;
 };
 
-struct dio_metric_header_t{ 
+struct dio_metric_header_t{
   uint8_t routing_obj_type;
   uint8_t reserved    :  2;
   uint8_t R_flag      :  1;
@@ -346,7 +346,7 @@ typedef nx_struct {
   nx_struct nx_ip6_ext ip6_ext_outer;
   nx_struct nx_ip6_ext ip6_ext_inner;
   nx_uint8_t bitflag;
-  // nx_struct rpl_instance_id instance_id; // used to be instanceID 
+  // nx_struct rpl_instance_id instance_id; // used to be instanceID
   nx_uint8_t instance_id;
   nx_uint16_t senderRank;
 } __attribute__((packed)) rpl_data_hdr_t ;

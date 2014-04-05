@@ -46,10 +46,10 @@ struct test_case {
 };
 
 struct test_case cases[] = {
-  {0, 0, IANA_UDP, 66, "fe80::1", "ff02::1", "1", "aa:00:11:22:33:44:55:66:", 0xabcd, 
+  {0, 0, IANA_UDP, 66, "fe80::1", "ff02::1", "1", "aa:00:11:22:33:44:55:66:", 0xabcd,
    0, {}},
 
-  {1, 0, IANA_UDP, 100, "fe80::1", "fe80::2", "1", "65535", 10, 
+  {1, 0, IANA_UDP, 100, "fe80::1", "fe80::2", "1", "65535", 10,
    0, {}},
 
   {0, 0, IANA_UDP, 100, "fe80::aa00:1122:3344:5566", "ff02::ab", "aa:00:11:22:33:44:55:66:", "0xab", 10, 0, {}},
@@ -65,7 +65,7 @@ int check_test(struct ip6_packet *pkt, struct lowpan_reconstruct *recon) {
   memset(buf, 0, 2048);
   memcpy(buf, &pkt->ip6_hdr, sizeof(struct ip6_hdr));
   iov_read(pkt->ip6_data, 0, iov_len(pkt->ip6_data), &buf[sizeof(struct ip6_hdr)]);
-  
+
   // printf("CMP: %i", memcmp(buf, recon->r_buf, recon->r_bytes_rcvd));
   print_buffer(buf, 50);
   print_buffer(recon->r_buf, 50);
@@ -96,12 +96,15 @@ int run_tests() {
   int success = 0, total = 0;
   for (i = 0; i < (sizeof(cases) / sizeof(cases[0])); i++) {
     uint8_t buf[128], *rp, unpack[512], more_data[1500];
+    uint8_t *bptr = buf;
+    size_t len = 128;
     struct ip6_packet packet;
     struct ieee154_frame_addr fr, result_fr;
     struct lowpan_reconstruct recon;
     struct lowpan_ctx ctx;
     struct ip_iovec v[2];
     int rv;
+    int ret;
     memset(buf, 0, sizeof(buf));
     total++;
     printf("\n\n----- Test case %i ----\n", i+1);
@@ -143,7 +146,7 @@ int run_tests() {
       // print_buffer(buf, rv);
 
       /* how you unfragment a packet */
-      rp = unpack_ieee154_hdr(buf, &result_fr);
+      ret = unpack_ieee154_hdr(&bptr, &len, &result_fr);
       printf("unpacked ieee154_header: %p-%p\n", buf, rp);
       // print_buffer(&result_fr, sizeof(result_fr));
 

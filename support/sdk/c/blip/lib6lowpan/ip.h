@@ -159,7 +159,7 @@ struct  icmp6_hdr {
 
 enum {
     ICMP_TYPE_ECHO_DEST_UNREACH     = 1,
-    ICMP_TYPE_ECHO_PKT_TOO_BIG      = 2, 
+    ICMP_TYPE_ECHO_PKT_TOO_BIG      = 2,
     ICMP_TYPE_ECHO_TIME_EXCEEDED    = 3,
     ICMP_TYPE_ECHO_PARAM_PROBLEM    = 4,
     ICMP_TYPE_ECHO_REQUEST          = 128,
@@ -228,7 +228,7 @@ struct ip6_metadata {
 /*
  * These are data structures to hold IP messages.  We used a linked
  * list of headers so that we can easily add extra headers with no
- * copy; similar to the linux iovec's or BSD mbuf structs.  
+ * copy; similar to the linux iovec's or BSD mbuf structs.
  * Every split_ip_msg contains a full IPv6 header (40 bytes), but it
  * is placed at the end of the struct so that we can read() a message
  * straight into one of these structs, and then just set up the header
@@ -251,7 +251,7 @@ struct ip6_packet {
 #ifndef NO_LIB6LOWPAN_ASCII
 /*
  * parse a string representation of an IPv6 address
- */ 
+ */
 void inet_pton6(char *addr, struct in6_addr *dest);
 int  inet_ntop6(struct in6_addr *addr, char *buf, int cnt);
 #endif

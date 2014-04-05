@@ -61,7 +61,7 @@ implementation {
     // analog signal enable, active low
     TOSH_MAKE_SER0_CTS_OUTPUT();
     TOSH_SEL_SER0_CTS_IOFUNC();
-    TOSH_SET_SER0_CTS_PIN();    // signal disabled
+    TOSH_CLR_SER0_CTS_PIN();    // default to gyro signals
 
     // signal goes to gyro-zero pins
     TOSH_MAKE_UTXD0_OUTPUT();
@@ -111,15 +111,11 @@ implementation {
      */
     TOSH_CLR_PROG_OUT_PIN();     
 
-    // enable analog signal path
-    TOSH_CLR_SER0_CTS_PIN();     
-
     return SUCCESS;
   }
 
   command error_t StdControl.stop(){
-    // disable analog signals, then power down
-    TOSH_SET_SER0_CTS_PIN();   
+    //power down
     TOSH_SET_PROG_OUT_PIN();
 
     // kill the led

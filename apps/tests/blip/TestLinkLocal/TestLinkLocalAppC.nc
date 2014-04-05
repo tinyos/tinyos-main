@@ -14,4 +14,7 @@ configuration TestLinkLocalAppC {
   TestLinkLocalC.Sock -> UdpSocketC;
   TestLinkLocalC.Timer -> TimerMilliC;
   TestLinkLocalC.Leds -> LedsC;
+
+  components StaticIPAddressTosIdC; // Use TOS_NODE_ID in address
+  //components StaticIPAddressC; // Use LocalIeee154 in address
 }

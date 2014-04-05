@@ -188,14 +188,12 @@ implementation {
       }
       else
       {
-        uint16_t tmp_count;
         bufferQueue[client] = entry->next;
         if (!bufferQueue[client])
           bufferQueueEnd[client] = &bufferQueue[client];
-	pos = buffer = NULL;
+        pos = buffer = NULL;
         count = entry->count;
-        tmp_count = count;
-	pos = buffer = TCAST(uint16_t * COUNT_NOK(tmp_count), entry);
+        pos = buffer = TCAST(uint16_t * COUNT_NOK(count), entry);
         if (startNextAlarm)
           nextAlarm();
         return SUCCESS;

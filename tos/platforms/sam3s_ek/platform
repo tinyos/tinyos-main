@@ -1,0 +1,62 @@
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.
+
+push ( @includes,
+  "%T/chips/cortex/m3",
+  "%T/chips/cortex/m3/sam3",
+  "%T/chips/cortex/m3/sam3/s",
+  "%T/chips/cortex/m3/sam3/nvic",
+  "%T/chips/cortex/m3/sam3/s/nvic",
+  "%T/chips/cortex/m3/sam3/pmc",
+  "%T/chips/cortex/m3/sam3/s/pmc",
+  "%T/chips/cortex/m3/sam3/supc",
+  "%T/chips/cortex/m3/sam3/s/supc",
+  "%T/chips/cortex/m3/sam3/timer",
+  "%T/chips/cortex/m3/sam3/s/timer",
+  "%T/chips/cortex/m3/sam3/eefc",
+  "%T/chips/cortex/m3/sam3/s/eefc",
+  "%T/chips/cortex/m3/sam3/wdtc",
+  "%T/chips/cortex/m3/sam3/s/wdtc",
+  "%T/chips/cortex/m3/sam3/matrix",
+  "%T/chips/cortex/m3/sam3/s/matrix",
+  "%T/chips/cortex/m3/sam3/pins",
+  "%T/chips/cortex/m3/sam3/s/pins",
+  "%T/chips/cortex/m3/sam3/smc",
+  "%T/chips/cortex/m3/sam3/s/smc",
+  "%T/chips/cortex/m3/sam3/uart",
+  "%T/chips/cortex/m3/sam3/s/uart",
+  "%T/chips/cortex/m3/sam3/pdc",
+  "%T/chips/cortex/m3/sam3/s/pdc",
+  "%T/chips/cortex/m3/sam3/spi",
+  "%T/chips/cortex/m3/sam3/s/spi",
+  "%T/chips/cortex/m3/sam3/s/adc",
+  "%T/chips/cortex/m3/sam3/s/dacc",
+  "%T/chips/cortex/m3/sam3/s/pwm",
+  "%T/chips/cc2520",
+  "%T/chips/cc2520/layers",
+  "%T/chips/cc2520/util",
+  "%T/platforms/sam3s_ek/lcd",
+  "%T/platforms/sam3s_ek/chips/cc2520",
+  "%T/lib/timer",
+  "%T/lib/serial",
+  "%T/lib/power",
+  "%T/lib/rfxlink/layers",
+  "%T/lib/rfxlink/util",
+);
+
+@opts = qw(
+
+  -gcc=arm-none-eabi-gcc
+  -mcpu=cortex-m3
+  -nostartfiles
+  -fnesc-target=env
+  -fnesc-no-debug
+
+);
+
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
+push @opts, "-mingw-gcc" if $cygwin;
+
+$ENV{NESC_MACHINE} = "structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true";

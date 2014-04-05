@@ -1,0 +1,74 @@
+
+  push( @includes, qw(
+
+  %T/platforms/ucmini
+  %T/platforms/ucmini/chips/cp2102    
+  %T/platforms/ucmini/chips/stm25p
+  %T/platforms/ucmini/chips/sht21
+  %T/platforms/ucmini/chips/bh1750fvi
+  %T/platforms/ucmini/chips/ms5607
+  %T/platforms/ucmini/chips/bma180
+  %T/chips/atm128rfa1
+  %T/chips/atm128rfa1/adc
+  %T/chips/atm128rfa1/pins
+  %T/chips/atm128rfa1/sensors
+  %T/chips/atm128rfa1/timer
+  %T/chips/atm128rfa1/radio
+  %T/chips/atm128rfa1/i2c  
+  %T/chips/atm128rfa1/spi
+  %T/chips/atm1281
+  %T/chips/atm1281/adc
+  %T/chips/atm128
+  %T/chips/atm128/adc
+  %T/chips/atm128/spi
+  %T/chips/atm128/i2c
+  %T/chips/atm128/timer
+  %T/chips/stm25p
+  %T/chips/sht21
+  %T/chips/bh1750fvi
+  %T/chips/ms5607
+  %T/chips/bma180
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/serialautocontrol
+  %T/lib/power
+  %T/lib/rfxlink/layers
+  %T/lib/rfxlink/util
+  %T/lib/diagmsg
+
+  ) );
+
+  @opts = qw(
+
+  -gcc=avr-gcc
+  -mmcu=atmega128rfa1
+  -fnesc-target=avr
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+  );
+
+$ENV{'CIL_MACHINE'} =
+    "version_major=4 " .
+    "version_minor=1 " .
+    "version=avr-4.1.2 " .
+    "short=2,1, " .
+    "int=2,1 " .
+    "long=4,1 " .
+    "long_long=8,1 " .
+    "pointer=2,1 " .
+    "enum=2,1 " .
+    "float=4,1 " .
+    "double=4,1 " .
+    "long_double=4,1 " .
+    "void=1,1 " .
+    "fun=1,1 " .
+    "wchar_size_size=2,2 " .
+    "alignof_string=1 " .
+    "max_alignment=1 " .
+    "char_wchar_signed=true,true " .
+    "const_string_literals=true " .
+    "big_endian=false " .
+    "underscore_name=false " .
+    "__builtin_va_list=true " .
+    "__thread_is_keyword=true";

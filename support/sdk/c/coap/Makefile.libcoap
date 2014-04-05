@@ -1,0 +1,1 @@
+libcoap_src = pdu.c net.c debug.c encode.c uri.c coap_list.c subscribe.c resource.c hashkey.c str.c option.c async.c

@@ -20,14 +20,20 @@
  *
  */
 
+/* Provides useful functions for handling and manipulating IPV6 addresses.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
 
 configuration IPAddressC {
-  provides interface IPAddress;
-
+  provides {
+    interface IPAddress;
+    interface SetIPAddress @exactlyonce();
+  }
 } implementation {
   components IPAddressP, Ieee154AddressC;
 
-  IPAddress = IPAddressP;
-  IPAddressP.Ieee154Address -> Ieee154AddressC;
+  IPAddress = IPAddressP.IPAddress;
+  SetIPAddress = IPAddressP.SetIPAddress;
+  IPAddressP.Ieee154Address -> Ieee154AddressC.Ieee154Address;
 }
-

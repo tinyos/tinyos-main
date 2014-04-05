@@ -34,6 +34,10 @@
  * this is a Notify wrapper for pulling heart rate from a Polar RMCM01 
  * module, which provides a positive digital pulse on the line connected 
  * to GPIO_EXTERNAL on the anex board.
+ *
+ * @author Mike Healy
+ * @date February, 2013
+ * Removed connectionTimer as no longer required
  */
 
 configuration DigitalHeartRateC {
@@ -55,8 +59,4 @@ implementation {
   components Counter32khz32C as Counter, new CounterToLocalTimeC(T32khz);
   CounterToLocalTimeC.Counter -> Counter;
   Rmcm01P.LocalTime -> CounterToLocalTimeC;
-  
-  components new TimerMilliC() as connectionTimer;
-  Rmcm01P.connectionTimer -> connectionTimer;
 }
-

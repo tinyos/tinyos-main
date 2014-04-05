@@ -1,0 +1,32 @@
+#$Id:
+
+PLATFORM = ucprotonb
+PROGRAMMER ?= avrdude
+
+PROGRAMMER_PART ?= -pm128rfa1
+
+VOLUMEFILE = volumes-stm25p.xml
+VOLUME_ALLOCATOR ?= tos-storage-stm25p -s32
+
+AVR_FUSE_H ?= 0x98
+AVR_FUSE_L ?= 0xE2
+#writing efuse and flash in the same command causes strange verification error
+#AVR_FUSE_E ?= 0xFF
+
+reset:
+	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -baudrate $(AVR109_BAUDRATE) -reset -sleep 2  -askforreset
+
+#this reset technique needs an external app, which is coming soon
+#MCP2200_RESET_PIN=4
+#MCP2200_RESET_MODE=spike
+#ifeq ($(findstring install,$(GOALS)),install)
+#  ifeq ($(findstring avr109,$(GOALS)),avr109)
+#    -include $(TINYOS_MAKE_PATH)/mcp2200nodeid.extra
+#    -include $(TINYOS_MAKE_PATH)/mcp2200reset.extra
+#  endif
+#endif
+
+$(call TOSMake_include_platform,avr)
+
+ucprotonb: $(BUILD_DEPS)
+	@:

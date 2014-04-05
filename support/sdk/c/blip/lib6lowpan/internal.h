@@ -19,29 +19,70 @@ inline uint8_t *pack_hlim(uint8_t *buf, struct ip6_hdr *hdr, uint8_t *dispatch);
 uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len,
                       ieee154_addr_t *l2addr, ieee154_panid_t pan, uint8_t *flags);
 uint8_t *pack_multicast(uint8_t *buf, struct in6_addr *addr, uint8_t *flags);
-int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset);
-int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packet, int offset);
-int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet);
+int pack_nhc_udp(uint8_t **dest,
+                 size_t *dlen,
+                 struct ip6_packet *packet,
+                 int offset);
+int pack_nhc_ipv6_ext(uint8_t **dest,
+                      size_t *dlen,
+                      uint8_t *type,
+                      struct ip6_packet *packet,
+                      int offset);
+int pack_nhc_chain(uint8_t **dest, size_t *dlen, struct ip6_packet *packet);
 uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt,
                              struct ieee154_frame_addr *frame);
-uint8_t * lowpan_pack_headers(struct ip6_packet *packet,
-                              struct ieee154_frame_addr *frame,
-                              uint8_t *buf, size_t cnt);
 
 /* unpacking */
-uint8_t *unpack_ieee154_hdr(uint8_t *buf, struct ieee154_frame_addr *frame);
-uint8_t *unpack_tcfl(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_nh(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_hlim(struct ip6_hdr *hdr, uint8_t dispatch, uint8_t *buf);
-uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch, 
-                        int context, uint8_t *buf,
-                        ieee154_addr_t *frame, ieee154_panid_t pan);
-uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch, 
-                          int context, uint8_t *buf);
-uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
-                          uint8_t **dest, size_t cnt, 
-                          uint8_t *nxt_hdr, uint8_t *buf);
+int unpack_ieee154_hdr(uint8_t **buf,
+                      size_t *len,
+                      struct ieee154_frame_addr *frame);
+int unpack_context(uint8_t dispatch,
+                   int *contexts,
+                   uint8_t **buf,
+                   size_t *len);
+int unpack_tcfl(struct ip6_hdr *hdr,
+                uint8_t dispatch,
+                uint8_t **buf,
+                size_t *len);
+int unpack_nh(struct ip6_hdr *hdr,
+              uint8_t dispatch,
+              uint8_t **buf,
+              size_t *len);
+int unpack_hlim(struct ip6_hdr *hdr,
+                uint8_t dispatch,
+                uint8_t **buf,
+                size_t *len);
+int unpack_address(struct in6_addr *addr,
+                   uint8_t dispatch,
+                   int context,
+                   uint8_t **buf,
+                   size_t *len,
+                   ieee154_addr_t *frame,
+                   ieee154_panid_t pan,
+                   uint8_t *stateful);
+int unpack_multicast(struct in6_addr *addr,
+                     uint8_t dispatch,
+                     int context,
+                     uint8_t **buf,
+                     size_t *len);
+int unpack_nhc_udp(struct lowpan_reconstruct *recon,
+                   uint8_t **dest,
+                   size_t *dlen,
+                   uint8_t *nxt_hdr,
+                   uint8_t dispatch,
+                   uint8_t **buf,
+                   size_t *len);
+int unpack_nhc_ipv6_ext(uint8_t **dest,
+                        size_t *dlen,
+                        uint8_t **nxt_hdr,
+                        uint8_t dispatch,
+                        uint8_t **buf,
+                        size_t *len);
+int unpack_nhc_chain(struct lowpan_reconstruct *recon,
+                     uint8_t **dest,
+                     size_t *dlen,
+                     uint8_t *nxt_hdr,
+                     uint8_t **buf,
+                     size_t *len);
 
 #endif

@@ -20,12 +20,15 @@
  *
  */
 
-/**
- * 
- *
- */
 #include "IPDispatch.h"
 #include "BlipStatistics.h"
+
+/* IPDispatchP handles communicating with the 802.15.4 radio.
+ * The upper layer of this module provides full IPv6 packets to the upper
+ * layers.
+ *
+ * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ */
 
 configuration IPDispatchC {
   provides {
@@ -34,71 +37,50 @@ configuration IPDispatchC {
     interface BlipStatistics<ip_statistics_t>;
   }
 } implementation {
-  
+
   components MainC;
   components NoLedsC as LedsC;
 
   /* IPDispatchP wiring -- fragment rassembly and lib6lowpan bindings */
   components IPDispatchP;
-  components CC2420RadioC as MessageC;
+  components Ieee154BareC as MessageC;
+  components RadioPacketMetadataC as PacketMetaC;
   components ReadLqiC;
-  components new TimerMilliC();
+  components new TimerMilliC() as ExpireTimer;
 
   SplitControl = IPDispatchP.SplitControl;
-  IPLower = IPDispatchP;
-  BlipStatistics    = IPDispatchP;
+  IPLower = IPDispatchP.IPLower;
+  BlipStatistics = IPDispatchP.BlipStatistics;
 
-  IPDispatchP.Boot -> MainC;
-/* #else */
-/*   components ResourceSendP; */
-/*   ResourceSendP.SubSend -> MessageC; */
-/*   ResourceSendP.Resource -> MessageC.SendResource[unique("RADIO_SEND_RESOURCE")]; */
-/*   IPDispatchP.Ieee154Send -> ResourceSendP.Ieee154Send; */
-/* #endif */
-  IPDispatchP.RadioControl -> MessageC;
-
+  /* Wire to the bare interfaces from the radio. Bare Ieee154 interfaces provide
+   * full access to raw 802.15.4 packet and require that all fields of the
+   * packet be set except for the sequence number and the CRC at the end. */
+  IPDispatchP.Init <- MainC.SoftwareInit;
+  IPDispatchP.RadioControl -> MessageC.SplitControl;
   IPDispatchP.BarePacket -> MessageC.BarePacket;
   IPDispatchP.Ieee154Send -> MessageC.BareSend;
   IPDispatchP.Ieee154Receive -> MessageC.BareReceive;
 
 #ifdef LOW_POWER_LISTENING
-   IPDispatchP.LowPowerListening -> MessageC;
+   IPDispatchP.LowPowerListening -> PacketMetaC.LowPowerListening;
 #endif
-  MainC.SoftwareInit -> IPDispatchP.Init;
 
-  IPDispatchP.PacketLink -> MessageC;
-  IPDispatchP.ReadLqi -> ReadLqiC;
-  IPDispatchP.Leds -> LedsC;
-  IPDispatchP.ExpireTimer -> TimerMilliC;
+  IPDispatchP.PacketLink -> PacketMetaC.PacketLink;
+  IPDispatchP.ReadLqi -> ReadLqiC.ReadLqi;
+  IPDispatchP.Leds -> LedsC.Leds;
+  IPDispatchP.ExpireTimer -> ExpireTimer.Timer;
 
   components new PoolC(message_t, N_FRAGMENTS) as FragPool;
   components new PoolC(struct send_entry, N_FRAGMENTS) as SendEntryPool;
   components new QueueC(struct send_entry *, N_FRAGMENTS);
   components new PoolC(struct send_info, N_CONCURRENT_SENDS) as SendInfoPool;
-  
-  IPDispatchP.FragPool -> FragPool;
-  IPDispatchP.SendEntryPool -> SendEntryPool;
-  IPDispatchP.SendInfoPool  -> SendInfoPool;
-  IPDispatchP.SendQueue -> QueueC;
+
+  IPDispatchP.FragPool -> FragPool.Pool;
+  IPDispatchP.SendEntryPool -> SendEntryPool.Pool;
+  IPDispatchP.SendInfoPool  -> SendInfoPool.Pool;
+  IPDispatchP.SendQueue -> QueueC.Queue;
 
   components IPNeighborDiscoveryP;
-  IPDispatchP.NeighborDiscovery -> IPNeighborDiscoveryP;
-
-/*   components ICMPResponderC; */
-/* #ifdef BLIP_MULTICAST */
-/*   components MulticastP; */
-/*   components new TrickleTimerMilliC(2, 30, 2, 1); */
-/*   IP = MulticastP.IP; */
-
-/*   MainC.SoftwareInit -> MulticastP.Init; */
-/*   MulticastP.MulticastRx -> IPDispatchP.Multicast; */
-/*   MulticastP.HopHeader -> IPExtensionP.HopByHopExt[0]; */
-/*   MulticastP.TrickleTimer -> TrickleTimerMilliC.TrickleTimer[0]; */
-/*   MulticastP.IPExtensions -> IPDispatchP; */
-/* #endif */
-
-#ifdef DELUGE
-  components NWProgC;
-#endif
+  IPDispatchP.NeighborDiscovery -> IPNeighborDiscoveryP.NeighborDiscovery;
 
 }

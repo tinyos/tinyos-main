@@ -1,0 +1,98 @@
+#################################################
+# Mote 1 (2a01:c911:0:212f::11)			#
+# TD_COAP_CORE_01 - TD_COAP_CORE_23		#
+# TD_COAP_BLOCK_01 - TD_COAP_BLOCK_02		#
+# TD_COAP_OBS_01 - TD_COAP_OBS_0?		#
+#################################################
+
+Resources:
+- Default
+- Segment
+- Separate
+- Location-Query
+- Large
+- Observe
+- Multi-Format
+
+PDU Size:
+- 250
+
+Content-Format:
+- Plain
+- XML
+
+Options:
+- Observe
+- Block
+- Well-known
+
+
+Install:
+
+make telosb blip coap install,17 bsl,/dev/ttyUSB0
+
+sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB0 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::23,::24
+
+sudo ifconfig ppp0 add 2a01:c911:0:212f::1e/124
+
+ping6 2a01:c911:0:212f::11
+
+#################################################
+# Mote 2 (2a01:c911:0:212f::21)			#
+# TD_COAP_CORE_01 - TD_COAP_CORE_09		#
+#################################################
+
+Resources:
+- Link
+
+PDU Size:
+- 600
+
+Content-Format:
+- Plain
+
+
+Install:
+
+make telosb blip coap install,33 bsl,/dev/ttyUSB1
+
+sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB1 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::25,::26
+
+sudo ifconfig ppp1 add 2a01:c911:0:212f::2e/124
+
+ping6 2a01:c911:0:212f::21
+
+
+#################################################
+# Mote 3 (2a01:c911:0:212f::31)			#
+# IPSO 	 					#
+# dev/mfg, dev/mdl, dev/ser, dev/n, dev/bat	#
+#################################################
+
+Resources:
+- default
+- all IPSO
+
+PDU Size:
+- 250
+
+Content-Format:
+- Plain
+
+
+Install:
+
+make telosb blip coap install,49 bsl,/dev/ttyUSB2
+
+sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB2 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::27,::28
+
+sudo ifconfig ppp2 add 2a01:c911:0:212f::3e/124
+
+ping6 2a01:c911:0:212f::31
+
+
+
+#########################################
+Host 2a01:c911:0:212e::1		#
+GW   2a01:c911:0:2050::2		#
+#########################################

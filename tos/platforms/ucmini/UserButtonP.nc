@@ -91,4 +91,6 @@ implementation{
       }
     }
   }
+  
+  default event void Notify.notify(button_state_t but){}
 }

@@ -49,43 +49,63 @@ module HplMsp430UsciAB1RawInterruptsP @safe() {
 
 implementation {
 
+
+  // ISR Priority 17
   TOSH_SIGNAL(USCIAB1RX_VECTOR) {
     uint8_t temp;
-    if (UC1IFG & UCA1RXIFG){
-	    temp = UCA1RXBUF;
-    	signal UsciA.rxDone(temp);
+
+    // USCI_A1 RX interrupt UART and SPI mode
+    if ((UC1IFG & UCA1RXIFG) && (UC1IE & UCA1RXIE)){
+      temp = UCA1RXBUF;
+      signal UsciA.rxDone(temp);
     }
-    if (UC1IFG & UCB1RXIFG){
-	    temp = UCB1RXBUF;
-    	signal UsciB.rxDone(temp);
+    
+    // USCI_B1 RX interrupt SPI mode
+    // make sure USCI_B1 is not in I2C mode
+    // if USCI_B1 is in I2C mode TOSH_SIGNAL(USCIAB1TX_VECTOR) with priority 16 will be invoked
+    if ((UC1IFG & UCB1RXIFG) && (UC1IE & UCB1RXIE) && (UCB1CTL0 &  UCSYNC) && ((UCB1CTL0 & (UCMODE1 | UCMODE0)) != UCMODE_3)){
+      temp = UCB1RXBUF;
+      signal UsciB.rxDone(temp);
     }
   }
   
+  // ISR Priority 16
   TOSH_SIGNAL(USCIAB1TX_VECTOR) {
-    if ((UC1IFG & UCA1TXIFG) | (UC1IFG & UCA1RXIFG)){
-    	signal UsciA.txDone();
+    uint8_t temp;
+    // USCI_A1 TX interrupt UART and SPI mode
+    if ((UC1IFG & UCA1TXIFG) && (UC1IE & UCA1TXIE)){
+      signal UsciA.txDone();
     }
-    if ((UC1IFG & UCB1TXIFG) | (UC1IFG & UCB1RXIFG)){
-    	signal UsciB.txDone();
+    
+    // USCI_B1 RX interrupt I2C mode
+    // make sure USCI_B1 is in I2C mode
+    // if USCI_B1 is in I2C mode the receive interrupt has to be handled here
+    if ((UC1IFG & UCB1RXIFG) && (UC1IE & UCB1RXIE) && (UCB1CTL0 &  UCSYNC) && ((UCB1CTL0 & (UCMODE1 | UCMODE0)) == UCMODE_3)){
+      temp = UCB1RXBUF;
+      signal UsciB.rxDone(temp);
+    }
+
+    // USCI_B1 TX interrupt UART and SPI mode
+    if ((UC1IFG & UCB1TXIFG) && (UC1IE & UCB1TXIE)){
+      signal UsciB.txDone();
     }
   }
-
 
   /* default handlers */
   default async event void UsciA.txDone(){
-  	return;
+    return;
   }
   
   default async event void UsciA.rxDone(uint8_t temp){
-  	return;
+    return;
   }
 
   default async event void UsciB.txDone(){
-  	return;
+    return;
   }
   
   default async event void UsciB.rxDone(uint8_t temp){
-  	return;
+    return;
   }
-  
 }
+

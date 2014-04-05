@@ -21,7 +21,7 @@ module IPNeighborDiscoveryP {
   provides {
     interface IPForward;
     interface NeighborDiscovery;
-  } 
+  }
   uses {
     interface IPLower;
     interface IPAddress;
@@ -29,7 +29,7 @@ module IPNeighborDiscoveryP {
   }
 } implementation {
 
-  command int NeighborDiscovery.matchContext(struct in6_addr *addr, 
+  command int NeighborDiscovery.matchContext(struct in6_addr *addr,
                                              uint8_t *ctx) {
     struct in6_addr me;
     if (!(call IPAddress.getGlobalAddr(&me))) return 0;
@@ -41,13 +41,11 @@ module IPNeighborDiscoveryP {
     }
   }
 
-  command int NeighborDiscovery.getContext(uint8_t context, 
+  command int NeighborDiscovery.getContext(uint8_t context,
                                            struct in6_addr *ctx) {
     struct in6_addr me;
     if (!(call IPAddress.getGlobalAddr(&me))) return 0;
     if (context == 0) {
-      // memset(ctx->s6_addr, 0, 8);
-      // ctx->s6_addr16[0] = htons(0xaaaa);
       memcpy(ctx->s6_addr, me.s6_addr, 8);
       return 64;
     } else {
@@ -114,8 +112,9 @@ module IPNeighborDiscoveryP {
       printf("IPND - next-hop address resolution failed\n");
       return FAIL;
     }
-    printf("l2 source: "); printf_buf(fr_addr.ieee_src.i_laddr.data, 8);
-    printf("l2 dest: "); printf_buf(fr_addr.ieee_dst.i_laddr.data, 8);
+    printf("l2 source: "); printf_ieee154addr(&fr_addr.ieee_src);
+    printf("\n");
+    printf("l2 dest: "); printf_ieee154addr(&fr_addr.ieee_dst);
     printf("\n");
 
     return call IPLower.send(&fr_addr, msg, ptr);

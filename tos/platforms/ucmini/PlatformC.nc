@@ -54,6 +54,11 @@ implementation
   //turning off unused components
   components Stm25pOffC;
   PlatformP.Stm25pInit -> Stm25pOffC;
+
+  #ifndef DISABLE_BATTERY_CHECK
+  components BatteryWarningC;
+  PlatformP.BatteryWarning -> BatteryWarningC;
+  #endif
   
   #ifndef DISABLE_SERIAL_AUTO
     components SerialAutoControlC;

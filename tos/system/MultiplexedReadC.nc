@@ -20,6 +20,7 @@ generic module MultiplexedReadC(typedef width_t) {
   uses {
     interface Read<width_t> as Service;
     interface Resource[uint8_t client];
+    interface ArbiterInfo;
   }
 }
 implementation {

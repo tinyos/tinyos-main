@@ -1,20 +1,9 @@
 /* tiny -- tiny sender
  *
- * Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
+ *
+ * This file is part of the CoAP library libcoap. Please see
+ * README for terms of use. 
  */
 
 #include <string.h>
@@ -58,7 +47,7 @@ make_pdu( unsigned int value ) {
   return pdu;
 }
 
-void 
+void
 usage( const char *program ) {
   const char *p;
 
@@ -73,7 +62,41 @@ usage( const char *program ) {
 	   program, program );
 }
 
-int 
+coap_context_t *
+get_context(const char *node, const char *port) {
+  coap_context_t *ctx = NULL;  
+  int s;
+  struct addrinfo hints;
+  struct addrinfo *result, *rp;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+  hints.ai_socktype = SOCK_DGRAM; /* Coap uses UDP */
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST | AI_NUMERICSERV | AI_ALL;
+  
+  s = getaddrinfo(node, port, &hints, &result);
+  if ( s != 0 ) {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+    return NULL;
+  } 
+
+  /* iterate through results until success */
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    ctx = coap_new_context(rp->ai_addr, rp->ai_addrlen);
+    if (ctx) {
+      /* TODO: output address:port for successful binding */
+      goto finish;
+    }
+  }
+  
+  fprintf(stderr, "no context available for interface '%s'\n", node);
+
+ finish:
+  freeaddrinfo(result);
+  return ctx;
+}
+
+int
 main(int argc, char **argv) {
   coap_context_t  *ctx;
   struct timeval tv;
@@ -86,9 +109,10 @@ main(int argc, char **argv) {
     exit( 1 );
   }
 
-  ctx = coap_new_context(0);
+  ctx = get_context("::", NULL);
   if ( !ctx )
     return -1;
+
   id = rand() & INT_MAX;
 
   memset(&dst, 0, sizeof(struct sockaddr_in6 ));
@@ -97,7 +121,7 @@ main(int argc, char **argv) {
   dst.sin6_port = htons( COAP_DEFAULT_PORT );
 
   if ( IN6_IS_ADDR_MULTICAST(&dst.sin6_addr) ) {
-    /* set socket options for multicast */ 
+    /* set socket options for multicast */
 
     if ( setsockopt( ctx->sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
 		     (char *)&hops, sizeof(hops) ) < 0 )
@@ -106,16 +130,17 @@ main(int argc, char **argv) {
   }
 
   while ( 1 ) {
-    
+
     if (! (pdu = make_pdu( rand() & 0xfff ) ) )
       return -1;
 
-    coap_send( ctx, &dst, pdu );
+    coap_send( ctx, (struct sockaddr *)&dst, sizeof(dst), pdu );
+    coap_delete_pdu(pdu);
 
     tv.tv_sec = 5; tv.tv_usec = 0;
 
     select( 0, 0, 0, 0, &tv );
-    
+
   }
 
   coap_free_context( ctx );

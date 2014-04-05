@@ -2,9 +2,9 @@
 # Copyright (c) 2005 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 dnl -*- m4 -*-
@@ -23,33 +23,25 @@ AC_PROG_RANLIB
 
 AC_PATH_PROG(pathperl, perl)
 if test -z "$pathperl" ; then
-  AC_MSG_ERROR(I can't find perl); 
+  AC_MSG_ERROR(I can't find perl);
 fi
 
 AC_PATH_PROGS(pathpython, [python2 python])
 if test -z "$pathpython" ; then
-  AC_MSG_ERROR(I can't find python); 
+  AC_MSG_ERROR(I can't find python);
 fi
 
-if test -z "$NESCC_PREFIX"; then
-  AC_PATH_PROG(pathnescc, nescc)
-  if test -z "$pathnescc"; then
-    AC_MSG_ERROR(I can't find nescc)
-  else
-    NESCC_PREFIX=`dirname "$pathnescc"`
-    NESCC_PREFIX=`dirname "$NESCC_PREFIX"`
-  fi
+AC_PATH_PROG(pathnescc, nescc)
+if test -z "$pathnescc"; then
+  AC_MSG_ERROR(I can't find nescc)
 fi
-nescc_prefix=`(cd $NESCC_PREFIX;pwd)`
-AC_SUBST(nescc_prefix)
-
 
 if test -z "$DEFAULT_TARGET"; then
   DEFAULT_TARGET=mica
 fi
 default_target=$DEFAULT_TARGET
 AC_MSG_NOTICE(Default ncc build target is $default_target)
-AC_MSG_NOTICE(...but using a tos/.default-platform file is a better choice)
+AC_MSG_NOTICE(...but using a tos/default-platform file is a better choice)
 AC_SUBST(default_target)
 
 if test -z "$TOSDIR"; then
@@ -73,7 +65,7 @@ case $host in
     AC_MSG_RESULT(yes)
     JNIPREFIX=
     JNISUFFIX=dll
-    JNIVERSIONS=.
+    JNIVERSIONS="-32. -64."
     INSTALLJNI="install --group=SYSTEM"
     CYGWIN=yes
     ;;
@@ -88,13 +80,25 @@ case $host in
   *)
     JNIPREFIX=lib
     JNISUFFIX=so
-    JNIVERSIONS="-32. -64."
+    JNIVERSIONS="."
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
 esac
 
 AM_CONDITIONAL([CYGWIN], [test "$CYGWIN"])
 AM_CONDITIONAL([DARWIN], [test "$DARWIN"])
+AM_COND_IF([CYGWIN],
+      [
+       AC_PATH_PROG(GCC32, gcc-3)
+       AC_PATH_PROG(GCXX32, g++-3)
+       GCC32="$GCC32 -mno-cygwin"
+       GCXX32="$GCXX32 -mno-cygwin"
+       #this would be nicer, but generates bigger code
+       #AC_PATH_PROG(GCC32, i686-pc-mingw32-gcc)
+       #AC_PATH_PROG(GCCX32, i686-pc-mingw32-g++)
+       AC_PATH_PROG(GCC64, x86_64-w64-mingw32-gcc)
+       AC_PATH_PROG(GCXX64, x86_64-w64-mingw32-g++)
+       ])
 
 AC_MSG_CHECKING(for JDK location)
 JAVAC_DIR=`/bin/sh tinyos/misc/tos-locate-jre --javac`
@@ -120,6 +124,8 @@ AC_SUBST(INSTALLJNI)
 AC_SUBST(JNIPREFIX)
 AC_SUBST(JNISUFFIX)
 
+AC_CHECK_LIB(popt, poptGetNextOpt)
+AM_CONDITIONAL([POPT_CPPBSL], [test "$ac_cv_lib_popt_poptGetNextOpt" == yes])
 
 AC_OUTPUT(
 	Makefile
@@ -127,6 +133,8 @@ AC_OUTPUT(
 	platforms/mica/Makefile
 	platforms/mica/cc1000-channelgen/Makefile
 	platforms/msp430/Makefile
+	platforms/msp430/cppbsl/Makefile
+	platforms/msp430/cppbsl/src/Makefile
 	platforms/msp430/motelist/motelist-linux
 	platforms/msp430/motelist/motelist-macos
 	platforms/msp430/motelist/Makefile

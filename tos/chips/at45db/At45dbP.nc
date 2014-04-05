@@ -318,7 +318,10 @@ implementation
 	  if (buffer[selected].busy)
 	    call HplAt45db.waitIdle();
 	  else
-	    call HplAt45db.readBuffer(OP(AT45_C_READ_BUFFER), reqOffset,
+	    if (!buffer[selected].clean || buffer[selected].erased)
+	      call HplAt45db.fill(OP(AT45_C_FILL_BUFFER), reqPage);
+	    else
+	      call HplAt45db.readBuffer(OP(AT45_C_READ_BUFFER), reqOffset,
 				      reqBuf, reqBytes);
 	  break;
 

@@ -37,21 +37,22 @@
 
 typedef nx_struct measurement {
   nx_uint32_t press;
-  nx_int16_t temp2;
-  nx_int16_t temp;
+  nx_int16_t temp_ms5607;
+  nx_int16_t temp_sht21;
   nx_int16_t humi;
   nx_uint16_t light;
-  nx_int16_t temp3;
+  nx_int16_t temp_atmel;
+	nx_int16_t accelx;
+	nx_int16_t accely;
+	nx_int16_t accelz;
+	nx_int16_t temp_bma180;
   nx_uint16_t voltage;
+	nx_uint8_t batswitch;
+	nx_uint8_t button;
 } measurement_t;
-
-typedef nx_struct calib {
-  nx_uint16_t coefficient[6];
-} calib_t;
 
 enum{
   AM_MEASUREMENT = 10,
-  AM_CALIB = 11,
 };
 
 #endif

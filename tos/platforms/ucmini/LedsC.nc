@@ -42,9 +42,15 @@ configuration LedsC {
   provides interface Leds;
 }
 implementation {
-  components LedsP, PlatformLedsC;
+  components PlatformLedsC;
 
-  Leds = LedsP;
+	#if defined(UCMINI_REV) && UCMINI_REV < 110
+		components LedsInvertedP as LedsP;
+	#else
+		components LedsP;
+	#endif
+	
+	Leds = LedsP;
 
   LedsP.Init <- PlatformLedsC.Init;
   LedsP.Led0 -> PlatformLedsC.Led0;

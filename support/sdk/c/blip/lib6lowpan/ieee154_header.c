@@ -1,5 +1,3 @@
-
-
 #include "lib6lowpan-includes.h"
 #include "internal.h"
 
@@ -37,34 +35,47 @@ uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt,
   ieee_hdr[2] = (fcf >> 8);
   ieee_hdr[4] = frame->ieee_dstpan & 0xff;
   ieee_hdr[5] = frame->ieee_dstpan >> 8;
-  
+
   return buf;
 }
 
-uint8_t *unpack_ieee154_hdr(uint8_t *buf, struct ieee154_frame_addr *frame) {
-  uint16_t fcf = ((uint16_t)buf[2] << 8) | buf[1];
+/* Unpack the IEEE154 header from a buffer.
+ *
+ * Returns 0 on success and -1 if the buffer is too short.
+ */
+int unpack_ieee154_hdr(uint8_t **buf,
+                      size_t *len,
+                      struct ieee154_frame_addr *frame) {
+  uint16_t fcf;
 
-  frame->ieee_dstpan = htole16(((uint16_t)buf[5] << 8) | buf[4]);
+  if (*len < IEEE154_MIN_HDR_SZ) return -1;
+
+  fcf = ((uint16_t)(*buf)[2] << 8) | (*buf)[1];
+
+  frame->ieee_dstpan = htole16(((uint16_t)(*buf)[5] << 8) | (*buf)[4]);
   frame->ieee_src.ieee_mode = (fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3;
   frame->ieee_dst.ieee_mode = (fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3;
 
-  buf += IEEE154_MIN_HDR_SZ;
+  *buf += IEEE154_MIN_HDR_SZ; *len -= IEEE154_MIN_HDR_SZ;
 
   if (frame->ieee_dst.ieee_mode == IEEE154_ADDR_SHORT) {
-    memcpy(&frame->ieee_dst.i_saddr, buf, 2);
-    buf += 2;
+    if (*len < 2) return -1;
+    memcpy(&frame->ieee_dst.i_saddr, *buf, 2);
+    *buf += 2; *len -= 2;
   } else if (frame->ieee_dst.ieee_mode == IEEE154_ADDR_EXT) {
-    memcpy(&frame->ieee_dst.i_laddr, buf, 8);
-    buf += 8;
+    if (*len < 8) return -1;
+    memcpy(&frame->ieee_dst.i_laddr, *buf, 8);
+    *buf += 8; *len -= 8;
   }
 
   if (frame->ieee_src.ieee_mode == IEEE154_ADDR_SHORT) {
-    memcpy(&frame->ieee_src.i_saddr, buf, 2);
-    buf += 2;
+    if (*len < 2) return -1;
+    memcpy(&frame->ieee_src.i_saddr, *buf, 2);
+    *buf += 2; *len -= 2;
   } else if (frame->ieee_src.ieee_mode == IEEE154_ADDR_EXT) {
-    memcpy(&frame->ieee_src.i_laddr, buf, 8);
-    buf += 8;
+    if (*len < 8) return -1;
+    memcpy(&frame->ieee_src.i_laddr, *buf, 8);
+    *buf += 8; *len -= 8;
   }
-  return buf;
+  return 0;
 }
-

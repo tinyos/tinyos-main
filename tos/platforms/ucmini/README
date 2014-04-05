@@ -13,4 +13,6 @@ The ucmini revison you use, multiplied by 100. Known revisions (default is the h
 52: new ldo, accelerometer, leds moved, usb detection and Vbatt measurment changed
 53: accelerometer connection changed
 100: usb detection changed, pull-up resistors on i2c bus
-101: switchable power for flash chip, user button
+101: switchable power for flash chip, user button. Connected USB might jams radio communication
+110,120: test versions for 200
+200: new usb bridge (ft230x), measurable battery voltage, detectable battery switch, reset over usb gpio, inverted leds, fixed usb-radio jamming

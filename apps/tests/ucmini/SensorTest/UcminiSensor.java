@@ -44,40 +44,22 @@ public class UcminiSensor implements MessageListener {
   private long calibration[]=new long[6];
   public UcminiSensor(MoteIF moteIF) {
     this.moteIF = moteIF;
-    this.moteIF.registerListener(new UcminiSensorCalib(), this);
     this.moteIF.registerListener(new UcminiSensorMeas(), this);
-    UcminiSensorCalib payload=new UcminiSensorCalib();
-    try{
-      this.moteIF.send(0xffff, payload);
-    }
-    catch (IOException exception) {
-      System.err.println("Exception thrown when sending packets. Exiting.");
-      System.err.println(exception);
-      System.exit(1);
-    }
   }
 
   public void messageReceived(int to, Message message) {
-    if(message instanceof UcminiSensorCalib){
-    	UcminiSensorCalib msg = (UcminiSensorCalib)message;
-    	calibration[0]=msg.getElement_coefficient(0);
-    	calibration[1]=msg.getElement_coefficient(1);
-    	calibration[2]=msg.getElement_coefficient(2);
-    	calibration[3]=msg.getElement_coefficient(3);
-    	calibration[4]=msg.getElement_coefficient(4);
-    	calibration[5]=msg.getElement_coefficient(5);
-    	System.out.println("Ms5607 calibration:");
-    	System.out.println("c1="+calibration[0]+"; c2="+calibration[1]+"; c3="+calibration[2]+"; c4="+calibration[3]+
-    					   "; c5="+calibration[4]+"; c6="+calibration[5]);
-    } else if(message instanceof UcminiSensorMeas){
+    if(message instanceof UcminiSensorMeas){
       UcminiSensorMeas msg = (UcminiSensorMeas)message;
       System.out.format("Humidity (sht21):\t\t%8.3f %% \t(%d)\n", (double)msg.get_humi()/100, msg.get_humi());
-      System.out.format("Temperature (sht21):\t\t%8.3f \u00B0C \t(%d)\n", (double)msg.get_temp()/100, msg.get_temp());
-      System.out.format("Temperature (atmega128rfa1):\t%8.3f \u00B0C \t(%d)\n", (double)msg.get_temp3()/100, msg.get_temp3());
-      System.out.format("Temperature (ms5607):\t\t%8.3f \u00B0C \t(%d)\n",(double)msg.get_temp2()/100,msg.get_temp2());
+      System.out.format("Temperature (sht21):\t\t%8.3f \u00B0C \t(%d)\n", (double)msg.get_temp_sht21()/100, msg.get_temp_sht21());
+      System.out.format("Temperature (atmega128rfa1):\t%8.3f \u00B0C \t(%d)\n", (double)msg.get_temp_atmel()/100, msg.get_temp_atmel());
+      System.out.format("Temperature (ms5607):\t\t%8.3f \u00B0C \t(%d)\n",(double)msg.get_temp_sht21()/100,msg.get_temp_sht21());
       System.out.format("Pressure (ms5607):\t\t%8.3f mbar \t(%d)\n",(double)msg.get_press()/100,msg.get_press());
       System.out.format("Light (bh1750fvi):\t\t%8d lx\n",msg.get_light());
-//      System.out.println("Voltage (atmega128rfa1):\t"+msg.get_voltage());
+      System.out.format("Accelerometer (bma180):\t\t%8.3f %8.3f %8.3f \t\n", (double)msg.get_accelx(), (double)msg.get_accely(), (double)msg.get_accelz());
+      System.out.format("Voltage:\t\t\t%8.3f V \t(%d)\n",(double)msg.get_voltage()/1000,msg.get_voltage());
+      System.out.println("Switch:\t\t\t\t"+(msg.get_batswitch()==0?"Rechargable":"Not Rechargable"));
+      System.out.println("Button:\t\t\t\t"+(msg.get_button()==0?"Released":"Pressed"));
       System.out.println();
     }
   }

@@ -68,7 +68,7 @@ implementation {
     ucssel  : 2,			/* smclk */
     i2coa   : 1,			/* our address is 1 */
     ucgcen  : 1,			/* respond to general call */
-    ubr     : 800,			/* smclk/2 */
+    ubr     : 80,			/* smclk/2 */
   } };
 
   async command msp430_i2c_union_config_t* Msp430I2CConfigure.getConfig[uint8_t id]() {

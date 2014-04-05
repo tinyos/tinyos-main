@@ -73,4 +73,7 @@ configuration TCPEchoC {
   TCPEchoP.Random -> RandomC;
 
   components UDPShellC;
+
+  components StaticIPAddressTosIdC; // Use TOS_NODE_ID in address
+  //components StaticIPAddressC; // Use LocalIeee154 in address
 }

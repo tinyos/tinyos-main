@@ -1,4 +1,3 @@
-// $Id: PlatformIeeeEui64.h,v 1.1 2010/02/23 06:45:38 sdhsdh Exp $
 /*
  * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
@@ -24,7 +23,7 @@
 
 #ifndef PLATFORMIEEEEUI64_H
 #define PLATFORMIEEEEUI64_H
- 
+
 enum {
   // University of California Berkeley's OUI
   IEEE_EUI64_COMPANY_ID_0 = 0x00,

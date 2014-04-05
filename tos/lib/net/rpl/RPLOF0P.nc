@@ -98,16 +98,12 @@ implementation{
   }
 
   command bool RPLOF.recalculateRank() {
-    uint16_t prevEtx, prevRank;
     parent_t* parentNode = call ParentTable.get(desiredParent);
 
     if (desiredParent == MAX_PARENT) {
       nodeRank = INFINITE_RANK;
       return FALSE;
     }
-
-    prevEtx = nodeEtx;
-    prevRank = nodeRank;
 
     // printf("RPLOF: OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
     nodeEtx = parentNode->etx_hop;
@@ -133,8 +129,8 @@ implementation{
 
     parentNode = call ParentTable.get(min);
 
-    while ((!parentNode->valid) && 
-           (min < MAX_PARENT) && 
+    while ((!parentNode->valid) &&
+           (min < MAX_PARENT) &&
            (parentNode->rank != INFINITE_RANK)) {
       min++;
       parentNode = call ParentTable.get(min);
@@ -142,7 +138,7 @@ implementation{
 
     minDesired = parentNode->etx_hop + (parentNode->rank * divideRank);
 
-    if (min == MAX_PARENT) { 
+    if (min == MAX_PARENT) {
       call RPLOF.resetRank();
       call RPLRoute.inconsistency();
       call ForwardingTable.delRoute(route_key);
@@ -150,16 +146,16 @@ implementation{
       return FALSE;
     }
 
-//     printf("RPLOF: Start Compare %d %d: %d %d %d \n", 
-//            htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]), 
+//     printf("RPLOF: Start Compare %d %d: %d %d %d \n",
+//            htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]),
 //            minDesired, parentNode->etx_hop, parentNode->rank);
 
     parentNode = call ParentTable.get(desiredParent);
 
     if (htons(parentNode->parentIP.s6_addr16[7]) != 0) {
       minMetric = parentNode->etx_hop + parentNode->rank*divideRank;
-//       printf("RPLOF: Compare %d: %d %d with %d %d\n", 
-//              htons(parentNode->parentIP.s6_addr16[7]), 
+//       printf("RPLOF: Compare %d: %d %d with %d %d\n",
+//              htons(parentNode->parentIP.s6_addr16[7]),
 //              parentNode->etx_hop, parentNode->rank, minDesired, minMetric);
     }
 
@@ -170,26 +166,26 @@ implementation{
       parentNode = call ParentTable.get(indexset);
 
 //       if (parentNode->valid)
-// 	printf("RPLOF: Compare %d: %d %d with %d %d\n", 
-//                htons(parentNode->parentIP.s6_addr16[7]), 
+//         printf("RPLOF: Compare %d: %d %d with %d %d\n",
+//                htons(parentNode->parentIP.s6_addr16[7]),
 //                parentNode->etx_hop, parentNode->rank, minDesired, indexset);
 
-      if ((parentNode->valid) && 
+      if ((parentNode->valid) &&
           (parentNode->etx_hop >= 0) &&
-          (parentNode->etx_hop + (parentNode->rank * divideRank) < minDesired) && 
-          (parentNode->rank < nodeRank) && 
+          (parentNode->etx_hop + (parentNode->rank * divideRank) < minDesired) &&
+          (parentNode->rank < nodeRank) &&
           (parentNode->rank != INFINITE_RANK)) {
-	count ++;
-	min = indexset;
-	minDesired = parentNode->etx_hop + parentNode->rank * divideRank;
-// 	printf("RPLOF: Compare %d %d \n", 
+        count ++;
+        min = indexset;
+        minDesired = parentNode->etx_hop + parentNode->rank * divideRank;
+//        printf("RPLOF: Compare %d %d \n",
 //                minDesired, parentNode->etx_hop/divideRank + parentNode->rank);
-	if (min == desiredParent) {
-	  // printf("RPLOF: current parent Checking...\n");
-	  minMetric = minDesired;
-	}
+        if (min == desiredParent) {
+          // printf("RPLOF: current parent Checking...\n");
+          minMetric = minDesired;
+        }
       } else if (min == desiredParent) {
-	minMetric = minDesired;
+        minMetric = minDesired;
       }
     }
 
@@ -206,8 +202,8 @@ implementation{
 
     previousParent = call ParentTable.get(desiredParent);
 
-    if ((minDesired * divideRank + STABILITY_BOUND >= minMetric * divideRank) && 
-        (minMetric != 0) && 
+    if ((minDesired * divideRank + STABILITY_BOUND >= minMetric * divideRank) &&
+        (minMetric != 0) &&
         (previousParent->valid)) {
       // if the min measurement (minDesired) is not significantly
       // better than the previous parent's (minMetric), stay with what
@@ -221,26 +217,26 @@ implementation{
     minMetric = minDesired;
     desiredParent = min;
     parentNode = call ParentTable.get(desiredParent);
-    // printf("RPLOF: OF0 %d %d %u %u %d\n", TOS_NODE_ID, 
-    //        htons(parentNode->parentIP.s6_addr16[7]), 
+    // printf("RPLOF: OF0 %d %d %u %u %d\n", TOS_NODE_ID,
+    //        htons(parentNode->parentIP.s6_addr16[7]),
     //        parentNode->etx_hop, parentNode->rank, count);
 
     /* set the new default route */
     /* set one of the below of maybe set both? */
-    // call ForwardingTable.addRoute((const uint8_t*)&DODAGID, 128, 
+    // call ForwardingTable.addRoute((const uint8_t*)&DODAGID, 128,
     // l                              &parentNode->parentIP, RPL_IFACE);
-    route_key = call ForwardingTable.addRoute(NULL, 
-                                              0, 
-                                              &parentNode->parentIP, 
+    route_key = call ForwardingTable.addRoute(NULL,
+                                              0,
+                                              &parentNode->parentIP,
                                               RPL_IFACE);
 
     if (prevParent != parentNode->parentIP.s6_addr16[7]) {
-      // printf("RPLOF: >> New Parent %d %x %lu \n", TOS_NODE_ID, 
-      //        htons(parentNode->parentIP.s6_addr16[7]), 
+      // printf("RPLOF: >> New Parent %d %x %lu \n", TOS_NODE_ID,
+      //        htons(parentNode->parentIP.s6_addr16[7]),
       //        parentChanges++);
       // printf("RPLOF: #L %u 0\n", (uint8_t)htons(prevParent));
-      // printf("RPLOF: #L %u 1 %d\n", 
-      //        (uint8_t)htons(parentNode->parentIP.s6_addr16[7]), 
+      // printf("RPLOF: #L %u 1 %d\n",
+      //        (uint8_t)htons(parentNode->parentIP.s6_addr16[7]),
       //        TOS_NODE_ID);
       newParent = TRUE;
       call RPLDAO.newParent();

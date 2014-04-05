@@ -37,14 +37,14 @@ interface LibCoAP {
      *
      */
     command coap_tid_t send(coap_context_t *ctx,
-			    struct sockaddr_in6 *dst,
-			    coap_pdu_t *pdu,
-			    int free_pdu);
+			    const coap_address_t *dst,
+			    coap_pdu_t *pdu);
 
     /*
-     *
+     * Set up the libcoap context for client and server. For the
+     * server a bind on the port is performed as well.
      */
-    command error_t bind(uint16_t port);
+    command error_t setupContext(uint16_t port);
 
     /*
      *
