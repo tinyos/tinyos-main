@@ -44,16 +44,45 @@
 #include "MH.h"
 #include "MH_private.h"
 
-#include "debugserial.h"
-#if 0 // debug this module
-#define xdbg_MH(s,args...) printf(#s ": " args)
-#define xdbg_inline_MH(s, args...) printf(args)
-#define xdbg_flush_MH(s) printfflush()
-#else
-#define xdbg_MH(s,args...)
-#define xdbg_inline_MH(s, args...)
-#define xdbg_flush_MH(s)
-#endif
+#include "printfsyslog.h"
+
+// define facilities and define facilities name
+
+// BASIC facility - generic facility
+#define MH_BASIC_FACILITY (1<<0)
+#define MH_BASIC_NAME ""
+// SENDL3 facility - for L3 forwarded message sending
+#define MH_SENDL3_FACILITY (1<<1)
+#define MH_SENDL3_NAME "SL3"
+// SENDL4 facility - for local (AMSend) L4 messages receiving
+#define MH_SENDL4_FACILITY (1<<2)
+#define MH_SENDL4_NAME "SL4"
+// RECEIVEL3 facility - for L3 forwarded message receiving/forwarding (Intercept)
+#define MH_RECEIVEL3_FACILITY (1<<3)
+#define MH_RECEIVEL3_NAME "RL3"
+// RECEIVEL4 facility  - for local (AMReceive) L4 messages receiving
+#define MH_RECEIVEL4_FACILITY (1<<4)
+#define MH_RECEIVEL4_NAME "RL4"
+
+// define severity filter per facility and define facility filter mask
+
+#define MH_BASIC_SEVERITY LOG_DEBUG
+#define MH_SENDL3_SEVERITY LOG_DEBUG
+#define MH_SENDL4_SEVERITY LOG_DEBUG
+#define MH_RECEIVEL3_SEVERITY LOG_DEBUG
+#define MH_RECEIVEL4_SEVERITY LOG_DEBUG
+
+//#define MH_FACILITY_MASK (MH_BASIC_FACILITY | MH_SENDL3_FACILITY | MH_SENDL4_FACILITY | MH_RECEIVEL3_FACILITY | MH_RECEIVEL4_FACILITY)
+#define MH_FACILITY_MASK (0)
+
+// local macros
+
+#define MH_D(facility, ...) prinfsyslog(MH, MH_ ## facility, LOG_DEBUG, __VA_ARGS__)
+#define MH_D_inline(facility, ...) prinfsyslog_inline(MH, MH_ ## facility, LOG_DEBUG, __VA_ARGS__)
+#define MH_D_flush(facility) prinfsyslog_flush(MH, MH_ ## facility, LOG_DEBUG)
+#define MH_W(facility, ...) prinfsyslog(MH, MH_ ## facility, LOG_WARNING, __VA_ARGS__)
+#define MH_E(facility, ...) prinfsyslog(MH, MH_ ## facility, LOG_ERR, __VA_ARGS__)
+#define MH_E_flush(facility) prinfsyslog_flush(MH, MH_ ## facility, LOG_ERR)
 
 module MultiHopM {
 	provides {
@@ -100,7 +129,7 @@ implementation {
 	message_t * subsend_msg = NULL; // subsending message
 	bool subsend_fwd_sent = FALSE; // alternate (1:1) sending of local and forward messages
 
-	// SoftwareInit 
+	// SoftwareInit
 	// setup free buffers for forwarding
 
 	command error_t SoftwareInit.init() {
@@ -121,7 +150,7 @@ implementation {
 		// try to send "forward message"
 
 		for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
-			if( ! (from_timer || (subsend_msg == NULL))) 
+			if( ! (from_timer || (subsend_msg == NULL)))
 				break;
 			if(( ! fwd[i].free)&&(fwd[i].msg_wait % MH_WAIT_BEFORE_RETRY == 0)&&(fwd[i].msg != subsend_msg)) {
 				switch(call RouteSelect.selectRoute(fwd[i].msg)) {
@@ -131,17 +160,17 @@ implementation {
 							error_t err;
 							subsend_msg = fwd[i].msg;
 							subsend_fwd_sent = TRUE;
-							xdbg(MH, "send: fwd sent type %u\n", call AMPacket.type(subsend_msg));
+							MH_D(SENDL3, "sent type %u\n", call AMPacket.type(subsend_msg));
 							err = call SubSend.send(call SubAMPacket.destination(subsend_msg), subsend_msg, call SubPacket.payloadLength(subsend_msg));
 							if(err != SUCCESS) {
 								fwd[i].free = TRUE;
 								subsend_msg = NULL;
 								subsend_fwd_sent = FALSE;
-								xdbg(MH, "send: fwd sent err\n");
+								MH_E(SENDL3, "subsend err\n");
 							}
 							break;
 						}
-						xdbg(MH, "send: fwd subsend busy\n");
+						MH_D(SENDL3, "subsend busy\n");
 						break;
 					}
 					case MH_WAIT : {
@@ -153,11 +182,11 @@ implementation {
 							fwd[MH_FORWARDING_BUFERS - 1].msg = _msg;
 							fwd[MH_FORWARDING_BUFERS - 1].free = TRUE;
 							fwd[MH_FORWARDING_BUFERS - 1].msg_wait = 0;
-							xdbg(MH, "send: fwd discarding, no more retry - %04X\n", call AMPacket.destination(_msg));
+							MH_W(SENDL3, "discarding, no more retry - %04X\n", call AMPacket.destination(_msg));
 							break;
 						}
 						else {
-							xdbg(MH, "send: fwd retry route later - %04X\n", call AMPacket.destination(fwd[i].msg));
+							MH_D(SENDL3, "retry route later - %04X\n", call AMPacket.destination(fwd[i].msg));
 							break;
 						}
 					}
@@ -170,14 +199,14 @@ implementation {
 						fwd[MH_FORWARDING_BUFERS - 1].msg = _msg;
 						fwd[MH_FORWARDING_BUFERS - 1].free = TRUE;
 						fwd[MH_FORWARDING_BUFERS - 1].msg_wait = 0;
-						xdbg(MH, "send: fwd discarding - %04X\n", call AMPacket.destination(_msg));
+						MH_D(SENDL3, "discarding - %04X\n", call AMPacket.destination(_msg));
 						break;
 					}
 				}
 			}
 		}
 
-		// try to send "L4 message"
+		// try to send waiting "L4 message"
 
 		if((send_msg != NULL)&&( ! send_canceled)&&(send_msg_wait % MH_WAIT_BEFORE_RETRY == 0)&&(send_msg != subsend_msg)&&(from_timer || (subsend_msg == NULL))) {
 			switch(call RouteSelect.selectRoute(send_msg)) {
@@ -187,30 +216,30 @@ implementation {
 						error_t err;
 						subsend_msg = send_msg;
 						subsend_fwd_sent = FALSE;
-						xdbg(MH, "send: sent type %u\n", call AMPacket.type(subsend_msg));
+						MH_D(SENDL4, "sent type %u\n", call AMPacket.type(subsend_msg));
 						err = call SubSend.send(call SubAMPacket.destination(subsend_msg), subsend_msg, call SubPacket.payloadLength(subsend_msg));
 						if(err != SUCCESS) {
 							message_t * _msg = send_msg;
 							subsend_msg = NULL;
 							send_msg = NULL;
 							signal AMSend.sendDone[call AMPacket.type(_msg)](_msg, FAIL);
-							xdbg(MH, "send: sent err\n");
+							MH_E(SENDL4, "subsent err\n");
 						}
 						break;
 					}
-					xdbg(MH, "send: subsend busy\n");
+					MH_D(SENDL4, "subsend busy\n");
 					break;
 				}
 				case MH_WAIT : {
 					if(send_msg_wait == 0) {
 						message_t * _msg = send_msg;
 						send_msg = NULL;
-						xdbg(MH, "send: discarding, no more retry - %04X\n", call AMPacket.destination(_msg));
+						MH_W(SENDL4, "discarding, no more retry - %04X\n", call AMPacket.destination(_msg));
 						signal AMSend.sendDone[call AMPacket.type(_msg)](_msg, FAIL);
 						break;
 					}
 					else {
-						xdbg(MH, "send: retry route later - %04X\n", call AMPacket.destination(send_msg));
+						MH_D(SENDL4, "retry route later - %04X\n", call AMPacket.destination(send_msg));
 						break;
 					}
 				}
@@ -219,7 +248,7 @@ implementation {
 					message_t * _msg = send_msg;
 					send_msg = NULL;
 					send_msg_wait = 0;
-					xdbg(MH, "send: discarding - %04X\n", call AMPacket.destination(_msg));
+					MH_D(SENDL4, "discarding - %04X\n", call AMPacket.destination(_msg));
 					signal AMSend.sendDone[call AMPacket.type(_msg)](_msg, FAIL);
 					break;
 				}
@@ -230,19 +259,19 @@ implementation {
 
 		if(send_msg_wait == 0) {
 			for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
-				if(fwd[i].msg_wait > 0) 
+				if(fwd[i].msg_wait > 0)
 					break;
 			}
-			if(i == MH_FORWARDING_BUFERS) 
+			if(i == MH_FORWARDING_BUFERS)
 				call Timer.stop();
 		}
-		xdbg_flush(MH);
+		MH_D_flush(BASIC);
 	}
 
 	// AMSend (L4)
 
 	command error_t AMSend.send[am_id_t am](am_addr_t destination, message_t * msg, uint8_t len) {
-		if(send_msg) 
+		if(send_msg)
 			return EBUSY;
 
 		call AMPacket.setType(msg, am);
@@ -257,31 +286,31 @@ implementation {
 					error_t err;
 					subsend_msg = msg;
 					subsend_fwd_sent = FALSE;
-					xdbg(MH, "amsend: sent type %u\n", am);
+					MH_D(SENDL4, "sent type %u\n", am);
 					err = call SubSend.send(call SubAMPacket.destination(subsend_msg), subsend_msg, call SubPacket.payloadLength(subsend_msg));
 					if(err != SUCCESS) {
-						xdbg(MH, "amsend: sent err\n");
+						MH_E(SENDL4, "subsend err\n");
 						subsend_msg = NULL;
 						send_msg = NULL;
 					}
 					return err;
 				}
-				xdbg(MH, "amsend: subsend busy\n");
-				xdbg_flush(MH);
+				MH_D(SENDL4, "subsend busy\n");
+				MH_D_flush(SENDL4);
 				return SUCCESS;
 			}
 			case MH_WAIT : {
 				send_msg = msg;
 				send_msg_wait = MH_WAIT_BEFORE_RETRY * MH_RETRIES;
-				if( ! call Timer.isRunning()) 
+				if( ! call Timer.isRunning())
 					call Timer.startPeriodic(MH_TIMER_CYCLE);
-				xdbg(MH, "amsend: retry route later - %04X\n", destination);
-				xdbg_flush(MH);
+				MH_D(SENDL4, "retry route later - %04X\n", destination);
+				MH_D_flush(SENDL4);
 				return SUCCESS;
 			}
 			default : {
 				// send to self ?
-				xdbg(MH, "amsend: discarding - %04X\n", destination);
+				MH_D(SENDL4, "discarding - %04X\n", destination);
 				return FAIL;
 			}
 		}
@@ -297,7 +326,7 @@ implementation {
 	}
 
 	command error_t AMSend.cancel[am_id_t am](message_t * msg) {
-		if(send_msg != msg) 
+		if(send_msg != msg)
 			return FAIL;
 		if(send_msg == subsend_msg){ // live
 			return call SubSend.cancel(subsend_msg);
@@ -322,17 +351,17 @@ implementation {
 	// SubSend
 
 	event void SubSend.sendDone(message_t * msg, error_t e) {
-		xdbg(MH, "subsend done\n");
+		MH_D(BASIC, "subsend done\n");
 
 		if(subsend_msg != msg) {
-			xdbg(MH, "subsend: wrong msg\n");
-			xdbg_flush(MH);
+			MH_D(BASIC, "wrong msg\n");
+			MH_D_flush(BASIC);
 			return;
 		}
 
 		subsend_msg = NULL;
 		if(send_msg == msg) {
-			xdbg(MH, "subsend: signaling upper sendDone\n");
+			MH_D(SENDL4, "signaling upper sendDone\n");
 			send_msg = NULL;
 			signal AMSend.sendDone[call AMPacket.type(msg)](msg, e);
 		}
@@ -359,7 +388,7 @@ implementation {
 	uint8_t fwd_getfree(){ // find first free
 		uint8_t i, candidate = MH_FORWARDING_BUFERS, candidate_min_wait = ~0;
 		for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
-			if(fwd[i].free) 
+			if(fwd[i].free)
 				break;
 			if((fwd[i].msg_wait > 0)&&(fwd[i].msg_wait < candidate_min_wait)) {
 				candidate_min_wait = fwd[i].msg_wait;
@@ -379,11 +408,11 @@ implementation {
 	}
 
 	event message_t * SubReceive.receive(message_t * msg, void * payload, uint8_t len) {
-		xdbg(MH, "subrecieve from %04X\n", call SubAMPacket.source(msg));
+		MH_D(BASIC, "receive from %04X\n", call SubAMPacket.source(msg));
 		
 		if (len < sizeof(mhpacket_header_t)) {
-			xdbg(MH, "subrecieve: packet too small\n");
-			xdbg_flush(MH);
+			MH_E(BASIC, "receive packet too small\n");
+			MH_E_flush(BASIC);			
 			return msg;
 		}
 
@@ -393,8 +422,8 @@ implementation {
 					uint8_t fwd_free = fwd_getfree();
 					message_t * fwd_free_msg;
 					if(fwd_free == MH_FORWARDING_BUFERS) {
-						xdbg(MH, "subrecieve: fwd discarding, no free buffers\n");
-						xdbg_flush(MH);
+						MH_E(RECEIVEL3, "discarding, no free buffers\n");
+						MH_E_flush(RECEIVEL3);
 						return msg;
 					}
 					fwd_free_msg = fwd[fwd_free].msg;
@@ -404,25 +433,25 @@ implementation {
 					if((subsend_msg == NULL)&&((!subsend_fwd_sent) || (send_msg == NULL) || (send_msg_wait > 0))) {
 						subsend_msg = msg;
 						subsend_fwd_sent = TRUE;
-						xdbg(MH, "subrecieve: fwd sent\n");
+						MH_D(RECEIVEL3, "sent\n");
 						if(call SubSend.send(call SubAMPacket.destination(msg), msg, len) != SUCCESS) {
 							fwd[fwd_free].free = TRUE;
 							subsend_msg = NULL;
 							subsend_fwd_sent = FALSE;
-							xdbg(MH, "subrecieve: fwd sent error\n");
+							MH_E(RECEIVEL3, "subsend error\n");
 						}
 					}
 					else {
-						xdbg(MH, "subrecieve: fwd subsend busy.\n");
+						MH_D(RECEIVEL3, "subsend busy.\n");
 					}
-					xdbg_flush(MH);
+					MH_D_flush(RECEIVEL3);
 					return fwd_free_msg;
 				}
 				return msg;
 			}
 
 			case MH_RECEIVE : {
-				xdbg(MH, "subrecieve: signaling upper receive type %u\n",call AMPacket.type(msg));
+				MH_D(RECEIVEL4, "signaling upper receive type %u\n",call AMPacket.type(msg));
 				return signal Receive.receive[call AMPacket.type(msg)](msg, payload + sizeof(mhpacket_header_t), len - sizeof(mhpacket_header_t));
 			}
 
@@ -431,23 +460,23 @@ implementation {
 					uint8_t fwd_free = fwd_getfree();
 					message_t * fwd_free_msg;
 					if(fwd_free == MH_FORWARDING_BUFERS) {
-						xdbg(MH, "subrecieve: fwd discarding, no free buffers\n");
-						xdbg_flush(MH);
+						MH_E(RECEIVEL3, "discarding, no free buffers\n");
+						MH_E_flush(RECEIVEL3);
 						return msg;
 					}
 					fwd_free_msg = fwd[fwd_free].msg;
 					fwd[fwd_free].msg = msg;
 					fwd[fwd_free].free = FALSE;
 					fwd[fwd_free].msg_wait = MH_WAIT_BEFORE_RETRY * MH_RETRIES;
-					if( ! call Timer.isRunning()) 
+					if( ! call Timer.isRunning())
 						call Timer.startPeriodic(MH_TIMER_CYCLE);
 					return fwd_free_msg;
 				}
 				return msg;
 			}
 			default : {
-				xdbg(MH, "subrecieve: fwd discarding\n");
-				xdbg_flush(MH);
+				MH_D(RECEIVEL3, "discarding\n");
+				MH_D_flush(RECEIVEL3);
 				return msg;
 			}
 		}
@@ -457,11 +486,11 @@ implementation {
 
 	event void Timer.fired() {
 		uint8_t i;
-		if(send_msg_wait > 0) 
+		if(send_msg_wait > 0)
 			send_msg_wait--;
 
 		for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
-			if(fwd[i].msg_wait > 0) 
+			if(fwd[i].msg_wait > 0)
 				fwd[i].msg_wait--;
 		}
 		send(TRUE);
@@ -479,21 +508,21 @@ implementation {
 
 	command void * Packet.getPayload(message_t * msg, uint8_t len) {
 		void * p = call SubPacket.getPayload(msg, len + sizeof(mhpacket_header_t));
-		if( ! p) 
+		if( ! p)
 			return NULL;
 		return(void * )(p + sizeof(mhpacket_header_t));
 	}
 
 	command uint8_t Packet.maxPayloadLength() {
 		uint8_t len = call SubPacket.maxPayloadLength();
-		if(len < sizeof(mhpacket_header_t)) 
+		if(len < sizeof(mhpacket_header_t))
 			return 0; // packet size not for header maybe static check ?
 		return len - sizeof(mhpacket_header_t);
 	}
 
 	command uint8_t Packet.payloadLength(message_t * amsg) {
 		uint8_t len = call SubPacket.payloadLength(amsg);
-		if(len < sizeof(mhpacket_header_t)) 
+		if(len < sizeof(mhpacket_header_t))
 			return 0; // malformed msg ?
 		return len - sizeof(mhpacket_header_t);
 	}
@@ -510,42 +539,42 @@ implementation {
 
 	command am_addr_t AMPacket.destination(message_t * amsg) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return 0; // malformed msg ?
 		return mhhdr->dest;
 	}
 
 	command am_addr_t AMPacket.source(message_t * amsg) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return 0; // malformed msg ?
 		return mhhdr->src;
 	}
 
 	command void AMPacket.setDestination(message_t * amsg, am_addr_t addr) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return; // malformed msg ?
 		mhhdr->dest = addr;
 	}
 
 	command void AMPacket.setSource(message_t * amsg, am_addr_t addr) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return; // malformed msg ?
 		mhhdr->src = addr;
 	}
 
 	command bool AMPacket.isForMe(message_t * amsg) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return FALSE; // malformed msg ?
 		return((mhhdr->dest == call AMPacket.address()) || (mhhdr->dest == AM_BROADCAST_ADDR));
 	}
 
 	command am_id_t AMPacket.type(message_t * amsg) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return 0; // malformed msg ?
 		return mhhdr->type;
 	}
@@ -553,7 +582,7 @@ implementation {
 	command void AMPacket.setType(message_t * amsg, am_id_t t) {
 		mhpacket_header_t * mhhdr = call SubPacket.getPayload(amsg, sizeof(mhpacket_header_t));
 		call SubAMPacket.setType(amsg, AM_MH);
-		if( ! mhhdr) 
+		if( ! mhhdr)
 			return; // malformed msg ?
 		mhhdr->type = t;
 	}

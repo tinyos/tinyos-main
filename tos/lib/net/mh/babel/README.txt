@@ -15,5 +15,4 @@ Known bugs/limitations:
 
 - beta stage
 - now LocalIeeeEui64C needed + collided address changing (should be optional)
-- RSSI/LQI should be defined by platform selection
 ...

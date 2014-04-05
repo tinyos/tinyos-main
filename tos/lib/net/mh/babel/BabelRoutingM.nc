@@ -36,23 +36,53 @@
  * Implements "am_address" collision detection and renumbering.
  *
  * @author Martin Cerveny
- */ 
+ */
 
 #include "Timer.h"
 #include "MH.h"
 #include "Babel.h"
 #include "Babel_private.h"
 
-#include "debugserial.h"
-#if 0 // debug this module
-#define xdbg_BABEL(s,args...) printf(#s ": " args)
-#define xdbg_inline_BABEL(s, args...) printf(args)
-#define xdbg_flush_BABEL(s) printfflush()
-#else
-#define xdbg_BABEL(s,args...)
-#define xdbg_inline_BABEL(s, args...)
-#define xdbg_flush_BABEL(s)
-#endif
+#include "printfsyslog.h"
+
+// define facilities and define facilities name
+
+// BASIC facility - generic facility
+#define BABEL_BASIC_FACILITY (1<<0)
+#define BABEL_BASIC_NAME ""
+// SEND facility - prepare and send BABEL messages
+#define BABEL_SEND_FACILITY (1<<1)
+#define BABEL_SEND_NAME "S"
+// RECEIVE facility - receive nad process BABEL messages
+#define BABEL_RECEIVE_FACILITY (1<<2)
+#define BABEL_RECEIVE_NAME "R"
+// ROUTE facility - route decision procees (called from MultiHop/RouteSelect)
+#define BABEL_ROUTE_FACILITY (1<<3)
+#define BABEL_ROUTE_NAME "R"
+// TIMER facility - timer processing (regular updates and timeout)
+#define BABEL_TIMER_FACILITY (1<<4)
+#define BABEL_TIMER_NAME "T"
+
+// define severity filter per facility and define facility filter mask
+
+#define BABEL_BASIC_SEVERITY LOG_DEBUG
+#define BABEL_SEND_SEVERITY LOG_DEBUG
+#define BABEL_RECEIVE_SEVERITY LOG_DEBUG
+#define BABEL_ROUTE_SEVERITY LOG_DEBUG
+#define BABEL_TIMER_SEVERITY LOG_DEBUG
+
+//#define BABEL_FACILITY_MASK (BABEL_BASIC_FACILITY | BABEL_SEND_FACILITY | BABEL_RECEIVE_FACILITY | BABEL_ROUTE_FACILITY | BABEL_TIMER_FACILITY)
+#define BABEL_FACILITY_MASK (BABEL_BASIC_FACILITY | BABEL_ROUTE_FACILITY | BABEL_TIMER_FACILITY)
+//#define BABEL_FACILITY_MASK (0)
+
+// local macros
+
+#define BABEL_D(facility, ...) prinfsyslog(BABEL, BABEL_ ## facility, LOG_DEBUG, __VA_ARGS__)
+#define BABEL_D_inline(facility, ...) prinfsyslog_inline(BABEL, BABEL_ ## facility, LOG_DEBUG, __VA_ARGS__)
+#define BABEL_D_flush(facility) prinfsyslog_flush(BABEL, BABEL_ ## facility, LOG_DEBUG)
+#define BABEL_E(facility, ...) prinfsyslog(BABEL, BABEL_ ## facility, LOG_ERR, __VA_ARGS__)
+#define BABEL_E_flush(facility) prinfsyslog_flush(BABEL, BABEL_ ## facility, LOG_ERR)
+#define BABEL_N(facility, ...) prinfsyslog(BABEL, BABEL_ ## facility, LOG_NOTICE, __VA_ARGS__)
 
 module BabelRoutingM {
 	// export
@@ -82,17 +112,18 @@ module BabelRoutingM {
 	uses interface AMPacket as L3AMPacket;
 
 	uses interface Leds;
+	uses interface Timer<TMilli> as TimerLed;
 }
 implementation {
 	// global state and tables
 
 	NetDB ndb[BABEL_NDB_SIZE]; // sorted by dest_nodeid
-	uint8_t cnt_ndb = 0;
+	uint8_t cnt_ndb = 0; // size of ndb
+	uint8_t self; // my position in ndb
 	NeighborDB neighdb[BABEL_NEIGHDB_SIZE]; // sorted by neigh_nodeid
-	uint8_t cnt_neighdb = 0;
-	uint8_t self;
+	uint8_t cnt_neighdb = 0; // size of neighdb
 	AckDB ackdb[BABEL_ACKDB_SIZE]; // FIFO
-	uint8_t cnt_ackdb = 0;
+	uint8_t cnt_ackdb = 0; // size of ackdb
 
 	// local state
 
@@ -106,19 +137,17 @@ implementation {
 
 	uint8_t wait_cnt = 0;
 
-	//
+	// packet for sending BABEL messages
 
 	bool busy = FALSE;
 	message_t pkt;
 
-	//
-
-	//am_addr_t block = 0;
+	// Initialization and support function
 
 	event void Boot.booted() {
 
-		cnt_ndb++;
 		self = 0;
+		cnt_ndb++;
 		memset(&ndb[self], 0, sizeof(ndb[0]));
 		ndb[self].dest_nodeid = call ActiveMessageAddress.amAddress();
 		ndb[self].eui = call LocalIeeeEui64.getId();
@@ -129,16 +158,16 @@ implementation {
 	}
 
 	uint8_t getLqi(message_t * msg) {
-		if(call PacketLinkQuality.isSet(msg)) 
+		if(call PacketLinkQuality.isSet(msg))
 			return call PacketLinkQuality.get(msg);
-		else 
+		else
 			return 0;
 	}
 
 	uint8_t getRssi(message_t * msg) {
-		if(call PacketRSSI.isSet(msg)) 
+		if(call PacketRSSI.isSet(msg))
 			return call PacketRSSI.get(msg);
-		else 
+		else
 			return 0;
 	}
 
@@ -158,9 +187,9 @@ implementation {
 	}
 
 	uint16_t seqnodiff(uint16_t seqnew, uint16_t seqold) {
-		if(seqnew > seqold) 
+		if(seqnew > seqold)
 			return seqnew - seqold;
-		else 
+		else
 			return seqnew + (~ seqold);
 	}
 
@@ -171,26 +200,28 @@ implementation {
 
 	uint16_t linkcost(uint16_t hello_history) {
 		uint16_t cost = BABEL_LINK_COST * (0x8000 / (((hello_history & 0x8000) >> 2) + ((hello_history & 0x4000) >> 1) + (hello_history & 0x3fff) + 1));
-		if(cost > 0x0fff) 
+		if(cost > 0x0fff)
 			cost = BABEL_INFINITY;
 		return cost;
 	}
 
+	// database ndb function
+
 	bool insert_ndb(NetDB * data) {
 		uint8_t b = 0, e = cnt_ndb, m = 0;
 
-		if(cnt_ndb == (sizeof(ndb) / sizeof(ndb[0]))) 
+		if(cnt_ndb == (sizeof(ndb) / sizeof(ndb[0])))
 			return FALSE;
 
 		while(e > b) {
 			m = (b + e) / 2;
-			if(ndb[m].dest_nodeid > data->dest_nodeid) 
+			if(ndb[m].dest_nodeid > data->dest_nodeid)
 				e = m;
-			else 
+			else
 				b = m + 1;
 		}
 
-		if(self >= b) 
+		if(self >= b)
 			self++;
 		memmove(&ndb[b + 1], &ndb[b], sizeof(ndb[0]) * (cnt_ndb - b));
 		memcpy(&ndb[b], data, sizeof(ndb[0]));
@@ -200,7 +231,7 @@ implementation {
 
 	void remove_ndb(uint8_t idx) {
 		memmove(&ndb[idx], &ndb[idx + 1], sizeof(ndb[0]) * (cnt_ndb - idx - 1));
-		if(self > idx) 
+		if(self > idx)
 			self--;
 		cnt_ndb--;
 	}
@@ -211,27 +242,29 @@ implementation {
 		while(e > b) {
 			uint8_t m = (b + e) / 2;
 
-			if(ndb[m].dest_nodeid == nodeid) 
+			if(ndb[m].dest_nodeid == nodeid)
 				return m;
-			if(ndb[m].dest_nodeid > nodeid) 
+			if(ndb[m].dest_nodeid > nodeid)
 				e = m;
-			else 
+			else
 				b = m + 1;
 		}
 		return BABEL_NOT_FOUND;
 	}
 
+	// database neighdb function
+
 	bool insert_neighdb(NeighborDB * data) {
 		uint8_t b = 0, e = cnt_neighdb, m = 0;
 
-		if(cnt_neighdb == (sizeof(neighdb) / sizeof(neighdb[0]))) 
+		if(cnt_neighdb == (sizeof(neighdb) / sizeof(neighdb[0])))
 			return FALSE;
 
 		while(e > b) {
 			m = (b + e) / 2;
-			if(neighdb[m].neigh_nodeid > data->neigh_nodeid) 
+			if(neighdb[m].neigh_nodeid > data->neigh_nodeid)
 				e = m;
-			else 
+			else
 				b = m + 1;
 		}
 
@@ -252,37 +285,41 @@ implementation {
 		while(e > b) {
 			uint8_t m = (b + e) / 2;
 
-			if(neighdb[m].neigh_nodeid == nodeid) 
+			if(neighdb[m].neigh_nodeid == nodeid)
 				return m;
-			if(neighdb[m].neigh_nodeid > nodeid) 
+			if(neighdb[m].neigh_nodeid > nodeid)
 				e = m;
-			else 
+			else
 				b = m + 1;
 		}
 		return BABEL_NOT_FOUND;
 	}
+
+	// compute metric for BABEL
 
 	uint16_t metric(uint16_t m, uint16_t nexthop_nodeid) {
 		uint8_t idx;
 		uint16_t rx_cost, tx_cost;
 		uint32_t etx;
 
-		if(m == BABEL_INFINITY) 
+		if(m == BABEL_INFINITY)
 			return BABEL_INFINITY;
 		idx = search_neighdb(nexthop_nodeid);
-		if(idx == BABEL_NOT_FOUND) 
+		if(idx == BABEL_NOT_FOUND)
 			return BABEL_INFINITY;
 		tx_cost = neighdb[idx].ihu_tx_cost;
-		if(tx_cost == BABEL_INFINITY) 
+		if(tx_cost == BABEL_INFINITY)
 			return BABEL_INFINITY;
 		rx_cost = linkcost(neighdb[idx].hello_history);
-		if(rx_cost == BABEL_INFINITY) 
+		if(rx_cost == BABEL_INFINITY)
 			return BABEL_INFINITY;
 		etx = (uint32_t) tx_cost * rx_cost;
-		if(etx >= BABEL_INFINITY) 
+		if(etx >= BABEL_INFINITY)
 			return BABEL_INFINITY;
 		return m + etx + BABEL_RT_COST;
 	}
+
+	// process one "send" request (check variable pending)
 
 	void send() {
 		if(( ! busy)&&(pending)) {
@@ -294,38 +331,39 @@ implementation {
 				uint16_t destaddr;
 
 				BABEL_WRITE_MSG_BEGIN(bptr, aptr);
-				xdbg(BABEL, "txbegin == ");
+				BABEL_D(SEND, "txbegin == ");
 
 				if(ndb[self].dest_nodeid != call ActiveMessageAddress.amAddress()) {
-					xdbg_inline(BABEL, "tx nh - L2=%04X DB=%04X - ", call ActiveMessageAddress.amAddress(), ndb[self].dest_nodeid);
+					BABEL_D_inline(SEND, "nh - L2=%04X DB=%04X - ", call ActiveMessageAddress.amAddress(), ndb[self].dest_nodeid);
 					BABEL_WRITE_MSG_NH(bptr, aptr, ndb[self].dest_nodeid);
 				}
 
 				if(pending & BABEL_PENDING_ACK) {
-					// pending ack response (unicast send)					
-					xdbg_inline(BABEL, "tx ack - ");
+					// pending ack response (unicast send)
+					// TODO: unused/untested				
+					BABEL_D_inline(SEND, "ack - ");
 					if(cnt_ackdb) {
 						destaddr = ackdb[0].nodeid;
 
 						BABEL_WRITE_MSG_ACK(bptr, aptr, ackdb[0].nonce);
 						memmove(&ackdb[0], &ackdb[1], sizeof(ackdb[0]) * (cnt_ackdb - 1));
-						if( ! (--cnt_ackdb)) 
+						if( ! (--cnt_ackdb))
 							pending &= ~BABEL_PENDING_ACK;
 					}
-					else 
+					else
 						pending &= ~BABEL_PENDING_ACK;
 				}
 				else {
 					destaddr = AM_BROADCAST_ADDR;
 
 					if(pending & BABEL_ADDR_CHANGED) {
-						xdbg_inline(BABEL, "upd: addrchange - ");
+						BABEL_D_inline(SEND, "upd: addrchange - ");
 						for(i = 0; i < cnt_ndb;) {
-							xdbg_inline(BABEL, "upd: dest=%04X retract - ", ndb[i].dest_nodeid);
+							BABEL_D_inline(SEND, "upd: dest=%04X retract - ", ndb[i].dest_nodeid);
 							if(BABEL_WRITE_MSG_ROUTER_ID(bptr, aptr, ndb[i].eui)&& BABEL_WRITE_MSG_UPDATE(bptr, aptr, 1, ndb[i].seqno, BABEL_INFINITY, ndb[i].dest_nodeid)) {
-								if(i != self) 
+								if(i != self)
 									remove_ndb(i);
-								else 
+								else
 									i++;
 							}
 						}
@@ -340,25 +378,26 @@ implementation {
 					else {
 						// process hello_timer
 						if(pending & BABEL_PENDING_HELLO) {
-							xdbg_inline(BABEL, "tx hello h_seq=%04X - ", hello_seqno);
+							BABEL_D_inline(SEND, "hello h_seq=%04X - ", hello_seqno);
 							pending &= ~BABEL_PENDING_HELLO;
 							if(hello_interval < BABEL_HELLO_INTERVAL) {
 								hello_interval *= 2;
-								if(hello_interval > BABEL_HELLO_INTERVAL) 
+								if(hello_interval > BABEL_HELLO_INTERVAL)
 									hello_interval = BABEL_HELLO_INTERVAL;
 							}
 							BABEL_WRITE_MSG_HELLO(bptr, aptr, hello_seqno, hello_interval);
 							if((hello_seqno % BABEL_HELLO_PER_IHU) == 0) {
 								for(i = 0; i < cnt_neighdb; i++) {
-									xdbg_inline(BABEL, "tx ihu %04X - ", neighdb[i].neigh_nodeid);
+									BABEL_D_inline(SEND, "ihu %04X - ", neighdb[i].neigh_nodeid);
 									if( ! BABEL_WRITE_MSG_IHU(bptr, aptr, linkcost(neighdb[i].hello_history), BABEL_HELLO_PER_IHU * hello_interval, neighdb[i].neigh_nodeid)) {
-										xdbg(BABEL, "ihu packet tx overflow error\n");
+										BABEL_D_inline(SEND, "\n");
+										BABEL_E(SEND, "ihu packet tx overflow error\n");
 										break;
 									}
 								}
 							}
 							if((hello_seqno % BABEL_HELLO_PER_UPDATE) == 0) {
-								for(i = 0; i < cnt_ndb; i++) 
+								for(i = 0; i < cnt_ndb; i++)
 									ndb[i].flags |= BABEL_FLAG_UPDATE;
 								pending |= BABEL_PENDING_UPDATE;
 							}
@@ -366,7 +405,7 @@ implementation {
 
 						// request full route resync
 						if(pending & BABEL_PENDING_RT_REQUEST_WILD) {
-							xdbg_inline(BABEL, "tx upd all - ");
+							BABEL_D_inline(SEND, "upd all - ");
 							if(BABEL_WRITE_MSG_RT_REQUEST(bptr, aptr, BABEL_RT_WILD)) {
 								pending &= ~ BABEL_PENDING_RT_REQUEST_WILD;
 							}
@@ -375,10 +414,10 @@ implementation {
 						// process route update (maybe more messages)
 						if(pending & BABEL_PENDING_UPDATE) {
 							bool more = FALSE;
-							xdbg_inline(BABEL, "tx upd - ");
+							BABEL_D_inline(SEND, "upd - ");
 							for(i = 0; i < cnt_ndb; i++) {
 								if(ndb[i].flags & BABEL_FLAG_UPDATE) {
-									xdbg_inline(BABEL, "upd: dest=%04X seq=%04X metr=%04X - ", ndb[i].dest_nodeid, ndb[i].seqno, (ndb[i].flags & BABEL_FLAG_RETRACTION ? BABEL_INFINITY 
+									BABEL_D_inline(SEND, "upd: dest=%04X seq=%04X metr=%04X - ", ndb[i].dest_nodeid, ndb[i].seqno, (ndb[i].flags & BABEL_FLAG_RETRACTION ? BABEL_INFINITY
 											: ndb[i].metric));
 									if(BABEL_WRITE_MSG_ROUTER_ID(bptr, aptr, ndb[i].eui)&& BABEL_WRITE_MSG_UPDATE(bptr, aptr, BABEL_HELLO_PER_UPDATE * hello_interval, ndb[i].seqno,
 											(ndb[i].flags & BABEL_FLAG_RETRACTION ? BABEL_INFINITY : ndb[i].metric), ndb[i].dest_nodeid)) {
@@ -390,19 +429,19 @@ implementation {
 									}
 								}
 							}
-							if( ! more) 
+							if( ! more)
 								pending &= ~ BABEL_PENDING_UPDATE;
 						}
 
 						// process sq request (maybe more messages)
 						if(pending & BABEL_PENDING_SQ_REQUEST) {
 							bool more = FALSE;
-							xdbg_inline(BABEL, "tx sqrq - ");
+							BABEL_D_inline(SEND, "sqrq - ");
 							for(i = 0; i < cnt_ndb; i++) {
 								if(ndb[i].flags & BABEL_FLAG_SQ_REQEST) {
 									if(BABEL_WRITE_MSG_SQ_REQUEST(bptr, aptr, ndb[i].pending_seqno, ndb[i].pending_hopcount, ndb[i].eui, ndb[i].dest_nodeid)) {
 										ndb[i].flags &= ~ BABEL_FLAG_SQ_REQEST;
-										xdbg_inline(BABEL, "sqrq: dest=%04X seq=%04X - ", ndb[i].dest_nodeid, ndb[i].pending_seqno);
+										BABEL_D_inline(SEND, "sqrq: dest=%04X seq=%04X - ", ndb[i].dest_nodeid, ndb[i].pending_seqno);
 									}
 									else {
 										more = TRUE;
@@ -410,18 +449,18 @@ implementation {
 									}
 								}
 							}
-							if( ! more) 
+							if( ! more)
 								pending &= ~ BABEL_PENDING_SQ_REQUEST;
 						}
 
 						// process rt request (maybe more messages)
 						if(pending & BABEL_PENDING_RT_REQUEST) {
 							bool more = FALSE;
-							xdbg_inline(BABEL, "tx rtreq - ");
+							BABEL_D_inline(SEND, "rtreq - ");
 							for(i = 0; i < cnt_ndb; i++) {
 								if(ndb[i].flags & BABEL_FLAG_RT_REQUEST) {
 									if(BABEL_WRITE_MSG_RT_REQUEST(bptr, aptr, ndb[i].dest_nodeid)) {
-										xdbg_inline(BABEL, "rtreq: %04X - ", ndb[i].dest_nodeid);
+										BABEL_D_inline(SEND, "rtreq: %04X - ", ndb[i].dest_nodeid);
 										ndb[i].flags &= ~ BABEL_FLAG_RT_REQUEST;
 									}
 									else {
@@ -430,7 +469,7 @@ implementation {
 									}
 								}
 							}
-							if( ! more) 
+							if( ! more)
 								pending &= ~ BABEL_PENDING_RT_REQUEST;
 						}
 					}
@@ -439,16 +478,15 @@ implementation {
 					if(BABEL_WRITE_MSG_END(bptr, aptr)) {
 						if(call AMSend.send(destaddr, &pkt, aptr - bptr) == SUCCESS) {
 							busy = TRUE;
-							xdbg_inline(BABEL, "== %04X\n", destaddr);
-							//call Leds.led0On();
+							BABEL_D_inline(SEND, "== %04X\n", destaddr);
 						}
 						else {
-							xdbg_inline(BABEL, "== %04X ( txerr )\n", destaddr);
+							BABEL_D_inline(SEND, "== %04X ( txerr )\n", destaddr);
 						}
 					}
-					else 
-						xdbg(BABEL, "msg len error\n");
-					xdbg_flush(BABEL);
+					else
+						BABEL_E(SEND, "msg len error\n");
+					BABEL_D_flush(SEND);
 				}
 			}
 		}
@@ -457,37 +495,40 @@ implementation {
 	event void AMSend.sendDone(message_t * msg, error_t error) {
 		if(&pkt == msg) {
 			busy = FALSE;
-			xdbg(BABEL, "txdone\n");
-			xdbg_flush(BABEL);
-			//call Leds.led0Off();
+			if(error == SUCCESS) {
+				BABEL_D(SEND, "txdone\n");
+				BABEL_D_flush(SEND);
+			}
+			else {
+				BABEL_E(SEND, "txdone err %d\n", error);
+				BABEL_E_flush(SEND);
+			}
 			send();
 		}
 		else {
-			xdbg(BABEL, "txdone err\n");
-			xdbg_flush(BABEL);
+			BABEL_E(SEND, "txdone err\n");
+			BABEL_E_flush(SEND);
 		}
+	}
+
+	event void TimerLed.fired() {
+		call Leds.led0Off();
 	}
 
 	event message_t * Receive.receive(message_t * msg, void * payload, uint8_t len) {
 		bool send_immediate = FALSE;
 		void * bptr = payload, *aptr = payload;
 
-		//+++ debug code
-		//		if(block == call AMPacket.source(msg)) {
-		//			xdbg(BABEL, "rxbegin %04X== BLOCKED \n", call AMPacket.source(msg));
-		//			return msg;
-		//		}
-		//+++
-
 		if(len < 4) {
-			xdbg(BABEL, "rx packet too small\n");
-			xdbg_flush(BABEL);
+			BABEL_E(RECEIVE, "packet too small\n");
+			BABEL_E_flush(RECEIVE);
 			return msg;
 		}
 
-		//call Leds.led1On();
+		call Leds.led0On();
+		call TimerLed.startOneShot(10);
 
-		xdbg(BABEL, "rxbegin %04X == ", call AMPacket.source(msg));
+		BABEL_D(RECEIVE, "rxbegin %04X == ", call AMPacket.source(msg));
 
 		if(BABEL_READ_MSG_BEGIN(bptr, aptr, len)) {
 			bool err = FALSE;
@@ -508,35 +549,39 @@ implementation {
 				switch(*(nx_uint8_t * ) aptr) {
 					case BABEL_PAD1 : // 4.4.1.  Pad1
 					{
-						xdbg_inline(BABEL, "rx PAD1 - ");
+						BABEL_D_inline(RECEIVE, "PAD1 - ");
 						if( ! BABEL_READ_MSG_PAD1(bptr, aptr, len)) {
 							err = TRUE;
-							xdbg(BABEL, "rx PAD0 error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "PAD0 error\n");
 						}
 						break;
 					}
 					case BABEL_PADN : // 4.4.2.  PadN
 					{
-						xdbg_inline(BABEL, "rx PADN - ");
+						BABEL_D_inline(RECEIVE, "PADN - ");
 						if( ! BABEL_READ_MSG_PADN(bptr, aptr, len)) {
 							err = TRUE;
-							xdbg(BABEL, "rx PADN error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "PADN error\n");
 						}
 						break;
 					}
 					case BABEL_ACK_REQ : //  4.4.3.  Acknowledgement Request
 					{
+						// TODO: unused/untested
 						uint16_t _nonce, _interval;
-						xdbg_inline(BABEL, "rx ACKRQ %04X - ", last_nodeid);
+						BABEL_D_inline(RECEIVE, "ACKRQ %04X - ", last_nodeid);
 						if( ! BABEL_READ_MSG_ACK_REQ(bptr, aptr, len, _nonce, _interval)) {
 							err = TRUE;
-							xdbg(BABEL, "rx ACK REQ error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "ACK REQ error\n");
 						}
 						else {
 							uint8_t i;
-							xdbg_inline(BABEL, "ackrq: non=%04X - ", _nonce);
+							BABEL_D_inline(RECEIVE, "ackrq: non=%04X - ", _nonce);
 							for(i = 0; i < cnt_ackdb; i++){	// ignore duplicities
-								if((ackdb[i].nodeid == last_nodeid)&&(ackdb[i].nonce == _nonce)) 
+								if((ackdb[i].nodeid == last_nodeid)&&(ackdb[i].nonce == _nonce))
 									break;
 							}
 							if(i == cnt_ackdb) {
@@ -549,7 +594,8 @@ implementation {
 								}
 								else {
 									err = TRUE;
-									xdbg(BABEL, "ackdb overflow error\n");
+									BABEL_D_inline(RECEIVE, "\n");
+									BABEL_E(RECEIVE, "ackdb overflow error\n");
 									break;
 								}
 							}
@@ -558,28 +604,31 @@ implementation {
 					}
 					case BABEL_ACK : //  4.4.4.  Acknowledgement
 					{
+						// TODO: unused/untested
 						uint16_t _nonce;
-						xdbg_inline(BABEL, "rx ACK - ");
+						BABEL_D_inline(RECEIVE, "ACK - ");
 						if( ! BABEL_READ_MSG_ACK(bptr, aptr, len, _nonce)) {
 							err = TRUE;
-							xdbg(BABEL, "rx ACK error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "ACK error\n");
 						}
 						else {
 							// TODO: process ack response
-							xdbg_inline(BABEL, "ack: non=%04X (UNPROCESSED) - ", _nonce);
+							BABEL_D_inline(RECEIVE, "ack: non=%04X (UNPROCESSED) - ", _nonce);
 						}
 						break;
 					}
 					case BABEL_HELLO : // 4.4.5.  Hello
 					{
 						uint16_t _seqno, _interval;
-						xdbg_inline(BABEL, "rx HELLO - ");
+						BABEL_D_inline(RECEIVE, "HELLO - ");
 						if( ! BABEL_READ_MSG_HELLO(bptr, aptr, len, _seqno, _interval)) {
 							err = TRUE;
-							xdbg(BABEL, "rx HELLO error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "HELLO error\n");
 						}
 						else {
-							xdbg_inline(BABEL, "hello: h_seq=%04X - ", _seqno);
+							BABEL_D_inline(RECEIVE, "hello: h_seq=%04X - ", _seqno);
 							if(neighdb_idx != BABEL_NOT_FOUND) {
 								uint16_t hello_history = neighdb[neighdb_idx].hello_history;
 								uint8_t hello_timer_lost = 0, i;
@@ -587,9 +636,9 @@ implementation {
 
 								// count hello lost by expired hellp_timer
 								for(i = 0; i < 16; i++) {
-									if( ! (hello_history & 0x8000)) 
+									if( ! (hello_history & 0x8000))
 										hello_timer_lost++;
-									else 
+									else
 										break;
 									hello_history <<= 1;
 								}
@@ -612,7 +661,7 @@ implementation {
 								neighdb[neighdb_idx].hello_history |= 0x8000;
 								neighdb[neighdb_idx].hello_seqno = _seqno;
 								neighdb[neighdb_idx].hello_timer = 2 * _interval;
-								xdbg_inline(BABEL, "hello: history=%04X - ", neighdb[neighdb_idx].hello_history);
+								BABEL_D_inline(RECEIVE, "hello: history=%04X - ", neighdb[neighdb_idx].hello_history);
 							}
 							else {
 								NeighborDB data;
@@ -629,8 +678,8 @@ implementation {
 
 								if(insert_neighdb(&data)) {
 									uint8_t i;
-									xdbg_inline(BABEL, "hello: new - ");
-									for(i = 0; i < cnt_ndb; i++) 
+									BABEL_D_inline(RECEIVE, "hello: new - ");
+									for(i = 0; i < cnt_ndb; i++)
 										ndb[i].flags |= BABEL_FLAG_UPDATE;
 									pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 									hello_interval = BABEL_HELLO_INTERVAL / 8;
@@ -638,7 +687,8 @@ implementation {
 								}
 								else {
 									err = TRUE;
-									xdbg(BABEL, "neighdb overflow rx error\n");
+									BABEL_D_inline(RECEIVE, "\n");
+									BABEL_E(RECEIVE, "neighdb overflow rx error\n");
 									break;
 								}
 							}
@@ -648,14 +698,15 @@ implementation {
 					case BABEL_IHU : // 4.4.6.  IHU
 					{
 						uint16_t _cost, _interval, _nodeid;
-						xdbg_inline(BABEL, "rx IHU - ");
+						BABEL_D_inline(RECEIVE, "IHU - ");
 						if( ! BABEL_READ_MSG_IHU(bptr, aptr, len, _cost, _interval, _nodeid)) {
 							err = TRUE;
-							xdbg(BABEL, "rx IHU error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "IHU error\n");
 						}
 						else {
 							if(_nodeid == ndb[self].dest_nodeid){	// process only our IHU message data
-								xdbg_inline(BABEL, "ihu: my txcost %d - ", _cost);
+								BABEL_D_inline(RECEIVE, "ihu: my txcost %d - ", _cost);
 								if(neighdb_idx != BABEL_NOT_FOUND) {
 									neighdb[neighdb_idx].ihu_tx_cost = _cost;
 									neighdb[neighdb_idx].ihu_timer = _interval * BABEL_IHU_THRESHOLD;
@@ -675,8 +726,8 @@ implementation {
 
 									if(insert_neighdb(&data)) {
 										uint8_t i;
-										xdbg_inline(BABEL, "ihu: new neigh - ");
-										for(i = 0; i < cnt_ndb; i++) 
+										BABEL_D_inline(RECEIVE, "ihu: new neigh - ");
+										for(i = 0; i < cnt_ndb; i++)
 											ndb[i].flags |= BABEL_FLAG_UPDATE;
 										pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 										hello_interval = BABEL_HELLO_INTERVAL / 8;
@@ -684,7 +735,8 @@ implementation {
 									}
 									else {
 										err = TRUE;
-										xdbg(BABEL, "neighdb overflow error\n");
+										BABEL_D_inline(RECEIVE, "\n");
+										BABEL_E(RECEIVE, "neighdb overflow error\n");
 										break;
 									}
 								}
@@ -694,10 +746,11 @@ implementation {
 					}
 					case BABEL_ROUTER_ID : // 4.4.7.  Router-Id
 					{
-						xdbg_inline(BABEL, "rx RTID - ");
+						BABEL_D_inline(RECEIVE, "RTID - ");
 						if( ! BABEL_READ_MSG_ROUTER_ID(bptr, aptr, len, last_eui)) {
 							err = TRUE;
-							xdbg(BABEL, "rx ROUTERID error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "ROUTERID error\n");
 						}
 						break;
 					}
@@ -705,15 +758,17 @@ implementation {
 					{
 						uint16_t _last_nodeid;
 
-						xdbg_inline(BABEL, "rx NH - ");
+						BABEL_D_inline(RECEIVE, "NH - ");
 						if( ! BABEL_READ_MSG_NH(bptr, aptr, len, _last_nodeid)) {
 							err = TRUE;
-							xdbg(BABEL, "rx NH error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "NH error\n");
+							break;
 						}
-						xdbg_inline(BABEL, "nh=%04X - ", _last_nodeid);
+						BABEL_D_inline(RECEIVE, "nh=%04X - ", _last_nodeid);
 
 						if(_last_nodeid != last_nodeid) {
-							xdbg_inline(BABEL, "nh updated - ");
+							BABEL_D_inline(RECEIVE, "nh updated - ");
 
 							last_nodeid = _last_nodeid;
 							neighdb_idx = search_neighdb(last_nodeid);
@@ -731,23 +786,24 @@ implementation {
 					case BABEL_UPDATE : // 4.4.9.  Update
 					{
 						uint16_t _interval, _seqno, _metric, _destnodeid;
-						xdbg_inline(BABEL, "rx UPD - ");
+						BABEL_D_inline(RECEIVE, "UPD - ");
 						if( ! BABEL_READ_MSG_UPDATE(bptr, aptr, len, _interval, _seqno, _metric, _destnodeid)) {
 							err = TRUE;
-							xdbg(BABEL, "rx UPDATE error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "UPDATE error\n");
 						}
 						else {
 							uint16_t idx;
-							xdbg_inline(BABEL, "upd: dest=%04X seq=%04X metr=%04X - ", _destnodeid, _seqno, _metric);
+							BABEL_D_inline(RECEIVE, "upd: dest=%04X seq=%04X metr=%04X - ", _destnodeid, _seqno, _metric);
 							if(_destnodeid == ndb[self].dest_nodeid){// reverse echo ?
-								xdbg_inline(BABEL, "upd: me  -");
+								BABEL_D_inline(RECEIVE, "upd: me  -");
 								if(*(uint64_t * )&last_eui < *(uint64_t * )&ndb[self].eui) {
 									// someone else has my nodeid, change my nodeid
 									am_addr_t new_nodeid = ndb[self].dest_nodeid + 1;
-									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0)) 
+									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0))
 										new_nodeid++;
 									call ActiveMessageAddress.setAddress(TOS_AM_GROUP, new_nodeid);
-									xdbg(BABEL, "NODEID collision, new nodeid %04X\n", new_nodeid);
+									BABEL_N(BASIC, "NODEID collision, new nodeid %04X\n", new_nodeid);
 									break;
 								}
 								if(((*(uint64_t * )&last_eui == *(uint64_t * )&ndb[self].eui))&& seqnograter(_seqno, ndb[self].seqno, BABEL_SEQNO_GRATER)) {
@@ -756,13 +812,13 @@ implementation {
 									ndb[self].flags |= BABEL_FLAG_UPDATE;
 									pending |= BABEL_PENDING_UPDATE;
 									send_immediate = TRUE;
-									xdbg_inline(BABEL, "upd: my NEW seq=%04X -", ndb[self].seqno);
+									BABEL_D_inline(RECEIVE, "upd: my NEW seq=%04X -", ndb[self].seqno);
 								}
 								break;
 							}
 							else {
 								if((*(uint64_t * )&last_eui == *(uint64_t * )&ndb[self].eui)) {
-									xdbg_inline(BABEL, "upd: me with different nodeid, ignore - ");
+									BABEL_D_inline(RECEIVE, "upd: me with different nodeid, ignore - ");
 									break;
 								}
 							}
@@ -776,7 +832,7 @@ implementation {
 									ndb[idx].timer = _interval * BABEL_RT_THRESHOLD;
 									ndb[idx].flags &= ~BABEL_FLAG_UNFEASIBLE;
 									ndb[idx].flags &= ~(BABEL_FLAG_RT_SWITCH | BABEL_FLAG_RETRACTION);
-									xdbg_inline(BABEL, "upd: update - ");
+									BABEL_D_inline(RECEIVE, "upd: update - ");
 								}
 								else {
 									if(_metric == BABEL_INFINITY) {
@@ -788,7 +844,7 @@ implementation {
 												ndb[idx].pending_timer = 0;
 												ndb[idx].flags &= ~BABEL_FLAG_SQ_REQEST;
 											}
-											if(ndb[idx].seqno < _seqno) 
+											if(ndb[idx].seqno < _seqno)
 												ndb[idx].seqno = _seqno;
 											// send rt request, after timeout try, sq request if any unfeasible received, and go to retracted
 											ndb[idx].nexthop_nodeid = BABEL_NODEID_UNDEF; // switch to PHASE 2
@@ -797,10 +853,10 @@ implementation {
 											ndb[idx].flags &= ~(BABEL_FLAG_RT_SWITCH | BABEL_FLAG_RETRACTION);
 											pending |= BABEL_PENDING_RT_REQUEST;
 											send_immediate = TRUE;
-											xdbg_inline(BABEL, "upd: retracted - ");
+											BABEL_D_inline(RECEIVE, "upd: retracted - ");
 										}
 										else {
-											xdbg_inline(BABEL, "upd: NH(%04X) not match ndb(%04X) ignore - ", last_nodeid, ndb[idx].nexthop_nodeid);
+											BABEL_D_inline(RECEIVE, "upd: NH(%04X) not match ndb(%04X) ignore - ", last_nodeid, ndb[idx].nexthop_nodeid);
 										}
 									}
 									else {// test feasible
@@ -811,13 +867,13 @@ implementation {
 												ndb[idx].eui = last_eui;
 												ndb[idx].pending_timer = 0;
 												ndb[idx].flags &= ~BABEL_FLAG_SQ_REQEST;
-												xdbg_inline(BABEL, "upd: remote changed EUI - ");
+												BABEL_D_inline(RECEIVE, "upd: remote changed EUI - ");
 											}
 											if((ndb[idx].pending_timer > 0)&&(seqnodiff(_seqno, ndb[idx].pending_seqno) < BABEL_SEQNO_GRATER)) {
 												// this is response to sq request (_seqno >= pending_seqno), cancel sq request
 												ndb[idx].pending_timer = 0;
 												ndb[idx].flags &= ~BABEL_FLAG_SQ_REQEST;
-												xdbg_inline(BABEL, "upd: response to rqsq - ");
+												BABEL_D_inline(RECEIVE, "upd: response to rqsq - ");
 											}
 											ndb[idx].seqno = _seqno;
 											ndb[idx].metric = m;
@@ -828,12 +884,12 @@ implementation {
 											ndb[idx].flags &= ~(BABEL_FLAG_RT_SWITCH | BABEL_FLAG_RETRACTION);
 											pending |= BABEL_PENDING_UPDATE;
 											send_immediate = TRUE;
-											xdbg_inline(BABEL, "upd: feasible - ");
+											BABEL_D_inline(RECEIVE, "upd: feasible - ");
 										}
 										else {
 											// not feasible
 											ndb[idx].flags |= BABEL_FLAG_UNFEASIBLE;
-											xdbg_inline(BABEL, "upd: unfeasible - ");
+											BABEL_D_inline(RECEIVE, "upd: unfeasible - ");
 										}
 									}
 								}
@@ -855,11 +911,12 @@ implementation {
 									if(insert_ndb(&data)) {
 										pending |= BABEL_PENDING_UPDATE;
 										send_immediate = TRUE;
-										xdbg_inline(BABEL, "upd: new - ");
+										BABEL_D_inline(RECEIVE, "upd: new - ");
 									}
 									else {
 										err = TRUE;
-										xdbg(BABEL, "ndb overflow error\n");
+										BABEL_D_inline(RECEIVE, "\n");
+										BABEL_E(RECEIVE, "ndb overflow error\n");
 										break;
 									}
 
@@ -871,28 +928,29 @@ implementation {
 					case BABEL_RT_REQUEST : // 4.4.10.  Route Request
 					{
 						uint16_t _destnodeid;
-						xdbg_inline(BABEL, "rx RTRQ - ");
+						BABEL_D_inline(RECEIVE, "RTRQ - ");
 						if( ! BABEL_READ_MSG_RT_REQUEST(bptr, aptr, len, _destnodeid)) {
 							err = TRUE;
-							xdbg(BABEL, "rx RT REQUEST error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "RT REQUEST error\n");
 						}
 						else {
 							if(_destnodeid == BABEL_RT_WILD) {
 								uint8_t i;
-								xdbg_inline(BABEL, "rtrq: all - ");
-								for(i = 0; i < cnt_ndb; i++) 
+								BABEL_D_inline(RECEIVE, "rtrq: all - ");
+								for(i = 0; i < cnt_ndb; i++)
 									ndb[i].flags |= BABEL_FLAG_UPDATE;
 							}
 							else {
 								uint8_t idx = search_ndb(_destnodeid);
 								if(idx != BABEL_NOT_FOUND) {
-									xdbg_inline(BABEL, "rtrq: dest=%04X - ", _destnodeid);
+									BABEL_D_inline(RECEIVE, "rtrq: dest=%04X - ", _destnodeid);
 									ndb[idx].flags |= BABEL_FLAG_UPDATE;
 								}
 								else {
 									// TODO: send retraction route 3.8.1.1/1
 									// ??? what about loop ?
-									xdbg_inline(BABEL, "rtrq: unknown (RETRACTION NOT SEND) - ");
+									BABEL_D_inline(RECEIVE, "rtrq: unknown (RETRACTION NOT SEND) - ");
 								}
 							}
 							pending |= BABEL_PENDING_UPDATE;
@@ -905,34 +963,35 @@ implementation {
 						uint16_t _seqno, _destnodeid;
 						uint8_t _hopcount;
 						ieee_eui64_t _eui;
-						xdbg_inline(BABEL, "rx SQRQ - ");
+						BABEL_D_inline(RECEIVE, "SQRQ - ");
 						if( ! BABEL_READ_MSG_SQ_REQUEST(bptr, aptr, len, _seqno, _hopcount, _eui, _destnodeid)) {
 							err = TRUE;
-							xdbg(BABEL, "rx SQ REQUEST error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "SQ REQUEST error\n");
 						}
 						else {
-							xdbg_inline(BABEL, "sqrq: dest=%04X seq=%04X - ", _destnodeid, _seqno);
+							BABEL_D_inline(RECEIVE, "sqrq: dest=%04X seq=%04X - ", _destnodeid, _seqno);
 							if(_destnodeid == ndb[self].dest_nodeid){ // is for me
 								if(*(uint64_t * )&_eui < *(uint64_t * )&ndb[self].eui) {
 									am_addr_t new_nodeid = ndb[self].dest_nodeid + 1;
-									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0)) 
+									while((search_ndb(new_nodeid) != BABEL_NOT_FOUND) || (new_nodeid == 0xffff) || (new_nodeid == 0))
 										new_nodeid++;
 									call ActiveMessageAddress.setAddress(TOS_AM_GROUP, new_nodeid);
-									xdbg(BABEL, "NODEID collision, new nodeid %04X\n", new_nodeid);
+									BABEL_N(BASIC, "NODEID collision, new nodeid %04X\n", new_nodeid);
 									break;
 								}
-								if(seqnograter(_seqno, ndb[self].seqno, BABEL_SEQNO_GRATER)) 
+								if(seqnograter(_seqno, ndb[self].seqno, BABEL_SEQNO_GRATER))
 									ndb[self].seqno++;
 								ndb[self].flags |= BABEL_FLAG_UPDATE;
 								pending |= BABEL_PENDING_UPDATE;
 								send_immediate = TRUE;
-								xdbg_inline(BABEL, "sqrq: my NEW seq=%04X - ", ndb[self].seqno);
+								BABEL_D_inline(RECEIVE, "sqrq: my NEW seq=%04X - ", ndb[self].seqno);
 							}
 							else {
 								uint8_t idx = search_ndb(_destnodeid);
 								if(idx != BABEL_NOT_FOUND) {
 									// 3.8.1.2. /1
-									if((ndb[idx].flags & BABEL_FLAG_RETRACTION) || (ndb[idx].metric == BABEL_INFINITY)) 
+									if((ndb[idx].flags & BABEL_FLAG_RETRACTION) || (ndb[idx].metric == BABEL_INFINITY))
 										break;
 
 									// 3.8.1.2. /2-3
@@ -940,7 +999,7 @@ implementation {
 										ndb[idx].flags |= BABEL_FLAG_UPDATE;
 										pending |= BABEL_PENDING_UPDATE;
 										send_immediate = TRUE;
-										xdbg_inline(BABEL, "sqrq: update - ");
+										BABEL_D_inline(RECEIVE, "sqrq: update - ");
 										break;
 									}
 
@@ -950,7 +1009,7 @@ implementation {
 										// add new or updated sq request
 										if((ndb[idx].pending_timer == 0) || seqnograter(_seqno, ndb[idx].pending_seqno, BABEL_SEQNO_GRATER) || ((ndb[idx].pending_seqno == _seqno)&&(ndb[idx]
 												.pending_hopcount < _hopcount))) {
-											xdbg_inline(BABEL, "sqrq: forward - ");
+											BABEL_D_inline(RECEIVE, "sqrq: forward - ");
 											ndb[idx].pending_seqno = _seqno;
 											ndb[idx].pending_hopcount = _hopcount;
 											ndb[idx].pending_timer = BABEL_SQ_REQUEST_RETRY * BABEL_SQ_REQUEST_RETRY_INTERVAL;
@@ -967,10 +1026,11 @@ implementation {
 						break;
 					}
 					default : {
-						xdbg_inline(BABEL, "rx uknown - ");
+						BABEL_D_inline(RECEIVE, "uknown - ");
 						if( ! BABEL_READ_MSG_UNKNOWN(bptr, aptr, len)) {
 							err = TRUE;
-							xdbg(BABEL, "rx TLV error\n");
+							BABEL_D_inline(RECEIVE, "\n");
+							BABEL_E(RECEIVE, "TLV error\n");
 						}
 						break;
 					}
@@ -978,13 +1038,11 @@ implementation {
 			}
 		}
 
-		xdbg_inline(BABEL, " (node rssi %d)\n", getRssi(msg));
-		xdbg_flush(BABEL);
+		BABEL_D_inline(RECEIVE, " (node rssi %d)\n", getRssi(msg));
+		BABEL_D_flush(RECEIVE);
 
-		if(send_immediate) 
+		if(send_immediate)
 			send(); // or post ?
-
-		//call Leds.led1Off();
 
 		return msg;
 	}
@@ -995,23 +1053,23 @@ implementation {
 		// process neighdb timers
 
 		for(i = 0; i < cnt_neighdb; i++) {
-			if(neighdb[i].hello_timer) 
+			if(neighdb[i].hello_timer)
 				if( ! (--neighdb[i].hello_timer)){	// nonfatal lost "hello"
 				neighdb[i].hello_timer = neighdb[i].hello_interval;
 				neighdb[i].hello_history >>= 1;
-				xdbg(BABEL, "lost hello %04X\n", neighdb[i].neigh_nodeid);
-				xdbg_flush(BABEL);
+				BABEL_D(TIMER, "lost hello %04X\n", neighdb[i].neigh_nodeid);
+				BABEL_D_flush(TIMER);
 			}
-			if(neighdb[i].ihu_timer) 
+			if(neighdb[i].ihu_timer)
 				if( ! (--neighdb[i].ihu_timer)){	// fatal too many lost "ihu"
 				neighdb[i].ihu_tx_cost = BABEL_INFINITY;
-				xdbg(BABEL, "lost ihu %04X\n", neighdb[i].neigh_nodeid);
-				xdbg_flush(BABEL);
+				BABEL_D(TIMER, "lost ihu %04X\n", neighdb[i].neigh_nodeid);
+				BABEL_D_flush(TIMER);
 			}
 			if((neighdb[i].ihu_tx_cost == BABEL_INFINITY)&&(neighdb[i].hello_history == 0)){ // neighbor lost
 				uint8_t j;
-				xdbg(BABEL, "neighdb delete %04X\n", neighdb[i].neigh_nodeid);
-				xdbg_flush(BABEL);
+				BABEL_D(TIMER, "neighdb delete %04X\n", neighdb[i].neigh_nodeid);
+				BABEL_D_flush(TIMER);
 				// try to switch neigbor in route tables
 				for(j = 0; j < cnt_ndb; j++) {
 					if(ndb[j].nexthop_nodeid == neighdb[i].neigh_nodeid){ // request update routing
@@ -1084,7 +1142,7 @@ implementation {
 								ndb[i].pending_timer = BABEL_SQ_REQUEST_RETRY * BABEL_SQ_REQUEST_RETRY_INTERVAL;
 								ndb[i].flags |= BABEL_FLAG_SQ_REQEST;
 								pending |= BABEL_PENDING_SQ_REQUEST;
-								xdbg(BABEL, "sqreq dest=%04X seq=%04X\n", ndb[i].dest_nodeid, ndb[i].pending_seqno);
+								BABEL_D(TIMER, "sqreq dest=%04X seq=%04X\n", ndb[i].dest_nodeid, ndb[i].pending_seqno);
 							}
 							ndb[i].timer = BABEL_RT_RETRACTION_HOLD;
 							// send retraction
@@ -1109,7 +1167,7 @@ implementation {
 							// PHASE 4: delete
 							// last hold timeout, delete from route table (BABEL_RT_REQUEST_HOLD+BABEL_RT_REQUEST_HOLD), 3.5.5. Hold Time
 
-							xdbg(BABEL, "route delete %04X\n", ndb[i].dest_nodeid);
+							BABEL_D(TIMER, "route delete %04X\n", ndb[i].dest_nodeid);
 							remove_ndb(i);
 							i--;
 						}
@@ -1140,9 +1198,9 @@ implementation {
 
 	command mh_action_t RouteSelect.selectRoute(message_t * msg) {
 
-		xdbg(BABEL, "route query: ");
+		BABEL_D(ROUTE, "route query: ");
 		if(call L3AMPacket.isForMe(msg)) {
-			xdbg_inline(BABEL, "RECEIVE\n");
+			BABEL_D_inline(ROUTE, "RECEIVE\n");
 			return MH_RECEIVE;
 		}
 		else {
@@ -1154,7 +1212,7 @@ implementation {
 			idx = search_ndb(dest_nodeid);
 
 			if(idx == BABEL_NOT_FOUND) {
-				xdbg_inline(BABEL, "DISCARD %04X\n", dest_nodeid);
+				BABEL_D_inline(ROUTE, "DISCARD %04X\n", dest_nodeid);
 				return MH_DISCARD;
 			}
 			if(ndb[idx].nexthop_nodeid == BABEL_NODEID_UNDEF) {
@@ -1163,29 +1221,20 @@ implementation {
 					pending |= BABEL_PENDING_RT_REQUEST;
 					wait_cnt = 0;
 				}
-				xdbg_inline(BABEL, "WAIT %04X (%04X %04X)\n", dest_nodeid, ndb[idx].nexthop_nodeid, ndb[idx].flags);
+				BABEL_D_inline(ROUTE, "WAIT %04X (%04X %04X)\n", dest_nodeid, ndb[idx].nexthop_nodeid, ndb[idx].flags);
 				return MH_WAIT;
 			}
 
 			call AMPacket.setDestination(msg, ndb[idx].nexthop_nodeid);
-			xdbg_inline(BABEL, "ROUTE to %04X through %04X\n", dest_nodeid, ndb[idx].nexthop_nodeid);
+			BABEL_D_inline(ROUTE, "ROUTE to %04X through %04X\n", dest_nodeid, ndb[idx].nexthop_nodeid);
 			return MH_SEND;
 		}
 	}
 
-	task void addrchanged() {
-		xdbg(BABEL, "addr changed %04X\n", call ActiveMessageAddress.amAddress());
+	// address change reaction
 
-		//+++ debug code
-		//				switch(call ActiveMessageAddress.amAddress()) {
-		//					case 0xE4FC : block = 0xE4C6;
-		//					break;
-		//					case 0xE4C6 : block = 0xE4FC;
-		//					break;
-		//					default : break;
-		//				}
-		//				xdbg(BABEL, "BLOCKING %04X\n", block);
-		//+++
+	task void addrchanged() {
+		BABEL_D(BASIC, "addr changed %04X\n", call ActiveMessageAddress.amAddress());
 
 		pending |= BABEL_ADDR_CHANGED;
 		if(call Timer.isRunning())
@@ -1197,12 +1246,12 @@ implementation {
 		post addrchanged();
 	}
 
-	// TABLE searching
+	// table API
 
 	command error_t NeighborTable.rowFirst(void * row, uint8_t rowptrsize) {
-		if(rowptrsize < sizeof(am_addr_t)) 
+		if(rowptrsize < sizeof(am_addr_t))
 			return ESIZE;
-		if(cnt_neighdb == 0) 
+		if(cnt_neighdb == 0)
 			return ELAST;
 		*(am_addr_t * ) row = neighdb[0].neigh_nodeid;
 		return SUCCESS;
@@ -1210,48 +1259,48 @@ implementation {
 
 	command error_t NeighborTable.rowNext(void * row, uint8_t rowptrsize) {
 		uint8_t idx;
-		if(rowptrsize < sizeof(am_addr_t)) 
+		if(rowptrsize < sizeof(am_addr_t))
 			return ESIZE;
 		idx = search_neighdb(*(am_addr_t * ) row);
 		if(idx != BABEL_NOT_FOUND) {
 			idx++;
-			if(idx == cnt_neighdb) 
+			if(idx == cnt_neighdb)
 				return ELAST;
 			else {
 				*(am_addr_t * ) row = neighdb[idx].neigh_nodeid;
 				return SUCCESS;
 			}
 		}
-		else 
+		else
 			return FAIL;
 	}
 
 	command error_t NeighborTable.colRead(void * row, uint8_t col_id, void * col, uint8_t colptrsize) {
 		uint8_t idx;
 		idx = search_neighdb(*(am_addr_t * ) row);
-		if(idx == BABEL_NOT_FOUND) 
+		if(idx == BABEL_NOT_FOUND)
 			return FAIL;
 		switch(col_id) {
 			case BABEL_NB_NODEID : {
-				if(colptrsize < sizeof(am_addr_t)) 
+				if(colptrsize < sizeof(am_addr_t))
 					return ESIZE;
 				*(am_addr_t * ) col = neighdb[idx].neigh_nodeid;
 				return SUCCESS;
 			}
 			case BABEL_NB_COST : {
-				if(colptrsize < sizeof(uint16_t)) 
+				if(colptrsize < sizeof(uint16_t))
 					return ESIZE;
 				*(uint16_t * ) col = metric(0, idx);
 				return SUCCESS;
 			}
 			case BABEL_NB_LQI : {
-				if(colptrsize < sizeof(uint8_t)) 
+				if(colptrsize < sizeof(uint8_t))
 					return ESIZE;
 				*(uint8_t * ) col = neighdb[idx].lqi;
 				return SUCCESS;
 			}
 			case BABEL_NB_RSSI : {
-				if(colptrsize < sizeof(uint8_t)) 
+				if(colptrsize < sizeof(uint8_t))
 					return ESIZE;
 				*(uint8_t * ) col = neighdb[idx].rssi;
 				return SUCCESS;
@@ -1261,9 +1310,9 @@ implementation {
 	}
 
 	command error_t RoutingTable.rowFirst(void * row, uint8_t rowptrsize) {
-		if(rowptrsize < sizeof(am_addr_t)) 
+		if(rowptrsize < sizeof(am_addr_t))
 			return ESIZE;
-		if(cnt_ndb == 0) 
+		if(cnt_ndb == 0)
 			return ELAST;
 		*(am_addr_t * ) row = ndb[0].dest_nodeid;
 		return SUCCESS;
@@ -1271,48 +1320,48 @@ implementation {
 
 	command error_t RoutingTable.rowNext(void * row, uint8_t rowptrsize) {
 		uint8_t idx;
-		if(rowptrsize < sizeof(am_addr_t)) 
+		if(rowptrsize < sizeof(am_addr_t))
 			return ESIZE;
 		idx = search_ndb(*(am_addr_t * ) row);
 		if(idx != BABEL_NOT_FOUND) {
 			idx++;
-			if(idx == cnt_ndb) 
+			if(idx == cnt_ndb)
 				return ELAST;
 			else {
 				*(am_addr_t * ) row = ndb[idx].dest_nodeid;
 				return SUCCESS;
 			}
 		}
-		else 
+		else
 			return FAIL;
 	}
 
 	command error_t RoutingTable.colRead(void * row, uint8_t col_id, void * col, uint8_t colptrsize) {
 		uint8_t idx;
 		idx = search_ndb(*(am_addr_t * ) row);
-		if(idx == BABEL_NOT_FOUND) 
+		if(idx == BABEL_NOT_FOUND)
 			return FAIL;
 		switch(col_id) {
 			case BABEL_RT_NODEID : {
-				if(colptrsize < sizeof(am_addr_t)) 
+				if(colptrsize < sizeof(am_addr_t))
 					return ESIZE;
 				*(am_addr_t * ) col = ndb[idx].dest_nodeid;
 				return SUCCESS;
 			}
 			case BABEL_RT_EUI : {
-				if(colptrsize < sizeof(ieee_eui64_t)) 
+				if(colptrsize < sizeof(ieee_eui64_t))
 					return ESIZE;
 				*(ieee_eui64_t * ) col = ndb[idx].eui;
 				return SUCCESS;
 			}
 			case BABEL_RT_METRIC : {
-				if(colptrsize < sizeof(uint16_t)) 
+				if(colptrsize < sizeof(uint16_t))
 					return ESIZE;
 				*(uint16_t * ) col = ndb[idx].metric; // last known metric no retraction
 				return SUCCESS;
 			}
 			case BABEL_RT_NEXT : {
-				if(colptrsize < sizeof(am_addr_t)) 
+				if(colptrsize < sizeof(am_addr_t))
 					return ESIZE;
 				*(am_addr_t * ) col = ndb[idx].nexthop_nodeid;
 				return SUCCESS;

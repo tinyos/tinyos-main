@@ -92,6 +92,8 @@ implementation {
 	RoutingTable = BabelRoutingM.RoutingTable;
 	
 	// debug led support
+	components new TimerMilliC() as TimerLed;
+	BabelRoutingM.TimerLed->TimerLed;
 	components LedsC;
 	BabelRoutingM.Leds->LedsC;
 }
