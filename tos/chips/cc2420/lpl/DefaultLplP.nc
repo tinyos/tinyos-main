@@ -255,8 +255,14 @@ implementation {
   }
     
   event void SubControl.stopDone(error_t error) {
-    if(!error) {
+    if(call SplitControlState.isState(S_OFF) || call SplitControlState.isState(S_TURNING_OFF)) {
+      if (! call SendState.isIdle() ) {
+        signal Send.sendDone(currentSendMsg, FAIL);
+        call SendState.toIdle();
+      }
+    }
 
+    if(!error) {
       if(call SendState.getState() == S_LPL_FIRST_MESSAGE
           || call SendState.getState() == S_LPL_SENDING) {
         // We're in the middle of sending a message; start the radio back up
