@@ -67,7 +67,6 @@ implementation {
   bool m_running;
   bool m_bufBusy;
 
-  void sendProbe( uint16_t key );
   void sendObject( uint16_t key );
 
   command error_t StdControl.start() {
@@ -113,19 +112,6 @@ implementation {
   event void TrickleTimer.fired[ uint16_t key ]() {
 
     sendObject( key );
-  }
-
-  void sendProbe( uint16_t key ) {
-    dissemination_probe_message_t* dpMsg = 
-      (dissemination_probe_message_t*) call ProbeAMSend.getPayload( &m_buf, sizeof(dissemination_probe_message_t));
-    if (dpMsg != NULL && !m_bufBusy) {
-      m_bufBusy = TRUE;
-      
-      dpMsg->key = key;
-      
-      call ProbeAMSend.send( AM_BROADCAST_ADDR, &m_buf,
-			     sizeof( dissemination_probe_message_t ) );
-    }
   }
 
   void sendObject( uint16_t key ) {
