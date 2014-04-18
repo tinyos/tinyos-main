@@ -676,7 +676,6 @@ implementation
 		void* timesync;
 		timesync_relative_t timesync_relative;
 		uint32_t sfdTime;
-		cc2420X_status_t status;
 #ifdef RADIO_DEBUG
 		uint8_t sfd1, sfd2, sfd3, sfd4;
 #endif
@@ -725,20 +724,20 @@ implementation
 #ifdef RADIO_DEBUG
 	        sfd1 = call SFD.get();
 #endif
-			// start transmission
-			status = strobe(CC2420X_STXON);
+		// start transmission
+		strobe(CC2420X_STXON);
 #ifdef RADIO_DEBUG
 	        sfd2 = call SFD.get();
 #endif
-			// get a timestamp right after strobe returns
-			time = call RadioAlarm.getNow();
+		// get a timestamp right after strobe returns
+		time = call RadioAlarm.getNow();
 
-			cmd = CMD_TRANSMIT;			
-			state = STATE_TX_ON;
+		cmd = CMD_TRANSMIT;			
+		state = STATE_TX_ON;
 #ifdef RADIO_DEBUG
 	        sfd3 = call SFD.get();
 #endif
-			call SfdCapture.captureFallingEdge();
+		call SfdCapture.captureFallingEdge();
 #ifdef RADIO_DEBUG
 	        sfd4 = call SFD.get();
 #endif	        
@@ -779,7 +778,7 @@ implementation
 		// adjust for delay between the STXON strobe and the transmission of the SFD
 		time32 += TX_SFD_DELAY;
 
-         call PacketTimeStamp.set(msg, time32);
+	        call PacketTimeStamp.set(msg, time32);
                 
 		if( timesync != 0 ) {
 			// read and adjust the timestamp field
