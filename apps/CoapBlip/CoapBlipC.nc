@@ -51,6 +51,10 @@ configuration CoapBlipC {
   CoapBlipP.Leds -> LedsC;
   CoapBlipP.RadioControl ->  IPStackC;
 
+#ifdef IN6_PREFIX
+ components StaticIPAddressTosIdC;
+#endif
+
 #ifdef RPL_ROUTING
   components RPLRoutingC;
 #endif
