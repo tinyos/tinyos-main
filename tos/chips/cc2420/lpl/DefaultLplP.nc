@@ -38,6 +38,7 @@
  * and performing receive detections.
  *
  * @author David Moss
+ * @author Marcin K Szczodrak - preventing Lpl getting stuck after shutdown
  */
 
 #include "Lpl.h"
@@ -46,7 +47,6 @@
 
 module DefaultLplP {
   provides {
-    interface Init;
     interface LowPowerListening;
     interface Send;
     interface Receive;
@@ -80,9 +80,6 @@ implementation {
   /** The length of the current send message */
   uint8_t currentSendLen;
   
-  /** TRUE if the radio is duty cycling and not always on */
-  bool dutyCycling;
-
   /**
    * Radio Power State
    */
@@ -113,12 +110,6 @@ implementation {
   
   void initializeSend();
   void startOffTimer();
-  
-  /***************** Init Commands ***************/
-  command error_t Init.init() {
-    dutyCycling = FALSE;
-    return SUCCESS;
-  }
   
   /***************** LowPowerListening Commands ***************/
   /**
@@ -167,7 +158,8 @@ implementation {
    * signal receive() more than once for that message.
    */
   command error_t Send.send(message_t *msg, uint8_t len) {
-    if(call SplitControlState.getState() == S_OFF) {
+    if(call SplitControlState.isState(S_OFF) || 
+      call SplitControlState.isState(S_TURNING_OFF)) {
       // Everything is off right now, start SplitControl and try again
       return EOFF;
     }
@@ -190,7 +182,6 @@ implementation {
       
       return SUCCESS;
     }
-    
     return EBUSY;
   }
 
@@ -265,6 +256,17 @@ implementation {
   }
     
   event void SubControl.stopDone(error_t error) {
+    /* This check distinguishes the LPL sleep interval from
+     * the whole AM radio stack stop 
+     */
+    if(call SplitControlState.isState(S_OFF) || 
+      call SplitControlState.isState(S_TURNING_OFF)) {
+      call OffTimer.stop();
+      call SendDoneTimer.stop();
+      call SendState.toIdle();
+      return;
+    }
+
     if(!error) {
 
       if(call SendState.getState() == S_LPL_FIRST_MESSAGE
@@ -281,11 +283,23 @@ implementation {
   
   /***************** SubSend Events ***************/
   event void SubSend.sendDone(message_t* msg, error_t error) {
-   
+    /* Prevent resending routine when the radio AM
+     * is getting completely turned off 
+     */
+    if(call SplitControlState.isState(S_OFF) || 
+      call SplitControlState.isState(S_TURNING_OFF)) {
+      signal Send.sendDone(msg, error);
+      return;
+    }
+
     switch(call SendState.getState()) {
     case S_LPL_SENDING:
       if(call SendDoneTimer.isRunning()) {
-        if(!call PacketAcknowledgements.wasAcked(msg)) {
+        if(call PowerCycle.getSleepInterval() > 0 && 
+          !call PacketAcknowledgements.wasAcked(msg)) {
+          /* Continue resending when duty-cycling and when last
+	   * message was not acknowledged.
+           */
           post resend();
           return;
         }
@@ -302,7 +316,6 @@ implementation {
     default:
       break;
     }  
-    
     call SendState.toIdle();
     call SendDoneTimer.stop();
     startOffTimer();
@@ -330,8 +343,8 @@ implementation {
      * or if the duty cycle is on and our sleep interval is not 0
      */
     if(call SplitControlState.getState() == S_OFF
-        || (call PowerCycle.getSleepInterval() > 0
-            && call SplitControlState.getState() != S_OFF
+        || (call PowerCycle.getSleepInterval() > 0 
+                && call SplitControlState.getState() != S_OFF
                 && call SendState.getState() == S_LPL_NOT_SENDING)) { 
       post stopRadio();
     }
@@ -368,6 +381,10 @@ implementation {
   }
   
   task void resend() {
+    if(call SplitControlState.isState(S_OFF) ||
+      call SplitControlState.isState(S_TURNING_OFF)) {
+      return;
+    }
     if(call Resend.resend(TRUE) != SUCCESS) {
       post resend();
     }
@@ -389,8 +406,8 @@ implementation {
   
   /***************** Functions ***************/
   void initializeSend() {
-    if(call LowPowerListening.getRemoteWakeupInterval(currentSendMsg) 
-      > ONE_MESSAGE) {
+    if(call PowerCycle.getSleepInterval() > 0 && 
+	call LowPowerListening.getRemoteWakeupInterval(currentSendMsg) > ONE_MESSAGE) {
     
       if((call CC2420PacketBody.getHeader(currentSendMsg))->dest == IEEE154_BROADCAST_ADDR) {
         call PacketAcknowledgements.noAck(currentSendMsg);
@@ -408,7 +425,9 @@ implementation {
   
   
   void startOffTimer() {
-    call OffTimer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
+    if (call PowerCycle.getSleepInterval() > 0) {
+      call OffTimer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
+    }
   }
   
 }
