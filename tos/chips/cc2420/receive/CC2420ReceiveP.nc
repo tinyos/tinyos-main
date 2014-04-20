@@ -831,8 +831,7 @@ implementation {
     }
 
     if (mode == IEEE154_ADDR_SHORT) {
-      return (header->dest == call CC2420Config.getShortAddr()
-              || header->dest == IEEE154_BROADCAST_ADDR);
+      return TRUE;
     } else if (mode == IEEE154_ADDR_EXT) {
       ieee_eui64_t local_addr = (call CC2420Config.getExtAddr());
       ext_addr = TCAST(ieee_eui64_t* ONE, &header->dest);
