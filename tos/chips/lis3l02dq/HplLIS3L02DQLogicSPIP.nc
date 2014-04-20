@@ -145,7 +145,7 @@ implementation {
     }
     mSPITxBuf[0] = regAddr | (1 << 7); // Set the READ bit
     mSPIRxBuf[1] = 0;
-    mState = STATE_GETREG;
+    atomic mState = STATE_GETREG;
     call SPIFRM.clr(); // CS LOW
     error = call SpiPacket.send(mSPITxBuf,mSPIRxBuf,2);
 

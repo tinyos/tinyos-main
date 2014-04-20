@@ -64,39 +64,44 @@ implementation {
   uint8_t errorResult;
 
   task void complete_Task() {
+  
+  	uint8_t loc_errorResult, loc_byteResult;
+  	atomic loc_errorResult = errorResult;
+  	atomic loc_byteResult = byteResult;
+  	
     switch(state) {
     case S_GET_XL:
-      readResult += byteResult;
+      readResult += loc_byteResult;
       state = S_IDLE;
       call AccelXResource.release();
-      signal AccelX.readDone(errorResult, readResult);
+      signal AccelX.readDone(loc_errorResult, readResult);
       break;
     case S_GET_XH:
-      readResult = (uint16_t) byteResult & 0xF;
+      readResult = (uint16_t) loc_byteResult;
       readResult <<= 8;
       state = S_GET_XL;
       call Hpl.getReg(LIS3L02DQ_OUTX_L);
       break;
     case S_GET_YL:
-      readResult += byteResult;
+      readResult += loc_byteResult;
       state = S_IDLE;
       call AccelYResource.release();
-      signal AccelY.readDone(errorResult, readResult);
+      signal AccelY.readDone(loc_errorResult, readResult);
       break;
     case S_GET_YH:
-      readResult = (uint16_t) byteResult & 0xF;
+      readResult = (uint16_t) loc_byteResult;
       readResult <<= 8;
       state = S_GET_YL;
       call Hpl.getReg(LIS3L02DQ_OUTY_L);
       break;
     case S_GET_ZL:
-      readResult += byteResult;
+      readResult += loc_byteResult;
       state = S_IDLE;
       call AccelZResource.release();
-      signal AccelZ.readDone(errorResult, readResult);
+      signal AccelZ.readDone(loc_errorResult, readResult);
       break;
     case S_GET_ZH:
-      readResult = (uint16_t) byteResult & 0xF;
+      readResult = (uint16_t) loc_byteResult;
       readResult <<= 8;
       state = S_GET_ZL;
       call Hpl.getReg(LIS3L02DQ_OUTZ_L);
@@ -117,8 +122,11 @@ implementation {
   }
   
   event void AccelXResource.granted() {
-    errorResult = call Hpl.getReg(LIS3L02DQ_OUTX_H);
-    if (errorResult != SUCCESS) {
+    uint8_t loc_errorResult;
+    
+    atomic loc_errorResult = errorResult = call Hpl.getReg(LIS3L02DQ_OUTX_H);
+    
+    if (loc_errorResult != SUCCESS) {
       state = S_GET_XL;
       post complete_Task();
     }
@@ -126,8 +134,11 @@ implementation {
   }
 
   event void AccelYResource.granted() {
-    errorResult = call Hpl.getReg(LIS3L02DQ_OUTY_H);
-    if (errorResult != SUCCESS) {
+    uint8_t loc_errorResult;
+    
+    atomic loc_errorResult = errorResult = call Hpl.getReg(LIS3L02DQ_OUTY_H);
+    
+    if (loc_errorResult != SUCCESS) {
       state = S_GET_YL;
       post complete_Task();
     }
@@ -135,8 +146,11 @@ implementation {
   }
 
   event void AccelZResource.granted() {
-    errorResult = call Hpl.getReg(LIS3L02DQ_OUTZ_H);
-    if (errorResult != SUCCESS) {
+    uint8_t loc_errorResult;
+    
+    atomic loc_errorResult = errorResult = call Hpl.getReg(LIS3L02DQ_OUTZ_H);
+    
+    if (loc_errorResult != SUCCESS) {
       state = S_GET_ZL;
       post complete_Task();
     }
@@ -144,8 +158,8 @@ implementation {
   }
 
   async event void Hpl.getRegDone(error_t error, uint8_t regAddr, uint8_t val) {
-    errorResult |= error;
-    byteResult = val;
+    atomic errorResult |= error;
+    atomic byteResult = val;
     post complete_Task();
   }
 

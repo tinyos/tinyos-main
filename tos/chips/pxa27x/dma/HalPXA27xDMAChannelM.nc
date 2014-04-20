@@ -44,7 +44,7 @@ module HalPXA27xDMAChannelM {
 }
 
 implementation {
-  uint8_t requestedChannel;
+	uint8_t requestedChannel;
   task void reqCompleteTask() {
     signal HalPXA27xDMAChannel.requestChannelDone[requestedChannel]();
   }
@@ -53,12 +53,17 @@ implementation {
     // priority is decided based on which channel you pick (PXADEV 5-4)
     // permanent? nothing lasts forever my friend
 
-    uint32_t valDRCMR;
+    uint32_t valDRCMR, valDCSR;
     valDRCMR = call HplPXA27xDMACntl.getDRCMR(peripheralID) | DRCMR_MAPVLD;
     valDRCMR = valDRCMR & ~DRCMR_CHLNUM(0x1F);
     valDRCMR |= DRCMR_CHLNUM(chnl);
     call HplPXA27xDMACntl.setDRCMR(peripheralID, valDRCMR);
     requestedChannel = chnl;
+    
+    valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
+    valDCSR &= ~(DCSR_RUN);
+    call HplPXA27xDMAChnl.setDCSR[chnl](valDCSR | DCSR_NODESCFETCH);
+    
     post reqCompleteTask();
     return SUCCESS;
   }
@@ -184,13 +189,15 @@ implementation {
   command error_t HalPXA27xDMAChannel.run[uint8_t chnl](bool InterruptEn) {
     uint32_t valDCSR;
     uint32_t valDCMD;
+
     valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
     valDCMD = call HplPXA27xDMAChnl.getDCMD[chnl]();
-
-    valDCMD = (InterruptEn) ? valDCMD | DCMD_ENDIRQEN : valDCSR & ~DCMD_ENDIRQEN;
+			
+    valDCMD = (InterruptEn) ? valDCMD | DCMD_ENDIRQEN : valDCMD & ~DCMD_ENDIRQEN ; //was valDCSR & ~DCMD_ENDIRQEN
     
     call HplPXA27xDMAChnl.setDCMD[chnl](valDCMD);
     call HplPXA27xDMAChnl.setDCSR[chnl](valDCSR | DCSR_RUN | DCSR_NODESCFETCH);
+    
     return SUCCESS;
   }
 
@@ -203,10 +210,9 @@ implementation {
   }
 
   async event void HplPXA27xDMAChnl.interruptDMA[uint8_t chnl]() {
-    // might want to clear interrupt first
+	// might want to clear interrupt first
     // ...
-
-    signal HalPXA27xDMAChannel.Interrupt[chnl]();
+	signal HalPXA27xDMAChannel.Interrupt[chnl]();
   }
 
   default async event void HalPXA27xDMAChannel.Interrupt[uint8_t chnl]() { }

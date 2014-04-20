@@ -60,26 +60,30 @@ implementation {
   uint8_t clientVal;
 
   task void signal_Task() {
+  	uint8_t loc_clientResult;
+  	
+  	atomic loc_clientResult = clientResult;
+  	
     switch(state) {
     case S_DECIMATION:
       state = S_IDLE;
       call Resource.release();
-      signal Advanced.setDecimationDone(clientResult);
+      signal Advanced.setDecimationDone(loc_clientResult);
       break;
     case S_ENAXIS:
       state = S_IDLE;
       call Resource.release();
-      signal Advanced.enableAxisDone(clientResult);
+      signal Advanced.enableAxisDone(loc_clientResult);
       break;
     case S_TLOW:
       state = S_IDLE;
       call Resource.release();
-      signal Advanced.setTLowDone(clientResult);
+      signal Advanced.setTLowDone(loc_clientResult);
       break;
     case S_THIGH:
       state = S_IDLE;
       call Resource.release();
-      signal Advanced.setTHighDone(clientResult);
+      signal Advanced.setTHighDone(loc_clientResult);
       break;
     default:
       break;
