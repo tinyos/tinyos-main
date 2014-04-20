@@ -89,7 +89,8 @@ configuration CtpP {
     interface CtpInfo;
     interface LinkEstimator;
     interface CtpCongestion;
-    interface RootControl;    
+    interface RootControl; 
+    interface UnicastNameFreeRouting;
   }
 
   uses {
@@ -147,6 +148,8 @@ implementation {
   StdControl = Router;
   StdControl = Estimator;
   RootControl = Router;
+  UnicastNameFreeRouting = Router;
+  
   MainC.SoftwareInit -> Router;
   Router.BeaconSend -> Estimator.Send;
   Router.BeaconReceive -> Estimator.Receive;
