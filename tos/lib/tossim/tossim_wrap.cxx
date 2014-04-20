@@ -4513,6 +4513,58 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Packet_setDsn(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Packet *arg1 = (Packet *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Packet_setDsn",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Packet, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Packet_setDsn" "', argument " "1"" of type '" "Packet *""'"); 
+  }
+  arg1 = reinterpret_cast< Packet * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Packet_setDsn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  (arg1)->setDsn(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Packet_dsn(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Packet *arg1 = (Packet *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Packet_dsn",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Packet, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Packet_dsn" "', argument " "1"" of type '" "Packet *""'"); 
+  }
+  arg1 = reinterpret_cast< Packet * >(argp1);
+  result = (int)(arg1)->dsn();
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *Packet_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
@@ -6510,6 +6562,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Packet_setStrength", _wrap_Packet_setStrength, METH_VARARGS, NULL},
 	 { (char *)"Packet_deliver", _wrap_Packet_deliver, METH_VARARGS, NULL},
 	 { (char *)"Packet_deliverNow", _wrap_Packet_deliverNow, METH_VARARGS, NULL},
+	 { (char *)"Packet_setDsn", _wrap_Packet_setDsn, METH_VARARGS, NULL},
+	 { (char *)"Packet_dsn", _wrap_Packet_dsn, METH_VARARGS, NULL},
 	 { (char *)"Packet_swigregister", Packet_swigregister, METH_VARARGS, NULL},
 	 { (char *)"variable_string_t_type_set", _wrap_variable_string_t_type_set, METH_VARARGS, NULL},
 	 { (char *)"variable_string_t_type_get", _wrap_variable_string_t_type_get, METH_VARARGS, NULL},

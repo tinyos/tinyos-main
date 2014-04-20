@@ -41,6 +41,7 @@
  */
 
 // $Id: SimMoteP.nc,v 1.6 2010-06-29 22:07:51 scipio Exp $
+#include "CC2420.h"
 
 module SimMoteP {
   provides interface SimMote;
@@ -51,6 +52,57 @@ implementation {
   long long int startTime;
   bool isOn;
   sim_event_t* bootEvent;
+  
+  uint8_t radioChannel = CC2420_DEF_CHANNEL;   // Current node channel
+  
+  /**
+   * Sets current node radio channel
+   */
+  command error_t SimMote.setRadioChannel(uint8_t newRadioChannel)
+  {
+    if (newRadioChannel >= 11 && newRadioChannel <= 26) {
+      radioChannel = newRadioChannel;
+      return SUCCESS;
+    }
+    
+    return FAIL;
+  }
+  
+  /**
+   * Gets current node radio channel
+   */
+  async command uint8_t SimMote.getRadioChannel()
+  {
+    if (radioChannel < 11 || radioChannel > 26) {
+      return CC2420_DEF_CHANNEL;
+    }
+    
+    return radioChannel;
+  }
+  
+  /**
+   * Sets current node radio channel
+   */
+  error_t sim_mote_set_radio_channel(int mote, uint8_t newRadioChannel) __attribute__ ((C, spontaneous)) {
+    error_t result;
+    int tmp = sim_node();
+    sim_set_node(mote);
+    result = call SimMote.setRadioChannel(newRadioChannel);
+    sim_set_node(tmp);
+    return result;
+  }
+  
+  /**
+   * Gets current node radio channel
+   */
+  uint8_t sim_mote_get_radio_channel(int mote) __attribute__ ((C, spontaneous)) {
+    uint8_t result;
+    int tmp = sim_node();
+    sim_set_node(mote);
+    result = call SimMote.getRadioChannel();
+    sim_set_node(tmp);
+    return result;
+  }
   
   async command long long int SimMote.getEuid() {
     return euid;

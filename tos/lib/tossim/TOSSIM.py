@@ -134,6 +134,8 @@ class Packet(_object):
     def setStrength(*args): return _TOSSIM.Packet_setStrength(*args)
     def deliver(*args): return _TOSSIM.Packet_deliver(*args)
     def deliverNow(*args): return _TOSSIM.Packet_deliverNow(*args)
+    def setDsn(*args): return _TOSSIM.Packet_setDsn(*args)
+    def dsn(*args): return _TOSSIM.Packet_dsn(*args)
 Packet_swigregister = _TOSSIM.Packet_swigregister
 Packet_swigregister(Packet)
 

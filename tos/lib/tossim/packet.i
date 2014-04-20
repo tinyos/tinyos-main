@@ -75,4 +75,7 @@ class Packet {
 
     void deliver(int node, long long int time);
     void deliverNow(int node);
+    
+    void setDsn(int dsn);
+    int dsn();
 };

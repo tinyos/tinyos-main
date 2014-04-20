@@ -250,10 +250,10 @@ implementation {
    evt->data = msg;
    return evt;
  }
- 
+
  void active_message_deliver(int node, message_t* msg, sim_time_t t) @C() @spontaneous() {
    sim_event_t* evt = allocate_deliver_event(node, msg, t);
    sim_queue_insert(evt);
  }
- 
+
 }

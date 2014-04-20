@@ -208,7 +208,7 @@ void Mote::createNoiseModel() {
 }
 
 int Mote::generateNoise(int when) {
-  return (int)sim_noise_generate(id(), when);
+  return (int)sim_noise_generate(id(), sim_mote_get_radio_channel(id()), when);   // return (int)sim_noise_generate(id(), when);
 }
 
 Tossim::Tossim(nesc_app_t* n) {

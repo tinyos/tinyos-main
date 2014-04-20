@@ -71,10 +71,11 @@ typedef struct sim_noise_hash_t {
 } sim_noise_hash_t;
 
 typedef struct sim_noise_node_t {
-  char key[NOISE_HISTORY];
+  //char key[NOISE_HISTORY];
+  char* key[16];
   char freqKey[NOISE_HISTORY];
-  char lastNoiseVal;
-  uint32_t noiseGenTime;
+  char lastNoiseVal[16];
+  uint32_t noiseGenTime[16];
   struct hashtable *noiseTable;
   char* noiseTrace;
   uint32_t noiseTraceLen;
@@ -84,7 +85,7 @@ typedef struct sim_noise_node_t {
 
 void sim_noise_init();
 char sim_real_noise(uint16_t node_id, uint32_t cur_t);
-char sim_noise_generate(uint16_t node_id, uint32_t cur_t);
+char sim_noise_generate(uint16_t node_id, uint8_t channel, uint32_t cur_t);   // char sim_noise_generate(uint16_t node_id, uint32_t cur_t);
 void sim_noise_trace_add(uint16_t node_id, char val);
 void sim_noise_create_model(uint16_t node_id);
   
