@@ -252,8 +252,8 @@ void sim_log_debug(uint16_t id, char* string, const char* format, ...) {
   for (i = 0; i < outputs[id].num; i++) {
     FILE* file = outputs[id].files[i];
     va_start(args, format);
-    fprintf(file, "DEBUG (%i): ", (int)sim_node());
-    vfprintf(file, format, args); 
+fprintf(file, "%s DEBUG (%i): ", sim_time_string(), (int)sim_node());
+    vfprintf(file, format, args);
     fflush(file);
   }
 }

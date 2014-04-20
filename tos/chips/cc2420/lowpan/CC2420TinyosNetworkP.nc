@@ -98,6 +98,7 @@ implementation {
       return NULL;
     }
   }
+
   /***************** BarePacket Commands ****************/
   command void BarePacket.clear(message_t *msg) {
     memset(msg, 0, sizeof(message_t));
@@ -157,9 +158,12 @@ implementation {
   event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len) {
     uint8_t network = call CC2420Packet.getNetwork(msg);
 
+#if !TOSSIM //TOSSIM doesn't seem to believe in CRCs
     if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
       return msg;
     }
+#endif
+
 #ifndef TFRAMES_ENABLED
     if (network == TINYOS_6LOWPAN_NETWORK_ID) {
       return signal ActiveReceive.receive(msg, payload, len);

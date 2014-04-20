@@ -62,6 +62,9 @@ void sim_mote_turn_off(int mote);
 int sim_mote_get_variable_info(int mote, char* name, void** addr, size_t* len);
 void sim_mote_enqueue_boot_event(int mote);
 
+bool sim_mote_set_radio_channel(int mote, uint8_t newRadioChannel);   // MIKE_LIANG
+uint8_t sim_mote_get_radio_channel(int mote);   // MIKE_LIANG
+
 #ifdef __cplusplus
 }
 #endif

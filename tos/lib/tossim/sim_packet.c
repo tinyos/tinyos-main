@@ -119,3 +119,14 @@ void sim_packet_free(sim_packet_t* p) __attribute__ ((C, spontaneous)) {
   printf("sim_packet.c: Freeing packet %p\n", p);
   free(p);
 }
+
+void sim_packet_set_dsn(sim_packet_t* msg, uint8_t dsn) __attribute__ ((C, spontaneous)){
+  tossim_header_t* hdr = getHeader((message_t*)msg);
+  hdr->dsn = dsn;
+}
+
+uint8_t sim_packet_dsn(sim_packet_t* msg) __attribute__ ((C, spontaneous)){
+  tossim_header_t* hdr = getHeader((message_t*)msg);
+  return hdr->dsn;
+}
+

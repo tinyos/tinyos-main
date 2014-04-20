@@ -15,6 +15,23 @@ push( @includes, qw(
   %T/platforms/mica
   %T/platforms/micaz/chips/cc2420
   %T/chips/cc2420
+  
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
+  %T/platforms/mica2/chips/at45db
+  %T/platforms/mica/chips/at45db
+  %T/chips/at45db
+
   %T/chips/atm128
   %T/chips/atm128/adc
   %T/chips/atm128/pins

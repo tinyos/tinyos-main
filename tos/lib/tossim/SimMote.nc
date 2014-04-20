@@ -47,4 +47,7 @@ interface SimMote {
   async command int getVariableInfo(char* name, void** ptr, size_t* len);
   command void turnOn();
   async command void turnOff();
+  
+  command error_t setRadioChannel(uint8_t newRadioChannel);   // MIKE_LIANG
+  async command uint8_t getRadioChannel();   // MIKE_LIANG
 }

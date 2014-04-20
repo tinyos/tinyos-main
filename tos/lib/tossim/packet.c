@@ -120,3 +120,11 @@ void Packet::deliver(int node, long long int t) {
 void Packet::deliverNow(int node) {
   deliver(node, 0);
 }
+
+void Packet::setDsn(int dsn) {
+  sim_packet_set_dsn(msgPtr, (uint8_t)dsn);
+}
+
+int Packet::dsn() {
+  sim_packet_dsn(msgPtr);
+}

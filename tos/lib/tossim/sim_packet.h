@@ -79,6 +79,9 @@ extern "C" {
   sim_packet_t* sim_packet_allocate();
   void sim_packet_free(sim_packet_t* m);
 
+  void sim_packet_set_dsn(sim_packet_t* msg, uint8_t dsn);
+  uint8_t sim_packet_dsn(sim_packet_t* msg);
+
 #ifdef __cplusplus
 }
 #endif

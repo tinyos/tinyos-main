@@ -71,6 +71,9 @@ class Packet {
     void deliver(int node, long long int t);
     void deliverNow(int node);
     
+    void setDsn(int dsn);
+    int dsn();
+    
  private:
     int allocated;
     sim_packet_t* msgPtr;
