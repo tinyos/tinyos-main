@@ -324,9 +324,7 @@ implementation {
     uint8_t i, totalPkt;
     neighbor_table_entry_t *ne;
     uint8_t newEst;
-    uint8_t minPkt;
 
-    minPkt = BLQ_PKT_WINDOW;
     dbg("LI", "%s\n", __FUNCTION__);
     for (i = 0; i < NEIGHBOR_TABLE_SIZE; i++) {
       ne = &NeighborTable[i];
@@ -343,7 +341,7 @@ implementation {
 	  }
 
 	  ne->flags |= MATURE_ENTRY;
-	  dbg("LI", "MinPkt: %d, totalPkt: %d\n", minPkt, totalPkt);
+	  dbg("LI", "MinPkt: %d, totalPkt: %d\n", BLQ_PKT_WINDOW, totalPkt);
 	  newEst = (250UL * ne->rcvcnt) / totalPkt;
 	  dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10);
 	  ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10;
@@ -407,6 +405,7 @@ implementation {
 
   // print the packet. for debugging.
   void print_packet(message_t* msg, uint8_t len) {
+#ifdef TOSSIM
     uint8_t i;
     uint8_t* b;
 
@@ -414,6 +413,7 @@ implementation {
     for(i=0; i<len; i++)
       dbg_clear("LI", "%x ", b[i]);
     dbg_clear("LI", "\n");
+#endif
   }
 
   // initialize the neighbor table in the very beginning
@@ -589,7 +589,6 @@ implementation {
   // link estimator is received
   void processReceivedMessage(message_t* ONE msg, void* COUNT_NOK(len) payload, uint8_t len) {
     uint8_t nidx;
-    uint8_t num_entries;
 
     dbg("LI", "LI receiving packet, buf addr: %x\n", payload);
     print_packet(msg, len);
@@ -602,7 +601,6 @@ implementation {
 
       dbg("LI", "Got seq: %d from link: %d\n", hdr->seq, ll_addr);
 
-      num_entries = hdr->flags & NUM_ENTRIES_FLAG;
       print_neighbor_table();
 
       // update neighbor table with this information
