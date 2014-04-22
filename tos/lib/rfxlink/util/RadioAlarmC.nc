@@ -43,15 +43,16 @@ generic configuration RadioAlarmC()
 
 	uses
 	{
+		interface Tasklet;
 		interface Alarm<TRadio, tradio_size> @exactlyonce();
 	}
 }
 
 implementation
 {
-	components new RadioAlarmP(), TaskletC;
+	components new RadioAlarmP();
 
 	RadioAlarm = RadioAlarmP;
 	Alarm = RadioAlarmP;
-	RadioAlarmP.Tasklet -> TaskletC;
+	Tasklet = RadioAlarmP.Tasklet;
 }
