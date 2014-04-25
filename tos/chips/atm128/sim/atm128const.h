@@ -19,12 +19,12 @@
 #ifndef ATMEGA128CONST_H
 #define ATMEGA128CONST_H
 
-typedef uint8_t const_uint8_t PROGMEM;
-typedef uint16_t const_uint16_t PROGMEM;
-typedef uint32_t const_uint32_t PROGMEM;
-typedef int8_t const_int8_t PROGMEM;
-typedef int16_t const_int16_t PROGMEM;
-typedef int32_t const_int32_t PROGMEM;
+#define const_uint8_t const uint8_t PROGMEM
+#define const_uint16_t const uint16_t PROGMEM
+#define const_uint32_t const uint32_t PROGMEM
+#define const_int8_t const int8_t PROGMEM
+#define const_int16_t const int16_t PROGMEM
+#define const_int32_t const int32_t PROGMEM
 
 #define read_uint8_t(x) pgm_read_byte(x)
 #define read_uint16_t(x) pgm_read_word(x)
