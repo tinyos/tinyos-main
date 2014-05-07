@@ -658,7 +658,6 @@ int unpack_address(struct in6_addr *addr,
           addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
         addr->s6_addr[8] ^= 0x2;
       } else {
-        addr->s6_addr16[4] = htons(letohs(pan) & ~0x0200);
         addr->s6_addr[11] = 0xff;
         addr->s6_addr[12] = 0xfe;
         addr->s6_addr16[7] = leton16(frame->i_saddr);
