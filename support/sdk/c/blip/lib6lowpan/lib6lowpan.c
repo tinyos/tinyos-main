@@ -198,8 +198,7 @@ uint8_t *pack_address(uint8_t *buf,
       return buf += 2;
     } else if (/* maybe it's a 16-bit address with the IID derived from the
                   PANID + address */
-               (addr->s6_addr16[4] == htons(letohs(pan) & ~0x0200) &&
-                addr->s6_addr16[5] == htons(0x00ff) &&
+               (addr->s6_addr16[5] == htons(0x00ff) &&
                 addr->s6_addr16[6] == htons(0xfe00) &&
                 (((l2addr->ieee_mode == IEEE154_ADDR_SHORT) &&
                   addr->s6_addr16[7] == htons(letohs(l2addr->i_saddr))))) ||
