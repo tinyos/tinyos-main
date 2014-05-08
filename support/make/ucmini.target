@@ -13,6 +13,28 @@ AVR_FUSE_L ?= 0xE2
 #writing efuse and flash in the same command causes strange verification error
 #AVR_FUSE_E ?= 0xFF
 
+MOTELIST?=motelist2
+
+MOTELIST2_EXISTS=$(shell $(MOTELIST) --help 2>/dev/null >/dev/null && echo found)
+ifneq (,$(findstring found,$(MOTELIST2_EXISTS)))
+  ifeq ($(findstring install,$(GOALS)),install)
+    ifeq ($(findstring avr109,$(GOALS)),avr109)
+      #search for motes if port is not defined
+      ifeq ($(AVR109),)
+        TEST = $(shell [ `$(MOTELIST) -p|grep -c Mini` -eq 1 ]&& echo found) #use autosearch if and only if there's only one mcp2200 device plugged in
+        ifneq (,$(findstring found,$(TEST)))
+          AVR109 = $(shell $(MOTELIST) -p|grep Mini|cut -d, -f5)
+        else
+          $(error No devices found. Please specify avr109)
+        endif
+      endif
+      
+      USBSERIAL=$(AVR109)
+      -include $(TINYOS_MAKE_PATH)/usbdescriptornodeid.extra
+    endif
+  endif
+endif 
+
 reset:
 	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -reset -sleep 2  -askforreset
 

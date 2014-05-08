@@ -1,0 +1,14 @@
+MOTELIST ?= motelist2
+
+ifneq ($(USBSERIAL),) #only if the serial port is defined
+  RESET_DEVICE ?= $(shell $(MOTELIST) -p|grep $(USBSERIAL)|cut -d, -f1)#get the USB device from the uart device
+endif
+
+ifeq ($(RESET_DEVICE),)
+  $(error "Can't find valid device at port '$(USBSERIAL)'")
+endif
+
+
+mcp2200_reset:
+	mcp2200gpio -l$(RESET_DEVICE) -n$(MCP2200_RESET_PIN) -m$(MCP2200_RESET_MODE) #reset is GPIO4, and active high
+	sleep 1

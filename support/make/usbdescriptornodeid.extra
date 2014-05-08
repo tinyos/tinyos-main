@@ -1,0 +1,15 @@
+MOTELIST ?= motelist2
+
+ifneq ($(USBSERIAL),) #only if the serial port is defined
+  #guess the ID from device description
+  ifeq ($(INSTALL),)
+    TESTID = $(shell $(MOTELIST) -p|grep $(USBSERIAL)|cut -d, -f8|sed 's/.*ID://')#get the id
+    TEST = $(shell echo $(TESTID)|grep "^[0-9]*$$"&&echo found)#check if ID is a number
+    ifneq (,$(findstring found,$(TEST)))
+      INSTALL=$(TESTID)
+      $(info NodeID found: '$(TESTID)')
+    else
+      $(info NodeID not found.)
+    endif
+  endif
+endif

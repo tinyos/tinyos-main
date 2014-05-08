@@ -13,18 +13,38 @@ AVR_FUSE_L ?= 0xE2
 #writing efuse and flash in the same command causes strange verification error
 #AVR_FUSE_E ?= 0xFF
 
-reset:
+MOTELIST?=motelist2
+
+MOTELIST2_EXISTS=$(shell $(MOTELIST) --help 2>/dev/null >/dev/null && echo found)
+ifneq (,$(findstring found,$(MOTELIST2_EXISTS)))
+  ifeq ($(findstring install,$(GOALS)),install)
+    ifeq ($(findstring avr109,$(GOALS)),avr109)
+      #search for motes if port is not defined
+      ifeq ($(AVR109),)
+        TEST = $(shell [ `$(MOTELIST) -p|grep -c ProtonB` -eq 1 ]&& echo found) #use autosearch if and only if there's only one mcp2200 device plugged in
+        ifneq (,$(findstring found,$(TEST)))
+          AVR109 = $(shell $(MOTELIST) -p|grep ProtonB|cut -d, -f5)
+        else
+          $(error No devices found. Please specify avr109)
+        endif
+      endif
+      
+      USBSERIAL=$(AVR109)
+      -include $(TINYOS_MAKE_PATH)/usbdescriptornodeid.extra
+      MCP2200_RESET_PIN=4
+      MCP2200_RESET_MODE=spike
+      -include $(TINYOS_MAKE_PATH)/mcp2200reset.extra
+    endif
+  endif
+  RESETTARGET=mcp2200_reset
+else
+  RESETTARGET=softreset
+endif 
+
+softreset:
 	java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -baudrate $(AVR109_BAUDRATE) -reset -sleep 2  -askforreset
 
-#this reset technique needs an external app, which is coming soon
-#MCP2200_RESET_PIN=4
-#MCP2200_RESET_MODE=spike
-#ifeq ($(findstring install,$(GOALS)),install)
-#  ifeq ($(findstring avr109,$(GOALS)),avr109)
-#    -include $(TINYOS_MAKE_PATH)/mcp2200nodeid.extra
-#    -include $(TINYOS_MAKE_PATH)/mcp2200reset.extra
-#  endif
-#endif
+reset:$(RESETTARGET)
 
 $(call TOSMake_include_platform,avr)
 
