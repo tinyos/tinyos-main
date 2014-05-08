@@ -1,0 +1,77 @@
+import os
+import os.path
+import struct
+
+def readToVar(path):
+  file = open(path, "r")
+  variable=file.read()
+  file.close()
+  if(variable[-1]=="\n" or variable[-1]=="\x00"):
+    variable=variable[:-1]
+  return variable
+
+#We search for devices like:
+#TODO
+def getAllDevices():
+  devs = []
+  for basedir in ["/proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Enum/USB", "/proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Enum/FTDIBUS"]: 
+    for devdir in os.listdir(basedir):#all usb devs
+      if(devdir.startswith("VID_")):#except root hubs
+        for filename in os.listdir(basedir+"/"+devdir):#devices by vid&pid
+          fileabsname=basedir+"/"+devdir+"/"+filename  #devices by vid&pid and serial
+          if(os.path.exists(fileabsname+"/Device Parameters/PortName")):
+            properties={'vid':"0", 'pid':"0", 'serialnum':"0", 'location':"0", 'port':"0", 'manufacturer':"0", 'description':"0", 'active':False}
+            properties['port']=readToVar(fileabsname+"/Device Parameters/PortName")
+            if(basedir.endswith("FTDIBUS")):
+              properties['vid']=fileabsname[fileabsname.rfind("VID_")+4:fileabsname.rfind("+PID_")]
+              properties['pid']=fileabsname[fileabsname.rfind("+PID_")+5:fileabsname.rfind("+")]
+              properties['serialnum']=fileabsname[fileabsname.rfind("+")+1:fileabsname.rfind("/")-1]#last charachter is A for first serial, B for second etc.
+              properties['manufacturer']=readToVar(fileabsname+"/Mfg")
+              properties['manufacturer']=properties['manufacturer'][properties['manufacturer'].rfind(";")+1:]
+              properties['description']=readToVar(fileabsname+"/DeviceDesc")
+              properties['description']=properties['description'][properties['description'].rfind(";")+1:]
+              rootdevice="/proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Enum/USB/VID_"\
+                +properties['vid']+"&PID_"+properties['pid']+"/"+properties['serialnum']
+              properties['location']=readToVar(rootdevice+"/LocationInformation")
+              properties['location']=properties['location'][6:10]+":"+properties['location'][-4:]
+              symname=readToVar(rootdevice+"/Device Parameters/SymbolicName")
+            elif(os.path.exists(fileabsname+"/Device Parameters/SymbolicName")):#not &MI## port, like cp2102
+              properties['vid']=fileabsname[fileabsname.rfind("VID_")+4:fileabsname.rfind("&PID_")]
+              properties['pid']=fileabsname[fileabsname.rfind("&PID_")+5:fileabsname.rfind("/")]
+              properties['serialnum']=fileabsname[fileabsname.rfind("/")+1:]
+              properties['manufacturer']=readToVar(fileabsname+"/Mfg")
+              properties['manufacturer']=properties['manufacturer'][properties['manufacturer'].rfind(";")+1:]
+              properties['description']=readToVar(fileabsname+"/DeviceDesc")
+              properties['description']=properties['description'][properties['description'].rfind(";")+1:]
+              properties['location']=readToVar(fileabsname+"/LocationInformation")
+              properties['location']=properties['location'][6:10]+":"+properties['location'][-4:]
+              symname=readToVar(fileabsname+"/Device Parameters/SymbolicName")
+            else:# &MI## port (interface?), search for the base device
+              parentId=fileabsname[fileabsname.rfind("/")+1:]
+              fileabsname=fileabsname[:fileabsname.rfind("&MI")]
+              if(not os.path.exists(fileabsname)):
+                continue
+              for serial in os.listdir(fileabsname):
+                if(os.path.exists(fileabsname+"/"+serial+"/ParentIdPrefix") and parentId.startswith(readToVar(fileabsname+"/"+serial+"/ParentIdPrefix"))):
+                  fileabsname+="/"+serial
+                  properties['vid']=fileabsname[fileabsname.rfind("VID_")+4:fileabsname.rfind("&PID_")]
+                  properties['pid']=fileabsname[fileabsname.rfind("&PID_")+5:fileabsname.rfind("/")]
+                  properties['serialnum']=serial
+                  properties['manufacturer']=readToVar(fileabsname+"/Mfg")
+                  properties['manufacturer']=properties['manufacturer'][properties['manufacturer'].rfind(";")+1:]
+                  properties['description']=readToVar(fileabsname+"/DeviceDesc")
+                  properties['description']=properties['description'][properties['description'].rfind(";")+1:]
+                  properties['location']=readToVar(fileabsname+"/LocationInformation")
+                  properties['location']=properties['location'][6:10]+":"+properties['location'][-4:]
+                  symname=readToVar(fileabsname+"/Device Parameters/SymbolicName")
+                else:
+                  continue
+            symname=symname[symname.find("{"):]+"}"#trim vid, pid, etc
+            fileabsname="/proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/DeviceClasses/"\
+              +symname+"/##?#USB#VID_"+properties['vid']+"&PID_"+properties['pid']+"#"+properties['serialnum']+"#"+symname+"/Control/ReferenceCount"
+            if(os.path.exists(fileabsname)):
+              count = struct.unpack("i",open(fileabsname, "rb").read())[0]
+              if(count>0):
+                properties['active']=True
+            devs.append(properties)
+  return devs

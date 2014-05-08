@@ -1,0 +1,92 @@
+#!@pathpython@
+import getopt
+import sys
+sys.path.append("@tinyoslibdir@")
+from motelist2_getdevices import getAllDevices
+
+classic=False
+parsable=False
+filters={'vid':[], 'pid':[], 'serialnum':[], 'location':[], 'port':[], 'manufacturer':[], 'description':[], 'active':False}
+
+
+def printhelp(exitVal):
+  print("motelist - Locate connected virtual serial ports")
+  print("Usage:")
+  print(sys.argv[0] + " [options]")
+  print("")
+  print("Options:")
+  print("\t -h, --help\n\t\t Prints this help.")
+  print("\t -c, --classic\n\t\t Emulates the old motelist -c command. Usable for bsl.")
+  print("\t -p, --parsable\n\t\t Prints each device in a comma separated line.")
+  print("")
+  print("Output columns:")
+  print("\t Loc: USB device location, format: <Bus number>:<device number> on linux")
+  print("\t VID: Vendor ID in hexadecimal number")
+  print("\t PID: Product ID in hexadecimal number")
+  print("\t Serial: USB serial number in hexadecimal number")
+  print("\t Device: Serial port device file")
+  print("\t Active: True, if the serial port is plugged in. It can be false only on windows")
+  print("\t Manufacturer: Manufacturer string")
+  print("\t Description: Description string")
+  print("Classic format:")
+  print("\t \"Serial,Device,Manufacturer Description\"")
+  print("Parsable format:")
+  print("\t \"Loc,VID,PID,Serial,Device,Active,Manufacturer,Description\"")
+  exit(exitVal)
+  
+optlist, args = getopt.getopt(sys.argv[1:], 'hcp', ["help", "classic", "parsable"])
+for o,a in optlist:
+  if o in ("-h", "--help"):
+    printhelp(0)    
+  elif o in ("-c", "--classic"):
+    classic = True
+  elif o in ("-p", "--parsable"):
+    parsable = True
+
+devices=getAllDevices()
+if(classic):
+  tempDevs = devices
+  devices = []
+  for device in tempDevs:
+    if( (device['vid'] == "0403" and device['pid'] == "6001") or\
+      (device['vid'] == "10c4" and device['pid'] == "ea60")):
+        devices.append(device)
+    
+if len(devices)==0:
+  print("No devices found.")
+else:
+  if(classic):
+    print(device['serialnum']+","+device['port']+","+device['manufacturer']+" "+device['description'])
+  else:
+    if( not parsable ):
+      print("Loc".rjust(4)+" "+\
+          "VID".rjust(4)+" "+\
+          "PID".rjust(4)+" "+\
+          "Serial".rjust(10)+" "+\
+          "Device".rjust(15)+" "+\
+          "Active".rjust(6)+" "+\
+          "Manufacturer; Description")
+      print("----".rjust(4)+" "+\
+          "----".rjust(4)+" "+\
+          "----".rjust(4)+" "+\
+          "----------".rjust(10)+" "+\
+          "---------------".rjust(15)+" "+\
+          "------".rjust(6)+" "+\
+          "------------- -----------")
+      for device in devices:
+        print((device['location']).rjust(4)+" "+\
+          device['vid'].rjust(4)+" "+\
+          device['pid'].rjust(4)+" "+\
+          device['serialnum'].rjust(10)+" "+\
+          device['port'].rjust(15)+" "+\
+          str(device['active']).rjust(6)+" "+\
+          device['manufacturer']+"; "+device['description'])
+    else:
+      for device in devices:
+        print((device['location'])+","+\
+          device['vid']+","+\
+          device['pid']+","+\
+          device['serialnum']+","+\
+          device['port']+","+\
+          ("T," if device['active'] else "F,")+\
+          device['manufacturer']+","+device['description'])

@@ -149,6 +149,12 @@ AC_OUTPUT(
 	platforms/sam3/samba-program.py
 	platforms/sam3/Makefile
 	platforms/intelmote2/openocd/imote2-ocd-program.py
+	platforms/ucmote/Makefile
+	platforms/ucmote/mcp2200gpio/Makefile
+	platforms/ucmote/motelist2/Makefile
+	platforms/ucmote/motelist2/motelist2
+	platforms/ucmote/motelist2/motelist2_getdevices-cygwin.py
+	platforms/ucmote/motelist2/motelist2_getdevices-linux.py
 	tinyos/Makefile
 	tinyos/java/Makefile
 	tinyos/java/env/Makefile
