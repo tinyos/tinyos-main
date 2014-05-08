@@ -20,6 +20,7 @@ define AVR_HELP
    the same name in all caps (such as MIB510, EPRB, or AVRISP).
 
 endef
+
 HELP += $(AVR_HELP)
 
 ifdef MAKE_DEPUTY_FLAG
@@ -51,7 +52,7 @@ VOLUMEFILE ?= volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
 VOLUME_ALLOCATOR_FLAGS ?=
 
-PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
+PFLAGS += -Wno-unused-but-set-variable -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
