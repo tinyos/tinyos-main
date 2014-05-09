@@ -1,0 +1,31 @@
+Origin: tinyos
+Label: tinyos-squeeze-tinyos
+Codename: squeeze
+Architectures: i386 amd64
+Components: main
+Description: general TinyOS Debian/Ubuntu repository
+SignWith: yes
+
+Origin: tinyos
+Label: tinyos-squeeze-tinyos
+Codename: wheezy
+Architectures: i386 amd64
+Components: main
+Description: general TinyOS Debian/Ubuntu repository
+SignWith: yes
+
+Origin: tinyos
+Label: tinyos-msp430-46
+Codename: msp430-46
+Architectures: i386 amd64
+Components: main
+Description: mspgcc 4.6.3 toolchain (debian/ubuntu)
+SignWith: yes
+
+Origin: tinyos
+Label: tinyos-msp430-47
+Codename: msp430-47
+Architectures: i386 amd64
+Components: main
+Description: mspgcc 4.7 toolchain EXPERIMENTAL (debian/ubuntu)
+SignWith: yes
