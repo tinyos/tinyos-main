@@ -141,6 +141,16 @@ case $1 in
 	package_mspdebug_rpm
 	;;
 
+    repo)
+	setup_deb
+	if [[ -z "${REPO_DEST}" ]]; then
+	    REPO_DEST=${TOSROOT}/packaging/repo
+	fi
+	echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
+	echo -e   "*** Using packages from ${PACKAGES_DIR}\n"
+	find ${PACKAGES_DIR} -iname "*.deb" -exec reprepro -b ${REPO_DEST} includedeb ${CODENAME} '{}' \;
+	;;
+
     local)
 	setup_local
 	download
