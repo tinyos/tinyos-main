@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-# Duplicates what is in tools/platforms/msp430/toolchain*
-#
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
 # set TOSROOT to the head of the tinyos source tree root.
@@ -11,13 +9,14 @@
 # Env variables used....
 #
 # TOSROOT	head of the tinyos source tree root.  Used for base of default repo
-# PACKAGES_DIR	where packages get stashed.  Defaults to $(TOSROOT)/packages
-# REPO_DEST	Where the repository is being built (no default)
+# PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
+# REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TOSROOT}/packaging/repo/conf.
 #
 
 #default variables: overridable in build.sh
@@ -34,7 +33,7 @@ fi
 setup_package_target(){
 	INSTALLDIR=${BUILD_ROOT}/${1}_${2}-${3}/
 	if [[ -z "${PACKAGES_DIR}" ]]; then
-		PACKAGES_DIR=${BUILD_ROOT}
+		PACKAGES_DIR=${BUILD_ROOT}/packages
 	fi
 	echo      "*** Install Directory ${INSTALLDIR}"
 	echo      "*** Debian package Directory ${PACKAGES_DIR}"

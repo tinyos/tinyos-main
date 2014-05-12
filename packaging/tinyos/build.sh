@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-# Duplicates what is in tools/platforms/msp430/toolchain*
-#
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
 # set TOSROOT to the head of the tinyos source tree root.
@@ -11,13 +9,14 @@
 # Env variables used....
 #
 # TOSROOT	head of the tinyos source tree root.  Used for base of default repo
-# PACKAGES_DIR	where packages get stashed.  Defaults to $(TOSROOT)/packages
-# REPO_DEST	Where the repository is being built (no default)
+# PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
+# REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TOSROOT}/packaging/repo/conf.
 #
 
 COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
@@ -93,8 +92,8 @@ case $1 in
     ;;
 
   deb)
-		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-		cd ${BUILD_ROOT}
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
     installto
@@ -105,8 +104,8 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-		cd ${BUILD_ROOT}
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
     installto

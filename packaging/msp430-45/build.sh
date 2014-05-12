@@ -19,12 +19,13 @@
 #
 # TOSROOT	head of the tinyos source tree root.  Used for base of default repo
 # PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
-# REPO_DEST	Where the repository is being built (defaults to ${TOSROOT}/tools/repo)
+# REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TOSROOT}/packaging/repo/conf.
 #
 # we use opt for these tools to avoid conflicting with placement from normal
 # distribution paths (debian or ubuntu repositories).
@@ -633,7 +634,7 @@ case $1 in
     repo)
 	setup_deb
 	if [[ -z "${REPO_DEST}" ]]; then
-	    REPO_DEST=${TOSROOT}/tools/repo
+	    REPO_DEST=${TOSROOT}/packaging/repo
 	fi
 	echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
 	echo -e   "*** Using packages from ${PACKAGES_DIR}\n"
