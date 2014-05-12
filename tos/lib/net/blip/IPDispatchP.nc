@@ -101,7 +101,7 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
   };
   uint8_t state = S_STOPPED;
   bool radioBusy;
-  bool ack_Required=TRUE;
+  bool ack_Required=TRUE;	//to check whether ack is required for the packet sent
   uint8_t current_local_label = 0;
   ip_statistics_t stats;
 

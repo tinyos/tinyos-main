@@ -56,7 +56,6 @@ module IPNeighborDiscoveryP {
 
   command error_t NeighborDiscovery.resolveAddress(struct in6_addr *addr,
                                                    ieee154_addr_t *link_addr) {
-    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       if (addr->s6_addr16[5] == htons(0x00FF) &&

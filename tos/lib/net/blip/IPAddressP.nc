@@ -93,7 +93,7 @@ module IPAddressP {
     ieee154_laddr_t eui = call Ieee154Address.getExtAddr();
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
-      // link-local
+      // link-local address format : fe80::ff:fe00:16-bit short (RFC6282)
       if (m_short_addr &&
           addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
