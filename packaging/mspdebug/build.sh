@@ -29,7 +29,7 @@ fi
 echo -e "\n*** TOSROOT: $TOSROOT"
 echo "*** Destination: ${DEB_DEST}"
 
-MSPDEBUG_VER=0.20
+MSPDEBUG_VER=0.22
 MSPDEBUG=mspdebug-${MSPDEBUG_VER}
 
 setup_deb()
