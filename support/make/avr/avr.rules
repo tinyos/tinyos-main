@@ -52,7 +52,7 @@ VOLUMEFILE ?= volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
 VOLUME_ALLOCATOR_FLAGS ?=
 
-PFLAGS += -Wno-unused-but-set-variable -Wall -Wshadow $(NESC_FLAGS)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
@@ -62,11 +62,16 @@ PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 AVRGCCMAJOR = $(shell avr-gcc -v 2>&1 | grep "gcc version" | sed -n 's/gcc version \([2-5]\)\.\([0-9]\)\.\([0-9]\).*/\1/p')
+AVRGCCMINOR = $(shell avr-gcc -v 2>&1 | grep "gcc version" | sed -n 's/gcc version \([2-5]\)\.\([0-9]\)\.\([0-9]\).*/\2/p')
 ifeq ($(AVRGCCMAJOR),4)
   PFLAGS += --param max-inline-insns-single=100000
+  ifneq ($(AVRGCCMINOR),1)
+    PFLAGS+=-Wno-unused-but-set-variable 
+  endif
 else
   PFLAGS += -finline-limit=100000
 endif
+
 
 ifeq ($(PROGRAMMER),avrdude)
   ifeq ($(findstring Darwin, $(shell uname)), Darwin)
