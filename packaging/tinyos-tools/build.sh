@@ -33,8 +33,8 @@ MAKE="make -j8"
 download()
 {
   mkdir -p ${SOURCEDIRNAME}
-	cp -R ${TOSROOT}/tools ${SOURCEDIRNAME}
-	cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}
+  cp -R ${TOSROOT}/tools ${SOURCEDIRNAME}
+  cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}
 }
 
 build()
@@ -50,7 +50,7 @@ build()
 
 installto()
 {
-	cd ${SOURCEDIRNAME}/tools
+  cd ${SOURCEDIRNAME}/tools
   ${MAKE} DESTDIR=${INSTALLDIR} install
 }
 
@@ -78,9 +78,9 @@ cleaninstall(){
 BUILD_ROOT=$(pwd)
 case $1 in
   test)
-		installto
-# 		cd ${BUILD_ROOT}
-#		package_deb
+    installto
+#   cd ${BUILD_ROOT}
+#   package_deb
     ;;
 
   download)
@@ -113,8 +113,8 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-		cd ${BUILD_ROOT}
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
     build
@@ -156,4 +156,3 @@ case $1 in
     echo -e "\n./build.sh <target>"
     echo -e "    local | rpm | deb | clean | veryclean | download | tarball"
 esac
-
