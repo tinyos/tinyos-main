@@ -84,7 +84,7 @@ package_deb()
 {
     VER=${NESC_VER}
     DEB_VER=${VER}${POST_VER}
-    echo -e "\n***" debian archive: ${DEB_VER}
+    echo -e "\n***" debian archive: ${NESC} \-\> ${PACKAGES_DIR}
     cd ${NESC}
     mkdir -p debian/DEBIAN debian/${DEB_DEST}
     find debian/${DEB_DEST}/bin/ -type f \

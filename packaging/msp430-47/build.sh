@@ -266,7 +266,7 @@ package_binutils_deb()
     VER=${BINUTILS_VER}
     LAST_PATCH=$(last_patch msp430-binutils-*.patch)
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${BINUTILS}
+    echo -e "\n***" debian archive: ${BINUTILS} \-\> ${PACKAGES_DIR}
     (
 	cd ${BINUTILS}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -325,7 +325,7 @@ package_gcc_deb()
     VER=${GCC_VER}
     LAST_PATCH=$(last_patch msp430-gcc-*.patch)
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${GCC}
+    echo -e "\n***" debian archive: ${GCC} \-\> ${PACKAGES_DIR}
     (
 	cd ${GCC}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -385,7 +385,7 @@ package_mcu_deb()
     else
 	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
-    echo -e "\n***" debian archive: ${MSP430MCU}
+    echo -e "\n***" debian archive: ${MSP430MCU} \-\> ${PACKAGES_DIR}
     (
 	cd ${MSP430MCU}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -448,7 +448,7 @@ package_libc_deb()
     else
 	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
-    echo -e "\n***" debian archive: ${MSP430LIBC}
+    echo -e "\n***" debian archive: ${MSP430LIBC} \-\> ${PACKAGES_DIR}
     (
 	cd ${MSP430LIBC}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -506,7 +506,7 @@ package_gdb_deb()
 	LAST_PATCH=$(last_patch gdb-*.patch)
     fi
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${GDB}
+    echo -e "\n***" debian archive: ${GDB} \-\> ${PACKAGES_DIR}
     (
 	cd ${GDB}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -540,7 +540,7 @@ package_gdb_rpm()
 package_dummy_deb()
 {
     set -e
-    echo -e "\n***" debian archive: msp430-47
+    echo -e "\n***" debian archive: msp430-47 \-\> ${PACKAGES_DIR}
     (
 	mkdir -p tinyos
 	cd tinyos

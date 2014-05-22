@@ -81,7 +81,7 @@ package_mspdebug_deb()
     (
 	VER=${MSPDEBUG_VER}
 	DEB_VER=${VER}${POST_VER}
-	echo -e "\n***" debian archive: ${MSPDEBUG}${POST_VER}
+	echo -e "\n***" debian archive: ${MSPDEBUG}${POST_VER} \-\> ${PACKAGES_DIR}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
 	cat mspdebug.control \
 	    | sed 's/@version@/'${DEB_VER}'/' \
