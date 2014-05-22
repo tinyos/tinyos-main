@@ -23,6 +23,9 @@ COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
 
 
+BUILD_ROOT=$(pwd)
+CODENAME=squeeze
+
 SOURCENAME=tinyos-tools
 SOURCEVERSION=1.4.3
 SOURCEDIRNAME=${SOURCENAME}-${SOURCEVERSION}
@@ -74,8 +77,7 @@ cleaninstall(){
   remove ${INSTALLDIR}
 }
 
-#main funcition
-BUILD_ROOT=$(pwd)
+#main function
 case $1 in
   test)
     installto
@@ -127,7 +129,7 @@ case $1 in
     ;;
 
   repo)
-    setup_deb
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
     if [[ -z "${REPO_DEST}" ]]; then
       REPO_DEST=${TOSROOT}/packaging/repo
     fi
