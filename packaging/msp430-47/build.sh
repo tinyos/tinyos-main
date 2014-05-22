@@ -36,7 +36,7 @@ POST_VER=-expr
 : ${POST_VER:=-tinyos}
 
 DEB_DEST=opt/msp430-47-expr
-CODENAME=msp430-47-expr
+CODENAME=msp430-47
 REL=EXP
 MAKE_J=-j8
 
