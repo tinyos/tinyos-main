@@ -1,0 +1,175 @@
+<div style='
+     font-family: Georgia, serif;
+     font-size: 17px;
+     line-height: 1.2em;'
+>
+
+<p><b>TinyOS Debian Development Repository</b></p>
+Last update: 20140522, cire
+<br>(Changelog at end)
+
+<br><br>
+4 repositories are homed here that maybe useful to the TinyOS development community.
+
+<ul>
+<li><b><i>squeeze</i></b> and <b><i>wheezy</i></b>: contain general tinyos tools.   Useful on multiple target platforms.
+<li><b><i>msp430-46</i></b>: current cross compiler toolchain for msp430 based TinyOS development,
+<a href='http://tinyprod.net/repos/debian/README-46.html'> README-46</a>.
+<br> <br>
+<li><b><i>msp430-47</i></b>: experimental mspgcc 4.7.0 cross compiler for msp430 platforms, (20 bit support),
+<a href='http://tinyprod.net/repos/debian/README-47.html'> README-47</a>.
+</ul>
+<br>
+<p><b>Squeeze</b> and <b>Wheezy</b>, the main repositories, contain the following packages for <i>i386</i> and <i>amd64</i>:</p>
+
+<ul>
+<li>nesc: 1.3.5
+<li>tinyos-tools: 1.4.3
+<li>mspdebug: 0.22
+<br><br>
+<li>avarice-tinyos: 2.11-20110905
+<li>avr-binutils-tinyos: 2.17-20110905
+<li>avr-gcc-tinyos: 4.1.2-20110905
+<li>avr-libc-tinyos: 1.6.7-20110905
+<li>avr-tinyos: 20110905
+<li>avrdude-tinyos: 5.10-20110905
+<br><br>
+<li>avr-binutils-tinyos-legacy: 2.17-20110905 &dagger;
+<li>avr-gcc-tinyos-legacy: 4.1.2-20110905 &dagger;
+<li>avr-libc-tinyos-legacy: 1.4.7-20110905 &dagger;
+<li>avr-tinyos-legacy: 20110905 &dagger;
+<li>avrdude-tinyos-legacy: 5.4-20110904 &dagger;
+<li>uisp-tinyos: 20050519tinyos-20111126
+<br><br>
+<li>msp430-binutils-tinyos-legacy: 2.17-20110905 &dagger;
+<li>msp430-gcc-tinyos-legacy: 3.2.3-20110905 &dagger;
+<li>msp430-libc-tinyos-legacy: 20060801cvs-20110905 &dagger;
+<li>msp430-tinyos-legacy: 20110905 &dagger;
+<br><br>
+<li>arm-all-tinyos: 2011.03-42-20110912 <i><small>(i386 only)</small></i>&Dagger;
+</ul>
+
+<div style='
+     font-size: 14px;
+     line-height: 1.1em;
+     color: #777;'
+>
+
+<p>&dagger; The *-legacy packages contains the old toolchains used by
+tinyos-2.1.1 (and older).
+<br />
+&Dagger; This is only available for <i>i386</i> and it is a temporary
+package based on the binary provided
+by <a href='https://sourcery.mentor.com/sgpp/lite/arm/portal/release1802'>Code
+Sourcery</a>.
+</p>
+</div>
+<br>
+<p>You may need to remove old *-tinyos packages.   To do so, follow these instructions:</p>
+
+<ol>
+<li>Remove previously installed *-tinyos packages:
+<pre>
+  $ sudo dpkg -P `dpkg -l nesc '*tinyos*' | grep ^ii | awk '{ print $2 }' | xargs`
+  $ sudo apt-get clean
+</pre>
+
+<li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
+<pre>
+  deb http://tinyprod.net/repos/debian squeeze main
+  deb http://tinyprod.net/repos/debian msp430-46 main
+
+  $ cd /etc/apt/sources.list.d
+  $ sudo echo "deb http://tinyprod.net/repos/debian squeeze main" >> tinyprod-debian.list
+  $ sudo echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
+
+</pre>
+
+<li>Install the new packages:
+<pre>
+  $ sudo apt-get update
+  $ sudo apt-get install nesc tinyos-tools msp430-46 avr-tinyos
+
+</pre>
+
+</ol>
+
+<p>If you want to uninstall the packages you can do it like this:</p>
+
+<pre>
+  $ sudo apt-get autoremove --purge nesc tinyos-tools msp430-46 avr-tinyos
+</pre>
+
+<br><br>
+<div style='
+     border:   1px solid red;
+     padding: 10px;
+     background-color: #FFC2C2;
+     width: 45em;'>
+
+<div style='font-family: sans-serif; font-weight: bold;'>Note</div>
+
+<p>These repositories are signed with the following key:</p>
+<pre>
+  pub   2048R/A9B913B9 2014-05-09
+        Key fingerprint = 481E 5089 F39D 2A53 F6BB  E071 DBCA 24B8 A9B9 13B9
+  uid   TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
+</pre>
+
+<p>A public copy of the key can be found in repos/debian/tinyprod.key.  It can
+be installed by the following:</p>
+
+<pre>
+  $ wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+</pre>
+
+<p>Alternatively, the key can be added from the ubuntu keyserver via:</p>
+
+<pre>
+  $ gpg --keyserver keyserver.ubuntu.com --recv-keys A9B913B9
+  $ gpg -a --export A9B913B9 | sudo apt-key add -
+</pre>
+
+</div>
+
+<p>-- Eric Decker (cire831@gmail.com) (May 22, 2014)</p>
+
+<pre>
+
+
+</pre>
+
+<p><b>Changelog:</b></p>
+<pre>
+  20140522, cire: update mspdebug to 0.22
+                  update nesc to 1.3.5
+                  update tinyos-tools to 1.4.3
+                  change signing key to the TinyProd signing key
+                  add wheezy references
+  20120815, cire: update mspdebug to 0.20
+  20120720, cire: bring arm-all back in.
+  20120717, cire: typos in README.
+  20120716, cire: rebuild tinyprod repository, squeeze, msp430-4{5-7}
+
+  20120427, cire: add mspgcc 4.7.0 reference
+
+  20120410, cire: mspdebug 0.19
+	add msp430-46, mspgcc 4.6.3 experimental repository.
+
+  20120319, cire: amd64 fixed. new msp430-gcc package that includes SF3500740 and
+	SF3420924.  Add ReleaseNotes.txt
+
+  20120305, cire:  resync'd with Razvan's debian repo to make sure AMD64 works
+	properly.  It doesn't.   AMD64 is still back rev'd.
+
+  20120107, cire: update msp430-gcc-tinyos to include patches through 20111105
+	note: (msp430-*) tinyos-tools, binutils, gdb, libc, mcu are repackaged as
+	an artifact of the package build process.
+
+	mspdebug revised to version 0.18.
+
+  20111127, cire: new tinyos-tools, uisp-tinyos packages
+  20111010, cire: installed as debian-dev
+</pre>
+
+</div>

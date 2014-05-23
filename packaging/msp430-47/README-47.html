@@ -85,21 +85,28 @@ This allows for easy comparisons between current and experimental toolchains.
 
 <p>This repository is signed with the following key:</p>
 <pre>
-  pub   2048R/34EC655A 2011-02-28
-        Key fingerprint = 2ADB 95E2 E116 3F0C 0B55  73F0 DB53 87FB 34EC 655A
-  uid                  Eric Decker <cire831@gmail.com>
+  pub   2048R/A9B913B9 2014-05-09
+        Key fingerprint = 481E 5089 F39D 2A53 F6BB  E071 DBCA 24B8 A9B9 13B9
+  uid   TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
 </pre>
 
-<p>To install the key in the local apt keyring you have to do the following:</p>
+<p>A public copy of the key can be found in repos/debian/tinyprod.key.  It can
+be installed by the following:</p>
 
 <pre>
-  $ gpg --keyserver keyserver.ubuntu.com --recv-keys 34EC655A
-  $ gpg -a --export 34EC655A | sudo apt-key add -
+  $ wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+</pre>
+
+<p>Alternatively, the key can be added from the ubuntu keyserver via:</p>
+
+<pre>
+  $ gpg --keyserver keyserver.ubuntu.com --recv-keys A9B913B9
+  $ gpg -a --export A9B913B9 | sudo apt-key add -
 </pre>
 
 </div>
 
-<p>-- cire (July 16, 2012)</p>
+<p>-- cire (May 22, 2014)</p>
 
 
 <pre>
@@ -109,11 +116,10 @@ This allows for easy comparisons between current and experimental toolchains.
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140522, cire: convert to using the TinyProd signing key
   20120716, cire: restructure tinyprod repository.  reorganization,  update.
-
   20120430, cire: update gdb to include patch for Unhandled dwarf expression opcode 0xf3
     (added in gcc 4.7)
-
   20120427, cire: initial release
 </pre>
 
