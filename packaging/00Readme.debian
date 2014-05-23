@@ -1,0 +1,93 @@
+
+Building a Debian Repository
+
+These are instructions for building Debian archives and a corresponding
+repository from TinyOS packaging.
+
+Build environment: packages are built on i386 (32 bit) and amd64 (64 bit)
+machines running Debian 6 (squeeze).
+
+Following codenames exist:
+
+  squeeze:   generic packages built on squeeze (debian 6).
+  wheezy:    generic packages built on wheezy  (debian 7).
+  msp430-46: holds the msp430 mainline compiler (4.6.3).
+  msp430-47: experimental 4.7 (20 bit support).
+
+Prerequisites:
+
+  install build-essential automake autoconf libtool libc6-dev git-core
+          git-daemon-run git-doc git-email git-gui gitk gitmagic
+          openssh-client openssh-server
+
+  install gperf bison flex libzip-dev gnupg-agent lzma reprepro
+          dpkg-sig default-jdk
+
+Each packaging directory builds a package or a group of related packages.
+This is controlled by a build script at the top level, "build.sh".
+
+1) Pull current release or development tip of the tinyos sources.
+
+   cd ~/top
+   mkdir t2_cur
+   cd t2_cur
+   git clone -v git://github.com/tinyos/tinyos-main.git tinyos-2.x
+   cd tinyos-2.x
+
+2) Create location for the repository.   Copy starting configuration
+   from packaging/repo.
+
+   mkdir repo
+   cp -R packaging/repo/conf repo/conf
+
+3) By default, repo/conf/distributions has "SignWith: yes" which means the
+   repository will be signed with your default key (~/.gnupg/gpg.conf).  You
+   want to change this to a known signature.  For example to use the TinyProd
+   signing key one can use "SignWith: A9B913B9" or "SignWith: TinyProd".  You
+   have to have the key on your secret keyring.
+   
+4) set environment variables.
+
+   export TOSROOT=${HOME}/top/t2_cur/tinyos-2.x
+   export TOSDIR=${TOSROOT}/tos
+   export MAKERULES=${TOSROOT}/support/make/Makerules
+   export CLASSPATH=.:${TOSROOT}/support/sdk/java/tinyos.jar
+
+   export REPO_DEST=${TOSROOT}/repo             # defaults to packaging/repo
+   export POST_VER=-tinyprod                    # defaults to -tinyos
+
+   PACKAGING_DIR defaults to ${BUILD_DIR}/packaging, local package being
+   built.  And typically doesn't need to be changed.
+
+
+   See ./build.sh for other environment variables that might need to be
+   modified.  You might need to change "MAKE_J=-j8" to -j1 if errors occur.
+   DEB_DEST determines where in the file hierarchy the final binaries will
+   be placed when the package is installed.  The default is "/usr".
+   Expermental packages typically get placed into /opt.
+
+
+For each package in ${TOSROOT}/packaging:
+
+1) Build package
+
+   ./build.sh deb
+
+   This will download any sources and patch files and compile the binaries
+   that get packaged.  These packages will be placed in ${BUILD_DIR}/packages
+   which is local to the package being built.
+
+2) Sign package
+
+   dpkg-sig -s builder -k <key sig> packaging/*.deb
+
+3) Add packages to the repository
+
+   ./build.sh repo
+
+   This will take packages in ${PACKAGES_DIR} (defaults to
+   ${BUILD_DIR}/packages) and adds them to the repository being built in
+   ${REPO_DEST}.
+
+
+Note, to build the tinyos-tools package one needs to have "nesc" installed.
