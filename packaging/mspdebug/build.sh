@@ -134,6 +134,15 @@ case $1 in
 	package_mspdebug_deb
 	;;
 
+    sign)
+        setup_deb
+        if [[ -z "$2" ]]; then
+            dpkg-sig -s builder ${PACKAGES_DIR}/*
+        else
+            dpkg-sig -s builder -k $2 ${PACKAGES_DIR}/*
+        fi
+        ;;
+
     rpm)
 	setup_rpm
 	download
@@ -159,5 +168,5 @@ case $1 in
 
     *)
 	echo -e "\n./build.sh <target>"
-	echo -e "    local | rpm | deb | clean | veryclean | download"
+	echo -e "    local | rpm | deb | sign | repo | clean | veryclean | download"
 esac

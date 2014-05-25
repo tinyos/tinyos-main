@@ -626,6 +626,15 @@ case $1 in
 	package_dummy_deb
  	;;
 
+    sign)
+        setup_deb
+        if [[ -z "$2" ]]; then
+            dpkg-sig -s builder ${PACKAGES_DIR}/*
+        else
+            dpkg-sig -s builder -k $2 ${PACKAGES_DIR}/*
+        fi
+        ;;
+
     repo)
 	setup_deb
 	if [[ -z "${REPO_DEST}" ]]; then
@@ -665,5 +674,5 @@ case $1 in
 
     *)
 	echo -e "\n./build.sh <target>"
-	echo -e "    local | rpm | deb | repo | clean | veryclean | download"
+	echo -e "    local | rpm | deb | sign | repo | clean | veryclean | download"
 esac
