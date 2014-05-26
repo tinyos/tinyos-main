@@ -7,7 +7,7 @@ Description: general TinyOS Debian/Ubuntu repository
 SignWith: yes
 
 Origin: tinyos
-Label: tinyos-squeeze-tinyos
+Label: tinyos-wheezy-tinyos
 Codename: wheezy
 Architectures: i386 amd64
 Components: main
