@@ -3,6 +3,6 @@ Version: %{version}
 Section: devel
 Priority: optional
 Architecture: %{architecture}
-Depends: python, python-serial, perl, nesc, default-jre, default-jdk
-Maintainer: Eric B. Decker <cire831@gmail.com>
+Depends: python, python-serial, perl, nesc, default-jre
+Maintainer: Eric B. Decker <cire831@gmail.com>, Andras Biro <andras.biro@ucmote.com>
 Description: Development-tools for TinyOS
