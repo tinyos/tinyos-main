@@ -5,22 +5,21 @@
 >
 
 <p><b>TinyOS Debian Development Repository</b></p>
-Last update: 20140522, cire
+Last update: 20140527, cire
 <br>(Changelog at end)
 
 <br><br>
-4 repositories are homed here that maybe useful to the TinyOS development community.
+3 repositories are homed here that maybe useful to the TinyOS development community.
 
 <ul>
-<li><b><i>squeeze</i></b> and <b><i>wheezy</i></b>: contain general tinyos tools.   Useful on multiple target platforms.
+<li><b><i>squeeze</i></b>: contain general tinyos tools.   Useful on multiple target hosts.
 <li><b><i>msp430-46</i></b>: current cross compiler toolchain for msp430 based TinyOS development,
 <a href='http://tinyprod.net/repos/debian/README-46.html'> README-46</a>.
-<br> <br>
+<br>
 <li><b><i>msp430-47</i></b>: experimental mspgcc 4.7.0 cross compiler for msp430 platforms, (20 bit support),
 <a href='http://tinyprod.net/repos/debian/README-47.html'> README-47</a>.
 </ul>
-<br>
-<p><b>Squeeze</b> and <b>Wheezy</b>, the main repositories, contain the following packages for <i>i386</i> and <i>amd64</i>:</p>
+<p><b>Squeeze</b>, the main repository, contains the following packages for <i>i386</i> and <i>amd64</i>:</p>
 
 <ul>
 <li>nesc: 1.3.5
@@ -79,9 +78,10 @@ Sourcery</a>.
   deb http://tinyprod.net/repos/debian squeeze main
   deb http://tinyprod.net/repos/debian msp430-46 main
 
+  $ sudo -s
   $ cd /etc/apt/sources.list.d
-  $ sudo echo "deb http://tinyprod.net/repos/debian squeeze main" >> tinyprod-debian.list
-  $ sudo echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
+  $ echo "deb http://tinyprod.net/repos/debian squeeze main" >> tinyprod-debian.list
+  $ echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
 
 </pre>
 
@@ -132,7 +132,8 @@ be installed by the following:</p>
 
 </div>
 
-<p>-- Eric Decker (cire831@gmail.com) (May 22, 2014)</p>
+<br>
+<p>-- Eric Decker (cire831@gmail.com) (May 27, 2014)</p>
 
 <pre>
 
@@ -141,6 +142,8 @@ be installed by the following:</p>
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140527, cire: tweaks
+                  nuke references to wheezy
   20140522, cire: update mspdebug to 0.22
                   update nesc to 1.3.5
                   update tinyos-tools to 1.4.3
