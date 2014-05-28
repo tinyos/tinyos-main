@@ -3,6 +3,7 @@ Getting Started with Git.
 Contents:
 
 - Introduction
+- Documentation
 - GitHub
 - Set up Git
 - Set up your working repository
@@ -54,6 +55,26 @@ that reflect the objects that are being managed by the DVCS.
 
 Contributing back to the TinyOS effort can be streamlined by joining the 
 github community (since that is where the main tinyos repositories are hosted).
+
+
+* Documentation
+
+We use GIT as the SCM.  Here are some pointers to get you started:
+
+   Start here:   http://book.git-scm.com/2_setup_and_initialization.html
+   Everyday GIT: http://www.kernel.org/pub/software/scm/git/docs/everyday.html
+   Cheat Sheet:  http://zrusin.blogspot.com/2007/09/git-cheat-sheet.html
+   SVN to GIT:   http://git-scm.com/course/svn.html
+   GIT Book:     http://book.git-scm.com/
+   Another Book: http://progit.org/book/
+
+
+Documentation on getting started with T2 can be found at:
+
+    http://docs.tinyos.net
+    http://docs.tinyos.net/index.php/Getting_started
+
+
 
 * GitHub
 
