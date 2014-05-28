@@ -54,7 +54,6 @@ This is controlled by a build script at the top level, "build.sh".
    export CLASSPATH=.:${TOSROOT}/support/sdk/java/tinyos.jar
 
    export REPO_DEST=${TOSROOT}/repo             # defaults to packaging/repo
-   export POST_VER=-tinyprod                    # defaults to -tinyos
 
    PACKAGING_DIR defaults to ${BUILD_DIR}/packaging, local package being
    built.  And typically doesn't need to be changed.
@@ -81,6 +80,8 @@ For each package in ${TOSROOT}/packaging:
 
    dpkg-sig -s builder -k <key sig> packaging/*.deb
 
+   "./build.sh sign <key sig>" automates the above.
+
 3) Add packages to the repository
 
    ./build.sh repo
@@ -91,3 +92,11 @@ For each package in ${TOSROOT}/packaging:
 
 
 Note, to build the tinyos-tools package one needs to have "nesc" installed.
+
+
+
+Typically, one will set REPO_DEST to the locatio of the repository being built
+or updated.  POST_VER and PACKAGES_DIR will be unset.  The build scripts will
+install fresh packages into ${BUILD_DIR}/packages by default, local to the
+package being built.  These new packages then are used to update the
+repository in ${REPO_DEST}.   This is what "./build.sh repo" does.
