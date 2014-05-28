@@ -1,0 +1,331 @@
+
+Installing a development environment on Debian based distributions.
+
+Focuses on installing a msp430 based development environment but can
+easily be adapted to other cpus by changing what toolchain gets 
+installed.
+
+Linux only.  In particular, Debian based (wheezy 7.5) or Ubuntu (12.04 and
+later).
+
+
+State:
+
+2014-05-26:
+    Migrated to Debian 7 (wheezy) and Ubuntu 12.04 through 14.04.  Tested
+    on wheezy 7.5.0 and Ubuntu 12.04, 13.10 and 14.04.
+
+    msp430 4.6.3 (msp430-46) toolchain used.
+    Toolchain from http://tinyprod.net/repos/debian
+
+**************************************************************************************
+
+This brief is written assuming that there is a common root directory,
+we'll call it "top" and it is usually at the top level of a working
+directory.  ie.  ~/top.   You can put this directory anywhere, environment
+variables are used to tell the tools where things live.
+
+Most commands are entered from a terminal window.
+
+**************************************************************************************
+
+1) OS Install.
+
+Development is only supported on Linux hosts, in particular the Ubuntu and/or Debian
+strains.  Ubuntu 13.10 has been directly tested (on ASUS i7 quad core).
+
+Obtain an ISO image from releases/ubuntu.com or alternatively from tinyprod.net/downloads.
+Put the iso on to a bootable media (dvd or usb stick).  You can also use grub loopback 
+for installation on an exiting Linux installation.  (Actual how to is beyond the scope
+of this document).  A simple install is fine and will take less time.
+
+When the install is complete, boot the system, and use "apt-get" to install the following
+packages:
+
+    build-essential stow automake autoconf libtool libc6-dev
+    git-core git-daemon-run git-doc git-email git-gui gitk gitmagic
+    openssh-client openssh-server
+
+    python3 python3-serial python python-serial
+
+The following will do the trick:
+
+sudo -s
+apt-get install build-essential stow automake autoconf libtool libc6-dev
+apt-get install git-core git-daemon-run git-doc git-email git-gui gitk gitmagic
+apt-get install openssh-client openssh-server
+apt-get install python3 python3-serial python python-serial
+exit
+
+
+**************************************************************************************
+
+2) Install the TinyOS toolset (msp430) (or other appropriate toolchain)
+
+We want the tinyos toolset for msp430 based motes (ie, telosb, msp430f1611). Debian packages
+are available from Stanford and tinyprod.net.   The toolchain at tinyprod.net as of
+(May 25, 2014) is more up to date.
+
+We want the following packages:
+
+           nesc
+	   tinyos-tools
+
+        dependent on what toolchain you are using:
+	   mspdebug
+           msp430-46
+           msp430-binutils-46
+           msp430-gcc-46
+	   msp430-gdb-46
+           msp430-libc-46
+	   msp430mcu-46
+
+You want to follow the instructions at: http://tinyprod.net/repos/debian.
+
+The following should be equivilent.
+
+#
+# add the repositories signing key to APT's keyring.  Needed to verify the repository
+#
+wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+
+
+#
+# teach dpkg/apt-get/aptitude about where to find the tinyprod tools repository
+#
+sudo -s
+echo "deb http://tinyprod.net/repos/debian squeeze main"   >> /etc/apt/sources.list.d/tinyprod-debian.list
+echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> /etc/apt/sources.list.d/tinyprod-debian.list
+apt-get update
+apt-get install nesc tinyos-tools msp430-46 mspdebug
+exit
+
+**************************************************************************************
+
+3) TinyOS 2.x tree checkout
+
+GIT is used to manage the TinyOS trees.   These trees are held in git
+repositories.  You should read 00c_Getting_Started_Git for details.
+
+There are several repositories of note for TinyOS 2.1.2+.  You should choose
+the one that makes the most sense for what you are working on.   These
+repositories are all related and pains have been taken to track appropriately.
+
+gh:tinyos/tinyos-main(master): This is the main development repository.
+While typically stable it should be considered bleeding edge.
+
+gh:tinyos/tinyos-release.git: This repository contains release points for the
+main tinyos releases.  It is always stable.  The current default branch will
+always point at the most current release.
+
+gh:tinyprod/prod(tp-master): This repository is a superset of the main tinyos
+repository.  It has stable additions that have not as of yet been integrated
+into the main tinyos development threads.  Its current primary feature is
+additional support for more modern TI MSP430 processors.  See 00a_Repo_Notes
+for details.  It actively tracks the main tinyos development repository.
+
+gh:tp-freeforall/prod(tp-master): This repository tracks gh:tinyprod/prod and
+is essentiall the tip of tinyprod development.  It actively tracks the main
+tinyos development repository.
+
+
+
+For example, below we check out of the tip of the main development repository,
+gh:tinyos/tinyos-main(master).
+
+This gives you a read-only copy of the master branch of the tinyos/tinyos-main
+repository.   It is a fully functional local repository that can be commited 
+into (locally only).
+
+    cd ~/top
+    mkdir tinyos-main
+    cd tinyos-main
+    git clone -o tos -v git://github.com/tinyos/tinyos-main tinyos-2.x
+    cd tinyos-2.x
+    git checkout -b <your_initials>
+
+    # note the remote will be called "tos"
+
+
+>>>>>>>
+
+Note: To get the current tinyos release (currently, tinyos-2_1_2) you should
+use the following:
+
+    cd ~/top
+    mkdir tinyos-release
+    cd tinyos-release
+    git clone -o rel -v git://github.com/tinyos/tinyos-release tinyos-2.x
+    cd tinyos-2.x
+    git checkout -b <your_initials>
+
+    # note the remote will be called "rel".
+
+<<<<<<<
+
+
+This will create a new branch named <your_intials> and will place you on
+that branch. It will be branched off of the main branch of the remote,
+gh:tinyos/tinyos-main(master).
+
+This will keep your changes locally grouped.   You will have a remote named
+'tos' (or 'rel') that points at the repository that you cloned,
+git://github.com/tinyos/tinyos-main (git://github.com/tinyos/tinyos-release).
+Your branch <your_initials> will be rooted at the default branch of the
+repository.
+
+To set up for contibuting to the main repository, see 00b_Using the Repo.
+
+**************************************************************************************
+
+4) Set up build environment settings
+
+The following environment variables must be set to build.
+
+    TOSROOT
+    TOSDIR
+    MAKERULES
+    CLASSPATH
+
+    for example:  working dir ~/top
+  
+  	#!/bin/sh
+  
+  	MOTECOM="serial@/dev/ttyUSB0:telosb"
+  
+  	TOSROOT=~/top/t2_cur/tinyos-2.x
+  	TOSDIR=$TOSROOT/tos
+  
+  	MAKERULES=$TOSROOT/support/make/Makerules
+  	CLASSPATH=.:$TOSROOT/support/sdk/java/tinyos.jar
+  
+  	PYTHONPATH=$TOSROOT/support/sdk/python:$PYTHONPATH
+  
+  	export MAKERULES TOSDIR TOSROOT CLASSPATH PYTHONPATH
+  	export MOTECOM
+
+
+**************************************************************************************
+
+5) Do a test compile.
+
+    For telosb hardware:  (assumes pluged in to a USB port)
+
+    cd ~/top/t2_cur/tinyos-2.x/apps/Blink
+    make telosb install
+
+    The Leds should start to blink.
+
+
+**************************************************************************************
+
+6) Build SerialForwarder and libmote library.   (optional)
+
+WARNING:  This should get replaced with libmotenet.   Superset of the SF but also
+allows using AM sockets or IPv6 sockets for connections.  Note: currently libmotenet
+is a work in progress and should be considered experimental.
+
+
+    Build the serial forwarder and associated library (also includes direct serial access)
+
+      cd $TOSROOT/support/sdk/c/sf
+      ./bootstrap
+      ./configure --prefix=/opt/stow/sf_c
+      make
+
+      sudo -s
+      make install
+
+      ("sudo make install" for some reason doesn't pick up the value of $TOSROOT properly so
+      the make install doesn't work write unless you are root first)
+
+      This will install bin/{sf, sflisten, sfsend, seriallisten, serialsend}, include/{message.h,
+      serialsource.h, sfsource.h}, and lib/libmote.a.  These will be installed into /opt/stow/sf_c.
+
+
+   Install into /opt/{bin,include,lib} using stow.
+
+      cd /opt/stow
+      stow sf_c
+
+
+**************************************************************************************
+
+7) We use GIT as the SCM.  Here are some pointers to get you started:
+
+   Start here:   http://book.git-scm.com/2_setup_and_initialization.html
+   Everyday GIT: http://www.kernel.org/pub/software/scm/git/docs/everyday.html
+   Cheat Sheet:  http://zrusin.blogspot.com/2007/09/git-cheat-sheet.html
+   SVN to GIT:   http://git-scm.com/course/svn.html
+   GIT Book:     http://book.git-scm.com/
+   Another Book: http://progit.org/book/
+
+
+
+
+Documentation on getting started with T2 can be found at:
+
+    http://docs.tinyos.net
+    http://docs.tinyos.net/index.php/Getting_started
+
+
+**************************************************************************************
+
+8) Using the serialforwarder/seriallistener
+
+    a) make sure that tinyos.jar has been built.  It should live in $TOSROOT/support/sdk/java/tinyos.jar
+    b) to rebuild:
+  
+       cd $TOSROOT/support/sdk/java/
+       make tinyos.jar
+  
+    c) Install TOSComm JNI support if needed.  Did java bitch about not finding TOSComm JNI support?
+  
+       assuming tinyos-tools is installed run:
+  
+       tos-install-jni
+  
+    d) To watch raw bytes coming from the serial port
+  
+       Make sure CLASSPATH includes $TOSROOT/support/sdk/java/tinyos.jar, ie:
+  
+           CLASSPATH=.:/home/joe/mm/t2_cur/tinyos-2.x/support/sdk/java/tinyos.jar
+
+execute:
+
+       java net.tinyos.tools.Listen -comm serial@/dev/ttyUSB0:telosb
+
+
+And you should see packets that look something like this:  (depends on what the mote is sending)
+
+            00 FF FF 00 00 12 00 A1 00 12 07 09 00 0C 9E 23 00 0C 9E 30 F6 2C FF D7 FF FF
+            00 FF FF 00 00 12 00 A1 00 12 07 05 00 0C 9E 24 00 0C 9E 3F E5 AF B1 6F 9E D4
+            00 FF FF 00 00 0E 00 A1 00 0E 07 06 00 0C 9E 33 00 0C 9E 46 78 80
+            00 FF FF 00 00 0E 00 A1 00 0E 07 07 00 0C 9E 33 00 0C 9E 52 FF FF
+            00 FF FF 00 00 10 00 A1 00 10 07 08 00 0C 9E 33 00 0C 9E 61 FF FF FF FF
+  
+            00 FF FF 00 00 10 00 A1 00 10 07 08 00 0C 9E 33 00 0C 9E 61 FF FF FF FF
+            ^  ^     ^     ^  ^  ^  ^     ^  ^  | -- sensor 8 data
+            |  |     |     |  |  |  |     |  |- sensor id
+            |  |     |     |  |  |  |     |- sensor data type
+            |  |     |     |  |  |  |-- length of data block
+            |  |     |     |  |  |-- AM type MM_DT (data, typed)
+            |  |     |     |  |-- AM group
+            |  |     |     |-- serial length
+            |  |     |-- src addr           
+            |  |-- dest addr
+            |-- dispatch byte - 0 says AM
+                             
+If you define MOTECOM you won't need to specify the -comm parameter.  ie:
+
+       MOTECOM=serial@/dev/ttyUSB1:telosb
+
+
+
+
+**************************************************************************************
+
+9) Repos:
+
+See $(TOSROOT)/00a_Repo_Notes for details about how the TinyProd/prod repo is organized.
+github:tinyprod/prod or github:tp-freeforall/prod hold the main t2 repository.
