@@ -548,6 +548,11 @@ void SENDINFO_DECR(struct send_info *si) {
       if (call SendQueue.enqueue(s_entry) != SUCCESS) {
         BLIP_STATS_INCR(stats.encfail);
         s_info->failed = TRUE;
+        // Because we were unable to add this fragment to the send queue we need
+        // to return the fragment and send entry to their respective pools.
+        // The s_info will be taken care of in done:
+        call FragPool.put(outgoing);
+        call SendEntryPool.put(s_entry);
         printf("drops: IP send: enqueue failed\n");
         goto done;
       }
@@ -565,7 +570,8 @@ void SENDINFO_DECR(struct send_info *si) {
       }
       call PacketLink.setRetryDelay(s_entry->msg, BLIP_L2_DELAY);
 
-      SENDINFO_INCR(s_info);}
+      SENDINFO_INCR(s_info);
+    }
 
     // printf("got %i frags\n", s_info->link_fragments);
   done:
