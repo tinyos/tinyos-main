@@ -91,10 +91,10 @@ uint8_t setupHeaders(struct packed_lowmsg *packed, uint16_t headers);
 /*
  * Test if various protocol features are enabled
  */
-inline uint8_t hasMeshHeader(struct packed_lowmsg *msg);
-inline uint8_t hasBcastHeader(struct packed_lowmsg *msg);
-inline uint8_t hasFrag1Header(struct packed_lowmsg *msg);
-inline uint8_t hasFragNHeader(struct packed_lowmsg *msg);
+uint8_t hasMeshHeader(struct packed_lowmsg *msg);
+uint8_t hasBcastHeader(struct packed_lowmsg *msg);
+uint8_t hasFrag1Header(struct packed_lowmsg *msg);
+uint8_t hasFragNHeader(struct packed_lowmsg *msg);
 
 /*
  * Mesh header fields
@@ -119,13 +119,13 @@ uint8_t setBcastSeqno(struct packed_lowmsg *msg, uint8_t seqno);
 /*
  * Fragmentation header fields
  */
-inline uint8_t getFragDgramSize(struct packed_lowmsg *msg, uint16_t *size);
-inline uint8_t getFragDgramTag(struct packed_lowmsg *msg, uint16_t *tag);
-inline uint8_t getFragDgramOffset(struct packed_lowmsg *msg, uint8_t *size);
+uint8_t getFragDgramSize(struct packed_lowmsg *msg, uint16_t *size);
+uint8_t getFragDgramTag(struct packed_lowmsg *msg, uint16_t *tag);
+uint8_t getFragDgramOffset(struct packed_lowmsg *msg, uint8_t *size);
 
-inline uint8_t setFragDgramSize(struct packed_lowmsg *msg, uint16_t size);
-inline uint8_t setFragDgramTag(struct packed_lowmsg *msg, uint16_t tag);
-inline uint8_t setFragDgramOffset(struct packed_lowmsg *msg, uint8_t size);
+uint8_t setFragDgramSize(struct packed_lowmsg *msg, uint16_t size);
+uint8_t setFragDgramTag(struct packed_lowmsg *msg, uint16_t tag);
+uint8_t setFragDgramOffset(struct packed_lowmsg *msg, uint8_t size);
 
 
 /*

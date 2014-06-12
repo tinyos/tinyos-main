@@ -8,7 +8,11 @@ tinyoslib_PROGRAMS = @TOSCOMMLIB@
 
 EXTRA_PROGRAMS = libtoscomm.so toscomm.dll libtoscomm.jnilib
 
-LIBFLAGS = "-I$(JDK)/include" -s -O2
+LIBFLAGS = "-I$(JDK)/include" -O2
+if !DARWIN
+LIBFLAGS += -s
+endif
+
 SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -shared -fPIC
 DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -shared -D_JNI_IMPLEMENTATION -Wl,--kill-at -static-libgcc -static-libstdc++ -fno-rtti
 JNILIBFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle

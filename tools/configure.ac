@@ -14,7 +14,7 @@ AC_PREREQ(2.50)
 
 AC_INIT(tinyos-tools, 2.2.0)
 AC_CONFIG_AUX_DIR(config-aux)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(subdir-objects)
 AC_CANONICAL_HOST
 
 AC_PROG_CC

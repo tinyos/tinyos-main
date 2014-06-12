@@ -9,6 +9,9 @@
 
 ### --- This makefile requires GNU Make version 3.80 or newer.
 
+# Make the coloring work on Mac
+SHELL=/bin/bash
+
 ### ---
 ### --- Prepare variables
 ### ---

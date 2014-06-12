@@ -1,5 +1,5 @@
 #ifndef _NWBYTE_H
-#define _NWBYTE_H_
+#define _NWBYTE_H
 
 #if !defined(PC)
 // if we're not on a pc, assume little endian for now
