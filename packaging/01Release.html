@@ -5,14 +5,14 @@
 >
 
 <p><b>TinyOS Debian Development Repository</b></p>
-Last update: 20140527, cire
+Last update: 20140612, cire
 <br>(Changelog at end)
 
 <br><br>
 3 repositories are homed here that maybe useful to the TinyOS development community.
 
 <ul>
-<li><b><i>squeeze</i></b>: contain general tinyos tools.   Useful on multiple target hosts.
+<li><b><i>squeeze</i></b>: contains general tinyos tools.   Useful for multiple target motes.
 <li><b><i>msp430-46</i></b>: current cross compiler toolchain for msp430 based TinyOS development,
 <a href='http://tinyprod.net/repos/debian/README-46.html'> README-46</a>.
 <br>
@@ -66,12 +66,28 @@ Sourcery</a>.
 <br>
 <p>You may need to remove old *-tinyos packages.   To do so, follow these instructions:</p>
 
-<ol>
+<ul>
 <li>Remove previously installed *-tinyos packages:
+
 <pre>
   $ sudo dpkg -P `dpkg -l nesc '*tinyos*' | grep ^ii | awk '{ print $2 }' | xargs`
   $ sudo apt-get clean
 </pre>
+
+</ul>
+
+<p>To use these packages, follow these instructions:</p>
+<ol>
+<li>Tell <em>apt</em> about the TinyProd Signing Key.
+<pre>
+  $ wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+
+      ... or ...
+
+  $ gpg --keyserver keyserver.ubuntu.com --recv-keys A9B913B9
+  $ gpg -a --export A9B913B9 | sudo apt-key add -
+</pre>
+
 
 <li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
 <pre>
@@ -116,24 +132,10 @@ Sourcery</a>.
   uid   TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
 </pre>
 
-<p>A public copy of the key can be found in repos/debian/tinyprod.key.  It can
-be installed by the following:</p>
-
-<pre>
-  $ wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
-</pre>
-
-<p>Alternatively, the key can be added from the ubuntu keyserver via:</p>
-
-<pre>
-  $ gpg --keyserver keyserver.ubuntu.com --recv-keys A9B913B9
-  $ gpg -a --export A9B913B9 | sudo apt-key add -
-</pre>
-
 </div>
 
 <br>
-<p>-- Eric Decker (cire831@gmail.com) (May 27, 2014)</p>
+<p>-- Eric Decker (cire831@gmail.com) (June 12, 2014)</p>
 
 <pre>
 
@@ -142,6 +144,7 @@ be installed by the following:</p>
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140612, cire: move signing key around
   20140527, cire: tweaks
                   nuke references to wheezy
   20140522, cire: update mspdebug to 0.22
