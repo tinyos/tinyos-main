@@ -1,0 +1,14 @@
+Compilation order:
+1. Compile & install binutils
+2. Compile & install gcc
+3. Compile & install avr-libc 
+4. Compile & install gcc
+
+The configure script for gcc and avr-libc checks the supported platforms for the
+installed binutils and gcc respectively, so if you don't install what you compiled,
+it probably wouldn't know all platforms. Recompiling gcc at the end seems stupid,
+but gcc compiles something in from libc, so in theory, it must be compiled twice.
+Search for the configure option "--with-avrlibc" for more.
+
+Needed packages on debian7:
+build-essential bison flex autoconf automake
