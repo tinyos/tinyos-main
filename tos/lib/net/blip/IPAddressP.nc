@@ -40,14 +40,12 @@ module IPAddressP {
   struct in6_addr m_addr;
 
   command bool IPAddress.getLLAddr(struct in6_addr *addr) {
-    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
     ieee154_saddr_t saddr = letohs(call Ieee154Address.getShortAddr());
     ieee154_laddr_t laddr = call Ieee154Address.getExtAddr();
 
     memclr(addr->s6_addr, 16);
     addr->s6_addr16[0] = htons(0xfe80);
     if (m_short_addr) {
-      addr->s6_addr16[4] = htons(panid);
       addr->s6_addr16[5] = htons(0x00FF);
       addr->s6_addr16[6] = htons(0xFE00);
       addr->s6_addr16[7] = htons(saddr);
@@ -90,7 +88,6 @@ module IPAddressP {
   }
 
   command bool IPAddress.isLocalAddress(struct in6_addr *addr) {
-    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
     ieee154_saddr_t saddr = letohs(call Ieee154Address.getShortAddr());
     ieee154_laddr_t eui = call Ieee154Address.getExtAddr();
 
@@ -99,8 +96,7 @@ module IPAddressP {
       if (m_short_addr &&
           addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
-        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x200) &&
-            ntohs(addr->s6_addr16[7]) == saddr) {
+           if(ntohs(addr->s6_addr16[7]) == saddr) {
           return TRUE;
         } else {
           return FALSE;
