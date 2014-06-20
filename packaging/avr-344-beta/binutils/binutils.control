@@ -2,7 +2,7 @@ Package: binutils-avr-tinyos-beta
 Version: %{version}
 Architecture: %{architecture}
 Depends: avr-tinyos-base
-Provides: binutils-avr, avr-binutils-tinyos, binutils-avr-tinyos
+Provides: binutils-avr, binutils-avr-tinyos
 Conflicts: binutils-avr, avr-binutils-tinyos, binutils-avr-tinyos
 Recommends: avr-tinyos, avr-optional-tinyos
 Maintainer: Andras Biro, Janos Sallai

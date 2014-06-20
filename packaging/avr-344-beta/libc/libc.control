@@ -1,8 +1,8 @@
 Package: avr-libc-tinyos-beta
 Version: %{version}
 Architecture: %{architecture}
-Depends: avr-gcc-tinyos, avr-tinyos-base
-Provides: avr-libc, avr-libc-tinyos
+Depends: gcc-avr-tinyos-beta, avr-tinyos-base
+Provides: avr-libc
 Conflicts: avr-libc, avr-libc-tinyos
 Recommends: avr-tinyos, avr-optional-tinyos, avrdude
 Maintainer: Andras Biro, Janos Sallai

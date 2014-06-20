@@ -1,8 +1,8 @@
 Package: gcc-avr-tinyos-beta
 Version: %{version}
 Architecture: %{architecture}
-Depends: binutils-avr-tinyos, avr-tinyos-base
-Provides: gcc-avr, avr-gcc-tinyos, gcc-avr-tinyos
+Depends: binutils-avr-tinyos-beta, avr-tinyos-base
+Provides: gcc-avr, gcc-avr-tinyos
 Conflicts: gcc-avr, avr-gcc-tinyos, gcc-avr-tinyos
 Recommends: avr-tinyos, avr-optional-tinyos, avrdude
 Maintainer: Andras Biro, Janos Sallai
