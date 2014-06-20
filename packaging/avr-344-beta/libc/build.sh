@@ -34,7 +34,7 @@ HEADERFILENAME=avr8-headers-${HEADERVERSION}.zip
 HEADERDIRNAME=avr
 #PACKAGE_RELEASE=1
 PREFIX=/usr
-MAKE="make -j8"
+MAKE="make -j4"
 
 download()
 {

@@ -33,7 +33,7 @@ SOURCEFILENAME=avr-${SOURCENAME}-${SOURCEVERSION}.tar.bz2
 #PACKAGE_RELEASE=1
 #PATCHES="30-binutils-2.17-avr-size.patch 31-binutils-2.17-avr-coff.patch 50-binutils-2.17-atmega256x.patch 51-binutils-2.17-newdevices.patch"
 PREFIX=/usr
-MAKE="make -j8"
+MAKE="make -j4"
 
 download()
 {
@@ -64,7 +64,7 @@ build()
     cd ..
     mkdir -p ${BUILDDIR}
     cd ${BUILDDIR}
-    CFLAGS="-Os -g0" ../configure\
+    CFLAGS="-Os -g0 -s" ../configure\
                       --prefix=${PREFIX}\
                       --disable-nls\
                       --enable-doc\

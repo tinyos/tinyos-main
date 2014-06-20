@@ -92,8 +92,7 @@ build()
     
     mkdir -p ${BUILDDIR}
     cd ${BUILDDIR}
-    CFLAGS="-Os -g0" \
-    ../configure \
+    CFLAGS="-Os -g0 -s" ../configure \
             LDFLAGS="-L${PREFIX}/lib" CPPFLAGS=""\
             --target=avr\
             --prefix=${PREFIX}\
@@ -125,6 +124,14 @@ installto()
   rm -f ${INSTALLDIR}/usr/lib64/libiberty.a
   rm -rf ${INSTALLDIR}/usr/share/info
   rm -rf ${INSTALLDIR}/usr/share/man/man7
+  #strip executables
+  cd ${INSTALLDIR}/usr/bin/
+  strip *
+  cd ${INSTALLDIR}/usr/lib/gcc/avr/${SOURCEVERSION}/
+  for binary in cc1 cc1plus collect2 lto-wrapper lto1 "install-tools/fixincl" "plugin/gengtype"
+  do
+    strip $binary
+  done
 }
 
 package_deb(){
@@ -157,7 +164,6 @@ case $1 in
   download)
     download
     ;;
-  
   
   clean)
     cleanbuild
