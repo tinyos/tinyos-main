@@ -114,7 +114,19 @@ ERROR_STRING=$(ERROR_COLOR)[ERROR]$(NO_COLOR)
 WARN_STRING=$(WARN_COLOR)[WARNING]$(NO_COLOR)
 INFO_STRING=$(INFO_COLOR)[INFO]$(NO_COLOR)
 
+### --- Check if a new enough version of tinyos-tools is installed. This really
+### --- equates to whether or not the `tos-sub-tosdir` script exists.
 
+define OLD_TOOLS_ERROR
+
+$(ERROR_STRING) Your version of tinyos-tools is too old (<2.2.0).
+Please build and install the tinyos-tools in the tinyos-main/tools directory
+endef
+
+TOS_SUB_TOSDIR_OUTPUT := $(shell tos-sub-tosdir --help 2>/dev/null)
+ifndef TOS_SUB_TOSDIR_OUTPUT
+    $(error $(shell echo -e '$(OLD_TOOLS_ERROR)'))
+endif
 
 ### ---
 ### --- Define make functions.
