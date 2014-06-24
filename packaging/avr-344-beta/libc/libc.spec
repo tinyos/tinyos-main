@@ -1,5 +1,5 @@
 Summary: C library for the AVR platform
-Name: avr-libc
+Name: avr-libc-beta
 Version: %{version}
 Release: %{release}
 Packager: Andras Biro, Janos Sallai

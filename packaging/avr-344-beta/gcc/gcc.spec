@@ -1,5 +1,5 @@
 Summary: gcc compiled for the AVR platform with TinyOS patches
-Name: avr-gcc
+Name: avr-gcc-beta
 Version: %{version}
 Release: %{release}
 Packager: Andras Biro, Janos Sallai

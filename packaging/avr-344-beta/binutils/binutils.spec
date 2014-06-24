@@ -1,5 +1,5 @@
 Summary: GNU binutils for the AVR platform
-Name: avr-binutils
+Name: avr-binutils-beta
 Version: %{version}
 Release: %{release}
 Packager: Andras Biro, Janos Sallai
