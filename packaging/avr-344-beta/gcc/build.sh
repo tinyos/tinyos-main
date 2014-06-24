@@ -128,7 +128,7 @@ installto()
   cd ${INSTALLDIR}/usr/bin/
   strip *
   cd ${INSTALLDIR}/usr/lib/gcc/avr/${SOURCEVERSION}/
-  for binary in cc1 cc1plus collect2 lto-wrapper lto1 "install-tools/fixincl" "plugin/gengtype"
+  for binary in cc1 cc1plus collect2 lto-wrapper lto1 "install-tools/fixincl"
   do
     strip $binary
   done
