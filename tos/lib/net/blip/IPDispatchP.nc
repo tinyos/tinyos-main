@@ -36,6 +36,7 @@
  * Provides IP layer reception to applications on motes.
  *
  * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ * @author Mohammad Jamal Mohiuddin <mjmohiuddin@cdac.in> bug fixes
  */
 
 module IPDispatchP {
@@ -100,6 +101,7 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
   };
   uint8_t state = S_STOPPED;
   bool radioBusy;
+  bool ack_Required=TRUE;	//to check whether ack is required for the packet sent
   uint8_t current_local_label = 0;
   ip_statistics_t stats;
 
@@ -495,6 +497,11 @@ void SENDINFO_DECR(struct send_info *si) {
       return EOFF;
     }
 
+  //check whether the destination address is a multicast address or not
+    if(frame_addr->ieee_dst.i_saddr==IEEE154_BROADCAST_ADDR)
+	ack_Required=FALSE;
+    else
+	ack_Required=TRUE;
     /* set version to 6 in case upper layers forgot */
     msg->ip6_hdr.ip6_vfc &= ~IPV6_VERSION_MASK;
     msg->ip6_hdr.ip6_vfc |= IPV6_VERSION;
@@ -596,7 +603,8 @@ void SENDINFO_DECR(struct send_info *si) {
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
     s_entry->info->link_fragment_attempts++;
 
-    if (!call PacketLink.wasDelivered(msg)) {
+//acknowledgements are not required for multicast packets ,useful for fragmentation
+  if (!call PacketLink.wasDelivered(msg)&&ack_Required) {
       printf("sendDone: was not delivered! (%i tries)\n",
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;

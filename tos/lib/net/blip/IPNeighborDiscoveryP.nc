@@ -12,6 +12,7 @@
  * address resolution mechanisms here.
  *
  * @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
+ * @author Mohammad Jamal Mohiuddin <mjmohiuddin@cdac.in> bug fixes
  */
 #include <lib6lowpan/ip.h>
 
@@ -55,18 +56,13 @@ module IPNeighborDiscoveryP {
 
   command error_t NeighborDiscovery.resolveAddress(struct in6_addr *addr,
                                                    ieee154_addr_t *link_addr) {
-    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       if (addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
         /* U bit must not be set if a short address is in use */
-        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x0200)) {
           link_addr->ieee_mode = IEEE154_ADDR_SHORT;
-          link_addr->i_saddr = htole16(ntohs(addr->s6_addr16[7]));
-        } else {
-          return FAIL;
-        }
+          link_addr->i_saddr = htole16(ntohs(addr->s6_addr16[7]));        
       } else {
         int i;
         link_addr->ieee_mode = IEEE154_ADDR_EXT;
