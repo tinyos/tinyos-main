@@ -5,7 +5,7 @@
 >
 
 <p><b>TinyOS Debian Development Repository</b></p>
-Last update: 20140612, cire
+Last update: 20140624, cire
 <br>(Changelog at end)
 
 <br><br>
@@ -23,7 +23,7 @@ Last update: 20140612, cire
 
 <ul>
 <li>nesc: 1.3.5
-<li>tinyos-tools: 1.4.3
+<li>tinyos-tools: 1.4.2
 <li>mspdebug: 0.22
 <br><br>
 <li>avarice-tinyos: 2.11-20110905
@@ -63,6 +63,20 @@ by <a href='https://sourcery.mentor.com/sgpp/lite/arm/portal/release1802'>Code
 Sourcery</a>.
 </p>
 </div>
+<br>
+An erroneous version of tinyos-tools (1.4.3) was released by accident.  Version 1.4.2 is what should
+be used.  You can determine what version you have installed by:
+
+<pre>
+  $ dpkg -l tinyos-tools
+</pre>
+
+If you have installed 1.4.3, you should remove and reinstall via the following:
+<pre>
+  $ apt-get purge tinyos-tools
+  $ apt-get install tinyos-tools
+</pre>
+
 <br>
 <p>You may need to remove old *-tinyos packages.   To do so, follow these instructions:</p>
 
@@ -144,6 +158,7 @@ Sourcery</a>.
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140624, cire: remove 1.4.3, replace with 1.4.2 (from Stanford)
   20140612, cire: move signing key around
   20140527, cire: tweaks
                   nuke references to wheezy
