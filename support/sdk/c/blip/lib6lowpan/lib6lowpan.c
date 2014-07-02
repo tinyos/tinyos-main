@@ -197,7 +197,7 @@ uint8_t *pack_address(uint8_t *buf,
       memcpy(buf, &addr->s6_addr[14], 2);
       return buf += 2;
     } else if (/* maybe it's a 16-bit address with the IID derived from the
-                  PANID + address */
+                  802.15.4 address(RFC 6282 Section 3.2.2) */
                 (addr->s6_addr16[5] == htons(0x00ff) &&
                 addr->s6_addr16[6] == htons(0xfe00) &&
                 (((l2addr->ieee_mode == IEEE154_ADDR_SHORT) &&
