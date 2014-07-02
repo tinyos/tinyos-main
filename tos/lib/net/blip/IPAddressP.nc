@@ -22,7 +22,6 @@
 
 /*
  * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
- * @author Mohammad Jamal Mohiuddin <mjmohiuddin@cdac.in> bug fixes
  */
 
 #include <lib6lowpan/lib6lowpan.h>
