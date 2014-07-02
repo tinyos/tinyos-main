@@ -36,7 +36,6 @@
  * Provides IP layer reception to applications on motes.
  *
  * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
- * @author Mohammad Jamal Mohiuddin <mjmohiuddin@cdac.in> bug fixes
  */
 
 module IPDispatchP {
@@ -101,7 +100,7 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
   };
   uint8_t state = S_STOPPED;
   bool radioBusy;
-  bool ack_Required=TRUE;
+  bool ack_required=TRUE;
   uint8_t current_local_label = 0;
   ip_statistics_t stats;
 
@@ -605,8 +604,8 @@ void SENDINFO_DECR(struct send_info *si) {
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
     s_entry->info->link_fragment_attempts++;
 
- //acknowledgements are not required for multicast packets ,useful for fragmentation
-   if (!call PacketLink.wasDelivered(msg)&&ack_Required) {
+ //acknowledgements are not required for multicast packets, useful for fragmentation
+   if (!call PacketLink.wasDelivered(msg) && ack_Required) {
       printf("sendDone: was not delivered! (%i tries)\n",
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;
