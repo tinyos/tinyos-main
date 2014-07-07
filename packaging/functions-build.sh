@@ -31,7 +31,7 @@ fi
 #$2: package version
 #$3: package release
 setup_package_target(){
-	INSTALLDIR=${BUILD_ROOT}/${1}_${2}-${3}/
+	INSTALLDIR=${BUILD_ROOT}/${1}_${2}-${3}
 	if [[ -z "${PACKAGES_DIR}" ]]; then
 		PACKAGES_DIR=${BUILD_ROOT}/packages
 	fi

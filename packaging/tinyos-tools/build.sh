@@ -28,7 +28,7 @@ CODENAME=squeeze
 
 SOURCENAME=tinyos-tools
 SOURCEVERSION=1.4.3
-SOURCEDIRNAME=${SOURCENAME}-${SOURCEVERSION}
+SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 #PACKAGE_RELEASE=1
 PREFIX=/usr
 MAKE="make -j8"
@@ -53,8 +53,11 @@ build()
 
 installto()
 {
-  cd ${SOURCEDIRNAME}/tools
-  ${MAKE} DESTDIR=${INSTALLDIR} install
+  set -e
+  (
+    cd ${SOURCEDIRNAME}/tools
+    ${MAKE} DESTDIR=${INSTALLDIR} install
+  )
 }
 
 package_deb(){
@@ -81,7 +84,6 @@ cleaninstall(){
 case $1 in
   test)
     installto
-#   cd ${BUILD_ROOT}
 #   package_deb
     ;;
 
@@ -96,21 +98,16 @@ case $1 in
 
   veryclean)
     cleanbuild
-    cd ${BUILD_ROOT}
     cleandownloaded
     ;;
 
   deb)
+    # sets up INSTALLDIR, which package_deb uses
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-    cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
     build
-    cd ${BUILD_ROOT}
     installto
-    cd ${BUILD_ROOT}
     package_deb
-    cd ${BUILD_ROOT}
     cleaninstall
     ;;
 
@@ -125,15 +122,10 @@ case $1 in
 
   rpm)
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-    cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
     build
-    cd ${BUILD_ROOT}
     installto
-    cd ${BUILD_ROOT}
     package_rpm
-    cd ${BUILD_ROOT}
     cleaninstall
     ;;
 
@@ -149,16 +141,12 @@ case $1 in
 
   local)
     setup_local_target
-    cd ${BUILD_ROOT}
     download
-    cd ${BUILD_ROOT}
     build
-    cd ${BUILD_ROOT}
     installto
     ;;
     
   tarball)
-    cd ${BUILD_ROOT}
     download
     tar -cjf ${SOURCEDIRNAME}.tar.bz2 ${SOURCEDIRNAME}
     ;;
