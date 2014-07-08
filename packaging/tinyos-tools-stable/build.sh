@@ -25,9 +25,13 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 BUILD_ROOT=$(pwd)
 CODENAME=squeeze
+TINYOSVERSION=2_1_2
+SOURCEFILENAME=release_tinyos_${TINYOSVERSION}.tar.gz
+TARBALLDIR=tinyos-main-release_tinyos_${TINYOSVERSION}
+SOURCEURL=https://github.com/tinyos/tinyos-main/archive/${SOURCEFILENAME}
 
 SOURCENAME=tinyos-tools
-SOURCEVERSION=1.4.3
+SOURCEVERSION=1.4.2
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 #PACKAGE_RELEASE=1
 PREFIX=/usr
@@ -35,9 +39,23 @@ MAKE="make -j8"
 
 download()
 {
+  if [ ! -f ${SOURCEFILENAME} ]; then
+    wget ${SOURCEURL}
+  fi
+}
+
+unpack()
+{
+  tar -xzf ${SOURCEFILENAME}
+  rm -rf ${SOURCEDIRNAME}
   mkdir -p ${SOURCEDIRNAME}
-  cp -R ${TOSROOT}/tools ${SOURCEDIRNAME}
-  cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}
+  cp -R ${TARBALLDIR}/tools ${SOURCEDIRNAME}
+  cp -R ${TARBALLDIR}/licenses ${SOURCEDIRNAME}
+  
+  #This was fixed after 1.4.2, so it must be removed after the next release
+  cd ${SOURCEDIRNAME}/tools
+  patch -p1 < ../../disable_cross_compiler.patch
+  cd ../..
 }
 
 build()
@@ -48,6 +66,7 @@ build()
     ./Bootstrap
     ./configure --prefix=${PREFIX}
     ${MAKE}
+    cd ${BUILD_ROOT}
   )
 }
 
@@ -57,6 +76,7 @@ installto()
   (
     cd ${SOURCEDIRNAME}/tools
     ${MAKE} DESTDIR=${INSTALLDIR} install
+    cd ${BUILD_ROOT}
   )
 }
 
@@ -70,10 +90,11 @@ package_rpm(){
 
 cleanbuild(){
   remove ${SOURCEDIRNAME}
+  remove ${TARBALLDIR}
 }
 
 cleandownloaded(){
-  remove ${SOURCEFILENAME} ${PATCHES}
+  remove ${SOURCEFILENAME}
 }
 
 cleaninstall(){
@@ -105,6 +126,7 @@ case $1 in
     # sets up INSTALLDIR, which package_deb uses
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
     download
+    unpack
     build
     installto
     package_deb
@@ -123,6 +145,7 @@ case $1 in
   rpm)
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
     download
+    unpack
     build
     installto
     package_rpm
@@ -142,6 +165,7 @@ case $1 in
   local)
     setup_local_target
     download
+    unpack
     build
     installto
     ;;

@@ -1,0 +1,22 @@
+diff -rupN tinyos-tools-1.4.0/configure.ac tinyos-tools-1.4.0-new/configure.ac
+--- tinyos-tools-1.4.0/configure.ac	2008-12-28 06:19:00.000000000 +0100
++++ tinyos-tools-1.4.0-new/configure.ac	2011-10-24 19:14:04.000000000 +0200
+@@ -85,10 +85,17 @@ case $host in
+     AC_MSG_RESULT(no)
+     DARWIN=yes
+     ;;
++  *x86_64-*)
++    JNIPREFIX=lib
++    JNISUFFIX=so
++    JNIVERSIONS="-64."
++    INSTALLJNI="install"
++    AC_MSG_RESULT(no)
++    ;;
+   *)
+     JNIPREFIX=lib
+     JNISUFFIX=so
+-    JNIVERSIONS="-32. -64."
++    JNIVERSIONS="-32."
+     INSTALLJNI="install"
+     AC_MSG_RESULT(no)
+ esac
