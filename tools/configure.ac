@@ -89,13 +89,10 @@ AM_CONDITIONAL([CYGWIN], [test "$CYGWIN"])
 AM_CONDITIONAL([DARWIN], [test "$DARWIN"])
 AM_COND_IF([CYGWIN],
       [
-       AC_PATH_PROG(GCC32, gcc-3)
-       AC_PATH_PROG(GCXX32, g++-3)
-       GCC32="$GCC32 -mno-cygwin"
-       GCXX32="$GCXX32 -mno-cygwin"
-       #this would be nicer, but generates bigger code
-       #AC_PATH_PROG(GCC32, i686-pc-mingw32-gcc)
-       #AC_PATH_PROG(GCCX32, i686-pc-mingw32-g++)
+       AC_PATH_PROG(GCC32, i686-pc-mingw32-gcc)
+       AC_PATH_PROG(GCXX32, i686-pc-mingw32-g++)
+#        AC_PATH_PROG(GCC32, i686-w64-mingw32-gcc)
+#        AC_PATH_PROG(GCXX32, i686-w64-mingw32-g++)
        AC_PATH_PROG(GCC64, x86_64-w64-mingw32-gcc)
        AC_PATH_PROG(GCXX64, x86_64-w64-mingw32-g++)
        ])

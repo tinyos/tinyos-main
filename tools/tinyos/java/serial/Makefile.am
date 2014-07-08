@@ -8,14 +8,9 @@ tinyoslib_PROGRAMS = @TOSCOMMLIB@
 
 EXTRA_PROGRAMS = libtoscomm.so toscomm.dll libtoscomm.jnilib
 
-#TODO: check if -O2 works on all platforms, but I don't think we should care with a gcc 4.1 bug anymore
-
-# Compiling libtoscomm.so with -O2 generates bad code with gcc 4.1.x on x86_64
-# (the -O1 code is slightly weird, but works at least ;-))
-
 LIBFLAGS = "-I$(JDK)/include" -s -O2
 SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -shared -fPIC
-DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -shared -D_JNI_IMPLEMENTATION -Wl,--kill-at
+DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -shared -D_JNI_IMPLEMENTATION -Wl,--kill-at -static-libgcc -static-libstdc++ -fno-rtti
 JNILIBFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle
 
 libtoscomm_common_SOURCES = \
@@ -41,7 +36,7 @@ libtoscomm.so$(EXEEXT): $(libtoscomm_so_SOURCES)
 	$(CXX) $(SOFLAGS) $< -o $@
 
 toscomm-64.dll$(EXEEXT): $(toscomm_dll_SOURCES)
-	$(GCXX64) -m64 $(DLLFLAGS) -static-libstdc++ $< -o $@
+	$(GCXX64) -m64 $(DLLFLAGS) $< -o $@
 
 toscomm-32.dll$(EXEEXT): $(toscomm_dll_SOURCES)
-	$(GCXX32) $(DLLFLAGS) $< -o $@
+	$(GCXX32) -m32 $(DLLFLAGS) $< -o $@
