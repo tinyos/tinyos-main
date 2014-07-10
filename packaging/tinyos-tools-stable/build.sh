@@ -59,10 +59,14 @@ unpack()
   cp -R ${TARBALLDIR}/tools ${SOURCEDIRNAME}
   cp -R ${TARBALLDIR}/licenses ${SOURCEDIRNAME}
   
-  #This was fixed after 1.4.2, so it must be removed after the next release
+# The TinyOS 2.1.2 release of tinyos-tools (1.4.2) needs the disable_cross_compiler patch 
+# Post 1.4.2 versions of tinyos-tools won't need this patch.  Remove for the TinyOS 2.2 release. Remove the patch file as well 10/07/2014
+# Without the patch, the make system tries to compile for x86 and x86_64 on every host architecture (even on arm for example)
+# With the patch, it only builds for the host architecture
   cd ${SOURCEDIRNAME}/tools
   patch -p1 < ../../disable_cross_compiler.patch
   cd ../..
+# End of pathcing
 }
 
 build()
