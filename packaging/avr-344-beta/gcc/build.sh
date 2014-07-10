@@ -74,6 +74,7 @@ unpack()
   ln -s ../${GMPDIRNAME} gmp
   ln -s ../${MPFRDIRNAME} mpfr
   ln -s ../${MPCDIRNAME} mpc
+  patch -p0 <../bugfix60486.patch
 }
 
 

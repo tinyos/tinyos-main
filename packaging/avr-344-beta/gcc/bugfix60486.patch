@@ -1,0 +1,13 @@
+--- gcc/config/avr/avr.c	2014/03/13 07:53:48	208531
++++ gcc/config/avr/avr.c	2014/03/13 09:16:53	208532
+@@ -6812,8 +6812,8 @@
+ 
+   /* Work out the shortest sequence.  */
+ 
+-  avr_out_plus_1 (op, &len_minus, MINUS, &cc_plus, code_sat, sign, out_label);
+-  avr_out_plus_1 (op, &len_plus, PLUS, &cc_minus, code_sat, sign, out_label);
++  avr_out_plus_1 (op, &len_minus, MINUS, &cc_minus, code_sat, sign, out_label);
++  avr_out_plus_1 (op, &len_plus, PLUS, &cc_plus, code_sat, sign, out_label);
+ 
+   if (plen)
+     {
