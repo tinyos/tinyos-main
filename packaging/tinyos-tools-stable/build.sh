@@ -1,5 +1,12 @@
 #!/bin/bash
 #
+# This version of tinyos-tools builds a package against the 2.1.2
+# release tree.
+#
+# The tinyos-tools package will pick up various tool scripts and binaries
+# built from the tinyos source tree.  This makes the tinyos-tools package
+# dependent on the current state of the tree.
+#
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
 # set TOSROOT to the head of the tinyos source tree root.
