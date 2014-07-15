@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Builds against the trunk.  PACKAGE_RELEASE gets set to the tip
-# of the trunk (SHA).
+# Builds against the trunk.  PACKAGE_RELEASE gets set to version number
+# concatenated with the SHA of this branch's tip.
 #
 # The tinyos-tools package will pick up various tool scripts and binaries
 # built from the tinyos source tree.  This makes the tinyos-tools package
@@ -33,13 +33,13 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 BUILD_ROOT=$(pwd)
 CODENAME=squeeze
 
-SOURCENAME=tinyos-tools-15
+SOURCENAME=tinyos-tools-devel
 SOURCEVERSION=1.5.0
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
 PREFIX=/usr
-MAKE="make -j8"
+MAKE="make -j1"
 
 download()
 {

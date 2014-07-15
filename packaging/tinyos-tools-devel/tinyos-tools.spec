@@ -1,5 +1,5 @@
 Summary: TinyOS tools 
-Name: tinyos-tools-15
+Name: tinyos-tools-devel
 Version: %{version}
 Release: %{release}
 License: GNU GPL Version 2
@@ -13,9 +13,9 @@ Provides: /bin/sh /bin/bash
 Requires: nesc >= 1.3
 
 %description
-Tools for use with tinyos. Includes, for example: uisp, motelist, pybsl, mig,
-ncc and nesdoc. The source for these tools is found in the TinyOS CVS
-repository under tinyos-2.x/tools.
+Experimental (development trunk) tools for use with tinyos. Includes, for example:
+uisp, motelist, pybsl, mig, ncc and nesdoc. The source for these tools is found
+in the TinyOS git repository under tinyos-2.x/tools.
 
 Development trunk release (post .platform -> platform change).
 

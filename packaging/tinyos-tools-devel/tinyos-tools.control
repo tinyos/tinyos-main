@@ -1,10 +1,8 @@
-Package: tinyos-tools-15
+Package: tinyos-tools-devel
 Version: %{version}
 Section: devel
 Priority: optional
 Architecture: %{architecture}
 Depends: python, python-serial, perl, nesc, default-jdk, default-jre
 Maintainer: Eric B. Decker <cire831@gmail.com>, Andras Biro <andras.biro@ucmote.com>
-Description: Development-tools for TinyOS.   For development trunk after .platform
-    to platform conversion (post SHA 6dc714b).  The tinyos-tools situation will also
-    change again after #190 is commited.
+Description: Experimental (development trunk) tools for TinyOS.
