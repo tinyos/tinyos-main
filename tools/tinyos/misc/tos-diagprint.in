@@ -1,0 +1,157 @@
+#!@pathpython@
+
+# Copyright (c) 2014 Martin Cerveny.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the
+#   distribution.
+# - Neither the name of the copyright holders nor the names of
+#   its contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+# THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# @author Martin Cerveny
+
+# this program displays "printf" (see PrintfC.nc, AM_PRINTF_MSG=0x64) 
+# and "diag" (see DiagMsgC.nc, AM_DIAG_MSG=0xB1) messages
+
+import sys, struct, os.path
+try:
+    import tos
+except ImportError:
+    import posix
+    sys.path = [os.path.join(posix.environ['TOSROOT'], 'support', 'sdk', 'python')] + sys.path
+    import tos
+from datetime import datetime
+
+endtag = False
+
+def TYPE_END():
+    global endtag
+    endtag = True
+
+def TYPE_INT8():
+    print struct.unpack("b",chr(packet.data[0]))[0],
+    del packet.data[0]
+
+def TYPE_UINT8():
+    print struct.unpack("B",chr(packet.data[0]))[0],
+    del packet.data[0]
+
+def TYPE_HEX8():
+    print hex(struct.unpack("B",chr(packet.data[0]))[0]),
+    del packet.data[0]
+
+def TYPE_INT16():
+    print struct.unpack("h",''.join([chr(i) for i in packet.data[0:2]]))[0],
+    del packet.data[0:2]
+
+def TYPE_UINT16():
+    print struct.unpack("H",''.join([chr(i) for i in packet.data[0:2]]))[0],
+    del packet.data[0:2]
+
+def TYPE_HEX16():
+    print hex(struct.unpack("H",''.join([chr(i) for i in packet.data[0:2]]))[0]),
+    del packet.data[0:2]
+
+def TYPE_INT32():
+    print struct.unpack("i",''.join([chr(i) for i in packet.data[0:4]]))[0],
+    del packet.data[0:4]
+
+def TYPE_UINT32():
+    print struct.unpack("I",''.join([chr(i) for i in packet.data[0:4]]))[0],
+    del packet.data[0:4]
+
+def TYPE_HEX32():
+    print hex(struct.unpack("I",''.join([chr(i) for i in packet.data[0:4]]))[0]),
+    del packet.data[0:4]
+
+def TYPE_FLOAT():
+    print struct.unpack("f",''.join([chr(i) for i in packet.data[0:4]]))[0],
+    del packet.data[0:4]
+
+def TYPE_CHAR():
+    sys.stdout.write(chr(packet.data[0]))
+    del packet.data[0]
+
+def TYPE_INT64():
+    print struct.unpack("q",''.join([chr(i) for i in packet.data[0:8]]))[0],
+    del packet.data[0:8]
+
+def TYPE_UINT64():
+    print struct.unpack("Q",''.join([chr(i) for i in packet.data[0:8]]))[0],
+    del packet.data[0:8]
+
+def TYPE_ARRAY():
+    atag = packet.data[0]
+    del packet.data[0]
+    for x in range(0, atag & 0xf):
+        diag[(atag & 0xf0) >> 4]()
+    print " ",
+
+def EmptyHook(packet):
+    return packet
+
+am = tos.AM(oobHook=EmptyHook)
+s = ""
+diag = { 0 : TYPE_END,
+         1 : TYPE_INT8,
+         2 : TYPE_UINT8,
+         3 : TYPE_HEX8,
+         4 : TYPE_INT16,
+         5 : TYPE_UINT16,
+         6 : TYPE_HEX16,
+         7 : TYPE_INT32,
+         8 : TYPE_UINT32,
+         9 : TYPE_HEX32,
+         10 : TYPE_FLOAT,
+         11 : TYPE_CHAR,
+         12 : TYPE_INT64,
+         13 : TYPE_UINT64,
+         15 : TYPE_ARRAY,
+}
+
+while True:
+    packet = am.read()
+    
+    if packet.type == 0x64:
+        s += "".join([chr(i) for i in packet.data]).strip('\0')
+        lines = s.split('\n')
+        for line in lines[:-1]:
+            if line: print str(datetime.now()), line
+        s = lines[-1]
+        packet = None
+        
+    elif packet.type == 0xB1:
+        print str(datetime.now()), "DIAG: ",
+        endtag = False
+        while packet.data:
+           tag = packet.data[0]
+           del packet.data[0]
+           diag[tag & 0xf]()
+           if endtag:
+              break;
+           diag[(tag & 0xf0) >> 4]()
+        print
+        packet = None
+
