@@ -68,11 +68,14 @@ SERIAL_PROTO_PACKET_ACK = 68
 SERIAL_PROTO_PACKET_NOACK = 69
 SERIAL_PROTO_PACKET_UNKNOWN = 255
 
+
 def list2hex(v):
     return " ".join(["%02x" % p for p in v])
 
+
 class Timeout(Exception):
     pass
+
 
 def getSource(comm):
     source = comm.split('@')
@@ -91,7 +94,15 @@ def getSource(comm):
             print "ERROR: Unable to initialize a network connection to", comm
             print "ERROR:", traceback.format_exc()
             raise Exception
+    elif source[0] == 'sf':
+        try:
+            return SerialForwarder(params[0], int(params[1]), debug=debug)
+        except:
+            print "ERROR: Unable to initialize a network connection to", comm
+            print "ERROR:", traceback.format_exc()
+            raise Exception
     raise Exception
+
 
 class Serial:
     def __init__(self, port, baudrate, flush=False, debug=False, readTimeout=None, ackTimeout=0.02):
@@ -122,11 +133,13 @@ class Serial:
         c = self._s.read()
         if c == '':
             raise Timeout
-        #print 'Serial:getByte: 0x%02x' % ord(c)
+        if self.debug:
+            print 'Serial:getByte: 0x%02x' % ord(c)
         return ord(c)
 
     def putBytes(self, data):
-        #print "DEBUG: putBytes:", data
+        if self.debug:
+            print "DEBUG: putBytes:", data
         for b in data:
             self._s.write(struct.pack('B', b))
             time.sleep(0.000001)
@@ -136,6 +149,7 @@ class Serial:
 
     def setTimeout(self, timeout):
         self._s.timeout = timeout
+
 
 class SerialMIB600:
     def __init__(self, host, port=10002, debug=False, readTimeout=None, ackTimeout=0.5):
@@ -154,11 +168,13 @@ class SerialMIB600:
             c = ''
         if c == '':
             raise Timeout
-        #print 'Serial:getByte: 0x%02x' % ord(c)
+        if self.debug:
+            print 'Serial:getByte: 0x%02x' % ord(c)
         return ord(c)
 
     def putBytes(self, data):
-        #print "DEBUG: putBytes:", data
+        if self.debug:
+            print "DEBUG: putBytes:", data
         for b in data:
             self._s.send(struct.pack('B', b))
 
@@ -167,6 +183,59 @@ class SerialMIB600:
 
     def setTimeout(self, timeout):
         self._s.settimeout(timeout)
+
+
+class SerialForwarder:
+    """
+    Connects to an instance of net.tinyos.sf.SerialForwarder.
+    For the protocol read net.tinyos.packet.SFProtocol
+    """
+    def __init__(self, host='localhost', port=9002, debug=False, readTimeout=None, ackTimeout=0.5):
+        self.debug = debug
+        self.readTimeout = readTimeout
+        self.ackTimeout = ackTimeout
+        self._ts = None
+        self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._s.connect((host, port))
+        data = self._s.recv(2)
+        if data != 'U ':
+            print "Wrong handshake"
+        self._s.send("U ")
+        print "Connected"
+
+    def getByte(self):
+        """
+        Reads one single byte from the stream. The first read byte is the length of the payload.
+        """
+        try:
+            c = self._s.recv(1)
+        except socket.timeout:
+            c = ''
+        if c == '':
+            raise Timeout
+        if self.debug:
+            print 'Serial:getByte: 0x%02x' % ord(c)
+        return ord(c)
+
+    def putBytes(self, data):
+        """
+        Writes one byte after the other on the stream until the list is exhausted.
+        data has to be iterable.
+        """
+        # the java SerialForwarder expects the first byte to be the length of the following bytes
+        # followed by a zero byte [length_of_payload + 1, 0, payload]
+        data = [len(data) + 1, 0] + data
+        if self.debug:
+            print "DEBUG: putBytes:", data
+        for b in data:
+            self._s.send(struct.pack('B', b))
+
+    def getTimeout(self):
+        return self._s.gettimeout()
+
+    def setTimeout(self, timeout):
+        self._s.settimeout(timeout)
+
 
 class HDLC:
     """
@@ -370,6 +439,7 @@ class HDLC:
         if self._s.debug:
             print s
 
+
 class SimpleAM(object):
     def __init__(self, source, oobHook=None):
         self._source = source
@@ -395,7 +465,7 @@ class SimpleAM(object):
                 return True
             start = time.time()
             f = self._hdlc.read(self._source.ackTimeout)
-            if f == None:
+            if f is None:
                 #print "Ack Timeout!"
                 continue
             ack = AckFrame(f)
@@ -405,7 +475,7 @@ class SimpleAM(object):
                 else:
                     print 'SimpleAM:write: skip', ack, f
                 f = self._hdlc.read(self._source.ackTimeout)
-                if f == None:
+                if f is None:
                     #print "Ack Timeout!"
                     break
                 ack = AckFrame(f)
@@ -418,8 +488,9 @@ class SimpleAM(object):
     def setOobHook(self, oobHook):
         self.oobHook = oobHook
 
+
 def printfHook(packet):
-    if packet == None:
+    if packet is None:
         return
     if packet.type == 100:
         s = "".join([chr(i) for i in packet.data]).strip('\0')
@@ -429,9 +500,10 @@ def printfHook(packet):
         packet = None # No further processing for the printf packet
     return packet    
 
+
 class AM(SimpleAM):
     def __init__(self, s=None, oobHook=None):
-        if s == None:
+        if s is None:
             try:
                 s = getSource(sys.argv[1])
             except:
@@ -439,7 +511,7 @@ class AM(SimpleAM):
                     for (i, j) in zip(sys.argv[1::2], sys.argv[2::2]):
                         if i == '-comm':
                             s = getSource(j)
-                    if s == None:
+                    if s is None:
                         raise Exception
                 except:
                     try:
@@ -447,7 +519,7 @@ class AM(SimpleAM):
                     except:
                         print "ERROR: Please indicate a way to connect to the mote"
                         sys.exit(-1)
-        if oobHook == None:
+        if oobHook is None:
             oobHook = printfHook
         super(AM, self).__init__(s, oobHook)
 
@@ -463,43 +535,67 @@ class AM(SimpleAM):
         return True
 
 
-# class SFClient:
-#     def __init__(self, host, port, qsize=10):
-#         self._in_queue = Queue(qsize)
-#         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#         self._s.connect((host, port))
-#         data = self._s.recv(2)
-#         if data != 'U ':
-#             print "Wrong handshake"
-#         self._s.send("U ")
-#         print "Connected"
-#         thread.start_new_thread(self.run, ())
+class SFClient:
+    """
+    SFClient uses SerialForwarder to connect to a Java SerialForwarder instance.
+    """
+    # Note: can't use HDLC with SerialForwarder
+    def __init__(self, source=None, oobHook=None):
+        if source is None:
+            try:
+                self._source = getSource(sys.argv[1])
+            except:
+                print "ERROR: Please indicate a way to connect to the mote"
+                sys.exit(-1)
+        if oobHook is None:
+            self.oobHook = printfHook
+        else:
+            self.oobHook = oobHook
 
-#     def run(self):
-#         while True:
-#             length = ord(self._s.recv(1))
-#             data = self._s.recv(length)
-#             data = [ord(c) for c in data][1:]
-#             #print "Recv %d bytes" % (length), ActiveMessage(data)
-#             if self._in_queue.full():
-#                 print "Warning: Buffer overflow"
-#                 self._in_queue.get()
-#             p = RawPacket()
-#             p.data = data
-#             self._in_queue.put(p, block=False)
+    def read(self, timeout=None):
+        """
+        Reads one complete packet from the stream.
+        timeout is currently not implemented and solely exists to be equivalent with the AM class.
+        """
+        # read data and create a raw packet
+        length = self._source.getByte()
 
-#     def read(self, timeout=0):
-#         return self._in_queue.get()
+        packet = []
+        for i in range(length):
+            packet.append(self._source.getByte())
+        rawPacket = RawPacket(time.time(), [length] + packet)
 
-#     def write(self, payload):
-#         print "SFClient: write:", payload
-#         if type(payload) != type([]):
-#             # Assume this will be derived from Packet
-#             payload = payload.payload()
-#         payload = [0] + payload
-#         self._s.send(chr(len(payload)))
-#         self._s.send(''.join([chr(c) for c in payload]))
-#         return True
+        if rawPacket:
+            # create an ActiveMessage (to be compatible with SimpleAM)
+            return ActiveMessage(NoAckDataFrame(rawPacket))
+
+        return None
+
+    def _write(self, packet, amId, timeout=5, blocking=True, inc=1):
+        """
+        _write is internally used to mimic the behaviour of the AM class.
+        """
+        # TODO: implement blocking? implement sequence numbers? remove timeout?
+        endTime = None
+        if timeout:
+            endTime = time.time() + timeout
+
+        while not endTime or time.time() < endTime:
+            message = ActiveMessage(packet, amId)
+            message = message.payload()
+            self._source.putBytes(message)
+            return True
+
+    def write(self, packet, amId, timeout=5, blocking=True, inc=1):
+        """
+        Writes one packet on the stream.
+        """
+        r = self._write(packet, amId, timeout, blocking)
+        while not r:
+            r = self._write(packet, amId, timeout, blocking, inc=0)
+            if timeout and not r:
+                raise Timeout
+        return True
 
 
 ################################################################################
@@ -535,7 +631,7 @@ class Packet:
         sum = 0
         for i in range(len(desc)-1, -1, -1):
             (n, t, s) = desc[i]
-            if s == None:
+            if s is None:
                 if sum > 0:
                     desc[i] = (n, t, -sum)
                 break
@@ -673,6 +769,7 @@ class RawPacket(Packet):
         self.ts = ts;
         self.data = data
 
+
 class AckFrame(Packet):
     def __init__(self, payload = None):
         if isinstance(payload, Packet):
@@ -684,6 +781,7 @@ class AckFrame(Packet):
                         [('protocol', 'int', 1),
                          ('seqno',    'int', 1)],
                         payload)
+
 
 class DataFrame(Packet):
     def __init__(self, payload = None):
@@ -699,6 +797,7 @@ class DataFrame(Packet):
                          ('data',      'blob', None)],
                         payload)
 
+
 class NoAckDataFrame(Packet):
     def __init__(self, payload = None):
         if isinstance(payload, Packet):
@@ -711,6 +810,7 @@ class NoAckDataFrame(Packet):
                          ('dispatch',  'int', 1),
                          ('data',      'blob', None)],
                         payload)
+
 
 class ActiveMessage(Packet):
     def __init__(self, packet = None, amId = 0x00, dest = 0xFFFF):
@@ -729,7 +829,7 @@ class ActiveMessage(Packet):
                          ('type',        'int', 1),
                          ('data',        'blob', None)],
                         payload)
-        if payload == None:
+        if payload is None:
             self.destination = dest
             self.source = 0x0000
             self.group = 0x00

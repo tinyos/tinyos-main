@@ -421,8 +421,11 @@ def checkImgNum():
 
 # ======== MAIN ======== #
 if len(sys.argv) >= 3:
-
-    am = tos.AM()
+    am = None
+    if sys.argv[1].startswith("sf"):
+        am = tos.SFClient()
+    else:
+        am = tos.AM()
 
     try:
         print "Checking if node is a Deluge T2 base station ..."
