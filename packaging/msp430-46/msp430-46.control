@@ -1,7 +1,7 @@
 Package: msp430-46
 Version: @version@
 Architecture: @architecture@
-Depends: msp430-binutils-46, msp430-gcc-46, msp430-libc-46, msp430mcu-46, msp430-gdb-46, tinyos-tools
+Depends: msp430-binutils-46, msp430-gcc-46, msp430-libc-46, msp430mcu-46, msp430-gdb-46, tinyos-tools | tinyos-tools-devel
 Maintainer: Eric B. Decker <cire831@gmail.com>
 Priority: optional
 Section: devel
