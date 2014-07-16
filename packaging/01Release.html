@@ -4,26 +4,30 @@
      line-height: 1.2em;'
 >
 
-<p><b>TinyOS Debian Development Repository</b></p>
-Last update: 20140624, cire
+<p><b>TinyOS (TinyProd) Debian Development Repository</b></p>
+Last update: 20140715, cire
 <br>(Changelog at end)
 
 <br><br>
-3 repositories are homed here that maybe useful to the TinyOS development community.
+4 repositories are homed here that maybe useful to the TinyOS development community.
 
 <ul>
-<li><b><i>squeeze</i></b>: contains general tinyos tools.   Useful for multiple target motes.
+<li><b><i>squeeze</i></b>/<b><i>wheezy</i></b>: contain general tinyos tools.   Useful for multiple target motes.
 <li><b><i>msp430-46</i></b>: current cross compiler toolchain for msp430 based TinyOS development,
 <a href='http://tinyprod.net/repos/debian/README-46.html'> README-46</a>.
 <br>
 <li><b><i>msp430-47</i></b>: experimental mspgcc 4.7.0 cross compiler for msp430 platforms, (20 bit support),
 <a href='http://tinyprod.net/repos/debian/README-47.html'> README-47</a>.
 </ul>
-<p><b>Squeeze</b>, the main repository, contains the following packages for <i>i386</i> and <i>amd64</i>:</p>
+<p><b>Wheezy</b> is the main repository and provides packages built on Debian 7.5 (wheezy).  
+<b>Squeeze</b> (debian 6.0.9 packages) is provided for prior installations.
 
+<p>Wheezy contains the following packages for <i>i386</i> and <i>amd64</i>:</p>
 <ul>
 <li>nesc: 1.3.5
 <li>tinyos-tools: 1.4.2
+<li>tinyos-tools-14: 1.4.2
+<li>tinyos-tools-devel: 1.5.0
 <li>mspdebug: 0.22
 <br><br>
 <li>avarice-tinyos: 2.11-20110905
@@ -64,17 +68,28 @@ Sourcery</a>.
 </p>
 </div>
 <br>
-An erroneous version of tinyos-tools (1.4.3) was released by accident.  Version 1.4.2 is what should
-be used.  You can determine what version you have installed by:
+tinyos-tools is changing.
+
+<br><br>
+tinyos-tools-devel and tinyos-tools >= 2.2.0 are not
+backward compatible with TinyOS releases < 2.2.0.
+                                           
+<br><br>
+For the TinyOS 2.1.2 release, you should install tinyos-tools-14 (tinyos-tools).  Releases
+prior to 2.1.2 are not supported.
+
+<br><br>
+For the development trunk, one should use tinyos-tools-devel.
+
+<br><br>
+tinyos-tools and tinyos-tools-14 are incompatible with tinyos-tools-devel.  Mutually exclusive.
+You must remove tinyos-tools (tinyos-tools-14) prior to installing tinyos-tools-devel and
+vice-versa.
 
 <pre>
-  $ dpkg -l tinyos-tools
-</pre>
-
-If you have installed 1.4.3, you should remove and reinstall via the following:
-<pre>
+  $ sudo
   $ apt-get purge tinyos-tools
-  $ apt-get install tinyos-tools
+  $ apt-get install tinyos-tools-devel
 </pre>
 
 <br>
@@ -105,12 +120,12 @@ If you have installed 1.4.3, you should remove and reinstall via the following:
 
 <li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
 <pre>
-  deb http://tinyprod.net/repos/debian squeeze main
+  deb http://tinyprod.net/repos/debian wheezy main
   deb http://tinyprod.net/repos/debian msp430-46 main
 
   $ sudo -s
   $ cd /etc/apt/sources.list.d
-  $ echo "deb http://tinyprod.net/repos/debian squeeze main" >> tinyprod-debian.list
+  $ echo "deb http://tinyprod.net/repos/debian wheezy main" >> tinyprod-debian.list
   $ echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
 
 </pre>
@@ -158,6 +173,9 @@ If you have installed 1.4.3, you should remove and reinstall via the following:
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140715, cire: add tinyos-tools-14, tinyos-tools-devel
+                  create Wheezy compiled packages
+                  make wheezy be the primary repository
   20140624, cire: remove 1.4.3, replace with 1.4.2 (from Stanford)
   20140612, cire: move signing key around
   20140527, cire: tweaks
