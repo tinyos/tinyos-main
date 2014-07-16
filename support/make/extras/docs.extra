@@ -1,0 +1,40 @@
+#-*-Makefile-*- vim:syntax=make
+
+ARCHIVE = nesdoc-archive
+GENHTML = nesdoc-genhtml
+
+# The output directory for generated documentation
+DOCDIR := $(TINYOS_ROOT_DIR)/doc/nesdoc
+
+COMMA=,
+DOCS := $(subst $(COMMA), ,$(subst ., ,$(DOCS)))
+
+ifeq ($(filter here,$(DOCS)),here)
+DOCDIR = doc
+endif
+
+ifeq ($(filter preserve,$(DOCS)),preserve)
+NESDOC_ARCHIVE_FLAGS += --preserve
+endif
+
+ifeq ($(filter quiet,$(DOCS)),quiet)
+QUIET = --quiet
+endif
+
+TOPDIR = $(shell dirname $(TINYOS_OS_DIR))
+TOSMAKE_DOC_DIR ?= $(DOCDIR)/$(TARGET)
+
+NESDOC_FLAGS += -fsyntax-only -fnesc-dump=interfacedefs -fnesc-dump='components(wiring)' -fnesc-dump=interfaces -fnesc-dump='functions(!global())' -fnesc-dump='referenced(interfaces,components,functions)'
+
+BUILD_DEPS = docs_
+
+docs_: doc_dir FORCE
+	@echo -e '$(INFO_STRING) making documentation for $(COMPONENT) on $(PLATFORM)'
+	$(NESC) $(NESDOC_FLAGS) $(NESC_PFLAGS) $(CFLAGS) $(COMPONENT).nc > $(TOSMAKE_DOC_DIR)/doc.xml
+	$(ARCHIVE) --topdir $(TOPDIR) $(NESDOC_ARCHIVE_FLAGS) $(QUIET) $(TOSMAKE_DOC_DIR) < $(TOSMAKE_DOC_DIR)/doc.xml
+	@echo -e '$(INFO_STRING) generate HTML output for documentation'
+	$(GENHTML) $(QUIET) $(TOSMAKE_DOC_DIR)
+
+doc_dir: FORCE
+	@mkdir -p $(TOSMAKE_DOC_DIR)
+

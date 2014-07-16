@@ -1,0 +1,21 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/btnode3
+PFLAGS += -I%T/platforms/btnode3/chips/cc1000
+PFLAGS += -I%T/platforms/mica
+PFLAGS += -I%T/platforms/mica2
+PFLAGS += -I%T/platforms/mica2/chips/cc1000
+PFLAGS += -I%T/chips/cc1000
+PFLAGS += -I%T/chips/atm128
+PFLAGS += -I%T/chips/atm128/adc
+PFLAGS += -I%T/chips/atm128/i2c
+PFLAGS += -I%T/chips/atm128/pins
+PFLAGS += -I%T/chips/atm128/spi
+PFLAGS += -I%T/chips/atm128/timer
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+
+PFLAGS += -mmcu=atmega128
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug

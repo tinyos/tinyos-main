@@ -1,0 +1,44 @@
+#-*-Makefile-*- vim:syntax=make
+
+# Include directories for epic platform
+PFLAGS += -I%T/platforms/epic
+PFLAGS += -I%T/platforms/epic/chips/at45db
+PFLAGS += -I%T/platforms/epic/chips/ds2411
+PFLAGS += -I%T/platforms/telosa
+PFLAGS += -I%T/platforms/telosa/chips/cc2420
+PFLAGS += -I%T/chips/cc2420
+PFLAGS += -I%T/chips/cc2420/alarm
+PFLAGS += -I%T/chips/cc2420/control
+PFLAGS += -I%T/chips/cc2420/csma
+PFLAGS += -I%T/chips/cc2420/interfaces
+PFLAGS += -I%T/chips/cc2420/link
+PFLAGS += -I%T/chips/cc2420/lowpan
+PFLAGS += -I%T/chips/cc2420/lpl
+PFLAGS += -I%T/chips/cc2420/packet
+PFLAGS += -I%T/chips/cc2420/receive
+PFLAGS += -I%T/chips/cc2420/spi
+PFLAGS += -I%T/chips/cc2420/transmit
+PFLAGS += -I%T/chips/cc2420/unique
+PFLAGS += -I%T/chips/cc2420/security
+PFLAGS += -I%T/chips/msp430
+PFLAGS += -I%T/chips/msp430/adc12
+PFLAGS += -I%T/chips/msp430/dma
+PFLAGS += -I%T/chips/msp430/pins
+PFLAGS += -I%T/chips/msp430/timer
+PFLAGS += -I%T/chips/msp430/usart
+PFLAGS += -I%T/chips/msp430/sensors
+PFLAGS += -I%T/chips/at45db
+PFLAGS += -I%T/chips/ds2411
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/onewire
+
+# Extra options for epic platform
+PFLAGS += -mmcu=msp430f1611
+PFLAGS += -fnesc-target=msp430
+PFLAGS += -fnesc-no-debug
+
+#push @opts, "-mingw-gcc" if $cygwin;
+
+TOSMAKE_FLASH_CHIP = at45db

@@ -7,4 +7,7 @@ RssiDemo.class: RssiDemo.java RssiMsg.java
 	javac $^
 
 RssiMsg.java: ../RssiDemoMessages.h
-	mig java -target=null -java-classname=RssiMsg $< RssiMsg -o $@
+	nescc-mig java -java-classname=RssiMsg $< RssiMsg -o $@
+
+clean:
+	rm -f *.class RssiMsg.java

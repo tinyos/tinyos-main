@@ -1,0 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
+build_tosimage: ihex exe build_dir FORCE
+	@echo -e '$(INFO_STRING) writing TOS image'
+	@tos-write-image $(IDENT_FLAGS) --ihex="$(MAIN_IHEX)" --exe="$(MAIN_EXE)" --objdump="$(OBJDUMP)" --platform="$(PLATFORM)" > $(TOSMAKE_BUILD_DIR)/tos_image.xml

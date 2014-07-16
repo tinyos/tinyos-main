@@ -1,0 +1,164 @@
+#-*-Makefile-*- vim:syntax=make
+# Extra threads Makefile target to enable thread support for tinyos
+# Kevin Klues May 16th, 2008
+# Chieh-Jan Mike Liang July 11th, 2008
+
+#Set up flag signifying threads are enabled
+THREADS = THREADS
+PFLAGS += -D$(THREADS)
+TOS_THREADS_DIR ?= $(TINYOS_OS_DIR)/lib/tosthreads
+
+#Include directories required by all platforms and mcus
+PFLAGS += -I$(TOS_THREADS_DIR)/system
+PFLAGS += -I$(TOS_THREADS_DIR)/interfaces
+PFLAGS += -I$(TOS_THREADS_DIR)/types
+PFLAGS += -I$(TOS_THREADS_DIR)/lib/serial
+
+#Setup the thread scheduler for use by redefining the name of the task scheduler to use
+NESC_SCHEDULER = SchedulerBasicP,TinyTaskSchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+#Msp430 specific include directories on tested platforms
+THREADS_MSP430_DIR = $(TOS_THREADS_DIR)/chips/msp430
+THREADS_MSP430_INCLUDE_DIRS = -I$(THREADS_MSP430_DIR)
+THREADS_MSP430_INCLUDE_DIRS += -I$(THREADS_MSP430_DIR)/adc12
+THREADS_MSP430_INCLUDE_DIRS += -I$(THREADS_MSP430_DIR)/sensors
+
+#Atm128 specific include directories on tested platforms
+THREADS_ATM128_DIR = $(TOS_THREADS_DIR)/chips/atm128
+THREADS_ATM128_INCLUDE_DIRS = -I$(THREADS_ATM128_DIR)
+THREADS_ATM128_INCLUDE_DIRS += -I$(THREADS_ATM128_DIR)/adc
+
+#Atm1281 specific include directories on tested platforms
+THREADS_ATM1281_DIR = $(TOS_THREADS_DIR)/chips/atm1281
+THREADS_ATM1281_INCLUDE_DIRS = -I$(THREADS_ATM1281_DIR)
+
+#CC1000 specific include directories on tested platforms
+THREADS_CC1000_DIR = $(TOS_THREADS_DIR)/chips/cc1000
+THREADS_CC1000_INCLUDE_DIRS = -I$(THREADS_CC1000_DIR)
+
+#CC2420 specific include directories on tested platforms
+THREADS_CC2420_DIR = $(TOS_THREADS_DIR)/chips/cc2420
+THREADS_CC2420_INCLUDE_DIRS = -I$(THREADS_CC2420_DIR)
+
+#RF230 specific include directories on tested platforms
+THREADS_RF230_DIR = $(TOS_THREADS_DIR)/chips/rf230
+THREADS_RF230_INCLUDE_DIRS = -I$(THREADS_RF230_DIR)
+
+#TDA5250 specific include directories on tested platforms
+THREADS_TDA5250_DIR = $(TOS_THREADS_DIR)/chips/tda5250
+THREADS_TDA5250_INCLUDE_DIRS = -I$(THREADS_TDA5250_DIR)
+
+#XE1205 specific include directories on tested platforms
+THREADS_XE1205_DIR = $(TOS_THREADS_DIR)/chips/xe1205
+THREADS_XE1205_INCLUDE_DIRS = -I$(THREADS_XE1205_DIR)
+
+#Telos specific include directories
+THREADS_TELOS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/telosa
+
+#Mica2 specific include directories
+THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2
+THREADS_MICA2_INCLUDE_DIRS += -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000
+
+#Mica2dot specific include directories
+THREADS_MICA2DOT_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2dot
+THREADS_MICA2DOT_INCLUDE_DIRS += -I$(TOS_THREADS_DIR)/platforms/mica2dot/chips/cc1000
+
+#MicaZ specific include directories
+THREADS_MICAZ_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/micaz
+
+#IRIS specific include directories
+THREADS_IRIS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/iris
+
+#TinyNode specific include directories
+THREADS_TINYNODE_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/tinynode
+
+#eyesIFX specific include directories
+THREADS_EYES_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/eyesIFX
+
+#Shimmer specific include directories
+THREADS_SHIMMER_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/shimmer
+
+#Epic specific include directories
+THREADS_EPIC_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/epic
+
+#M16c60 specific include directories on tested platforms
+THREADS_M16C60_DIR = $(TOS_THREADS_DIR)/chips/m16c60
+THREADS_M16C60_INCLUDE_DIRS = -I$(THREADS_M16C60_DIR)
+
+#Mulle specific include directories
+THREADS_MULLE_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mulle
+
+#Add PFLAGS for supported platforms
+ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_TELOS_INCLUDE_DIRS)
+
+  #Since Telosb has some sensors not on other platforms, this helps us figure out
+  #what components should be included
+  ifneq ($(filter telosb,$(MAKECMDGOALS)),)
+    PFLAGS += -DPLATFORM_TELOSB
+  endif
+endif
+ifneq ($(filter epic,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_EPIC_INCLUDE_DIRS)
+endif
+ifneq ($(filter mica2,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC1000_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_MICA2_INCLUDE_DIRS)
+endif
+ifneq ($(filter mica2dot,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC1000_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_MICA2DOT_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_MICA2_INCLUDE_DIRS)
+endif
+ifneq ($(filter micaz,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_MICAZ_INCLUDE_DIRS)
+endif
+ifneq ($(filter iris,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_ATM1281_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_RF230_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_IRIS_INCLUDE_DIRS)
+endif
+ifneq ($(filter tinynode,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_XE1205_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_TINYNODE_INCLUDE_DIRS)
+endif
+ifneq ($(filter eyesIFX eyesIFXv2,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_TDA5250_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_EYES_INCLUDE_DIRS)
+endif
+ifneq ($(filter shimmer,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
+endif
+ifneq ($(filter shimmer2,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
+endif
+ifneq ($(filter shimmer2r,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
+endif
+ifneq ($(filter span,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
+endif
+ifneq ($(filter mulle,$(MAKECMDGOALS)),)
+  PFLAGS += $(THREADS_M16C60_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_RF230_INCLUDE_DIRS)
+  PFLAGS += $(THREADS_MULLE_INCLUDE_DIRS)
+endif

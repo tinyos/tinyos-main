@@ -1,0 +1,25 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = z1
+
+MSP_BSL ?= tos-bsl
+MOTELIST ?= motelist
+
+MSP_BSL_FLAGS = --z1
+MSP_MCU ?= msp430f2617
+MSP_GCC ?= msp430-gcc
+MSP_NESC_TARGET ?= msp430
+
+# test the compiler to see if -mdata-64k is supported and if so tell it
+# to put data into lower 64k.
+
+HAS_MDATA = $(shell msp430-gcc --target-help | grep mdata-64k | awk '{print $1}')
+ifneq "$(HAS_MDATA)" ""
+PFLAGS += -mdata-64k
+endif
+
+$(call TOSMake_include_platform,z1)
+$(call TOSMake_include_make_platform,msp)
+
+z1: $(BUILD_DEPS)
+	@:

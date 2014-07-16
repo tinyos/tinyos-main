@@ -1,3 +1,4 @@
 COMPONENT=TestAppC
-PFLAGS += -I$(TOSDIR)/lib/printf
-include $(MAKERULES)
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

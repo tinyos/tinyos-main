@@ -1,0 +1,32 @@
+#-*-Makefile-*-
+
+PFLAGS += -DBIG_ENDIAN=4321
+PFLAGS += -DLITTLE_ENDIAN=1234
+PFLAGS += -DBYTE_ORDER=LITTLE_ENDIAN
+PFLAGS += -DNDEBUG=1
+
+#CoapBlip
+PFLAGS+=-I%T/lib/net/coap/
+PFLAGS+=-I%T/lib/net/coap/resources/
+PFLAGS+=-I%T/lib/net/coap/resources/IPSO/
+PFLAGS+=-I%T/lib/net/coap/translate/
+PFLAGS+=-I%T/lib/app/coap/interfaces/
+
+# for some option functions:
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_OS_DIR)/lib/net/coap/tinyos_net.c
+
+# libcoap:
+PFLAGS+=-I$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/async.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/block.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/coap_list.c
+#TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/debug.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/encode.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/hashkey.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/net.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/option.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/pdu.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/resource.c
+#TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/str.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/subscribe.c
+TOSMAKE_ADDITIONAL_INPUTS+=$(TINYOS_ROOT_DIR)/tools/tinyos/c/coap/uri.c

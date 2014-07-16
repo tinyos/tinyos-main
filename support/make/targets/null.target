@@ -1,0 +1,12 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = null
+PFLAGS += -finline-limit=100000
+
+$(call TOSMake_include_platform,null)
+
+$(call TOSMake_include_make_platform,null)
+
+null: $(BUILD_DEPS)
+	@:
+

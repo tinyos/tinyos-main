@@ -1,3 +1,0 @@
-#-*-Makefile-*- vim:syntax=make
-
-NOWIRING=1

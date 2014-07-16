@@ -1,55 +1,93 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.6 2008/09/26 20:13:58 klueska Exp $
+
+### ---
+### --- TinyOS Make System Version 3
+### ---
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
+# @author Brad Campbell <bradjc@umich.edu>
 
 ### --- This makefile requires GNU Make version 3.80 or newer.
 
+# Make the coloring work on Mac
+SHELL=/bin/bash
 
 ### ---
 ### --- Prepare variables
 ### ---
 
-#  Get TOSDIR from ncc if it isn't set already.
-ifndef TOSDIR
-TOSDIR := $(shell ncc -print-tosdir)
-endif
+#  Most variables are set in Makefile.include
 
 #  Mung MAKERULES for Cygwin; see the warning below for more details.
-ifneq ($(findstring \,$(MAKERULES)),)
-MAKERULES := $(subst \,/,$(MAKERULES))
+ifneq ($(findstring \,$(TINYOS_MAKERULES)),)
+TINYOS_MAKERULES := $(subst \,/,$(TINYOS_MAKERULES))
 define BACKSLASH_WARNING
-warning, MAKERULES contains backslashes.
+$(WARN_STRING) TINYOS_MAKERULES contains backslashes.
 
-    The environment variable MAKERULES contains backslashes \'s.  This can
-    cause shell scripts including ones in this make system to fail in
+    The environment variable TINYOS_MAKERULES contains backslashes \'s.  This
+    can cause shell scripts including ones in this make system to fail in
     strange ways.  I've changed those to forward slashes for you for this
-    build.  However, you are strongly encouraged to respecify MAKERULES as
-    either a standard unix-style path or as a mixed-style path where the
+    build.  However, you are strongly encouraged to respecify TINYOS_MAKERULES
+    as either a standard unix-style path or as a mixed-style path where the
     backslashes are replaced with forward slashes /'s.
 
 endef
 $(warning $(BACKSLASH_WARNING))
 endif
 
-#  Deduce TINYOS_MAKE_PATH, the path to this file, if it's not defined already.
-ifndef TINYOS_MAKE_PATH
-  ifdef MAKERULES
-    TINYOS_MAKE_PATH := $(dir $(MAKERULES))
-    TINYOS_MAKE_PATH := $(TINYOS_MAKE_PATH:%/=%)
-  else
-    TINYOS_MAKE_PATH := $(TOSDIR)/../support/make
-  endif
+#  Allow users to specify additional directories to find .target, .extra, and
+#  .rules files. This allows for platforms to be stored in separate repositories
+#  and still compile against the main TinyOS code.
+#  To use this feature, set the environment variable TINYOS_ROOT_DIR_ADDITIONAL
+#  to a space separated list of additional paths to make folders you would
+#  like the make system to search.
+ROOT_DIR_ADDITIONAL = $(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL))
+TOSMAKE_PATH = $(addsuffix /support/make,$(ROOT_DIR_ADDITIONAL))
+TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
+
+#  Also determine the path for all TinyOS OS directories that may have code in
+#  them. This makes out-of-tree builds and multiple TinyOS code trees very easy
+#  to manage. All relevant folders will automatically be included to the call to
+#  nescc.
+TOSMAKE_OS_DIR_ALL = $(addsuffix /tos,$(ROOT_DIR_ADDITIONAL)) $(TINYOS_OS_DIR)
+
+# Create identifying flags for the particular application, user, timestamp, etc.
+IDENT_FLAGS := $(shell tos-ident-flags "$(COMPONENT)")
+CFLAGS += $(IDENT_FLAGS)
+
+#  Set the rules that expand PFLAGS (which have %T in them) to the PFLAGS that
+#  nescc sees when it compiles.
+TOSDIR_OPTS = $(addprefix --tosdir ,$(TOSMAKE_OS_DIR_ALL))
+ADD_SIM_DIRS = $(if $(filter sim sim-fast sim-sf,$(GOALS)),--sim,)
+NESC_PFLAGS = $(shell tos-sub-tosdir $(TOSDIR_OPTS) $(ADD_SIM_DIRS) $(PFLAGS) $(TOSMAKE_PFLAGS_STD_INCLUDE))
+
+# Add the defaults to the list of PFLAGS. These are set in Makedefaults.
+# - What gcc to use
+# - nescc defaults (all warnings, include tos.h)
+# - nescc scheduler
+# - .c file for nescc output
+# - Separator for nescc output
+# - Define the default TOS AM group
+PFLAGS += -gcc=$(GCC)
+PFLAGS += $(NESC_FLAGS)
+PFLAGS += -fnesc-scheduler=$(NESC_SCHEDULER)
+PFLAGS += -fnesc-cfile=$(NESC_CFILE)
+PFLAGS += -fnesc-separator=$(NESC_SEPARATOR)
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(TOSMAKE_AM_GROUP)
+
+# Check for Cygwin
+OSNAME := $(shell uname -s)
+ifeq ($(OSNAME),Cygwin)
+  TOSMAKE_CYGWIN := 1
+  PFLAGS += -mingw-gcc
 endif
 
-#  Use a default Makelocal if it's not defined already.
-TINYOS_MAKELOCAL ?= $(TINYOS_MAKE_PATH)/Makelocal
+# Setup the flags needed to do the wiring check
+WIRING_CHECK_FLAGS = -fnesc-dump=wiring -fnesc-dump='interfaces(!abstract())' -fnesc-dump='referenced(interfacedefs, components)' -fnesc-dumpfile=$(WIRING_CHECK_FILE)
+WIRING_CHECK_FILE = $(TOSMAKE_BUILD_DIR)/wiring-check.xml
 
-#  Use a default Makedefaults if it's not defined already.
-TINYOS_MAKEDEFAULTS ?= $(TINYOS_MAKE_PATH)/Makedefaults
-
-#  Allow users to specify additional directories to find TOSMake files.
-TOSMAKE_PATH += $(TINYOS_MAKE_PATH)
+# Set default build targets
+BUILD_DEPS ?= tinyos_image
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -62,9 +100,36 @@ GOALS := $(shell perl -e '$$_="$(GOALS)"; s{$(OptRE)\S*}{}g; print;')
 $(foreach opt,$(GoalOpts),$(eval $(opt)))
 
 
+# Colors
+ifndef TOSMAKE_NO_COLOR
+NO_COLOR=\x1b[0m
+OK_COLOR=\x1b[32;01m
+ERROR_COLOR=\x1b[31;01m
+WARN_COLOR=\x1b[33;01m
+INFO_COLOR=\x1b[34;01m
+endif
+
+OK_STRING=$(OK_COLOR)[OK]$(NO_COLOR)
+ERROR_STRING=$(ERROR_COLOR)[ERROR]$(NO_COLOR)
+WARN_STRING=$(WARN_COLOR)[WARNING]$(NO_COLOR)
+INFO_STRING=$(INFO_COLOR)[INFO]$(NO_COLOR)
+
+### --- Check if a new enough version of tinyos-tools is installed. This really
+### --- equates to whether or not the `tos-sub-tosdir` script exists.
+
+define OLD_TOOLS_ERROR
+
+$(ERROR_STRING) Your version of tinyos-tools is too old (<2.2.0).
+Please build and install the tinyos-tools in the tinyos-main/tools directory
+endef
+
+TOS_SUB_TOSDIR_OUTPUT := $(shell tos-sub-tosdir --help 2>/dev/null)
+ifndef TOS_SUB_TOSDIR_OUTPUT
+    $(error $(shell echo -e '$(OLD_TOOLS_ERROR)'))
+endif
+
 ### ---
 ### --- Define make functions.
-### --- (Lord, this is ugly. I want a real scripting language so bad.)
 ### ---
 ### --- The functions a user will generally be interested in are
 ### ---   TOSMake_include(file)
@@ -77,7 +142,7 @@ names = $(sort $(basename $(notdir $(1))))
 
 #  TOSMake_find(file_or_dir)
 #    Search for file_or_dir within TOSMAKE_PATH.  For the special case of
-#    initializing TOSMAKE_PATH itself, this function does not search 
+#    initializing TOSMAKE_PATH itself, this function does not search
 #    TOSMAKE_PATH if file_or_dir begins with +.
 sh_search = for a in $(TOSMAKE_PATH); do [ -e "$$a/$$n" ] && echo "$$a/$$n" && break; done
 TOSMake_find = $(if $(filter +%,$(1)),$(1:+%=%),$(shell n="$(1)"; $(sh_search)))
@@ -89,7 +154,11 @@ TOSMake_makelist = $(wildcard $(call TOSMake_find,$(1))/*.$(2))
 
 #  TOSMake_include(file)
 #    Include a makefile which MUST be in a dir or subdir under TOSMAKE_PATH.
-TOSMake_include = $(eval include $(call TOSMake_find,$(1)))
+TOSMake_include = $(eval $(call TOSMake_include_define,$(1)))
+define TOSMake_include_define
+$(if $(call TOSMake_find,$(1)),,$(error File $(1) not found in any TinyOS make path. The search path is '$(TOSMAKE_PATH)'))
+$(eval include $(call TOSMake_find,$(1)))
+endef
 
 #  TOSMake_extra_targets(name)
 #    Create a default make targets for a TOSMake extra full with its possible
@@ -116,21 +185,55 @@ endef
 
 TOSMake_accum_dir = $(eval $(call TOSMake_accum_dir_define,$(1)))
 define TOSMake_accum_dir_define
-$(eval NEW_EXTRAS := $(call TOSMake_makelist,$(1),extra))
-$(eval NEW_TARGETS := $(call TOSMake_makelist,$(1),target))
+$(eval NEW_EXTRAS := $(call TOSMake_makelist,$(1)/extras,extra))
+$(eval NEW_TARGETS := $(call TOSMake_makelist,$(1)/targets,target))
 $(eval VALID_EXTRAS += $(NEW_EXTRAS))
 $(eval VALID_TARGETS += $(NEW_TARGETS))
 $(eval TARGETS = $(filter $(call names,$(VALID_TARGETS)),$(GOALS)))
 endef
 
-#  TOSMake_include_platform(dir)
+# TOSMake_include_target(dir)
+#   Pull in a .target file, which MUST be in the targets folder which is also a
+#   subdir of TOSMAKE_PATH.
+TOSMake_include_target=$(eval $(call TOSMake_include_target_define,$(1)))
+define TOSMake_include_target_define
+$(call TOSMake_include,targets/$(1).target)
+endef
+
+#  TOSMake_include_make_platform(dir)
 #    Pull in a directory as a new TOSMake platform, which MUST be a subdir of
 #    TOSMAKE_PATH.  A platform directory must also have a .rules file, which
 #    is automatically evaluated.
-TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
-define TOSMake_include_platform_define
+TOSMake_include_make_platform=$(eval $(call TOSMake_include_make_platform_define,$(1)))
+define TOSMake_include_make_platform_define
 $(call TOSMake_include_dir,$(1))
 $(call TOSMake_include,$(1)/$(1).rules)
+TOSMAKE_MAKE_PLATFORM_DIR = $(shell dirname $(call TOSMake_find,$(1)/$(1).rules))
+endef
+
+# TOSMake_include_sensor(sensorboard)
+#  Includes the [sensorboard].sensor file from the $TOSMAKE_PATH/sensors folder.
+#  Use this function to add a sensorboard to a target.
+TOSMake_include_sensor=$(eval $(call TOSMake_include_sensor_define,$(1)))
+define TOSMake_include_sensor_define
+$(call TOSMake_include,sensorboards/$(1).sensor)
+PFLAGS += -DBOARD_$(shell echo $(1) | tr a-z A-Z)
+endef
+
+# TOSMake_include_platform(platform)
+#  Use this to specify which platform the target is based on.
+TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
+define TOSMake_include_platform_define
+$(if $(filter sim sim-fast sim-sf,$(GOALS)),$(call TOSMake_include,platforms/sim/$(1).platform),$(call TOSMake_include,platforms/$(1).platform))
+PFLAGS += -DPLATFORM_$(shell echo $(1) | tr a-z A-Z)
+PLATFORM = $(1)
+endef
+
+# TOSMake_include_family(family)
+#  Specify that this target is part of a family.
+TOSMake_include_family=$(eval $(call TOSMake_include_family_define,$(1)))
+define TOSMake_include_family_define
+$(call TOSMake_include,families/$(1).family)
 endef
 
 
@@ -142,8 +245,6 @@ endef
 -include $(TINYOS_MAKELOCAL)
 -include $(TINYOS_MAKEDEFAULTS)
 
-PLATFORMDIR ?= $(TOSDIR)/platforms/$(PLATFORM)
-
 #  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
 $(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_accum_dir,$(incdir)))
 
@@ -152,6 +253,84 @@ $(foreach file,$(VALID_TARGETS),$(if $(filter $(call names,$(file)),$(GOALS)),$(
 
 #  Make default rules for each extra with full argument
 $(foreach goal,$(MAKECMDGOALS),$(if $(filter-out $(TARGETS) help,$(goal)),$(eval $(call TOSMake_extra_targets,$(goal)))))
+
+
+# Check if $(COMPONENT) is set
+ifeq ($(COMPONENT),)
+$(error $(shell echo -e '$(ERROR_STRING) you must define the variable "COMPONENT" in the application makefile'))
+endif
+
+
+### ---
+### --- Common targets
+### ---
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard volumes-$(TOSMAKE_FLASH_CHIP).xml), )
+build_storage: volumes-$(TOSMAKE_FLASH_CHIP).xml build_dir
+	@echo -e '$(INFO_STRING) creating StorageVolumes.h'
+	@tos-storage-$(TOSMAKE_FLASH_CHIP) $(TOSMAKE_VOLUME_ALLOCATOR_FLAGS) <volumes-$(TOSMAKE_FLASH_CHIP).xml > $(TOSMAKE_BUILD_DIR)/StorageVolumes.h || rm -f $(TOSMAKE_BUILD_DIR)/StorageVolumes.h
+
+PFLAGS += -I$(TOSMAKE_BUILD_DIR)
+else
+build_storage:
+endif
+
+# Main build target for building an application
+ifeq ($(TOSMAKE_DO_REINSTALL),)
+tinyos_image: $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_POST_EXE_DEPS) build_tosimage build_buildinfo wiring_check FORCE
+else
+tinyos_image:
+	@echo -e '$(INFO_STRING) reinstalling $(COMPONENT) binary'
+endif
+
+setid: tinyos_image FORCE
+ifneq ($(NODEID),)
+	@# Edit the binary with the updated nodeid
+	@echo -e '$(INFO_STRING) setting the node id to $(NODEID)'
+	@$(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target $(TOSMAKE_BINARY_FORMAT) $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT) $(TOSMAKE_TOS_NODE_ID_STR)=$(NODEID) $(TOSMAKE_AMADDR_STR)=$(NODEID)
+else
+	@# Just use the default NODEID that was compiled in initially
+	@cp $(TOSMAKE_BINARY_IN) $(TOSMAKE_BINARY_OUT)
+endif
+
+delsetid: program FORCE
+	rm -f $(subst .$(TOSMAKE_BINARY_FORMAT).,.exe.,$(TOSMAKE_BINARY_OUT)) $(TOSMAKE_BINARY_OUT)
+
+ihex: bytes FORCE
+	@echo -e '$(INFO_STRING) creating ihex file'
+	@$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+srec: bytes FORCE
+	@echo -e '$(INFO_STRING) creating srec file'
+	@$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
+
+bin: bytes FORCE
+	@echo -e '$(INFO_STRING) creating bin file'
+	@$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
+
+bytes: exe FORCE
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+
+ifeq ($(NO_WIRING_CHECK),)
+wiring_check: exe FORCE
+	@echo -e '$(INFO_STRING) running the wiring check'
+	@nescc-wiring $(WIRING_CHECK_FILE)
+else
+wiring_check:
+endif
+
+exe: $(TOSMAKE_PRE_EXE_DEPS) $(COMPONENT).nc build_dir build_storage ident_cache FORCE
+	@echo -e '$(INFO_STRING) compiling $(COMPONENT) to a $(TARGET) binary'
+	$(NESC) -o $(MAIN_EXE) $(SAFE_FLAGS) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(TOSMAKE_ADDITIONAL_INPUTS)
+
+ident_cache: build_dir FORCE
+	@echo '$(IDENT_FLAGS)' > $(TOSMAKE_BUILD_DIR)/ident_flags.txt
+
+build_dir:
+	@mkdir -p $(TOSMAKE_BUILD_DIR)
+
+
 
 
 ### ---
@@ -175,9 +354,9 @@ endef
 #  If no target or an invalid target is specified, print usage.
 ifeq ($(TARGETS),)
   ifeq ($(GOALS),)
-    $(error $(USAGE)Please specify a valid target)
+    $(error $(USAGE)$(shell echo -e '$(ERROR_STRING) Please specify a valid target'))
   else
-    $(error $(USAGE)ERROR, "$(GOALS)" does not specify a valid target)
+    $(error $(USAGE)$(shell echo -e '$(ERROR_STRING) "$(GOALS)" does not specify a valid target'))
   endif
 endif
 
@@ -189,16 +368,15 @@ define USAGE
 
 Usage:  make $(TARGETS) <extras>
 
-	Valid targets: $(call names,$(VALID_TARGETS))
         Valid extras: $(call names,$(VALID_EXTRAS))
 $(HELP)
 
 endef
-$(error $(USAGE)Thank you)
+$(error $(USAGE))
 endif
 
 $(COMPONENT).nc:
-	@echo "ERROR: You need to create a top level file called $(COMPONENT).nc, or modify your local Makefile to point to the real name of your top level component."
+	@echo -e '$(ERROR_STRING) You need to create a top level file called $(COMPONENT).nc, or modify your local Makefile to point to the real name of your top level component.'
 	@false
 
 .PHONY: FORCE

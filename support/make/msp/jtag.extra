@@ -1,24 +1,18 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: jtag.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
-PROGRAM = jtag
+TOSMAKE_PROGRAMMER_TYPE = jtag
+MSP_JTAG ?= msp430-jtag
 
-ifndef MSP_JTAG
-MSP_JTAG = msp430-jtag
-endif
-
-program: FORCE
-	@echo "    installing $(PLATFORM) binary using the parallel port jtag adapter"
+program: setid FORCE
+	@echo -e "$(INFO_STRING) installing $(PLATFORM) binary using the parallel port jtag adapter"
 	$(MSP_JTAG) $(MSP_JTAG_FLAGS) -Iepr $(INSTALL_IHEX)
 
-program_no_e: FORCE
-	@echo "    installing $(PLATFORM) binary using jtag (without mass erase)"
+program_with_bl: program_no_e
+
+program_no_e: program_bl FORCE
+	@echo -e "$(INFO_STRING) installing $(PLATFORM) binary using jtag (without mass erase)"
 	$(MSP_JTAG) $(MSP_JTAG_FLAGS) -r -I -p $(INSTALL_IHEX)
 
-program_bl: FORCE
-	@echo "    installing $(PLATFORM) bootloader using jtag"
+program_bl: setid FORCE
+	@echo -e "$(INFO_STRING) installing $(PLATFORM) bootloader using jtag"
 	$(MSP_JTAG) $(MSP_JTAG_FLAGS) -r -e -I -p $(BOOTLOADER_IMG)
-
-program_input: ihex
-	@:
-

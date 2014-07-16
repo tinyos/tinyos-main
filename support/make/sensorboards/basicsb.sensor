@@ -1,0 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/sensorboards/basicsb
+PFLAGS += -I%T/lib/tosthreads/sensorboards/basicsb

@@ -1,0 +1,9 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/eyesIFX/eyesIFXv1
+PFLAGS += -I%T/platforms/eyesIFX/eyesIFXv1/chips/stm25p
+PFLAGS += -I%T/chips/stm25p
+
+PFLAGS += -mmcu=msp430f149
+
+TOSMAKE_FLASH_CHIP = stm25p

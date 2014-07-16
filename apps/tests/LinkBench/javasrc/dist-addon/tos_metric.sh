@@ -9,7 +9,7 @@ PROGVERSION=0.1
 
 # default values
 MPLATFORM=iris
-TOSSVNDIR=$TOSROOT
+TOSSVNDIR=$TINYOS_ROOT_DIR
 LINKBDIR=".."
 START_DATE=`date +%Y-%m-%d`
 STOP_DATE=`date +%Y-%m-%d`
@@ -37,7 +37,7 @@ usage()
        -F|--benchfile   the benchmark batch file to use [ default : $BENCH_FILE ]
        --start <date>   set the start date in format: YYYY-MM-DD
        --stop  <date>   set the stop  date in format: YYYY-MM-DD
-       --svn   <dir >    set the TinyOS root directory   [ default : $TOSROOT ]
+       --svn   <dir >    set the TinyOS root directory   [ default : $TINYOS_ROOT_DIR ]
        --step  <spec>   set the step size in format : [1-9][0-9]* day|month|year
           examples: 10 day, 2 day, 2 month, 1 year
   " 

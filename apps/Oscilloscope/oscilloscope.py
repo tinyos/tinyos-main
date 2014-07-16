@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import tos
+from tinyos import tos
 
 AM_OSCILLOSCOPE = 0x93
 

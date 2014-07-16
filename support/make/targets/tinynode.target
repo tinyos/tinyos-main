@@ -1,0 +1,13 @@
+#-*-Makefile-*-
+
+TARGET = tinynode
+
+MSP_BSL ?= tos-bsl
+
+$(call TOSMake_include_platform,tinynode)
+
+$(call TOSMake_include_make_platform,tinynode)
+$(call TOSMake_include_make_platform,msp)
+
+tinynode: $(BUILD_DEPS)
+	@:

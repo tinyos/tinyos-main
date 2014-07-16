@@ -1,7 +1,7 @@
 COMPONENT=routerBasicAppC
 PLATFORMS = telosb
 
-ZIGBEE=$(TOSDIR)/lib/zigbee/clusterTree
+ZIGBEE=$(TINYOS_OS_DIR)/lib/zigbee/clusterTree
 
 # Shadows new version of files w.r.t. the official ones (if needed)
 PFLAGS += 	-I$(ZIGBEE)/../shadow
@@ -49,7 +49,7 @@ endif
 
 ifdef TKN154_DEBUG
 PFLAGS += -DTKN154_DEBUG
-CFLAGS += -I$(TOSDIR)/lib/printf
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
 PFLAGS += -DPRINTF_BUFFER_SIZE=1000
 endif
 
@@ -62,9 +62,10 @@ CFLAGS += -DTKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED -DIEEE154_PROMISCUOUS_MODE_DI
 
 # To use the TKN15.4 MAC instead of a platform's default MAC protocol first
 # include the TinyOS "Makerules" file as usual ...
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 # ... and then include the TKN15.4 "Makefile.include" file. That's all.
 # Hint: type "make <platform> verbose" to see the aggregate include path.
-include $(TOSDIR)/lib/mac/tkn154/Makefile.include
+include $(TINYOS_OS_DIR)/lib/mac/tkn154/Makefile.include
 
 

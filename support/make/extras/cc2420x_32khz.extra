@@ -1,0 +1,55 @@
+#-*-Makefile-*- vim:syntax=make
+
+CFLAGS += -DCC2420X
+
+ifeq ($(TARGETS),telosb)
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/telosa/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+endif
+
+ifeq ($(TARGETS),shimmer)
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+endif
+
+ifeq ($(TARGETS),shimmer2)
+  PFLAGS+=-I%T/platforms/shimmer2/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer2/chips/cc2420x
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+  PFLAGS+=-I%T/lib/diagmsg
+endif
+
+ifeq ($(TARGETS),shimmer2r)
+  PFLAGS+=-I%T/platforms/shimmer2r/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+endif
+
+ifeq ($(TARGETS),span)
+  PFLAGS+=-I%T/platforms/span/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/span/chips/cc2420x
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x/t32khz/am
+  PFLAGS+=-I%T/platforms/shimmer/chips/cc2420x
+  PFLAGS+=-I%T/chips/cc2420x
+  PFLAGS+=-I%T/lib/rfxlink/layers
+  PFLAGS+=-I%T/lib/rfxlink/util
+endif
+

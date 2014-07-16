@@ -1,0 +1,26 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/eyesIFX
+PFLAGS += -I%T/platforms/eyesIFX/chips/tda5250
+PFLAGS += -I%T/platforms/eyesIFX/chips/ad5200
+PFLAGS += -I%T/platforms/eyesIFX/chips/msp430
+PFLAGS += -I%T/platforms/eyesIFX/sensors
+PFLAGS += -I%T/platforms/eyesIFX/byte_radio
+PFLAGS += -I%T/chips/tda5250
+PFLAGS += -I%T/chips/tda5250/mac
+PFLAGS += -I%T/chips/ad5200
+PFLAGS += -I%T/chips/msp430
+PFLAGS += -I%T/chips/msp430/adc12
+PFLAGS += -I%T/chips/msp430/dma
+PFLAGS += -I%T/chips/msp430/pins
+PFLAGS += -I%T/chips/msp430/sensors
+PFLAGS += -I%T/chips/msp430/usart
+PFLAGS += -I%T/chips/msp430/timer
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/byte_radio
+PFLAGS += -I%T/lib/power
+
+PFLAGS += -gcc=msp430-gcc
+PFLAGS += -fnesc-target=msp430
+PFLAGS += -fnesc-no-debug

@@ -1,0 +1,122 @@
+# -*- makefile -*-
+
+PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
+PFLAGS += -DCC2420_HW_ADDRESS_RECOGNITION
+PFLAGS += -DPACKET_LINK
+
+ifdef BLIP_L2_MTU
+	PFLAGS += -DTOSH_DATA_LENGTH=$(BLIP_L2_MTU)
+else
+	PFLAGS += -DTOSH_DATA_LENGTH=112
+endif
+
+PFLAGS+=-I%T/lib/net/
+PFLAGS+=-I%T/lib/printf/
+PFLAGS+=-I$(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/
+PFLAGS+=-I%T/lib/net/blip/
+PFLAGS+=-I%T/lib/net/blip/interfaces/
+PFLAGS+=-I%T/lib/net/blip/nwprog/
+PFLAGS+=-I%T/lib/net/blip/shell/
+PFLAGS+=-I%T/lib/net/blip/serial/
+PFLAGS+=-I%T/lib/net/blip/platform/
+PFLAGS+=-I%T/lib/net/blip/icmp/
+PFLAGS+=-I%T/lib/net/blip/dhcp/
+
+export GCC=gcc
+GPP=g++
+OPTFLAGS = -g -O0
+LIBS = -lm -lstdc++
+PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\) -fnesc-gcc=$(GCC)
+WFLAGS = -Wno-nesc-data-race
+PYTHON_VERSION ?= $(shell python --version 2>&1 | sed 's/Python 2\.\([0-9]\)\.[0-9]+\{0,1\}/2.\1/')
+
+BUILDDIR   = simbuild/$(PLATFORM)
+CFILE    = $(BUILDDIR)/sim.c
+OBJFILE    = $(BUILDDIR)/sim.o
+CXXFILE    = $(TINYOS_OS_DIR)/lib/tossim/tossim.c
+CXXOBJFILE = $(BUILDDIR)/tossim.o
+HASHFILE    = $(TINYOS_OS_DIR)/lib/tossim/hashtable.c
+HASHOBJFILE = $(BUILDDIR)/c-support.o
+PYFILE     = $(TINYOS_OS_DIR)/lib/tossim/tossim_wrap.cxx
+PYOBJFILE  = $(BUILDDIR)/pytossim.o
+PYDIR      = $(shell python$(PYTHON_VERSION)-config --prefix)/include/python$(PYTHON_VERSION)
+SIMDIR     =$(TINYOS_OS_DIR)/lib/tossim
+XML        = app.xml
+DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
+
+ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else
+ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base
+  PLATFORM_LIB_FLAGS =-shared -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else
+ifeq ($(findstring darwin, $(OSTYPE)), darwin)
+  SIM_DARWIN=TRUE
+else
+ifeq ($(findstring Darwin, $(shell uname)), Darwin)
+  SIM_DARWIN = TRUE
+else # linux
+  PLATFORM_FLAGS=-shared -fPIC
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_LIB_FLAGS = -lstdc++
+  PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
+endif
+endif
+endif
+ifdef SIM_DARWIN
+  PLATFORM_FLAGS=-fPIC -D_FORTIFY_SOURCE=0
+  PLATFORM_CC_FLAGS=-bundle
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress
+  PLATFORM_LIB_FLAGS = -lstdc++
+endif
+
+BUILD_DEPS = sim-exe
+
+FILE1 = $(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/iovec.c
+FILE2 = $(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/in_cksum.c
+FILE3 = $(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/ip_malloc.c
+FILE4 = $(TINYOS_ROOT_DIR)/tools/tinyos/c/blip/lib6lowpan/utility.c
+FILE5 = $(TINYOS_OS_DIR)/lib/net/blip/table.c
+
+FILE1O = $(BUILDDIR)/iovec.o
+FILE2O = $(BUILDDIR)/in_cksum.o
+FILE3O = $(BUILDDIR)/ip_malloc.o
+FILE4O = $(BUILDDIR)/utility.o
+FILE5O = $(BUILDDIR)/table.o
+
+ADDFLAGS += -I$(TINYOS_OS_DIR)/types
+
+# lib/tossim has to come at the end in order to ensure basic TOSSIM
+# implementations are the last resort, so put it directly in the call
+
+sim-exe: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "  placing object files in $(BUILDDIR)"
+	@echo "  writing XML schema to $(XML)"
+	@echo "  compiling $(COMPONENT) to object file sim.o"
+	$(NCC) -c $(PLATFORM_FLAGS) -o $(OBJFILE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WFLAGS) $(COMPONENT).nc $(LDFLAGS)  $(DUMPTYPES) -fnesc-dumpfile=$(XML)
+
+	@echo "  compiling Python support and C libraries into pytossim.o, tossim.o, and c-support.o"
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(PYOBJFILE) $(OPTFLAGS) $(CFLAGS) $(PYFILE) -I$(PYDIR) -I$(SIMDIR) -DHAVE_CONFIG_H 
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CXXOBJFILE) $(OPTFLAGS) $(CFLAGS) $(CXXFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(HASHOBJFILE) $(OPTFLAGS) $(CFLAGS) $(HASHFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GCC) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(FILE1O) $(OPTFLAGS) $(CFLAGS) $(FILE1) -I$(PYDIR) -I$(SIMDIR) $(ADDFLAGS)
+	$(GCC) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(FILE2O) $(OPTFLAGS) $(CFLAGS) $(FILE2) -I$(PYDIR) -I$(SIMDIR) $(ADDFLAGS)
+	$(GCC) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(FILE3O) $(OPTFLAGS) $(CFLAGS) $(FILE3) -I$(PYDIR) -I$(SIMDIR) $(ADDFLAGS)
+	$(GCC) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(FILE4O) $(OPTFLAGS) $(CFLAGS) $(FILE4) -I$(PYDIR) -I$(SIMDIR) $(ADDFLAGS)
+	$(GCC) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(FILE5O) $(OPTFLAGS) $(CFLAGS) $(FILE5) -I$(PYDIR) -I$(SIMDIR) $(ADDFLAGS)
+
+	@echo "  linking into shared object ./$(SHARED_OBJECT)"
+	$(GPP) $(PLATFORM_BUILD_FLAGS) $(PLATFORM_CC_FLAGS) $(PYOBJFILE) $(OBJFILE) $(CXXOBJFILE) $(HASHOBJFILE) $(FILE1O) $(FILE2O) $(FILE3O) $(FILE4O) $(FILE5O) $(PLATFORM_LIB_FLAGS) -o $(SHARED_OBJECT)
+	@echo "  copying Python script interface TOSSIM.py from lib/tossim to local directory"
+	@cp $(TINYOS_OS_DIR)/lib/tossim/TOSSIM.py .
+	@echo " "
+	@echo "*** Successfully built $(PLATFORM) TOSSIM library. "
+

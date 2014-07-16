@@ -20,7 +20,7 @@ beacon packets. In this case LED1 should toggle every half second and
 printf java client should output some text on the frame content.
 
 
-Tools: The printf java client in $TOSDIR/../apps/tests/TestPrintf
+Tools: The printf java client in $TINYOS_OS_DIR/../apps/tests/TestPrintf
 
 Usage: 
 

@@ -25,7 +25,7 @@ Currently there is no IPv4 (RFC1332) module.
 The tosppd script can be used to start the PPP daemon with the required
 arguments.  Use:
 
-sudo ${TOSDIR}/lib/ppp/tospppd
+sudo ${TINYOS_OS_DIR}/lib/ppp/tospppd
 
 See the script for arguments that select serial device, baud rate, and other
 parameters.
@@ -36,7 +36,7 @@ The PppPrintfC component can be linked to an application to allow printf(3c)
 messages to be carried over the PPP link and displayed by the PPP daemon.
 See the instructions at the top of tos-pppd.patch.  Invoke it thusly:
 
-sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TOSDIR}/lib/ppp/tospppd
+sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TINYOS_OS_DIR}/lib/ppp/tospppd
 
 The Ipv6 demonstration prints the length of received packets, and produces
 messages like:

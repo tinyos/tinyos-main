@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+
+DOCS = $(APPDOC)
+
+TOSMAKE_DOC_DIR = doc/$(TARGET)
+
+NESDOC_FLAGS += -fnesc-dump=wiring
+NESDOC_ARCHIVE_FLAGS += --app
+
+$(call TOSMake_include,extras/docs.extra)

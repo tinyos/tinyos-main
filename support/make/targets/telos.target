@@ -1,0 +1,12 @@
+#-*-Makefile-*- vim:syntax=make
+
+TELOS_REV ?= A
+
+ifeq ($(TELOS_REV),A)
+  TELOS_TARGET = telosa
+else
+  TELOS_TARGET = telosb
+endif
+
+$(call TOSMake_include_target,$(TELOS_TARGET))
+

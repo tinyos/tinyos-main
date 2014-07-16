@@ -1,0 +1,15 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = eyesIFXv1
+
+MSP_MCU = msp430f149
+
+# Use JTAG as the default programmer
+$(call TOSMake_include,msp/jtag.extra)
+
+$(call TOSMake_include_family,eyesIFX)
+$(call TOSMake_include_platform,eyesIFXv1)
+$(call TOSMake_include_make_platform,msp)
+
+eyesIFXv1: $(BUILD_DEPS)
+	@:

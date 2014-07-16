@@ -5,6 +5,5 @@ CFLAGS += -DTFRAME_ENABLED
 
 CFLAGS += -DSAM3U_ADC12B_PDC
 
-CLEAN_EXTRA += *.pyc
-
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

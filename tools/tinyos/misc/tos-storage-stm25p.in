@@ -32,9 +32,9 @@
 # Copyright (c) 2006-2007 Intel Corporation
 # All rights reserved.
 #
-# This file is distributed under the terms in the attached INTEL-LICENSE     
+# This file is distributed under the terms in the attached INTEL-LICENSE
 # file. If you do not find these files, copies can be found by writing to
-# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
 # 94704.  Attention:  Intel License Inquiry.
 
 # @author Jonathan Hui <jhui@archedrock.com>
@@ -44,7 +44,7 @@
 # $Revision: 1.8 $
 # $Date: 2009-10-28 04:19:20 $
 #
-                                  
+
 from re import match
 from sys import *
 from xml.dom import *
@@ -54,13 +54,18 @@ from subprocess import Popen, PIPE
 from getopt import *
 import string
 import commands
+
+def print_usage():
+  stderr.write("Usage: tos-storage-stm25p [-t] [-s number of sectors] [--tosdir <path to tos directory>] <platform directory>\n")
+
 #New way of handling arguments........
 try:
-  opts, args = getopt(argv[1:], "ts:", [])
+  opts, args = getopt(argv[1:], "ts:", ["tosdir="])
 except GetoptError, err:
   print str(err) # will print something like "option -a not recognized"
-  stderr.write( "Usage: tos-storage-stm25p [-t] [-s number of sectors] <platform directory>\n" )
-  
+  print_usage()
+  quit(1)
+
 if len( args ) == 1:
   platformdir = args[0]
   # This gives the whole string when there's no / in platformdir
@@ -69,17 +74,21 @@ elif len( args ) == 0:
   platformdir = ""
   platform = ""
 else:
-  stderr.write( "Usage: tos-storage-stm25p [-t] [-s number of sectors] <platform directory>\n" )
-  
+  print_usage()
+  quit(1)
+
 cthreads = False
 NUM_SECTORS = 16
 SECTOR_SIZE = 65536
 
+tosdir = ""
 for o, a in opts:
   if o == "-t":
     cthreads = True
   elif o == "-s":
     NUM_SECTORS = int(a)
+  elif o == "--tosdir":
+    tosdir = str(a)
   else:
     assert False, "unhandled option"
 
@@ -107,8 +116,7 @@ def expand_path( path ):
       elif c == 'P':
         sub = platformdir
       elif c == 'T':
-        sub = Popen( ["ncc", "-print-tosdir"], stdout=PIPE ).communicate( )[0]
-        sub = sub[:-1] # remove newline
+        sub = tosdir
       else:
         nfail( "unknown include-path substitution character " + c )
       path += sub
@@ -145,7 +153,7 @@ def volumeparse( file, fname, depth ):
       isCircular = string.upper(volume.getAttribute("circular"))
       if isCircular == "":
           isCircular = "FALSE"
-      
+
       if name == "":
           error_exit( "volume has no name" )
       elif not match( "^[a-zA-Z0-9_]+$", name ):
@@ -177,7 +185,7 @@ def volumeparse( file, fname, depth ):
       volumeSizes.append( size / SECTOR_SIZE )
       volumeTypes["VOLUME_" + name] = type
       volumeOptions["VOLUME_" + name] = isCircular
-      
+
       if base == "":
           volumeOffsets.append( -1 )
       else:
@@ -227,7 +235,7 @@ print ""
 for i in range( len( volumeNames ) ):
     print "#define %s %d" % ( volumeNames[ i ], i )
 print ""
-        
+
 print "static const stm25p_volume_info_t STM25P_VMAP[ %d ] = {" % \
       len( volumeNames )
 for i in range( len( volumeNames ) ):
@@ -271,9 +279,9 @@ if cthreads == True:
       outFile.write("  VolumeMapP.SubBlockRead[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubBlockWrite[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
       outFile.write("\n")
-      
+
     elif volumeTypes[volumeNames[i]] == "log":
-      outFile.write("\n")      
+      outFile.write("\n")
       outFile.write("  components new LogStorageC(" + volumeNames[i] + ", " + volumeOptions[volumeNames[i]] + ") as LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogRead[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")

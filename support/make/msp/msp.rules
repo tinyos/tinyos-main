@@ -1,5 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.20 2010-03-17 00:38:05 klueska Exp $
 
 define MSP_HELP
 
@@ -21,103 +20,30 @@ define MSP_HELP
 endef
 HELP += $(MSP_HELP)
 
-ifdef MAKE_DEPUTY_FLAG
-        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -I$(TOSDIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib '
-else
-        NCC_SAFE_TINYOS_FLAGS =
-endif
-
-
+#  Check if the user has a new enough version of msp430-gcc
 MSPGCC_MIN_VER := 4.6.3
 MSPGCC_VER_OK := $(shell expr `msp430-gcc -dumpversion` \>= '$(MSPGCC_MIN_VER)')
+ifeq ("$(MSPGCC_VER_OK)","0")
+  $(warning $(shell echo -e '$(WARN_STRING) Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)'))
+endif
 
+GCC = msp430-gcc
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
-SET_ID = tos-set-symbols
-NCC = ncc
+SIZE = msp430-size
 LIBS = -lm
 
-# Use __ as the separator - requires nesC 1.2.9 or later
-ifneq ($(filter sim,$(GOALS)),sim)
-        PFLAGS += -fnesc-separator=__
-endif
-
-AMADDR = ActiveMessageAddressC__addr
-BUILDDIR ?= build/$(PLATFORM)
-MAIN_EXE = $(BUILDDIR)/main.exe
-MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
-PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
-PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
-ifdef MSG_SIZE
-PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
-endif
-ifdef DEFAULT_LOCAL_GROUP
-PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
-endif
+PFLAGS += -Wall -Wshadow
 
-DEFAULT_PROGRAM ?= bsl
-
-BUILDLESS_DEPS += bytes
-
-# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
-# out with call in there.  I don't know why.
-$(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
-
-# Build storage file if volumes.xml present
-ifneq ($(wildcard $(VOLUME_FILE)), )
-build_storage: $(BUILDDIR)/StorageVolumes.h
-
-exe0: build_storage 
-
-VOLUME_ALLOCATOR_FLAGS ?= 
-$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
-	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
-
-PFLAGS += -I$(BUILDDIR)
-else
-
-build_storage:
-
+# Check if the user specified a programmer type with a .extra file.
+# If not, use bsl by default.
+ifndef TOSMAKE_PROGRAMMER_TYPE
+  $(call TOSMake_include,msp/bsl.extra)
 endif
 
-ifndef BUILD_DEPS
-  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
-    BUILD_DEPS = tosimage $(POST_BUILD_EXTRA_DEPS)
-  endif
-endif
 
-setid: FORCE
-	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_IHEX) $(INSTALL_IHEX); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
-
-tos_buildinfo: ihex build_buildinfo FORCE
-  @:
-  
-tosimage: ihex build_tosimage FORCE
-	@:
-
-ihex: exe FORCE
-	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
-
-exe: exe0 bytes FORCE
-	@:
-
-exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
-	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-ifeq ("$(MSPGCC_VER_OK)","0")
-	@echo
-	@echo "    WARNING: Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)!!!"
-	@echo
-endif
-	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
-ifdef WIRING_CHECK_FILE
-	@nescc-wiring $(WIRING_CHECK_FILE)
-endif
-	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
-
-builddir: FORCE
-	mkdir -p $(BUILDDIR)
-
-bytes: FORCE
-	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+TOSMAKE_BINARY_FORMAT = ihex
+TOSMAKE_BINARY_IN = $(MAIN_IHEX)
+TOSMAKE_BINARY_OUT = $(INSTALL_IHEX)

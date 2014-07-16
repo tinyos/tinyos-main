@@ -1,0 +1,8 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/null
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+
+PFLAGS += -fnesc-target=pc
+PFLAGS += -fnesc-no-debug

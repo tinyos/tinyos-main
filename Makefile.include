@@ -1,0 +1,21 @@
+#-*-Makefile-*- vim:syntax=make
+###
+###  Makefile.include sets all of the relevant TinyOS make variables. It uses
+###  user specified values (by using environment variables) if they are set,
+###  otherwise it sets the variables to a reasonable default value.
+###
+
+#  Set TINYOS_OS_DIR if it is not already set by an environment variable.
+TINYOS_OS_DIR?=$(TINYOS_ROOT_DIR)/tos
+
+#  Set the path to the make files (.target, .extra, .rules)
+TINYOS_MAKE_DIR?=$(TINYOS_ROOT_DIR)/support/make
+
+#  Set TINYOS_MAKERULES to the main makefile
+TINYOS_MAKERULES?=$(TINYOS_MAKE_DIR)/Makerules
+
+#  Set TINYOS_MAKELOCAL and TINYOS_MAKEDEFAULTS
+TINYOS_MAKELOCAL?=$(TINYOS_MAKE_DIR)/Makelocal
+TINYOS_MAKEDEFAULTS?=$(TINYOS_MAKE_DIR)/Makedefaults
+
+include $(TINYOS_MAKERULES)

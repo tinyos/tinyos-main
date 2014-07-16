@@ -16,7 +16,7 @@
   <property name="java-package" value="benchmark.common"/>
 
   <property environment="env"/>
-  <property name="jar-tinyos" location="${env.TOSROOT}/support/sdk/java/tinyos.jar"/>
+  <property name="jar-tinyos" location="${env.TINYOS_ROOT_DIR}/support/sdk/java/tinyos.jar"/>
 
   <path id="classpath">
     <pathelement location="${build}"/>

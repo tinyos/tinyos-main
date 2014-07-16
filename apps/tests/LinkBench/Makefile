@@ -24,7 +24,6 @@ CFLAGS += -DEXCLUDE_USERDEFINED
 CFLAGS += -Icodeprofile
 CFLAGS += -Itossim
 #CFLAGS += -DTRAFFIC_MONITOR
-#CFLAGS += -I$(SZTETOSDIR)/lib/cc2420traffic
 
 # channel settings
 ifneq (,$(DEF_CHANNEL))
@@ -39,5 +38,6 @@ else
   CFLAGS += -DTOSH_DATA_LENGTH=90
 endif
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 include Makefile.Pdetect

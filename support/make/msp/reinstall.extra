@@ -1,13 +1,11 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: reinstall.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
-NODEID = $(REINSTALL)
-BUILD_DEPS = setid program
+NODEID ?= $(REINSTALL)
+BUILD_DEPS = program
+TOSMAKE_DO_REINSTALL = y
 
-ifdef BOOTLOADER
-  ifeq ($(BOOTLOADER),tosboot)
-    BUILD_DEPS = setid program_bl program_no_e
-  endif
+ifeq ($(BOOTLOADER),tosboot)
+  BUILD_DEPS = program_no_e
 endif
 
 check_tosboot: FORCE

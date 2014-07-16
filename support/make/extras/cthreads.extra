@@ -1,0 +1,26 @@
+#-*-Makefile-*- vim:syntax=make
+# Extra threads Makefile target to enable thread support for tinyos
+# Kevin Klues May 16th, 2008
+
+#Get all the normal include directories for a threads build
+$(call TOSMake_include,extras/threads.extra)
+PFLAGS += -DCTHREADS
+
+#Include directories required specifically for cthreads builds
+THREADS_CSYSTEM_DIR = $(TOS_THREADS_DIR)/csystem
+PFLAGS += -I$(THREADS_CSYSTEM_DIR)
+
+#Setup flag to pass to storage volume allocator to indicate threads are being used
+TOSMAKE_VOLUME_ALLOCATOR_FLAGS += -t
+
+#Set up extra c file to compile functions for thread manipulation
+#Also define the top level nesC component as the TinyOSEntryPointC component
+COMPONENT=$(THREADS_CSYSTEM_DIR)/TinyOSEntryPointC
+TOSTHREAD_MAIN_PATH=$(shell pwd)/$(TOSTHREAD_MAIN)
+ifdef TOSTHREAD_MAIN
+ifndef MAKE_DYNTHREADS
+  ifneq ($(wildcard $(TOSTHREAD_MAIN_PATH)), )
+    PFLAGS += -DMAIN_APP=\"$(TOSTHREAD_MAIN_PATH)\"
+  endif
+endif
+endif

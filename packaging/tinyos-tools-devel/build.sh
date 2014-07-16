@@ -9,21 +9,21 @@
 #
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
-# set TOSROOT to the head of the tinyos source tree root.
+# set TINYOS_ROOT_DIR to the head of the tinyos source tree root.
 # used to find default PACKAGES_DIR.
 #
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
+# TINYOS_ROOT_DIR	head of the tinyos source tree root.  Used for base of default repo
 # PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
-# REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
+# REPO_DEST	Where the repository is being built (${TINYOS_ROOT_DIR}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
 #		properly.   Examples of reprepo configuration can be found in
-#               ${TOSROOT}/packaging/repo/conf.
+#               ${TINYOS_ROOT_DIR}/packaging/repo/conf.
 #
 
 COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
@@ -34,7 +34,7 @@ BUILD_ROOT=$(pwd)
 CODENAME=squeeze
 
 SOURCENAME=tinyos-tools-devel
-SOURCEVERSION=1.5.0
+SOURCEVERSION=2.2.0
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
@@ -44,8 +44,9 @@ MAKE="make -j1"
 download()
 {
   mkdir -p ${SOURCEDIRNAME}
-  cp -R ${TOSROOT}/tools ${SOURCEDIRNAME}
-  cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}
+  cp -R ${TINYOS_ROOT_DIR}/tools ${SOURCEDIRNAME}
+  cp -R ${TINYOS_ROOT_DIR}/licenses ${SOURCEDIRNAME}
+  ln -s ../../../tos ${SOURCEDIRNAME}/tos
 }
 
 build()
@@ -140,7 +141,7 @@ case $1 in
   repo)
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
     if [[ -z "${REPO_DEST}" ]]; then
-      REPO_DEST=${TOSROOT}/packaging/repo
+      REPO_DEST=${TINYOS_ROOT_DIR}/packaging/repo
     fi
     echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
     echo -e   "*** Using packages from ${PACKAGES_DIR}\n"

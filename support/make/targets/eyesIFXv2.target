@@ -1,0 +1,21 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = eyesIFXv2
+
+MSP_MCU = msp430f1611
+
+MSP_BSL_FLAGS ?= --invert-test --invert-reset --f1x
+BSL ?= /dev/ttyUSB1
+
+ifeq (,$(findstring /dev/ttyUSB,$(BSL)))
+  ifneq (,$(findstring USB,$(BSL)))
+    BSL:=/dev/tty$(BSL)
+  endif
+endif
+
+$(call TOSMake_include_family,eyesIFX)
+$(call TOSMake_include_platform,eyesIFXv2)
+$(call TOSMake_include_make_platform,msp)
+
+eyesIFXv2: $(BUILD_DEPS)
+	@:

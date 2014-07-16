@@ -1,11 +1,18 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: install.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
 NODEID = $(INSTALL)
-BUILD_DEPS = srec tosimage bytes $(POST_BUILD_EXTRA_DEPS) setid program delsetid
+BUILD_DEPS = delsetid
 
-ifdef BOOTLOADER
-  ifeq ($(BOOTLOADER),tosboot)
-    BUILD_DEPS += program_bl
-  endif
+ifeq ($(BOOTLOADER),tosboot)
+  BUILD_DEPS = delsetid_bl
 endif
+
+PROGRAMMER_NAME ?= $(TOSMAKE_PROGRAMMER_TYPE)
+
+program: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(PLATFORM) binary using $(PROGRAMMER_NAME)'
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+
+program_bl: setid FORCE
+	@echo '$(INFO_STRING) installing $(PLATFORM) bootloader using $(PROGRAMMER_NAME)'
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

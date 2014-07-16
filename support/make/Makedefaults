@@ -1,10 +1,46 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makedefaults,v 1.8 2008-06-18 20:22:51 razvanm Exp $
 
-DEFAULT_LOCAL_GROUP ?= 0x22
+### ---
+### --- Set standard defaults for user-definable variables
+### ---
+
 OPTFLAGS ?= -Os
-NESC_FLAGS ?= -Wnesc-all
-GOALS += ident_flags tos_image tosboot
+
+NESC_FLAGS ?= -Wnesc-all -fnesc-include=tos
+NESC_SCHEDULER ?= TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+NESC_CFILE ?= $(TOSMAKE_BUILD_DIR)/app.c
+NESC_SEPARATOR ?= __
+
+# Add the standard TinyOS source directories to the build search path
+TOSMAKE_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
+
+# Define the TOS_AM_GROUP to be 0x22 by default
+TOSMAKE_AM_GROUP ?= 0x22
+
+### ---
+### --- Set common variables that are local to the Make system that are used in
+### --- many .rules files.
+### ---
+
+# Setup variables for the common output files. Not all toolchains may use all
+# these, but this way not all .rules files have to set all of them.
+TOSMAKE_BUILD_DIR ?= build/$(TARGET)
+MAIN_EXE  = $(TOSMAKE_BUILD_DIR)/main.exe
+MAIN_IHEX = $(TOSMAKE_BUILD_DIR)/main.ihex
+MAIN_BIN  = $(TOSMAKE_BUILD_DIR)/main.bin
+MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec
+MAIN_ELF  = $(TOSMAKE_BUILD_DIR)/main.elf
+
+# Default applications
+SET_ID ?= tos-set-symbols
+NESC ?= nescc
+
+# Variable name to be replaced when a NODEID is set
+TOSMAKE_AMADDR_STR ?= ActiveMessageAddressC__addr
+TOSMAKE_TOS_NODE_ID_STR ?= TOS_NODE_ID
+
+# Cause Makerules to include more .extra files
+GOALS += tos_image tos_buildinfo tosboot
 
 define DEFAULT_HELP
 

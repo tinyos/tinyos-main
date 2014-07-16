@@ -20,9 +20,9 @@ Usage:
 
 To use include the following in your Makefile:
 
-CFLAGS += -I$(TOSDIR)/lib/net
-CFLAGS += -I$(TOSDIR)/lib/net/dhv
-CFLAGS += -I$(TOSDIR)/lib/net/dhv/interfaces
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dhv
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/dhv/interfaces
 
 * add a following line when use BaseStation
 CFLAGS += -DTOSH_DATA_LENGTH=32

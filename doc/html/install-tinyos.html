@@ -10,19 +10,19 @@
 <div class="title">Installing TinyOS 2.0.2</div>
 <div class="subtitle">Last updated 14 Feb 2008</div>
 
-<p>If you already have a 1.x tree or an existing 2.x tree, you are better off 
-following the <i>upgrade</i> instructions at 
+<p>If you already have a 1.x tree or an existing 2.x tree, you are better off
+following the <i>upgrade</i> instructions at
 <a href="upgrade-tinyos.html">upgrade-tinyos.html</a>. There are several ways to install
       TinyOS. The first way is to install a live CD that gives
       you a virtualized Linux with a complete TinyOS install. Note that since
       this is on a CD, you can't modify anything; you can, however, make
-      a LiveUSB device to use as your TinyOS install. The second way is 
+      a LiveUSB device to use as your TinyOS install. The second way is
       to a Ubuntu-based virtual machine directly on your hard drive.  The final way is to
       install TinyOS on your host operating system. When installing
       on a host operating system, you can either use a debian package
-      repository or manually instally with RPMs.</p> 
+      repository or manually instally with RPMs.</p>
 
-      <p>Of the four options, installing a VM image is simplest. 
+      <p>Of the four options, installing a VM image is simplest.
          Using a Live CD lets you try out TinyOS without installing it on your
 	 drive. Debian packages are the simplest and best way to install TinyOS
 	 on your host operating system. RPMs are mostly a stand-by for RedHat
@@ -30,16 +30,16 @@ following the <i>upgrade</i> instructions at
 	 are using Cygwin, we strongly recommend using a VM image, unless you
 	 are completely unfamiliar with UNIX tools such as editors (xemacs, vi)
 	 and the shell,
-	 
+
 	 <h1>One-step install with a VM Image</h1>
-     
-      The most <A HREF="http://www.tinyos.net/scoop/section/Releases">current instructions</A> on 
+
+      The most <A HREF="http://www.tinyos.net/scoop/section/Releases">current instructions</A> on
       how to install the VM image are on <A HREF="http://www.tinyos.net">www.tinyos.net</A>.
 
       <h1>One-step Install with a Live CD</h1>
 
       <p><a href="http://toilers.mines.edu/Public/XubunTOS">Download a
-      Linux live CD that has a TinyOS installation on it</a>. 
+      Linux live CD that has a TinyOS installation on it</a>.
       All you
       need to do is download the CD image, burn it onto a CD, and
       install from there. This saves you all of the complexities of
@@ -49,11 +49,11 @@ following the <i>upgrade</i> instructions at
       Mines.</p>
 
 
-      
+
       <h1>Two-step install on your host OS with Debian packages</h1>
 
    <p>If you are running a version of Linux that supports Debian packages, then
-   you may want to use the TinyOS package repository. There is a <A HREF="http://www.tinyos.net/scoop/story/2007/8/15/234856/990">story on www.tinyos.net</A> 
+   you may want to use the TinyOS package repository. There is a <A HREF="http://www.tinyos.net/scoop/story/2007/8/15/234856/990">story on www.tinyos.net</A>
    that describes how to use it. If you do this, then you do not have to
    install the instructions here, except that you will need to check
    that your environment is set up correctly (the end of step 5 in
@@ -122,19 +122,19 @@ work.
 <ol>
 <li> Download and install Cygwin from <a href="http://www.cygwin.com">www.cygwin.com</a>.<p></p></li>
 
-<li> Download the confirmed-compatible cygwin packages from the tinyos web site 
+<li> Download the confirmed-compatible cygwin packages from the tinyos web site
      <a href="http://www.tinyos.net/dist-1.2.0/tools/windows/cygwin-1.2a.tgz">here
      </a>.<p></p></li>
 
-<li> In a cygwin shell, unzip the above package into some directory. In these 
+<li> In a cygwin shell, unzip the above package into some directory. In these
      instructions the directory is /cygdrive/c/newcygpkgs.
 <pre>
      $ cd /cygdrive/c/newcygpkgs
-     $ tar zxvf cygwin-1.2a.tgz 
+     $ tar zxvf cygwin-1.2a.tgz
 </pre>
 This unzips the packages.<p></p></li>
 
-<li> In Windows Explorer, navigate to /cygdrive/c/newcygpkgs and click on the 
+<li> In Windows Explorer, navigate to /cygdrive/c/newcygpkgs and click on the
      file setup.exe. Setup.exe is the setup program distributed by Cygnus Solutions.<p></p></li>
 
 <li> Follow these steps when the Cygwin Setup windows appears:<p></p></li>
@@ -143,20 +143,20 @@ This unzips the packages.<p></p></li>
 
 <li> Opt to Install from Local Directory.<p></p></li>
 
-<li> Specify the Root directory to be where your <i>current</i> cygwin installation 
-     is. This would be the directory that directories like 'opt' and 'usr' are in. 
+<li> Specify the Root directory to be where your <i>current</i> cygwin installation
+     is. This would be the directory that directories like 'opt' and 'usr' are in.
      For example, mine is rooted at c:\tinyos\cygwin, so I enter that.<p></p></li>
 
 <li> Select to Install for All Users<p></p></li>
 
 <li> Select the Unix file type (very important!)<p></p></li>
 
-<li> For the Local Packages Directory, specify where you unzipped the cygwin 
-     packages tarfile. For example, I would specify c:\newcygpkgs. (The setup.exe 
+<li> For the Local Packages Directory, specify where you unzipped the cygwin
+     packages tarfile. For example, I would specify c:\newcygpkgs. (The setup.exe
      program will probably select the right default directory.)<p></p></li>
 
-<li> The next window will allow you to select packages to install. You should 
-     see that most of the packages have an X-ed box next to them; these are the 
+<li> The next window will allow you to select packages to install. You should
+     see that most of the packages have an X-ed box next to them; these are the
      packages that are to be installed. <p></p></li>
 
 <li> Click install.  <p></p></li>
@@ -164,25 +164,25 @@ This unzips the packages.<p></p></li>
 
 Some notes:
 <ul>
-<li> You might see a message explaining that you need to reboot because some 
-     files are in use. This most likely means that your cygwin DLL is loaded 
-     and in-use and, therefore, cannot be replaced. When you reboot, the new DLL 
+<li> You might see a message explaining that you need to reboot because some
+     files are in use. This most likely means that your cygwin DLL is loaded
+     and in-use and, therefore, cannot be replaced. When you reboot, the new DLL
      will be loaded. <p></p></li>
 
-<li> Related to the above warnings, if you see warnings about the cygwin1.dll not 
+<li> Related to the above warnings, if you see warnings about the cygwin1.dll not
      being found, don't worry. All will be well once you reboot and the right DLL is loaded. <p></p></li>
 </ul>
 
 <h2>Step 3: Install native compilers </h2>
 
 <p>Install the appropriate version of the following (Windows or Linux,
-avr or msp430 or both) with the rpm command 'rpm -ivh <i>rpm></i>'. 
+avr or msp430 or both) with the rpm command 'rpm -ivh <i>rpm></i>'.
 On
 windows, if you get an error claiming that the rpm was build for an NT
 computer and you're on a windows NT computer, bypass the erroneous
 error by using 'rpm -ivh --ignoreos <i>rpmname</i>'.
 (We have xscale
-compiler tools online at 
+compiler tools online at
 <a href="http://www.tinyos.net/dist-1.2.0/tools/">http://www.tinyos.net/dist-1.2.0/tools/</a>
 but they have not yet been extensively tested by a large community.)</p>
 
@@ -288,12 +288,12 @@ developed in the tinyos-2.x/tools source code repository. They are
 also installed using rpms. If you using the Cygwin version recommended
 in these install
 instructions, you should install the "Recommended" Windows/Cygwin
-nesC RPM. 
+nesC RPM.
 If you
 get strange errors when you try to compile TinyOS programs,
 such as the error message "the procedure entry point basename could not be located
 in the dynamic link library cygwin1.dll", this is likely due
-to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin
 RPM (1.2.7a).
 If you are using Cygwin and installing the nesC RPM
 causes an error that the RPM was built for Cygwin,
@@ -345,10 +345,10 @@ the Java support may not work properly.
 
 <h2>Step 5: Install the TinyOS 2.x source tree </h2>
 
-<p>Now that the tools are installed, you need only install the tinyos 2.x 
+<p>Now that the tools are installed, you need only install the tinyos 2.x
 source tree and then set your environment variables.
 Install the appropriate version of the following (Window or Linux)
-with the rpm command 'rpm -ivh <i>rpm</i>'. 
+with the rpm command 'rpm -ivh <i>rpm</i>'.
 As with the previous rpms, if you get an error claiming that the rpm
 was build for an NT computer and you're on a windows NT computer,
 bypass the erroneous error by using 'rpm -ivh --ignoreos
@@ -378,18 +378,18 @@ bypass the erroneous error by using 'rpm -ivh --ignoreos
 <li> Configure your environment
 
 <p>
-Ideally, you'll put these environment variables in a shell script that will run when your shell starts, but you needn't 
-put such a script under /etc/profile.d. 
+Ideally, you'll put these environment variables in a shell script that will run when your shell starts, but you needn't
+put such a script under /etc/profile.d.
 </p>
 <p>
 The example
 settings below assume that the tinyos-2.x installation is in /opt/tinyos-2.x.
 Change the settings to be correct for where you've put your tinyos-2.x tree. Note
-that the windows CLASSPATH must be a windows-style path, not a cygwin path. You can 
+that the windows CLASSPATH must be a windows-style path, not a cygwin path. You can
 generate a windows style path from a cygwin-style path using 'cygpath -w'. For example:
 </p>
 
-<pre>export CLASSPATH=`cygpath -w $TOSROOT/support/sdk/java/tinyos.jar`
+<pre>export CLASSPATH=`cygpath -w /opt/tinyos-2.x/support/sdk/java/tinyos.jar`
 export CLASSPATH="$CLASSPATH;."
 </pre>
 
@@ -401,34 +401,16 @@ export CLASSPATH="$CLASSPATH;."
   <td bgcolor="#dddddd"><b>Linux</b></td>
 </tr>
 
-<tr>
-  <td>TOSROOT</td>
-  <td>/opt/tinyos-2.x</td>
-  <td>same as in Cygwin</td>
-<td>
-
-</td></tr><tr>
-  <td bgcolor="#dddddd">TOSDIR</td>
-  <td bgcolor="#dddddd">$TOSROOT/tos</td>
-  <td bgcolor="#dddddd">same as in Cygwin</td>
-<td>
-
 </td></tr><tr>
   <td>CLASSPATH</td>
   <td>C:\tinyos\cygwin\opt\tinyos-2.x\support\sdk\java\tinyos.jar;.</td>
-  <td>$TOSROOT/support/sdk/java/tinyos.jar:.</td>
+  <td>/opt/tinyos-2.x/support/sdk/java/tinyos.jar:.</td>
 <td>
 
 </td></tr><tr>
-  <td bgcolor="#dddddd">MAKERULES</td>
-  <td bgcolor="#dddddd">$TOSROOT/support/make/Makerules</td>
+  <td bgcolor="#dddddd">PATH<font color="red">&#8224;</font></td>
+  <td bgcolor="#dddddd">/opt/msp430/bin:$PATH</td>
   <td bgcolor="#dddddd">same as in Cygwin</td>
-<td>
-
-</td></tr><tr>
-  <td>PATH<font color="red">&#8224;</font></td>
-  <td>/opt/msp430/bin:$PATH</td>
-  <td>same as in Cygwin</td>
 <td>
 
 </td></tr></tbody></table>

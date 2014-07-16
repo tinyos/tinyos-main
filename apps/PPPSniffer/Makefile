@@ -19,11 +19,12 @@ CFLAGS += -DTOSH_DATA_LENGTH=120
 CFLAGS += -DCC2420X_DEF_CHANNEL=26
 
 TOSMAKE_PATH += .
-CFLAGS += -I$(TOSDIR)/lib/diagmsg
-PFLAGS += -I$(TOSDIR)/lib/ppp
-PFLAGS += -I$(TOSDIR)/lib/fragpool
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/diagmsg
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ppp
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/fragpool
 
 # -Os breaks the PPP or serial stack somehow...
 OPTFLAGS += -O2
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

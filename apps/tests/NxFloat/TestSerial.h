@@ -1,6 +1,7 @@
-
 #ifndef TEST_SERIAL_H
 #define TEST_SERIAL_H
+
+#include "hardware.h"
 
 typedef nx_struct test_serial_msg {
   nx_float counter;

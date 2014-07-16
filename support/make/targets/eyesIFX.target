@@ -1,0 +1,14 @@
+#-*-Makefile-*- vim:syntax=make
+
+EYES_IFX_VER ?= v2
+
+ifeq ($(EYES_IFX_VER),v2)
+  EYES_IFX_TARGET = eyesIFXv2
+else
+  EYES_IFX_TARGET = eyesIFXv1
+endif
+
+$(call TOSMake_include_target,$(EYES_IFX_TARGET))
+
+eyesIFX: $(BUILD_DEPS)
+    @:

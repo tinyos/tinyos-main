@@ -43,7 +43,7 @@ then
 fi
 
 echo ========================== Compile tosboot for ${PLATFORM} ===========================
-( cd $TOSDIR/lib/tosboot ; make ${PLATFORM} ) 
+( cd $TINYOS_OS_DIR/lib/tosboot ; make ${PLATFORM} ) 
 
 make clean
 

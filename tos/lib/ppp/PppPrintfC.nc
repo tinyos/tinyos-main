@@ -54,10 +54,10 @@
  *
  * A variant PPP implementation that recognizes TinyOS packets can be
  * obtained by reading the instructions in the patch file in
- * ${TOSDIR}/lib/ppp/tos-pppd.patch.
+ * ${TINYOS_OS_DIR}/lib/ppp/tos-pppd.patch.
  *
  * @note For cross-platform compatibility, this module uses the PutcharP
- * component from ${TOSDIR}/lib/printf.  That directory must be in
+ * component from ${TINYOS_OS_DIR}/lib/printf.  That directory must be in
  * your component search path.
  *
  * @author Peter A. Bigot <pab@peoplepowerco.com>

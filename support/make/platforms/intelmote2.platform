@@ -1,0 +1,42 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/intelmote2
+PFLAGS += -I%T/platforms/intelmote2/chips/cc2420
+PFLAGS += -I%T/platforms/intelmote2/chips/da9030
+PFLAGS += -I%T/platforms/intelmote2/chips/ds2745
+PFLAGS += -I%T/chips/cc2420
+PFLAGS += -I%T/chips/cc2420/alarm
+PFLAGS += -I%T/chips/cc2420/control
+PFLAGS += -I%T/chips/cc2420/csma
+PFLAGS += -I%T/chips/cc2420/interfaces
+PFLAGS += -I%T/chips/cc2420/link
+PFLAGS += -I%T/chips/cc2420/lowpan
+PFLAGS += -I%T/chips/cc2420/lpl
+PFLAGS += -I%T/chips/cc2420/packet
+PFLAGS += -I%T/chips/cc2420/receive
+PFLAGS += -I%T/chips/cc2420/spi
+PFLAGS += -I%T/chips/cc2420/transmit
+PFLAGS += -I%T/chips/cc2420/unique
+PFLAGS += -I%T/chips/cc2420/security
+PFLAGS += -I%T/chips/pxa27x
+PFLAGS += -I%T/chips/pxa27x/lib
+PFLAGS += -I%T/chips/pxa27x/timer
+PFLAGS += -I%T/chips/pxa27x/gpio
+PFLAGS += -I%T/chips/pxa27x/dma
+PFLAGS += -I%T/chips/pxa27x/ssp
+PFLAGS += -I%T/chips/pxa27x/i2c
+PFLAGS += -I%T/chips/pxa27x/uart
+PFLAGS += -I%T/chips/pxa27x/p30
+PFLAGS += -I%T/chips/pxa27x/ds2745
+PFLAGS += -I%T/chips/pxa27x/cif
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/gpio
+
+PFLAGS += -nostartfiles
+PFLAGS += -fnesc-target=env
+PFLAGS += -fnesc-no-debug
+
+export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true
+
+TOSMAKE_FLASH_CHIP = pxa27xp30

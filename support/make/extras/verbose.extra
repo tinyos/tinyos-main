@@ -1,0 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+# @file	verbose.extra
+# @author	Martin Turon
+
+PFLAGS += -v

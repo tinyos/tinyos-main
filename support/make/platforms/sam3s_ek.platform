@@ -1,0 +1,50 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/sam3s_ek
+PFLAGS += -I%T/chips/cortex/m3
+PFLAGS += -I%T/chips/cortex/m3/sam3
+PFLAGS += -I%T/chips/cortex/m3/sam3/s
+PFLAGS += -I%T/chips/cortex/m3/sam3/nvic
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/nvic
+PFLAGS += -I%T/chips/cortex/m3/sam3/pmc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/pmc
+PFLAGS += -I%T/chips/cortex/m3/sam3/supc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/supc
+PFLAGS += -I%T/chips/cortex/m3/sam3/timer
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/timer
+PFLAGS += -I%T/chips/cortex/m3/sam3/eefc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/eefc
+PFLAGS += -I%T/chips/cortex/m3/sam3/wdtc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/wdtc
+PFLAGS += -I%T/chips/cortex/m3/sam3/matrix
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/matrix
+PFLAGS += -I%T/chips/cortex/m3/sam3/pins
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/pins
+PFLAGS += -I%T/chips/cortex/m3/sam3/smc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/smc
+PFLAGS += -I%T/chips/cortex/m3/sam3/uart
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/uart
+PFLAGS += -I%T/chips/cortex/m3/sam3/pdc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/pdc
+PFLAGS += -I%T/chips/cortex/m3/sam3/spi
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/spi
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/adc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/dacc
+PFLAGS += -I%T/chips/cortex/m3/sam3/s/pwm
+PFLAGS += -I%T/chips/cc2520
+PFLAGS += -I%T/chips/cc2520/layers
+PFLAGS += -I%T/chips/cc2520/util
+PFLAGS += -I%T/platforms/sam3s_ek/lcd
+PFLAGS += -I%T/platforms/sam3s_ek/chips/cc2520
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+
+PFLAGS += -mcpu=cortex-m3
+PFLAGS += -nostartfiles
+PFLAGS += -fnesc-target=env
+PFLAGS += -fnesc-no-debug
+
+export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true

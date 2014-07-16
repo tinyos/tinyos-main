@@ -1,0 +1,44 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/ucprotonb
+PFLAGS += -I%T/platforms/ucprotonb/chips/stm25p
+PFLAGS += -I%T/platforms/ucprotonb/chips/rf212
+PFLAGS += -I%T/platforms/ucprotonb/chips/doubleradio
+PFLAGS += -I%T/chips/atm128rfa1
+PFLAGS += -I%T/chips/atm128rfa1/adc
+PFLAGS += -I%T/chips/atm128rfa1/pins
+PFLAGS += -I%T/chips/atm128rfa1/sensors
+PFLAGS += -I%T/chips/atm128rfa1/timer
+PFLAGS += -I%T/chips/atm128rfa1/radio
+PFLAGS += -I%T/chips/atm128rfa1/usart
+PFLAGS += -I%T/chips/atm128rfa1/i2c
+PFLAGS += -I%T/chips/atm128rfa1/spi
+PFLAGS += -I%T/chips/atm128rfa1/aes
+PFLAGS += -I%T/chips/atm1281
+PFLAGS += -I%T/chips/atm1281/adc
+PFLAGS += -I%T/chips/atm1281/pins
+PFLAGS += -I%T/chips/atm1281/usart
+PFLAGS += -I%T/chips/atm128
+PFLAGS += -I%T/chips/atm128/eeprom
+PFLAGS += -I%T/chips/atm128/adc
+PFLAGS += -I%T/chips/atm128/pins
+PFLAGS += -I%T/chips/atm128/spi
+PFLAGS += -I%T/chips/atm128/i2c/interfaces
+PFLAGS += -I%T/chips/atm128/i2c
+PFLAGS += -I%T/chips/atm128/timer
+PFLAGS += -I%T/chips/rf212/
+PFLAGS += -I%T/chips/stm25p/interfaces
+PFLAGS += -I%T/chips/stm25p
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/serialautocontrol
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+PFLAGS += -I%T/lib/diagmsg
+
+PFLAGS += -mmcu=atmega128rfa1
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug
+
+TOSMAKE_FLASH_CHIP = stm25p

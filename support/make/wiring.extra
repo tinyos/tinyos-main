@@ -1,4 +1,0 @@
-#-*-Makefile-*- vim:syntax=make
-
-WIRING_CHECK_FLAGS = -fnesc-dump=wiring -fnesc-dump='interfaces(!abstract())' -fnesc-dump='referenced(interfacedefs, components)' -fnesc-dumpfile=$(WIRING_CHECK_FILE)
-WIRING_CHECK_FILE = $(BUILDDIR)/wiring-check.xml

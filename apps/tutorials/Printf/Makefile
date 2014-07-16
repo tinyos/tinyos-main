@@ -1,5 +1,6 @@
 COMPONENT=TestPrintfAppC
-CFLAGS += -I$(TOSDIR)/lib/printf
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
 #CFLAGS += -DNEW_PRINTF_SEMANTICS
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

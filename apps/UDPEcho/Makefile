@@ -12,7 +12,7 @@ COMPONENT=UDPEchoC
 
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
-PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TOSDIR)/lib/net/rpl
+PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TINYOS_OS_DIR)/lib/net/rpl
 # PFLAGS += -DRPL_OF_MRHOF
 
 # tell the 6lowpan layer to not generate hc-compressed headers
@@ -37,5 +37,6 @@ PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
 PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

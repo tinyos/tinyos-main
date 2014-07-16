@@ -38,7 +38,7 @@
 #
 # By default this uses /usr/sbin/pppd.  Depending on your application,
 # you may want to use the modified PPP daemon that supports diagnostic
-# information from TinyOS.  See ${TOSDIR}/lib/ppp/tos-pppd.patch for
+# information from TinyOS.  See ${TINYOS_OS_DIR}/lib/ppp/tos-pppd.patch for
 # details.  Set the TOS_PPPD environment variable to the full path to
 # your PPP daemon, if it is not /usr/sbin/pppd.  For sudo, you
 # probably want something like:

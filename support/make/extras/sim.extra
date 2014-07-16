@@ -1,0 +1,83 @@
+#-*-Makefile-*- vim:syntax=make
+
+export GCC=gcc
+GPP=g++
+OPTFLAGS = -g -O0
+LIBS = -lm -lstdc++
+PFLAGS += -DTOSSIM -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber='sim_node\(\)' -fnesc-gcc=$(GCC)
+PFLAGS += -I%T/lib/tossim
+WFLAGS = -Wno-nesc-data-race
+PYTHON_VERSION ?= $(shell python --version 2>&1 | sed 's/Python 2\.\([0-9]\)\.[0-9]+\{0,1\}/2.\1/')
+
+TOSMAKE_BUILD_DIR = simbuild/$(PLATFORM)
+TOSSIMPY_DIR      = $(TINYOS_OS_DIR)/lib/tossim
+CFILE             = $(TOSMAKE_BUILD_DIR)/sim.c
+OBJFILE           = $(TOSMAKE_BUILD_DIR)/sim.o
+CXXFILE           = $(TINYOS_OS_DIR)/lib/tossim/tossim.c
+CXXOBJFILE        = $(TOSMAKE_BUILD_DIR)/tossim.o
+HASHFILE          = $(TINYOS_OS_DIR)/lib/tossim/hashtable.c
+HASHOBJFILE       = $(TOSMAKE_BUILD_DIR)/c-support.o
+PYFILE            = $(TINYOS_OS_DIR)/lib/tossim/tossim_wrap.cxx
+PYOBJFILE         = $(TOSMAKE_BUILD_DIR)/pytossim.o
+PYDIR             = $(shell python$(PYTHON_VERSION)-config --prefix)/include/python$(PYTHON_VERSION)
+SIMDIR            = $(TINYOS_OS_DIR)/lib/tossim
+XML               = app.xml
+DUMPTYPES         = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
+
+ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else
+ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base
+  PLATFORM_LIB_FLAGS =-shared -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else
+ifeq ($(findstring darwin, $(OSTYPE)), darwin)
+  SIM_DARWIN=TRUE
+else
+ifeq ($(findstring Darwin, $(shell uname)), Darwin)
+  SIM_DARWIN = TRUE
+else # linux
+  PLATFORM_FLAGS=-shared -fPIC
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_LIB_FLAGS = -lstdc++
+  PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
+endif
+endif
+endif
+ifdef SIM_DARWIN
+  PLATFORM_FLAGS=-fPIC -D_FORTIFY_SOURCE=0
+  PLATFORM_CC_FLAGS=-bundle
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress
+  PLATFORM_LIB_FLAGS = -lstdc++
+endif
+
+BUILD_DEPS = sim-exe
+
+# lib/tossim has to come at the end in order to ensure basic TOSSIM
+# implementations are the last resort, so put it directly in the call
+
+sim-exe: build_dir $(TOSMAKE_PRE_EXE_DEPS) FORCE
+	@echo -e '$(INFO_STRING) placing object files in $(TOSMAKE_BUILD_DIR)'
+	@echo -e '$(INFO_STRING) writing XML schema to $(XML)'
+	@echo -e '$(INFO_STRING) compiling $(COMPONENT) to object file sim.o'
+	$(NESC) -c $(PLATFORM_FLAGS) -o $(OBJFILE) $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(WFLAGS) $(COMPONENT).nc $(LDFLAGS)  $(DUMPTYPES) -fnesc-dumpfile=$(XML)
+
+	@echo -e '$(INFO_STRING) compiling Python support and C libraries into pytossim.o, tossim.o, and c-support.o'
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(PYOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_ADDITIONAL_CFLAGS) $(PYFILE) -I$(PYDIR) -I$(SIMDIR) -DHAVE_CONFIG_H
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CXXOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_ADDITIONAL_CFLAGS) $(CXXFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(HASHOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_ADDITIONAL_CFLAGS) $(HASHFILE) -I$(PYDIR) -I$(SIMDIR)
+
+	@echo -e '$(INFO_STRING) linking into shared object ./$(SHARED_OBJECT)'
+	$(GPP) $(PLATFORM_BUILD_FLAGS) $(PLATFORM_CC_FLAGS) $(PYOBJFILE) $(OBJFILE) $(CXXOBJFILE) $(HASHOBJFILE) $(SIM_ADDITIONAL_OBJS) $(PLATFORM_LIB_FLAGS) -o $(SHARED_OBJECT)
+
+	@echo -e '$(INFO_STRING) copying Python script interface TOSSIM.py from lib/tossim to local directory'
+	@cp $(TOSSIMPY_DIR)/TOSSIM.py .
+	@echo " "
+	@echo -e '$(INFO_STRING) *** Successfully built $(PLATFORM) TOSSIM library.'

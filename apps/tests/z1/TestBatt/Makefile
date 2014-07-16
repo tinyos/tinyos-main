@@ -2,6 +2,7 @@ COMPONENT=TestBattAppC
  
 CFLAGS += -DPRINTFUART_ENABLED
 CFLAGS += -DMSP430XSPEED8
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 
 

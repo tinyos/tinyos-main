@@ -1,0 +1,28 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/tinynode
+PFLAGS += -I%T/platforms/tinynode/chips/xe1205
+PFLAGS += -I%T/platforms/tinynode/chips/mm74hc595
+PFLAGS += -I%T/platforms/tinynode/chips/at45db
+PFLAGS += -I%T/chips/xe1205/conf
+PFLAGS += -I%T/chips/xe1205/phy
+PFLAGS += -I%T/chips/xe1205/mac
+PFLAGS += -I%T/chips/xe1205
+PFLAGS += -I%T/chips/mm74hc595
+PFLAGS += -I%T/chips/msp430
+PFLAGS += -I%T/chips/msp430/adc12
+PFLAGS += -I%T/chips/msp430/dma
+PFLAGS += -I%T/chips/msp430/pins
+PFLAGS += -I%T/chips/msp430/timer
+PFLAGS += -I%T/chips/msp430/usart
+PFLAGS += -I%T/chips/msp430/sensors
+PFLAGS += -I%T/chips/at45db
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+
+PFLAGS += -mmcu=msp430f1611
+PFLAGS += -fnesc-target=msp430
+PFLAGS += -fnesc-no-debug
+
+TOSMAKE_FLASH_CHIP = at45db

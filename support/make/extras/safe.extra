@@ -1,0 +1,3 @@
+#-*-Makefile-*-
+
+SAFE_FLAGS = -DSAFE_TINYOS -I$(TINYOS_OS_DIR)/lib/safe -fnesc-deputy -fnesc-deputy-args='-I$(TINYOS_OS_DIR)/lib/safe/include --FLIDs=$(TOSMAKE_BUILD_DIR)/flids.txt --envmachine -DSAFE_TINYOS --nolib '

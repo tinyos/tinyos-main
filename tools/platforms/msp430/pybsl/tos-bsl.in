@@ -9,16 +9,15 @@
 # based on the application note slas96b.pdf from Texas Instruments, Inc.,
 # Volker Rzehak
 # additional infos from slaa089a.pdf
-# 
+#
 # Forked by Travis Goodspeed <travis at tnbelt.com> for use with the GoodFET
 # JTAG programmer.
 
 import sys, time, string, cStringIO, struct
-sys.path.append("@tinyoslibdir@")
 import serial, os, glob
 
 #forked from TinyOS Telos version.
-VERSION = string.split("Revision: 1.39-goodfet-8 z1 fork")[1] 
+VERSION = string.split("Revision: 1.39-goodfet-8 z1 fork")[1]
 
 DEBUG = 0                                       #disable debug messages by default
 
@@ -295,9 +294,9 @@ class LowLevel:
     	self.swapRSTTEST = 0
     	self.telosLatch = 0
     	self.telosI2C = 0
-        
+
         self.z1 = 0
-        
+
         self.protocolMode = self.MODE_BSL
         self.BSLMemAccessWarning = 0                #Default: no warning.
         self.slowmode = 0
@@ -512,7 +511,7 @@ class LowLevel:
         self.picROMclock(0, True)
         #k = 1
         #while not self.serial.getCTS():
-        #    pass 
+        #    pass
         #time.sleep(0.1)
         return recbuf
 
@@ -529,7 +528,7 @@ class LowLevel:
         self.picROMclock(r)
         #time.sleep(0.1)
         return recbuf
-        
+
     def picROMclock(self, masterout, slow = False):
         #print "setting masterout to "+str(masterout)
         self.serialport.setRTS(masterout)
@@ -554,10 +553,10 @@ class LowLevel:
         Parameters:
             invokeBSL = 1: complete sequence
             invokeBSL = 0: only RST/NMI pin accessed
-            
+
         By now only BSL mode is accessed
         '''
-        
+
         if DEBUG > 1: sys.stderr.write("* bslReset(invokeBSL=%s)\n" % invokeBSL)
         if invokeBSL:
             #sys.stderr.write("in Z1 bsl reset...\n")
@@ -618,7 +617,7 @@ class LowLevel:
             # rst !s0: 0 0 0 0 1 1
     	# tck !s1: 1 0 1 0 0 1
             #   s0|s1: 1 3 1 3 2 0
-    
+
     	# "BSL entry sequence at shared JTAG pins"
             # rst !s0: 0 0 0 0 1 1
     	# tck !s1: 0 1 0 1 1 0
@@ -649,22 +648,22 @@ class LowLevel:
     	if self.telosI2C:
     	    self.telosBReset(invokeBSL)
     	    return
-    
+
         if self.z1:
             if DEBUG > 1: sys.stderr.write("* entering bsl with z1\n")
             self.bslResetZ1(invokeBSL)
             return
-    
+
         if DEBUG > 1: sys.stderr.write("* bslReset(invokeBSL=%s)\n" % invokeBSL)
         self.SetRSTpin(1)       #power suply
         self.SetTESTpin(1)      #power suply
         time.sleep(0.250)       #charge capacitor on boot loader hardware
-    
+
     	if self.telosLatch:
     	    self.SetTESTpin(0)
     	    self.SetRSTpin(0)
     	    self.SetTESTpin(1)
-    
+
         self.SetRSTpin(0)       #RST  pin: GND
         if invokeBSL:
             self.SetTESTpin(1)  #TEST pin: GND
@@ -702,7 +701,7 @@ class LowLevel:
                             sys.stderr.write("  bslSync() timeout, retry ...\n")
                     elif loopcnt == 4:
                         #nmi may have caused the first reset to be ignored, try again
-                        self.bslReset(0) 
+                        self.bslReset(0)
                         self.bslReset(1)
                     elif loopcnt > 0:
                         if DEBUG > 1:
@@ -712,7 +711,7 @@ class LowLevel:
                             sys.stderr.write("  bslSync() timeout\n")
             else:                                   #garbage
                 if DEBUG > 1: sys.stderr.write("  bslSync() failed (0x%02x), retry ...\n" % ord(c))
-                
+
                 raise BSLException(self.ERR_BSL_SYNC)       #Sync. failed
 
     def bslTxRx(self, cmd, addr, length = 0, blkout = None, wait=0):
@@ -863,7 +862,7 @@ class Memory:
                 sys.stderr.write("ELF section %s at 0x%04x %d bytes\n" % (section.name, section.lma, len(section.data)))
             if len(section.data):
                 self.segments.append( Segment(section.lma, section.data) )
-        
+
     def loadFile(self, filename):
         """fill memory with the contents of a file. file type is determined from extension"""
         #TODO: do a contents based detection
@@ -982,7 +981,7 @@ class BootStrapLoader(LowLevel):
     def readBlk(self,adr,len):
         """Read a block of memory."""
         blkin = self.bslTxRx(self.BSL_RXBLK, addr, len(blkout))
-        
+
     def programBlk(self, addr, blkout, action):
         """program a memory block"""
         if DEBUG > 1: sys.stderr.write("* programBlk()\n")
@@ -1056,7 +1055,7 @@ class BootStrapLoader(LowLevel):
                        passwd,              #password
                        wait=wait)           #if wait is 1, try to sync forever
         self.pwdsent = True
-        
+
 
     def getNewPassword(self):
         print 'getting new password'
@@ -1116,16 +1115,16 @@ class BootStrapLoader(LowLevel):
         """start BSL, download patch if desired and needed, adjust SP if desired"""
         sys.stderr.write("Invoking BSL...\n")
         sys.stderr.flush()
-        
+
         #for '30, invertTEST=0, else =1
         if bslreset:
             #detext if is z1?
             self.bslReset(1)                        #Invoke the boot loader.
-        
-        
+
+
         if(self.z1):
             ''' recover password from pic'''
-        
+
         self.txPasswd(self.passwd)                  #transmit password
 
         #Read actual bootstrap loader version.
@@ -1135,8 +1134,8 @@ class BootStrapLoader(LowLevel):
                           16)                       #No. of bytes to read
         dev_id, bslVerHi, bslVerLo = struct.unpack(">H8xBB4x", blkin[:-2]) #cut away checksum and extract data
         self.dev_id=dev_id;
-        
-        
+
+
         if self.cpu is None:                        #cpy type forced?
             if deviceids.has_key(dev_id):
                 self.cpu = deviceids[dev_id]        #try to autodectect CPU type
@@ -1158,7 +1157,7 @@ class BootStrapLoader(LowLevel):
         if self.bslVer <= 0x0130 and adjsp:
             #only do this on BSL where it's needed to prevent
             #malfunction with F4xx devices/ newer ROM-BSLs
-            
+
             #Execute function within bootstrap loader
             #to prepare stack pointer for the following patch.
             #This function will lock the protected functions again.
@@ -1183,7 +1182,7 @@ class BootStrapLoader(LowLevel):
                     sys.stderr.write("Using built in BSL replacement for F1x devices\n")
                     sys.stderr.flush()
                 replacementBSL.loadTIText(cStringIO.StringIO(F1X_BSL))  #parse embedded BSL
-    
+
         #now download the new BSL, if allowed and needed (version lower than the
         #the replacement) or forced
         if replacementBSL is not None:
@@ -1245,7 +1244,7 @@ class BootStrapLoader(LowLevel):
         self.txPasswd(self.passwd)
 
         #update version info
-        #verison only valid for the internal ones, but it also makes sure 
+        #verison only valid for the internal ones, but it also makes sure
         #that the patches are not applied if the user d/ls one
         self.bslVer = 0x0150
 
@@ -1274,16 +1273,16 @@ class BootStrapLoader(LowLevel):
         print "%s" % firmware[self.dev_id];
         fn="/tmp/.goodfet.hex"
         os.system("curl %s >%s" % (firmware[self.dev_id],fn))
-        
+
         fw=Memory(fn);
         #fw.loadIhex(open(fn,"rb"));
-        
+
         sys.stderr.write("Program ...\n")
         sys.stderr.flush()
         self.programData(fw, self.ACTION_PROGRAM | self.ACTION_VERIFY)
         sys.stderr.write("%i bytes programmed.\n" % self.byteCtr)
         sys.stderr.flush()
-        
+
     def actionVerify(self):
         """Verify programmed data"""
         if self.data is not None:
@@ -1336,7 +1335,7 @@ class BootStrapLoader(LowLevel):
             a,l = baudconfigs[baudrate]
         except KeyError:
             raise ValueError, "baudrate not valid. valid values are %r" % baudconfigs.keys()
-        
+
         sys.stderr.write("Changing baudrate to %d ...\n" % baudrate)
         sys.stderr.flush()
         self.bslTxRx(self.BSL_CHANGEBAUD,   #Command: change baudrate
@@ -1366,15 +1365,15 @@ class BootStrapLoader(LowLevel):
         ''' recovers password from picrom'''
         print 'recovering pic password',
         p = ''
-        
+
         for i in range(0,32):
              c = self.readpicROM(i)
              print c,
              p = p + chr(c)
-             
+
         print 'done'
         return p
-        
+
     def picWritePassword(self, password):
         ''' writes a new password to picrom'''
         print 'writing new password',
@@ -1443,7 +1442,7 @@ General options:
   --swap-reset-test     Swap the RST and TEST pins (used for some BSL hardware)
   --telos-latch         Special twiddle in BSL reset for Telos hardware
   --telos-i2c           DTR/RTS map via an I2C switch to TCK/RST in Telos Rev.B
-  --telos               Implies options --invert-reset, --invert-test, 
+  --telos               Implies options --invert-reset, --invert-test,
                         --swap-reset-test, and --telos-latch
   --telosb              Implies options --swap-reset-test, --telos-i2c,
                         --no-BSL-download, and --speed=38400
@@ -1547,10 +1546,10 @@ def main(itest=1):
     forceBSL    = 0
     dumpivt     = 0
     dumpinfo    = 0
-    
+
     bsl.invertRST = 1
     bsl.invertTEST = itest
-    
+
     if comPort is None and os.environ.get("GOODFET")!=None:
         glob_list = glob.glob(os.environ.get("GOODFET"));
         if len(glob_list) > 0:
@@ -1563,8 +1562,8 @@ def main(itest=1):
         glob_list = glob.glob("/dev/ttyUSB*");
         if len(glob_list) > 0:
             comPort = glob_list[0];
-    
-    
+
+
     sys.stderr.write("MSP430 Bootstrap Loader Version: %s\n" % VERSION)
 
     try:
@@ -1649,7 +1648,7 @@ def main(itest=1):
                 #todo.append(bsl.actionUnlockInfo)
                 #todo.append(bsl.writeCalibTables)
                 #todo.append(bsl.writeCalibTables2)
-                
+
                 #todo.append(bsl.actionWriteNewPassword)
                 pass
         elif o in ("--fromweb"):
@@ -1799,7 +1798,7 @@ def main(itest=1):
         reset = 0
 
     sys.stderr.flush()
-    
+
     #prepare data to download
     bsl.data = Memory()                             #prepare downloaded data
     if filetype is not None:                        #if the filetype is given...
@@ -1872,7 +1871,7 @@ def main(itest=1):
             hex+=("%02x "%ord(c));
         hex+="\nq\n";
         print hex;
-    
+
     if goaddr is not None:                          #start user programm at specified address
         bsl.actionRun(goaddr)                       #load PC and execute
 

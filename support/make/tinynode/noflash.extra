@@ -1,1 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+
+# Just reset the tinynode chip, do not load a program image
+
 FLASH_GDB = $(call TOSMake_find,tinynode/noflash.gdb.in)

@@ -1,53 +1,76 @@
 
-This is the TinyOS main development GIT repository.
+TinyOS
+======
 
-It is hosted at https://github.com/tinyos/tinyos-main, main branch master.
-(aka gh:tinyos/tinyos-main(master))
+[TinyOS](http://tinyos.net) is an open source, BSD-licensed operating system
+designed for low-power wireless devices, such as those used in sensor networks,
+ubiquitous computing, personal area networks, smart buildings, and smart meters.
+A worldwide community from academia and industry use, develop, and support the
+operating system as well as its associated tools, averaging 35,000 downloads a
+year.
+
 
 ============================================================================
 
-** Where to begin: **
+**Note**: New Make system and tinyos-tools
+------------------------------------------
 
-README.md (this file).  For a general overview of what this Repo is
-  about.  This repository uses GIT as its DVCS.
+The TinyOS make system has been upgraded to version 3. This brings many new
+improvements (see `support/make/README.md` for details) but also requires
+the `tools` to be rebuilt. To use TinyOS make version 3:
+
+    cd tools
+    ./Bootstrap
+    ./configure
+    make
+    sudo make install
+
+
+============================================================================
+
+
+
+Where to Begin
+--------------
  
-doc/00a_Getting_Started_w_Git: Overview of getting started using git, github.
+- `doc/00a_Getting_Started_w_Git`: Overview of getting started using git, github.
 
-doc/00b_Using_the_Repo: Using and contributing back to the central Repository.
+- `doc/00c_Setting_Up_Debian_Development`: Setting up development on Debian
+  based Linux machines. Debian and Ubuntu.
 
-doc/00c_Setting_Up_Debian_Development: Setting up development on Debian
-  based Linux machines.   Debian and Ubuntu.
-
-doc/00d_MacOSX_Development: Setting up development on Mac OS X.
-
-============================================================================
-
-* To get started you need to a) install a development environment and b)
-  obtain the TinyOS source code.  TinyOS is intended for small embedded
-  systems and is always cross-compiled.  So you always need a cross-compiler
-  toolchain.  The TinyOS source code can be obtained from a number of
-  different places.   The primary development trunk is located at github.com
-  and is called tinyos-main.   The release path is tinyos-release.
+- `doc/00d_MacOSX_Development`: Setting up development on Mac OS X.
 
 
-* About tinyos-main.
+TinyOS Wiki
+-----------
+
+Much information about how to setup and use TinyOS can be found on the
+[wiki](http://tinyos.stanford.edu/tinyos-wiki/index.php/Main_Page).
+It is also editable by the community if you have information to add or update.
+
+
+
+About tinyos-main
+-----------------
 
 Long ago (well not that long ago), in a galaxy not too distant, tinyos
-development was hosted on Google Code as a subversion repository, 
-tinyos-main.googlecode.com/svn/trunk.  This repository was only writeable by
-a select group of core developers.
+development was hosted on Google Code as a
+[subversion repository](http://tinyos-main.googlecode.com/svn/trunk).
+This repository was writeable by a select group of core developers.
 
 TinyOS development has moved to a fully distributed model to encourage more
-participation and is switching to the GIT distributed version control system
-to support this.
+participation by switching to the git distributed version control system.
 
-To ease the transition the gh:tinyos/tinyos-main repository will support very
-similar access mechanisms as formally used to write to the tinyos-main
-subversion repository.  The core group of lead developers has push (write)
-permission to the main development repository.
+The Github tinyos-main repository will still be writeable by those same core
+developers. Pull requests are welcome and will be reviewed by the core
+developer most familiar with the relevant code.
 
 
-* Repo Structure
+
+
+
+Repo Structure
+--------------
 
 Currently there is a single mainline, master.  gh:tinyos/tinyos-main(master).
 This is equivalent to the tip of the svn trunk.
@@ -60,7 +83,7 @@ For the immediate future, branching should be done in private user repositories
 until the community gets used to how they work.
 
 The general form for a repository/branch reference is: <github_context>/<repo>(branch)
-ie. gh:tinyos/tinyos-main(master) is the master branch in the tinyos/tinyos-main 
+ie. gh:tinyos/tinyos-main(master) is the master branch in the tinyos/tinyos-main
 repository.   Note that github repositories have a specific default branch controlled
 by github repository settings.   gh:tinyos/tinyos-main refers to the repository but
 if that repository is pulled it will reference the default branch.

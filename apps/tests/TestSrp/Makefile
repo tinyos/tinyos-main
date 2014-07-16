@@ -1,6 +1,7 @@
 COMPONENT=TestSrpAppC
 
-CFLAGS += -I$(TOSDIR)/lib/net/srp 
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/srp 
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

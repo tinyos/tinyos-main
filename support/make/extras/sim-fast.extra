@@ -1,0 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
+
+$(call TOSMake_include,extras/sim.extra)
+
+# Special flag settings for sim-fast
+PFLAGS += -DTOSSIM_NO_DEBUG
+OPTFLAGS = -g -O3

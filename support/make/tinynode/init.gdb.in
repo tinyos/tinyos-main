@@ -1,9 +1,7 @@
 set complaints 1
-#set output-radix 16
-#set input-radix 16
 
 dir .
-set prompt (@PROMPT@) 
+set prompt (@PROMPT@)
 
 # Various personal settings
 display/i $pc
@@ -19,9 +17,8 @@ set remote memory-read-packet-size fixed
 set remote memory-write-packet-size 1024
 set remote memory-write-packet-size fixed
 
-b 'XE1205PhyP$xe1205error' 
-b 'XE1205SpiImplP$xe1205error' 
-b 'XE1205SendReceiveP$xe1205error' 
-b 'XE1205IrqConfP$xe1205error' 
-b 'XE1205PhyRssiConfP$xe1205error' 
-#b 'TestXE1205C$xe1205error'
+b 'XE1205PhyP$xe1205error'
+b 'XE1205SpiImplP$xe1205error'
+b 'XE1205SendReceiveP$xe1205error'
+b 'XE1205IrqConfP$xe1205error'
+b 'XE1205PhyRssiConfP$xe1205error'

@@ -6,7 +6,7 @@ Description:
 MultihopOscilloscope is a simple data-collection demo. It periodically samples
 the default sensor and broadcasts a message every few readings. These readings
 can be displayed by the Java "Oscilloscope" application found in the
-TOSROOT/apps/Oscilloscope/java subdirectory. The sampling rate starts at 4Hz,
+TINYOS_ROOT_DIR/apps/Oscilloscope/java subdirectory. The sampling rate starts at 4Hz,
 but can be changed from the Java application.
 
 You can compile MultihopOscilloscope with a sensor board's default sensor by
@@ -23,7 +23,7 @@ Tools:
 
 The Java application displays readings it receives from motes running the
 MultihopOscilloscope demo via a serial forwarder. To run it, change to the
-TOSROOT/apps/Oscilloscope/java subdirectory and type:
+TINYOS_ROOT_DIR/apps/Oscilloscope/java subdirectory and type:
 
   make
   java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>

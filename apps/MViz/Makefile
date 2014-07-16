@@ -1,11 +1,12 @@
 COMPONENT=MVizAppC
-CFLAGS += -I$(TOSDIR)/lib/net/ -I$(TOSDIR)/lib/net/ctp -I$(TOSDIR)/lib/net/4bitle -I.
-BUILD_EXTRA_DEPS = MVizMsg.class
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net/ -I$(TINYOS_OS_DIR)/lib/net/ctp -I$(TINYOS_OS_DIR)/lib/net/4bitle -I.
+TOSMAKE_PRE_EXE_DEPS = MVizMsg.class
 
 MVizMsg.java: MViz.h
-	mig -target=null -java-classname=MVizMsg java MViz.h mviz_msg -o $@
+	nescc-mig -I$(TINYOS_OS_DIR)/types -java-classname=MVizMsg java MViz.h mviz_msg -o $@
 
 MVizMsg.class: MVizMsg.java
 	javac MVizMsg.java
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

@@ -16,17 +16,18 @@ README.txt in that directory).
 If you want to use the TKN15.4 MAC instead of your platform's default MAC
 protocol in your own application, all you need to do is add the line
 
-    include $(TOSDIR)/lib/mac/tkn154/Makefile.include
+    include $(TINYOS_OS_DIR)/lib/mac/tkn154/Makefile.include
 
-in your application's Makefile after the "include $(MAKERULES)" line as shown
+in your application's Makefile after the "include $(TINYOS_ROOT_DIR)/Makefile.include"
+line as shown
 in the example applications. This is also true, if your application uses the
 Active Message abstraction and you want to use the TKN15.4 MAC underneath AM.
 The full-blown MAC consumes quite a lot of program memory, but you can remove
 some functionality at compile time by setting IEEE154_X_DISABLED flags defined
-in $(TOSDIR)/lib/mac/tkn154/TKN154.h (e.g. adding them to the CFLAGS in your
-Makefile). The MAC interfaces are located in tos/lib/mac/tkn154/interfaces 
-and TKN154.h is typically the only MAC header file that your application needs 
-to include. 
+in $(TINYOS_OS_DIR)/lib/mac/tkn154/TKN154.h (e.g. adding them to the CFLAGS in your
+Makefile). The MAC interfaces are located in tos/lib/mac/tkn154/interfaces
+and TKN154.h is typically the only MAC header file that your application needs
+to include.
 
 
 If you pass "tkn154debug" to the make system, then a debug mode is enabled,

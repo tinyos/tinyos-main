@@ -6,5 +6,6 @@ COMPONENT=AntiTheftRootAppC
 #CFLAGS += -DLPL_DEF_REMOTE_WAKEUP=512
 #CFLAGS += -DDELAY_AFTER_RECEIVE=20
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

@@ -1,7 +1,8 @@
 COMPONENT=TestAppC
 TOSMAKE_PATH += ..
-PFLAGS += -I$(TOSDIR)/lib/printf
-PFLAGS += -I$(TOSDIR)/lib/fragpool
-PFLAGS += -I$(TOSDIR)/lib/ppp
-include $(MAKERULES)
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/fragpool
+PFLAGS += -I$(TINYOS_OS_DIR)/lib/ppp
+TINYOS_ROOT_DIR?=../../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
 

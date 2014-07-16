@@ -5,14 +5,10 @@
 # http://docs.tinyos.net/index.php/OpenOCD_for_IMote2
 #
 
-PROGRAM = imote2-ocd-program.py
+TOSMAKE_PROGRAMMER_TYPE = openocd
 
-PROGRAMMER ?= $(TOSROOT)/tools/platforms/intelmote2/openocd/imote2-ocd-program.py
+PROGRAMMER = imote2-ocd-program.py
 
-program: FORCE
-	@echo "    installing $(PLATFORM) binary using $(PROGRAM)"
+program: setid FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using $(TOSMAKE_PROGRAMMER_TYPE)'
 	$(PROGRAMMER) $(INSTALL_BIN)
-
-program_input: bin
-	@:
-

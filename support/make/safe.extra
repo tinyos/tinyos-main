@@ -1,5 +1,0 @@
-#-*-Makefile-*-
-
-MAKE_DEPUTY_FLAG := 1
-#export MAKE_DEPUTY_FLAG
-

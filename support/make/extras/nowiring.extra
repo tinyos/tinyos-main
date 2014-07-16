@@ -1,0 +1,3 @@
+#-*-Makefile-*- vim:syntax=make
+
+NO_WIRING_CHECK = 1

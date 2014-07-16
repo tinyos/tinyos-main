@@ -1,0 +1,20 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = micaz
+PROGRAMMER ?= avrdude
+ifeq ($(PROGRAMMER),avrdude)
+  PROGRAMMER_PART ?= -pm128  -U efuse:w:0xff:m
+endif
+
+AVR_FUSE_H ?= 0xd9
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
+
+$(call TOSMake_include_platform,micaz)
+$(call TOSMake_include_make_platform,avr)
+
+micaz: $(BUILD_DEPS)
+	@:
+

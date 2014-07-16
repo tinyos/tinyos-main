@@ -1,8 +1,3 @@
-# $Id: Makefile,v 1.8 2010-06-29 22:07:50 scipio Exp $
-
-#
-#
-#
 # Copyright (c) 2000-2005 The Regents of the University  of California.
 # All rights reserved.
 #
@@ -44,71 +39,71 @@ TINYOS_NP=
 
 PFLAGS += -DNESC_BUILD_BINARY
 
+$(warning $(MAKECMDGOALS))
 # ifeq ($(MAKECMDGOALS),mica2)
-#   CFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
-#   CFLAGS += -Wl,--section-start=.text=0x1f000
-#   CFLAGS += -Iat45db -Iavr -Imica2 -Ilib
+#   PFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
+#   PFLAGS += -Wl,--section-start=.text=0x1f000
+#   PFLAGS += -Iat45db -Iavr -Imica2 -Ilib
 # endif
 
 # ifeq ($(MAKECMDGOALS),mica2dot)
-#   CFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
-#   CFLAGS += -Wl,--section-start=.text=0x1f000
-#   CFLAGS += -Iat45db -Iavr -Imica2dot -Ilib
+#   PFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
+#   PFLAGS += -Wl,--section-start=.text=0x1f000
+#   PFLAGS += -Iat45db -Iavr -Imica2dot -Ilib
 # endif
 
 ifeq ($(MAKECMDGOALS),micaz)
-  CFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
-  CFLAGS += -Wl,--section-start=.text=0x1f000
-  CFLAGS += -Iat45db -Iavr -Imicaz -Ilib
-  CFLAGS += -I../net/Deluge
+  PFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
+  PFLAGS += -Wl,--section-start=.text=0x1f000
+  PFLAGS += -Iat45db -Iavr -Imicaz -Ilib
+  PFLAGS += -I../net/Deluge
 endif
 
 ifeq ($(MAKECMDGOALS),iris)
-  CFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
-  CFLAGS += -Wl,--section-start=.text=0x1f000
-  CFLAGS += -Iiris -Iat45db -Iavr -Imicaz -Ilib
-  CFLAGS += -I../net/Deluge
+  PFLAGS += -DTOSBOOT_START=0x1f000 -DTOSBOOT_END=0x20000
+  PFLAGS += -Wl,--section-start=.text=0x1f000
+  PFLAGS += -Iiris -Iat45db -Iavr -Imicaz -Ilib
+  PFLAGS += -I../net/Deluge
 endif
 
 # ifeq ($(MAKECMDGOALS),telosa)
-#   CFLAGS += -DTOSBOOT_START=0x1100 -DTOSBOOT_END=0x1a00
-#   CFLAGS += -Iat45db -Imsp430 -Itelos -Ilib
-#   POST_BUILD_EXTRA_DEPS += strip_iv
+#   PFLAGS += -DTOSBOOT_START=0x1100 -DTOSBOOT_END=0x1a00
+#   PFLAGS += -Iat45db -Imsp430 -Itelos -Ilib
+#   BUILD_DEPS += strip_iv
 # endif
 
 ifeq ($(MAKECMDGOALS),telosb)
-  CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
-  CFLAGS += -Imsp430 -Imsp430f1611 -Istm25p -Itelosb -Ilib
-  CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv
+  PFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
+  PFLAGS += -Imsp430 -Imsp430f1611 -Istm25p -Itelosb -Ilib
+  PFLAGS += -I../net/Deluge
+  BUILD_DEPS += strip_iv
 endif
 
 ifeq ($(MAKECMDGOALS),epic)
-  CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
-  CFLAGS += -Imsp430 -Imsp430f1611 -Iepic -Ilib
-  CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv
+  PFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
+  PFLAGS += -Imsp430 -Imsp430f1611 -Iepic -Ilib
+  PFLAGS += -I../net/Deluge
+  BUILD_DEPS += strip_iv
 endif
 
 ifeq ($(MAKECMDGOALS),mulle)
-  CFLAGS += -DTOSBOOT_START=0xe0000 -DTOSBOOT_END=0xeffff
-  CFLAGS += -Iat45db -Imulle -Im16c60 -Im16c60/62p -Ilib
-  CFLAGS += -I../net/Deluge -I../net/Deluge/extra/mulle
-  CFLAGS += -I../net/Deluge/extra/m16c60
-  CFLAGS += -I../net/Deluge/extra/m16c60/62p
+  PFLAGS += -DTOSBOOT_START=0xe0000 -DTOSBOOT_END=0xeffff
+  PFLAGS += -Iat45db -Imulle -Im16c60 -Im16c60/62p -Ilib
+  PFLAGS += -I../net/Deluge -I../net/Deluge/extra/mulle
+  PFLAGS += -I../net/Deluge/extra/m16c60
+  PFLAGS += -I../net/Deluge/extra/m16c60/62p
 endif
 
 ifeq ($(MAKECMDGOALS),tinynode)
-  CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
-  CFLAGS += -Itinynode -Imsp430 -Imsp430f1611 -Iat45db -Ilib
-  CFLAGS += -I../net/Deluge
-  POST_BUILD_EXTRA_DEPS += strip_iv 
+  PFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
+  PFLAGS += -Itinynode -Imsp430 -Imsp430f1611 -Iat45db -Ilib
+  PFLAGS += -I../net/Deluge
+  BUILD_DEPS += strip_iv
 endif
 
+strip_iv: tinyos_image FORCE
+	@echo -e '$(INFO_STRING) removing interrupt vector from binary'
+	msp430-objcopy -j .text -j .data -O ihex $(TOSMAKE_BUILD_DIR)/main.exe $(TOSMAKE_BUILD_DIR)/main.ihex
 
-
-strip_iv: FORCE
-	@echo "    removing interrupt vector from binary"
-	msp430-objcopy -j .text -j .data -O ihex $(BUILDDIR)/main.exe $(BUILDDIR)/main.ihex
-
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

@@ -1,9 +1,0 @@
-#-*-Makefile-*- vim:syntax=make
-#$Id: tos_image.extra,v 1.5 2007-04-27 05:01:25 prabal Exp $
-
-TOS_IMAGE_PL ?= tos-write-image
-IDENT_PROGRAM_NAME ?= $(COMPONENT)
-
-build_tosimage: FORCE
-	@echo "    writing TOS image"
-	@$(TOS_IMAGE_PL) $(IDENT_FLAGS) --ihex="$(MAIN_IHEX)" --exe="$(MAIN_EXE)" --objdump="$(OBJDUMP)" --platform="$(PLATFORM)" > $(BUILDDIR)/tos_image.xml

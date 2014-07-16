@@ -6,10 +6,10 @@ oscilloscope.jar: Oscilloscope.class
 	jar cf $@ *.class
 
 OscilloscopeMsg.java: ../Oscilloscope.h
-	mig -target=null -java-classname=OscilloscopeMsg java ../Oscilloscope.h oscilloscope -o $@
+	nescc-mig -java-classname=OscilloscopeMsg java ../Oscilloscope.h oscilloscope -o $@
 
 Constants.java: ../Oscilloscope.h
-	ncg -target=null -java-classname=Constants java ../Oscilloscope.h NREADINGS DEFAULT_INTERVAL -o $@
+	nescc-ncg -java-classname=Constants java ../Oscilloscope.h NREADINGS DEFAULT_INTERVAL -o $@
 
 Oscilloscope.class: $(wildcard *.java) $(GEN)
 	javac *.java

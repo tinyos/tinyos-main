@@ -12,17 +12,17 @@
    is necessary for appropriate radio stack support.
 
  - Make sure the c serial tools are built in
-   $TOSROOT/support/sdk/c/sf.  You may need to run ./bootstrap,
+   $TINYOS_ROOT_DIR/support/sdk/c/sf.  You may need to run ./bootstrap,
    ./configure, and make in that folder to generate libmote.a.
 
  2. Building
 
  - Build a test app:
-      * cd to $TOSROOT/apps/UDPEcho/ and try typing `make <platform> blip`
+      * cd to $TINYOS_ROOT_DIR/apps/UDPEcho/ and try typing `make <platform> blip`
  - Build the Ieee802.15.4 bridge to your computer
-      * cd to $TOSROOT/apps/IPBaseStation/ and `make <platform> blip`
+      * cd to $TINYOS_ROOT_DIR/apps/IPBaseStation/ and `make <platform> blip`
  - Build the driver 
-      * cd to $TOSROOT/support/sdk/c/blip
+      * cd to $TINYOS_ROOT_DIR/support/sdk/c/blip
       * run ./bootstrap
       * run ./configure
       * run make
@@ -35,8 +35,8 @@
        overwritten.
 
  - Start the driver (once you've built it)
-      * cd $TOSROOT/support/sdk/c/blip
-      * edit the config file $TOSROOT/support/sdk/c/blip/serial_tun.conf
+      * cd $TINYOS_ROOT_DIR/support/sdk/c/blip
+      * edit the config file $TINYOS_ROOT_DIR/support/sdk/c/blip/serial_tun.conf
          * set 'addr' you would like your computer's interface to use on the PAN
          * leave 'proxy' set to 'lo'
       * sudo driver/ip-driver /dev/ttyUSB0 telosb
@@ -71,7 +71,7 @@
        UDP.  They will send these reports to an address specified in the
        application make file; however these reports are disabled by default.
        You can observe these statistics using the Listener.py
-       script in $TOSROOT/apps/UDPEcho/: `python Listener.py`.
+       script in $TINYOS_ROOT_DIR/apps/UDPEcho/: `python Listener.py`.
 
  - The driver provides a simple console when running, which allows you
        to inspect and manipulates routes, and view statistics.  The

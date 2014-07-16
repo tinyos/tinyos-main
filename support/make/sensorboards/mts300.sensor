@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+
+#
+# The MTS300 board does not have an external pullup resistor on the I2C
+# lines, so we need to enable the internal pullup resistor on the MCU.
+#
+
+PFLAGS += -DATM128_I2C_EXTERNAL_PULLDOWN=1
+
+PFLAGS += -I%T/sensorboards/mts300

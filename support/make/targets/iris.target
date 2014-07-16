@@ -1,0 +1,23 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = iris
+
+PROGRAMMER ?= avrdude
+
+ifeq ($(PROGRAMMER),avrdude)
+  PROGRAMMER_PART ?= -pm1281 -U efuse:w:0xff:m
+endif
+
+AVR_FUSE_H ?= 0xd9
+AVR_FUSE_L ?= 0xff
+
+ifdef RF230_CHANNEL
+PFLAGS += -DRF230_DEF_CHANNEL=$(RF230_CHANNEL)
+endif
+
+$(call TOSMake_include_platform,iris)
+
+$(call TOSMake_include_make_platform,avr)
+
+iris: $(BUILD_DEPS)
+	@:

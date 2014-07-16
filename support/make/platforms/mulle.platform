@@ -1,0 +1,65 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/mulle
+PFLAGS += -I%T/platforms/mulle/fix
+PFLAGS += -I%T/platforms/mulle/chips/rf230
+PFLAGS += -I%T/chips/rf230
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+PFLAGS += -I%T/chips/at45db
+PFLAGS += -I%T/platforms/mulle/button
+PFLAGS += -I%T/platforms/mulle/lib
+PFLAGS += -I%T/platforms/mulle/i2c
+PFLAGS += -I%T/platforms/mulle/spi
+PFLAGS += -I%T/platforms/mulle/chips/rv8564
+PFLAGS += -I%T/platforms/mulle/chips/at45db
+PFLAGS += -I%T/platforms/mulle/chips/m16c60
+PFLAGS += -I%T/platforms/mulle/chips/mma7261qt
+PFLAGS += -I%T/platforms/mulle/chips/ds2782
+PFLAGS += -I%T/platforms/mulle/system
+PFLAGS += -I%T/platforms/mulle/timers
+PFLAGS += -I%T/platforms/mulle/timers/stop
+PFLAGS += -I%T/platforms/mulle/timers/wait
+PFLAGS += -I%T/platforms/mulle/timers/rf230
+PFLAGS += -I%T/chips/m16c60
+PFLAGS += -I%T/chips/m16c60/62p
+PFLAGS += -I%T/chips/m16c60/control
+PFLAGS += -I%T/chips/m16c60/adc
+PFLAGS += -I%T/chips/m16c60/dac
+PFLAGS += -I%T/chips/m16c60/pins
+PFLAGS += -I%T/chips/m16c60/timer
+PFLAGS += -I%T/chips/m16c60/uart
+PFLAGS += -I%T/chips/m16c60/printf
+PFLAGS += -I%T/chips/mma7261qt
+PFLAGS += -I%T/chips/ds2782
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/diagmsg
+PFLAGS += -I%T/lib/net/Deluge
+
+PFLAGS += -mcpu=m16c
+PFLAGS += -fnesc-target=env
+
+
+# gcc-4.5.0/gcc/config/m32c/m32c.h
+# in the order of nesc/src/machine/env_machine.c
+export NESC_MACHINE = \
+big_endian=false  \
+pcc_bitfield_type_matters=false \
+empty_field_boundary=8 \
+structure_size_boundary=8 \
+word_size=1 \
+pointer=2,1 \
+float=4,1 \
+double=8,1 \
+long_double=8,1 \
+short=2,1 \
+int=2,1 \
+long=4,1 \
+long_long=8,1 \
+int1248_align=1,1,1,1 \
+wchar_size_size=2,2 \
+char_wchar_signed=true,true
+
+TOSMAKE_FLASH_CHIP = at45db

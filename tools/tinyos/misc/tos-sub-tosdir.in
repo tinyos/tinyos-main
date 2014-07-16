@@ -1,0 +1,91 @@
+#!@pathpython@
+
+from __future__ import print_function
+
+import argparse
+import os
+import subprocess
+import sys
+
+about = """
+Substitute %T with TinyOS /tos directories.
+This creates include paths for nescc in the order the --tosdir arguments
+are passed in. Every substitution of %T that is an actual folder is added
+to the expansion.
+"""
+
+name = os.path.basename(sys.argv[0])
+
+# Substitute %%, %T with their correct values.
+# %T will be replaced with the 'correct' tosdir path, that is the one that makes
+# the path actually exist.
+def substitute_inc_path(ipath):
+  ret = []
+  ipath = ipath.replace('%%', '%').strip()
+  #ipath = ipath.replace('%p', target)
+  #ipath = ipath.replace('%P', platform_dir)
+  if '%T' in ipath:
+    sides = ipath.split('%T')
+    if len(sides) > 2:
+      print('{} (warning): {} contains {} instances of %T, and that doesn\'t make any sense.'.format(name, ipath, len(sides)-1), file=sys.stderr)
+    else:
+      single_match_only = False
+      if '-I' != ipath[0:2]:
+        # This is not an include for a directory, so it is probably a .c file
+        # that is needed for compilation. Here we only want to use the first
+        # expansion because multiple copies will cause the compilation to fail.
+        single_match_only = True
+      for tosdir in args.tosdir:
+        temp = tosdir + sides[1]
+        if os.path.exists(temp):
+          ret.append(sides[0] + temp)
+          if single_match_only:
+            break
+      if len(ret) == 0:
+        print('{} (warning): All expansions of {} did not match any directories or files that exist.'.format(name, ipath), file=sys.stderr)
+  else:
+    ret.append(ipath)
+  return ret
+
+def add_sim_folder(arguments):
+  ret = []
+  for a in arguments:
+    if '-I' == a[0:2]:
+      simpath = os.path.join(a, 'sim')
+      if os.path.exists(simpath[2:]):
+        ret.append(simpath)
+  return ret
+
+# Array of arguments to pass to nesC
+ret_args = []
+
+# Process all of the command line arguments
+argp = argparse.ArgumentParser(description=about)
+argp.add_argument('--tosdir',
+  action='append',
+  default=[],
+  required=True,
+  help='Paths to the /tos directories to use as the system code.')
+argp.add_argument('--sim',
+  action='store_true',
+  help='Add /sim directories to the include path.')
+argp.add_argument('--version',
+  action='version',
+  version='{}: @PACKAGE_VERSION@'.format(name),
+  help='Display version information and exit.')
+args, extra_args = argp.parse_known_args()
+
+# Check on the tosdir
+for tosdir in args.tosdir:
+  if not os.path.exists(tosdir):
+    print('{} (warning): TinyOS dir {} does not exist.'.format(name, tosdir), file=sys.stderr)
+
+# Do the substitutions and add the include paths
+for rawarg in extra_args:
+  arglist = substitute_inc_path(rawarg)
+  if args.sim:
+    argsimlist = add_sim_folder(arglist)
+    ret_args.extend(argsimlist)
+  ret_args.extend(arglist)
+
+print(' '.join(ret_args).replace('"', '\\"'))

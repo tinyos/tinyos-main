@@ -1,0 +1,33 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/iris
+PFLAGS += -I%T/platforms/micaz
+PFLAGS += -I%T/platforms/mica
+PFLAGS += -I%T/platforms/iris/chips/rf230
+PFLAGS += -I%T/chips/rf230
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+PFLAGS += -I%T/platforms/iris/chips/at45db
+PFLAGS += -I%T/platforms/mica2/chips/at45db
+PFLAGS += -I%T/platforms/mica/chips/at45db
+PFLAGS += -I%T/chips/at45db
+PFLAGS += -I%T/platforms/iris/chips/ds2401
+PFLAGS += -I%T/platforms/mica2/chips/ds2401
+PFLAGS += -I%T/chips/ds2401
+PFLAGS += -I%T/chips/atm1281
+PFLAGS += -I%T/chips/atm1281/adc
+PFLAGS += -I%T/chips/atm1281/timer
+PFLAGS += -I%T/chips/atm128
+PFLAGS += -I%T/chips/atm128/adc
+PFLAGS += -I%T/chips/atm128/pins
+PFLAGS += -I%T/chips/atm128/spi
+PFLAGS += -I%T/chips/atm128/i2c
+PFLAGS += -I%T/chips/atm128/timer
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/diagmsg
+
+PFLAGS += -mmcu=atmega1281
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug

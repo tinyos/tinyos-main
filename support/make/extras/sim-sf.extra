@@ -1,0 +1,64 @@
+#-*-Makefile-*- vim:syntax=make
+# Copyright (c) 2007 Toilers Research Group - Colorado School of Mines
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the
+#   distribution.
+# - Neither the name of Toilers Research Group - Colorado School of
+#   Mines  nor the names of its contributors may be used to endorse
+#   or promote products derived from this software without specific
+#   prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
+# UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Chad Metcalf
+
+TOSMAKE_PRE_EXE_DEPS += sim-sf-exe
+PFLAGS += $(SF_FLAGS)
+
+$(call TOSMake_include,extras/sim.extra)
+
+
+SF_DIR   = $(TINYOS_OS_DIR)/lib/tossim/sf
+SF_FLAGS = -I$(SF_DIR)
+
+TOSSIMPY_DIR = $(SF_DIR)
+
+CSFFILE         = $(SF_DIR)/sim_serial_forwarder.c
+CSFOBJFILE      = $(TOSMAKE_BUILD_DIR)/c-sf.o
+SFFILE          = $(SF_DIR)/SerialForwarder.c
+SFOBJFILE       = $(TOSMAKE_BUILD_DIR)/sf.o
+THROTTLEFILE    = $(SF_DIR)/Throttle.cpp
+THROTTLEOBJFILE = $(TOSMAKE_BUILD_DIR)/throttle.o
+
+PYFILE          = $(SF_DIR)/tossim_wrap.cxx
+CXXFILE         = $(SF_DIR)/tossim.c
+
+
+SIM_ADDITIONAL_CFLAGS += $(SF_FLAGS)
+SIM_ADDITIONAL_OBJS += $(CSFOBJFILE) $(SFOBJFILE) $(THROTTLEOBJFILE)
+
+
+sim-sf-exe: build_dir FORCE
+	@echo -e '$(INFO_STRING) compiling sf support and C libraries into sf.o, c-sf.o, and throttle.o'
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CSFOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SF_FLAGS) $(CSFFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(SFOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SF_FLAGS) $(SFFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(THROTTLEOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SF_FLAGS) $(THROTTLEFILE) -I$(PYDIR) -I$(SIMDIR)

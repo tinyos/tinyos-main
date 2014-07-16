@@ -4,17 +4,13 @@ blip-2.0 development tree
 This tree contains support for a stack built on top of:
  draft-6lowpan-hc-06 for IPv6 header compression
  draft-roll-rpl-17 for IPv6 routing
- linux ppp for communicating with external networks 
+ linux ppp for communicating with external networks
    - from the peoplepower osian stack
    - merged in from the osian-squashed-ppp branch
  dhcpv6 for doing address assignment
 
 We track trunk, periodically re-merging.  In the future this release
 will be integrated with trunk.
-
-TOSROOT=/home/sdawson/svn/blip-rpl-devel
-TOSDIR=/home/sdawson/svn/blip-rpl-devel/tos
-MAKERULES=/home/sdawson/svn/blip-rpl-devel/support/make/Makerules
 
 Some of the apps are tight on code space (PppRouter).  You should use
 mspgcc4 (http://mspgcc4.sourceforge.net/) to compile, since it
@@ -38,7 +34,7 @@ compile time; this is set by default for PppRouter and UDPEcho.  The
 Link-local address 1 is configured from the unique EUI-64 obtained
  from the DS2411 serial chip.  If you want to figure out what address
  a mote has, you can install the apps/tests/TestEui app (make epic
- msp-hack) and then look at the printf output: 
+ msp-hack) and then look at the printf output:
 
 "stty -F /dev/ttyUSB0 57600 && tail -f /dev/ttyUSB0"
 
@@ -95,7 +91,7 @@ PppRouterC is an application which advertises itsself as a RPL DODAG
 root.  It also has a second ppp interface which allows it to route
 packets between the 6lowpan network and other networks.
 
-$ cd $TOSROOT/apps/PppRouter
+$ cd $TINYOS_ROOT_DIR/apps/PppRouter
 $ make epic blip
 
 Then install it on a mote with ID 1 -- static addressing is default.
@@ -141,7 +137,7 @@ UDPEcho
 The stock image for motes not needing ppp is UDPEcho -- make and
 install it the same way
 
-$ cd $TOSROOT/apps/UDPEcho
+$ cd $TINYOS_ROOT_DIR/apps/UDPEcho
 $ make epic blip install.2 bsl,/dev/ttyUSB1
 
 Since we're not using DHCP here, we give it a new address based on

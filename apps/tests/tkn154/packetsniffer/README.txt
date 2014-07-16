@@ -14,7 +14,7 @@ the following:
 4. some frame-specific metadata (RSSI, LQI, timestamp, etc.)
 
 On the PC-side (a) with a few changes
-"$TOSROOT/apps/BaseStation15.4/seriallisten15-4.c" can be adapted to display
+"$TINYOS_ROOT_DIR/apps/BaseStation15.4/seriallisten15-4.c" can be adapted to display
 textual information on the frame content (if this is sufficient for you, also
 take a look at ../nonbeacon-enabled/TestPromiscuous app); (b) there exists a
 tool that visualizes the frame fields in a JAVA GUI, it's available here:

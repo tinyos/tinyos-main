@@ -4,4 +4,5 @@ BOOTLOADER=tosboot
 #CFLAGS += -DDELUGE_BASESTATION
 #CFLAGS += -DDELUGE_LIGHT_BASESTATION
 
-include $(MAKERULES)
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

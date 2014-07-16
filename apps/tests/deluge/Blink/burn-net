@@ -34,10 +34,10 @@ then
   exit 2
 fi
 
-if ! [ -a ${TOSDIR}/lib/tosboot/build/${PLATFORM}/main.ihex ]
+if ! [ -a ${TINYOS_OS_DIR}/lib/tosboot/build/${PLATFORM}/main.ihex ]
 then
   echo ========================== Compile tosboot for ${PLATFORM} ===========================
-  ( cd $TOSDIR/lib/tosboot ; make ${PLATFORM} ) 
+  ( cd $TINYOS_OS_DIR/lib/tosboot ; make ${PLATFORM} ) 
 fi
 
 echo ================================ Compile Blink =================================

@@ -1,0 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
+
+PLATFORMS ?= mica mica2 mica2dot telos micaz pc
+
+all: FORCE
+	for target in $(filter-out $(INVALID_PLATFORMS),$(PLATFORMS)); do cmd="make $$target"; echo ".... $$cmd"; $$cmd; done
+

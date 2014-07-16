@@ -1,0 +1,67 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/sam3u_ek
+PFLAGS += -I%T/platforms/sam3u_ek/lcd
+PFLAGS += -I%T/platforms/sam3u_ek/chips/cc2420
+PFLAGS += -I%T/platforms/sam3u_ek/chips/sd
+PFLAGS += -I%T/platforms/sam3u_ek/chips/nandflash
+PFLAGS += -I%T/platforms/shimmer/chips/sd/fatfs
+PFLAGS += -I%T/chips/cortex/m3
+PFLAGS += -I%T/chips/cortex/m3/sam3
+PFLAGS += -I%T/chips/cortex/m3/sam3/u
+PFLAGS += -I%T/chips/cortex/m3/sam3/pins
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/pins
+PFLAGS += -I%T/chips/cortex/m3/sam3/timer
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/timer
+PFLAGS += -I%T/chips/cortex/m3/sam3/nvic
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/nvic
+PFLAGS += -I%T/chips/cortex/m3/sam3/uart
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/uart
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/usart
+PFLAGS += -I%T/chips/cortex/m3/sam3/supc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/supc
+PFLAGS += -I%T/chips/cortex/m3/sam3/pmc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/pmc
+PFLAGS += -I%T/chips/cortex/m3/sam3/eefc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/eefc
+PFLAGS += -I%T/chips/cortex/m3/sam3/wdtc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/wdtc
+PFLAGS += -I%T/chips/cortex/m3/sam3/matrix
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/matrix
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/mpu
+PFLAGS += -I%T/chips/cortex/m3/sam3/spi
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/spi
+PFLAGS += -I%T/chips/cortex/m3/sam3/smc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/smc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/adc12b
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/dma
+PFLAGS += -I%T/chips/cortex/m3/sam3/pdc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/pdc
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/twi
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/hsmci
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/usb
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/usb/peripherals
+PFLAGS += -I%T/chips/cortex/m3/sam3/u/usb/board
+PFLAGS += -I%T/chips/cc2420
+PFLAGS += -I%T/chips/cc2420/alarm
+PFLAGS += -I%T/chips/cc2420/control
+PFLAGS += -I%T/chips/cc2420/csma
+PFLAGS += -I%T/chips/cc2420/interfaces
+PFLAGS += -I%T/chips/cc2420/link
+PFLAGS += -I%T/chips/cc2420/lowpan
+PFLAGS += -I%T/chips/cc2420/lpl
+PFLAGS += -I%T/chips/cc2420/packet
+PFLAGS += -I%T/chips/cc2420/receive
+PFLAGS += -I%T/chips/cc2420/spi
+PFLAGS += -I%T/chips/cc2420/transmit
+PFLAGS += -I%T/chips/cc2420/unique
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+
+PFLAGS += -mcpu=cortex-m3
+PFLAGS += -nostartfiles
+PFLAGS += -fnesc-target=env
+PFLAGS += -fnesc-no-debug
+
+export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true

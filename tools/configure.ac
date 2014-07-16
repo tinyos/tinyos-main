@@ -12,14 +12,22 @@ dnl -*- m4 -*-
 # force autoconf 2.5 on Debian systems
 AC_PREREQ(2.50)
 
-AC_INIT(tinyos-tools, 1.4.2)
+AC_INIT(tinyos-tools, 2.2.0)
 AC_CONFIG_AUX_DIR(config-aux)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(subdir-objects)
 AC_CANONICAL_HOST
 
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_RANLIB
+
+if test "$CXX" = no || test "$$CXX:$GXX" = "g++"; then
+  AC_MSG_ERROR([No C++ compiler found])
+fi
+
+m4_include([m4/python.m4])
+AM_PATH_PYTHON([2.5],,,)
+AM_PATH_PYTHON([3.0],,,3)
 
 AC_PATH_PROG(pathperl, perl)
 if test -z "$pathperl" ; then
@@ -31,33 +39,27 @@ if test -z "$pathpython" ; then
   AC_MSG_ERROR(I can't find python);
 fi
 
+AC_PATH_PROGS(pathpython3, [python3 python])
+if test -z "$pathpython3" ; then
+  AC_MSG_ERROR(I can't find python3);
+fi
+
+AC_PATH_PROGS(pathpython_config, [python$PYTHON_VERSION-config])
+if test -z "$pathpython_config" ; then
+  AC_MSG_NOTICE(I can't find python$PYTHON_VERSION-config. python$PYTHON_VERSION-config is required for TOSSIM)
+fi
+
+AC_PATH_PROGS(pathdot, [dot])
+if test -z "$pathdot"; then
+  AC_MSG_NOTICE(I can't find dot. dot is required for documentation.)
+fi
+
 AC_PATH_PROG(pathnescc, nescc)
 if test -z "$pathnescc"; then
   AC_MSG_ERROR(I can't find nescc)
 fi
-
-if test -z "$DEFAULT_TARGET"; then
-  DEFAULT_TARGET=mica
-fi
-default_target=$DEFAULT_TARGET
-AC_MSG_NOTICE(Default ncc build target is $default_target)
-AC_MSG_NOTICE(...but using a tos/default-platform file is a better choice)
-AC_SUBST(default_target)
-
-if test -z "$TOSDIR"; then
-  if test -d ../tos; then
-    TOSDIR=../tos
-  elif test -d ../../tos; then
-    TOSDIR=../../tos
-  elif test -d $HOME/nest/tos; then
-    TOSDIR=$HOME/nest/tos
-  else
-    AC_MSG_ERROR(I can't find the tos directory);
-  fi
-fi
-TOSDIR=`(cd $TOSDIR;pwd)`
-AC_MSG_NOTICE(TinyOS directory is $TOSDIR)
-AC_SUBST(TOSDIR)
+nescc_prefix=`(cd $NESCC_PREFIX;pwd)`
+AC_SUBST(nescc_prefix)
 
 AC_MSG_CHECKING(for cygwin)
 case $host in
@@ -68,6 +70,7 @@ case $host in
     JNIVERSIONS="-32. -64."
     INSTALLJNI="install --group=SYSTEM"
     CYGWIN=yes
+    ARCH=windows
     ;;
   *-apple-darwin*)
     JNIPREFIX=lib
@@ -76,6 +79,7 @@ case $host in
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
     DARWIN=yes
+    ARCH=darwin
     ;;
   *)
     JNIPREFIX=lib
@@ -83,6 +87,7 @@ case $host in
     JNIVERSIONS="."
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
+    ARCH=linux
 esac
 
 AM_CONDITIONAL([CYGWIN], [test "$CYGWIN"])
@@ -105,6 +110,10 @@ fi
 JDK=`dirname "$JAVAC_DIR"`
 AC_MSG_RESULT($JDK)
 
+AC_MSG_CHECKING(for location to put JARs)
+JAR_DIR=`/bin/sh tinyos/misc/tos-locate-jre --jni`/../ext
+AC_MSG_RESULT($JAR_DIR)
+
 function jnimap {
   for v in $JNIVERSIONS; do
     /bin/echo -n "${JNIPREFIX}$1$v$JNISUFFIX "
@@ -117,12 +126,72 @@ TOSCOMMLIB=`jnimap toscomm`
 AC_SUBST(GETENVLIB)
 AC_SUBST(TOSCOMMLIB)
 AC_SUBST(JDK)
+AC_SUBST(JAR_DIR)
 AC_SUBST(INSTALLJNI)
 AC_SUBST(JNIPREFIX)
 AC_SUBST(JNISUFFIX)
 
 AC_CHECK_LIB(popt, poptGetNextOpt)
 AM_CONDITIONAL([POPT_CPPBSL], [test "$ac_cv_lib_popt_poptGetNextOpt" == yes])
+
+AC_CONFIG_HEADERS([config.h])
+
+# Configure BLIP
+# Only try to build the BLIP tools on Linux and Mac
+AM_COND_IF([CYGWIN], [], [
+	AC_CHECK_HEADERS([stdint.h inttypes.h])
+	AC_CHECK_HEADERS([netinet/in.h ])
+	AC_CHECK_HEADERS([linux/if_tun.h])
+	AC_CHECK_HEADERS([arpa/inet.h])
+	AC_CHECK_HEADERS([sys/socket.h net/route.h net/if.h])
+
+	AC_MSG_CHECKING(whether struct in6_addr has u6_addrXX and defines s6_addrXX)
+	AC_TRY_COMPILE([#include <netinet/in.h>], [static struct in6_addr in6_u;
+	int u =  in6_u.s6_addr16;], [AC_MSG_RESULT(yes); AC_DEFINE([HAVE_IN6_ADDR_S6_ADDR],
+	1, [whether struct in6_addr has u6_addrXX and defines s6_addrXX])],
+	AC_MSG_RESULT(no))
+
+	AC_MSG_CHECKING(for SIOCADDRT)
+	AC_TRY_COMPILE([#include <sys/ioctl.h>], [int x = SIOCADDRT;],
+	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_SIOCADDRT], 1, [weather the SIOCADDRT ioctl is defined])],
+	AC_MSG_RESULT(no))
+
+	# sockoption for joining an ipv6 group
+	AC_MSG_CHECKING(if IPV6_JOIN_GROUP is defined)
+	AC_TRY_COMPILE([#include <netinet/in.h>], [int x = IPV6_JOIN_GROUP;],
+	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_IPV6_JOIN_GROUP], 1,
+	                     [weather IPV6_JOIN_GROUP is defined])],
+	AC_MSG_RESULT(no))
+
+	AC_MSG_CHECKING(if IPV6_ADD_MEMBERSHIP is defined)
+	AC_TRY_COMPILE([#include <netinet/in.h>], [int x = IPV6_ADD_MEMBERSHIP;],
+	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_IPV6_ADD_MEMBERSHIP], 1,
+	                     [weather IPV6_ADD_MEMBERSHIP is defined])],
+	AC_MSG_RESULT(no))
+
+	# Check where to put the pidfile
+	AC_MSG_CHECKING(where to put seqno file)
+	AC_ARG_WITH(seqfile,
+	[AC_HELP_STRING([--with-seqfile], [Path to the radvd pidfile (/var/run/ip-driver.seq)])],
+		PATH_BLIP_SEQFILE=$withval,
+		PATH_BLIP_SEQFILE=/var/run/ip-driver.seq)
+	AC_MSG_RESULT($PATH_BLIP_SEQFILE)
+	AC_SUBST(PATH_BLIP_SEQFILE)
+
+	AC_ARG_ENABLE([lpl],
+		[AS_HELP_STRING([--enable-lpl], [assume LPL is in use])],
+		AC_DEFINE([BLIP_L2_RETRIES], [1], [Number of link-layer retransmissions])
+		[])
+
+	AC_LINK_FILES(tinyos/c/blip/linux/tun_dev_${ARCH}.c, tinyos/c/blip/linux/tun_dev.c)
+]);
+
+# Configure coap
+AC_CONFIG_SUBDIRS([tinyos/c/coap])
+
+# SF
+#AC_CONFIG_HEADERS(tinyos/c/sf/autoconf.h)
+
 
 AC_OUTPUT(
 	Makefile
@@ -145,6 +214,8 @@ AC_OUTPUT(
 	platforms/msp430/pybsl/tos-bsl
 	platforms/sam3/samba-program.py
 	platforms/sam3/Makefile
+	platforms/intelmote2/Makefile
+	platforms/intelmote2/openocd/Makefile
 	platforms/intelmote2/openocd/imote2-ocd-program.py
 	platforms/ucmote/Makefile
 	platforms/ucmote/mcp2200gpio/Makefile
@@ -153,9 +224,32 @@ AC_OUTPUT(
 	platforms/ucmote/motelist2/motelist2_getdevices-cygwin.py
 	platforms/ucmote/motelist2/motelist2_getdevices-linux.py
 	tinyos/Makefile
+	tinyos/c/Makefile
+	tinyos/c/blip/Makefile
+	tinyos/c/blip/lib6lowpan/Makefile
+	tinyos/c/blip/lib6lowpan/trace/Makefile
+	tinyos/c/coap/Makefile
+	tinyos/c/coap/doc/Makefile
+	tinyos/c/coap/doc/Doxyfile
+	tinyos/c/coap/examples/Makefile
+	tinyos/c/serial_tun/Makefile
+	tinyos/c/sf/Makefile
+	tinyos/cpp/Makefile
+	tinyos/cpp/sf/Makefile
 	tinyos/java/Makefile
-	tinyos/java/env/Makefile
-	tinyos/java/serial/Makefile
+	tinyos/java/net/Makefile
+	tinyos/java/net/tinyos/Makefile
+	tinyos/java/net/tinyos/comm/Makefile
+	tinyos/java/net/tinyos/message/Makefile
+	tinyos/java/net/tinyos/mviz/Makefile
+	tinyos/java/net/tinyos/packet/Makefile
+	tinyos/java/net/tinyos/sf/Makefile
+	tinyos/java/net/tinyos/sim/Makefile
+	tinyos/java/net/tinyos/tools/Makefile
+	tinyos/java/net/tinyos/util/Makefile
+	tinyos/jni/Makefile
+	tinyos/jni/env/Makefile
+	tinyos/jni/serial/Makefile
 	tinyos/misc/tos-ident-flags
 	tinyos/misc/tos-install-jni
 	tinyos/misc/tos-set-symbols
@@ -170,13 +264,22 @@ AC_OUTPUT(
 	tinyos/misc/tos-build-deluge-image
 	tinyos/misc/tos-mote-key
 	tinyos/misc/tos-check-env
+	tinyos/misc/tos-serlook.py
+	tinyos/misc/tos-sub-tosdir
 	tinyos/misc/Makefile
 	tinyos/ncc/Makefile
 	tinyos/ncc/mig
-	tinyos/ncc/ncc
 	tinyos/ncc/ncg
-	tinyos/ncc/nesdoc
+	tinyos/ncc/nesdoc-archive
+	tinyos/ncc/nesdoc-genhtml
 	tinyos/ncc/nesdoc-py/Makefile
+	tinyos/python/Makefile
+	tinyos/python/tos.py
+	tinyos/python/message/Makefile
+	tinyos/python/misc/Makefile
+	tinyos/python/packet/Makefile
+	tinyos/python/tossim/Makefile
+	tinyos/python/utils/Makefile
 	tinyos/tosthreads/Makefile
 	tinyos/tosthreads/tosthreads_standard_api.py
 	tinyos/safe/Makefile

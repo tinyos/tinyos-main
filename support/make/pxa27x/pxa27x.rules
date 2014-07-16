@@ -1,6 +1,4 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: pxa27x.rules,v 1.12 2010-03-17 00:38:05 klueska Exp $
-
 define PXA27X_HELP
 
  PXA27x extras:
@@ -17,92 +15,25 @@ define PXA27X_HELP
 endef
 HELP += $(PXA27X_HELP)
 
-GAS = xscale-elf-gcc -c # This ensures .c and .s compiled object are compatible
-OBJCOPY = xscale-elf-objcopy 
-OBJDUMP = xscale-elf-objdump
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
 SET_ID = tos-set-symbols
-XDB_SYMBOL_EXTRACT = dwarf2bd
-NCC = ncc
+SIZE = arm-none-eabi-size
 LIBS = -lm
 
-AMADDR = ActiveMessageAddressC\$$addr
-BUILDDIR ?= build/$(PLATFORM)
-MAIN_EXE = $(BUILDDIR)/main.exe
-MAIN_BIN = $(BUILDDIR)/main.bin
+PFLAGS += -mtune=iwmmxt -march=iwmmxt
+
 INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
-#PLATFORM_DIR = $(TOSDIR)/chips/pxa27x
-#ASSEMBLY_FILES += $(PLATFORM_DIR)/mmu_table.s $(PLATFORM_DIR)/util.s 
-ASSEMBLY_OBJS =  $(BUILDDIR)/asms.o
-#LIBRARY_OBJS  =  $(PLATFORM_DIR)/lib/profile.o $(PLATFORM_DIR)/lib/queue.o
 
 OPTFLAGS ?= -O3 -g
-PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
-PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
-ifdef MSG_SIZE
-PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
-endif
-ifdef DEFAULT_LOCAL_GROUP
-PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+PFLAGS += -Wall -Wshadow
+
+ifndef TOSMAKE_PROGRAMMER_TYPE
+  $(call TOSMake_include,pxa27x/jflashmm.extra)
 endif
 
-DEFAULT_PROGRAM ?= jflashmm
+TOSMAKE_ADDITIONAL_INPUTS += $(ASSEMBLY_FILES)
 
-
-BUILDLESS_DEPS += bytes
-
-# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
-# out with call in there.  I don't know why.
-$(if $(PROGRAM),,$(call TOSMake_include,pxa27x/$(DEFAULT_PROGRAM).extra))
-
-# Build storage file if volumes.xml present
-ifneq ($(wildcard $(VOLUME_FILE)), )
-build_storage: $(BUILDDIR)/StorageVolumes.h
-
-exe0: build_storage 
-
-VOLUME_ALLOCATOR_FLAGS ?= 
-$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
-	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
-
-PFLAGS += -I$(BUILDDIR)
-else
-
-build_storage: 
-
-endif
-
-ifndef BUILD_DEPS
-  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
-    BUILD_DEPS = bin bytes $(POST_BUILD_EXTRA_DEPS)
-  endif
-endif
-
-setid: FORCE
-	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd $(OBJCOPY) --output-target=binary $(MAIN_EXE) $(INSTALL_BIN); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target binary $(MAIN_EXE) $(INSTALL_BIN) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
-
-
-bin: exe FORCE
-	@cmd () { echo "$$@"; $$@; }; if [ "${PROGRAM}" = "xflash" ]; then $(XDB_SYMBOL_EXTRACT) $(MAIN_EXE); fi
-
-exe: exe0 bytes FORCE
-	@:
-
-exe0: builddir asms $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
-	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS) $(ASSEMBLY_OBJS) $(LIBRARY_OBJS)
-ifdef WIRING_CHECK_FILE
-	@nescc-wiring $(WIRING_CHECK_FILE)
-endif
-	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
-
-builddir: FORCE
-	mkdir -p $(BUILDDIR)
-
-bytes: FORCE
-	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
-
-asms: 
-	$(GAS) $(ASSEMBLY_FILES) -o $(BUILDDIR)/asms.o 
-
-library:
-	cd $(PLATFORM_DIR)/lib; make;
+TOSMAKE_BINARY_FORMAT = bin
+TOSMAKE_BINARY_IN = $(MAIN_BIN)
+TOSMAKE_BINARY_OUT = $(INSTALL_BIN)

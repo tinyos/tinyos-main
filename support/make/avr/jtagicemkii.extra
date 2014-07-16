@@ -1,28 +1,19 @@
 #-*-Makefile-*- vim:syntax=make
 
-
 ifeq ($(JTAGICEMKII),)
-$(error JTAGICEMKII must be defined, try "make $(TARGETS) help")
+$(error $(shell echo -e '$(ERROR_STRING) JTAGICEMKII must be defined, try "make $(TARGETS) help"'))
 endif
 
-PROGRAM = jtagicemkii
+TOSMAKE_PROGRAMMER_TYPE = jtagicemkii
+PROGRAMMER_NAME = AVR JTAGICE mkII
 
 ifeq ($(PROGRAMMER),avrdude)
-    ifdef BOOTLOADER_IMG
-      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
-        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
-      endif
+  ifdef BOOTLOADER_IMG
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
     endif
-    PROGRAMMER_FLAGS = -c jtag2fast -P $(JTAGICEMKII) -U hfuse:w:$(AVR_FUSE_H):m -U lfuse:w:$(AVR_FUSE_L):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
-    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER_IMG):a
+  endif
+  PROGRAMMER_FLAGS = -c jtag2fast -P $(JTAGICEMKII) -U hfuse:w:$(AVR_FUSE_H):m -U lfuse:w:$(AVR_FUSE_L):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+  PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+  PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
-
-
-program: FORCE
-	@echo "    installing $(PLATFORM) binary using AVR JTAGICE mkII"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
-
-program_bl: FORCE
-	@echo "    installing $(PLATFORM) bootloader using AVR JTAGICE mkII"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

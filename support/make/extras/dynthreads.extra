@@ -1,0 +1,42 @@
+#-*-Makefile-*- vim:syntax=make
+# Extra threads Makefile target to enable thread support for tinyos
+# Kevin Klues May 16th, 2008
+
+MAKE_DYNTHREADS =
+BUILD_DEPS = dynthreads_all
+
+#Get all the normal include directories for a cthreads build
+$(call TOSMake_include,extras/cthreads.extra)
+PFLAGS += -DDYNTHREADS
+
+#Stuff to build dynamically loadable binary
+DYNLOAD_CFILE = $(TOSTHREAD_MAIN_PATH)
+CFLAGS += -c
+PFLAGS += -x nesc
+
+TOSMAKE_BUILD_DIR = build/$(PLATFORM)/dynthreads
+#DYNLOAD_BASENAME = $(shell basename $(DYNLOAD_CFILE) .c)
+DYNLOAD_BASENAME = main
+
+DYNLOAD_OBJFILE = $(TOSMAKE_BUILD_DIR)/$(DYNLOAD_BASENAME).o
+DYNLOAD_BINFILE = $(TOSMAKE_BUILD_DIR)/$(DYNLOAD_BASENAME).bin
+DYNLOAD_TOSFILE = $(TOSMAKE_BUILD_DIR)/$(DYNLOAD_BASENAME).tos
+
+dynthreads_build: dynthreads_builddir build_storage
+	@echo -e '$(INFO_STRING) compiling $(DYNLOAD_CFILE) to a $(PLATFORM) dynamically loadable binary'
+	$(NESC) -o $(DYNLOAD_OBJFILE) $(NESC_PFLAGS) $(OPTFLAGS) $(CFLAGS) $(DYNLOAD_CFILE)
+	$(OBJCOPY) --output-target=binary $(DYNLOAD_OBJFILE) $(DYNLOAD_BINFILE)
+	tosthreads-dynamic-app $(DYNLOAD_OBJFILE) $(DYNLOAD_BINFILE) $(DYNLOAD_TOSFILE)
+
+ifneq ($(shell uname),Darwin)
+dynthreads_all: dynthreads_build
+	@echo -e '$(INFO_STRING) $(shell stat -t $(DYNLOAD_TOSFILE) | perl -lane 'print $$F[1];') bytes in BINARY'
+	@echo -e '$(INFO_STRING) writing TOS image'
+else
+dynthreads_all: dynthreads_build
+	@echo -e '$(INFO_STRING) $(shell stat -F $(DYNLOAD_TOSFILE) | perl -lane 'print $$F[4];') bytes in BINARY'
+	@echo -e '$(INFO_STRING) writing TOS image'
+endif
+
+dynthreads_builddir:
+	mkdir -p $(TOSMAKE_BUILD_DIR)

@@ -35,5 +35,5 @@
 #
 # $Id: generate-swig.bash,v 1.2 2010-06-29 22:07:51 scipio Exp $
 
-swig -shadow -python -c++ -I$TOSROOT/tos/lib/tossim tossim.i
+swig -shadow -python -c++ -I$TINYOS_OS_DIR/lib/tossim tossim.i
 

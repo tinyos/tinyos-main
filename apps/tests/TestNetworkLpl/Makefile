@@ -9,18 +9,17 @@ CFLAGS += -DDELAY_AFTER_RECEIVE=20
 CFLAGS += -I.
 CFLAGS += -I../TestNetwork
 
-CFLAGS += -I$(TOSDIR)/lib/net \
-          -I$(TOSDIR)/lib/net/drip \
-          -I$(TOSDIR)/lib/net/4bitle \
-          -I$(TOSDIR)/lib/net/ctp -DNO_DEBUG
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/net \
+          -I$(TINYOS_OS_DIR)/lib/net/drip \
+          -I$(TINYOS_OS_DIR)/lib/net/4bitle \
+          -I$(TINYOS_OS_DIR)/lib/net/ctp -DNO_DEBUG
 
-TFLAGS += -I$(TOSDIR)/../apps/tests/TestDissemination \
-          -I$(TOSDIR)/../support/sdk/c \
-          -I$(TOSDIR)/types \
+TFLAGS += -I$(TINYOS_OS_DIR)/../apps/tests/TestDissemination \
+          -I$(TINYOS_OS_DIR)/../support/sdk/c \
+          -I$(TINYOS_OS_DIR)/types \
           -I.
 
-LIBMOTE = $(TOSDIR)/../support/sdk/c/libmote.a
-#BUILD_EXTRA_DEPS += tn-injector #tn-listener
+LIBMOTE = $(TINYOS_OS_DIR)/../support/sdk/c/libmote.a
 LISTEN_OBJS = collection_msg.o test_network_msg.o tn-listener.o $(LIBMOTE)
 INJECT_OBJS = set_rate_msg.o tn-injector.o collection_debug_msg.o $(LIBMOTE)
 
@@ -34,8 +33,8 @@ $(1).java:
 endef
 
 $(eval $(call mig_templ,test_network_msg,TestNetwork.h,TestNetworkMsg))
-$(eval $(call mig_templ,set_rate_msg,$(TOSDIR)/lib/net/DisseminationEngine.h,dissemination_message))
-$(eval $(call mig_templ,collection_debug_msg,$(TOSDIR)/lib/net/collection/CollectionDebugMsg.h,CollectionDebugMsg))
+$(eval $(call mig_templ,set_rate_msg,$(TINYOS_OS_DIR)/lib/net/DisseminationEngine.h,dissemination_message))
+$(eval $(call mig_templ,collection_debug_msg,$(TINYOS_OS_DIR)/lib/net/collection/CollectionDebugMsg.h,CollectionDebugMsg))
 
 %.o: %.c
 	gcc -v  $(TFLAGS) $(CFLAGS) -c -o $@ $<
@@ -53,10 +52,10 @@ tn-injector.o: tn-injector.c test_network_msg.c
 	gcc $(TFLAGS) $(CFLAGS) -c -o $@ $<
 
 #test_network_msg.c:
-#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg 
+#	mig -o test_network_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) TestNetwork.h TestNetworkMsg
 
 #set_rate_msg.c:
-#	mig -o set_rate_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TOSDIR)/lib/net/DisseminationEngine.h dissemination_message
+#	mig -o set_rate_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TINYOS_OS_DIR)/lib/net/DisseminationEngine.h dissemination_message
 
 #set_rate_msg.o: set_rate_msg.c
 #	gcc $(CFLAGS) $(TFLAGS) -c -o $@ $<
@@ -65,9 +64,7 @@ tn-injector.o: tn-injector.c test_network_msg.c
 #	gcc $(CFLAGS) $(TFLAGS) -c -o $@ $<
 
 #collection_msg.c:
-#	mig -o collection_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TOSDIR)/lib/net/collection/ForwardingEngine.h collection_header
+#	mig -o collection_msg.h c -target=$(PLATFORM) $(CFLAGS) $(TFLAGS) $(TINYOS_OS_DIR)/lib/net/collection/ForwardingEngine.h collection_header
 
-include $(MAKERULES)
-
-migclean:
-	rm -rf $(MIGFILES)
+TINYOS_ROOT_DIR?=../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
