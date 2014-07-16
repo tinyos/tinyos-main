@@ -31,15 +31,15 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 
 BUILD_ROOT=$(pwd)
-CODENAME=squeeze
+CODENAME=wheezy
 
 SOURCENAME=tinyos-tools-devel
-SOURCEVERSION=2.2.0
+SOURCEVERSION=1.5.0
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
 PREFIX=/usr
-MAKE="make -j1"
+MAKE="make -j8"
 
 download()
 {

@@ -5,7 +5,7 @@ These are instructions for building Debian archives and a corresponding
 repository from TinyOS packaging.
 
 Build environment: packages are built on i386 (32 bit) and amd64 (64 bit)
-machines running Debian 6 (squeeze).
+machines running Debian 7.5 (wheezy).
 
 Following codenames exist:
 

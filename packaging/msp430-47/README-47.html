@@ -11,7 +11,7 @@ MSPGCC 4.7.0 20120425 Release (Experimental)
 This release is experimental and not intended for production.  Use at your own risk.
 It is provided to allow for early testing.
 
-<p><b>Last update: 20120716, cire</b></p>
+<p><b>Last update: 20140715, cire</b></p>
 <p>(Changelog at end)</p>
 
 
@@ -31,13 +31,13 @@ architectures:</p>
 <ol>
 <li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
 <pre>
-  deb http://tinyprod.net/repos/debian squeeze   main
+  deb http://tinyprod.net/repos/debian wheezy    main
   deb http://tinyprod.net/repos/debian msp430-47 main
 </pre>
 <pre>
 
   $ cd /etc/apt/sources.list.d
-  $ sudo echo "deb http://tinyprod.net/repos/debian squeeze   main" >> tinyprod-debian.list
+  $ sudo echo "deb http://tinyprod.net/repos/debian wheezy    main" >> tinyprod-debian.list
   $ sudo echo "deb http://tinyprod.net/repos/debian msp430-47 main" >> tinyprod-debian.list
 
 </pre>
@@ -61,7 +61,7 @@ architectures:</p>
 <p>
 <ol>
 <li>
-Other packages from the main tinyprod debian repository (<b>squeeze</b>) are needed to make a functioning nesc
+Other packages from the main tinyprod debian repository (<b>wheezy</b>) are needed to make a functioning nesc
 development sytem.  In particular, you will need <b>nesc</b> and <b>tinyos-tools</b>.  These have been included
 in the instructions above.
 <br><br>
@@ -116,6 +116,7 @@ be installed by the following:</p>
 
 <p><b>Changelog:</b></p>
 <pre>
+  20140715, cire: default main repo is wheezy
   20140522, cire: convert to using the TinyProd signing key
   20120716, cire: restructure tinyprod repository.  reorganization,  update.
   20120430, cire: update gdb to include patch for Unhandled dwarf expression opcode 0xf3

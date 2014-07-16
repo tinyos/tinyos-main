@@ -31,7 +31,7 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 
 BUILD_ROOT=$(pwd)
-CODENAME=squeeze
+CODENAME=wheezy
 TINYOSVERSION=2_1_2
 SOURCEFILENAME=release_tinyos_${TINYOSVERSION}.tar.gz
 TARBALLDIR=tinyos-main-release_tinyos_${TINYOSVERSION}

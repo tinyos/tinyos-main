@@ -3,7 +3,7 @@
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
 # mspgcc development branch: 4.7.0 (non-20 bit)
-# needs nesc 1.3.4 (in squeeze)
+# needs nesc 1.3.5 (in wheezy)
 #
 # mspgcc:	4.7.0
 # binutils	2.22
