@@ -499,9 +499,9 @@ void SENDINFO_DECR(struct send_info *si) {
 
     //check whether the destination address is a multicast address or not
     if(frame_addr->ieee_dst.i_saddr==IEEE154_BROADCAST_ADDR)
- 	ack_Required=FALSE;
+      ack_required=FALSE;
     else
- 	ack_Required=TRUE;
+      ack_required=TRUE;
 
     /* set version to 6 in case upper layers forgot */
     msg->ip6_hdr.ip6_vfc &= ~IPV6_VERSION_MASK;
@@ -605,7 +605,7 @@ void SENDINFO_DECR(struct send_info *si) {
     s_entry->info->link_fragment_attempts++;
 
  //acknowledgements are not required for multicast packets, useful for fragmentation
-   if (!call PacketLink.wasDelivered(msg) && ack_Required) {
+   if (!call PacketLink.wasDelivered(msg) && ack_required) {
       printf("sendDone: was not delivered! (%i tries)\n",
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;
