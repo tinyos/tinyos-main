@@ -30,8 +30,11 @@ the `tools` to be rebuilt. To use TinyOS make version 3:
 
 alternatively you can use the tinyos-tools-devel package from tinyprod.net/
 repos/debian.   See the Readme at the top level (http://tinyprod.net/repos/debian).
+You need to modify /etc/apt/sources.list.d/tinyprod-debian.list.  Change "squeeze"
+to "wheezy".
 
     sudo -s
+    apt-get update
     apt-get purge tinyos-tools
     apt-get install tinyos-tools-devel
 
