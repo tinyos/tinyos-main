@@ -2,6 +2,9 @@
 TinyOS
 ======
 
+**Warning**: The main development tree (tinyos/tinyos-main) has been converted
+over to the new version 3 make system (issue #190 has been merged).   (see below).
+
 [TinyOS](http://tinyos.net) is an open source, BSD-licensed operating system
 designed for low-power wireless devices, such as those used in sensor networks,
 ubiquitous computing, personal area networks, smart buildings, and smart meters.
@@ -24,6 +27,13 @@ the `tools` to be rebuilt. To use TinyOS make version 3:
     ./configure
     make
     sudo make install
+
+alternatively you can use the tinyos-tools-devel package from tinyprod.net/
+repos/debian.   See the Readme at the top level (http://tinyprod.net/repos/debian).
+
+    sudo -s
+    apt-get purge tinyos-tools
+    apt-get install tinyos-tools-devel
 
 
 ============================================================================
