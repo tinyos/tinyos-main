@@ -53,6 +53,7 @@ configuration CC2420XDriverLayerC
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
 		interface RadioAlarm;
+		interface Tasklet;
 	}
 }
 
@@ -60,7 +61,6 @@ implementation
 {
 	components CC2420XDriverLayerP as DriverLayerP,
 		BusyWaitMicroC,
-		TaskletC,
 		MainC,
 		HplCC2420XC as HplC;
 
@@ -106,7 +106,7 @@ implementation
 	DriverLayerP.SfdCapture -> HplC;
 	DriverLayerP.FifopInterrupt -> HplC;
 
-	DriverLayerP.Tasklet -> TaskletC;
+	Tasklet = DriverLayerP.Tasklet;
 	DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 	DriverLayerP.LocalTime-> HplC.LocalTimeRadio;

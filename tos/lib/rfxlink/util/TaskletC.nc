@@ -32,10 +32,14 @@
  * Author: Miklos Maroti
  */
 
+/*
+ * Marcin K Szczodrak: update Tasklet to generic
+ */
+
 #include <Tasklet.h>
 #include <RadioAssert.h>
 
-module TaskletC
+generic module TaskletC()
 {
 	provides interface Tasklet;
 }

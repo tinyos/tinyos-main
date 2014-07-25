@@ -43,6 +43,7 @@ generic configuration MessageBufferLayerC()
 	}
 	uses
 	{
+		interface Tasklet;
 		interface RadioState;
 		interface RadioSend;
 		interface RadioReceive;
@@ -51,7 +52,7 @@ generic configuration MessageBufferLayerC()
 
 implementation
 {
-	components new MessageBufferLayerP(), MainC, TaskletC;
+	components new MessageBufferLayerP(), MainC;
 
 	MainC.SoftwareInit -> MessageBufferLayerP;
 
@@ -60,8 +61,8 @@ implementation
 	Receive = MessageBufferLayerP;
 	RadioChannel = MessageBufferLayerP;
 
+	Tasklet = MessageBufferLayerP;
 	RadioState = MessageBufferLayerP;
-	MessageBufferLayerP.Tasklet -> TaskletC;
 	RadioSend = MessageBufferLayerP;
 	RadioReceive = MessageBufferLayerP;
 }
