@@ -51,6 +51,6 @@ implementation
 	components McuInitC;
 	McuInitC.TimerInit -> AtmegaRtcCounterP.Init;
 
-	components HplAtmRfa1Timer2C;
-	AtmegaRtcCounterP.HplAtmegaCounter -> HplAtmRfa1Timer2C;
+	components HplAtmRfa1Timer2AsyncC;
+	AtmegaRtcCounterP.HplAtmegaCounter -> HplAtmRfa1Timer2AsyncC;
 }
