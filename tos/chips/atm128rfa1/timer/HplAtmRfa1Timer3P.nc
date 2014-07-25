@@ -132,7 +132,7 @@ implementation
 	{
 		atomic OCR3A = value;
 	}
-	
+
 // ----- COMPARE B: output compare register (OCR)
 
 	async command uint16_t CompareB.get()
@@ -144,7 +144,7 @@ implementation
 	{
 		atomic OCR3B = value;
 	}
-	
+
 // ----- COMPARE C: output compare register (OCR)
 
 	async command uint16_t CompareC.get()
@@ -176,7 +176,7 @@ implementation
 	async command bool CompareB.test() { return TIFR3 & (1 << OCF3B); }
 
 	async command void CompareB.reset() { TIFR3 = 1 << OCF3B; }
-	
+
 // ----- COMPARE C: timer interrupt flag register (TIFR), output comare match flag (OCF)
 
 	default async event void CompareC.fired() { }
@@ -186,7 +186,7 @@ implementation
 	async command bool CompareC.test() { return TIFR3 & (1 << OCF3C); }
 
 	async command void CompareC.reset() { TIFR3 = 1 << OCF3C; }
-	
+
 
 // ----- COMPARE A: timer interrupt mask register (TIMSK), output compare interrupt enable (OCIE)
 
@@ -203,7 +203,7 @@ implementation
 	}
 
 	async command bool CompareA.isOn() { return TIMSK3 & (1 << OCIE3A); }
-	
+
 // ----- COMPARE B: timer interrupt mask register (TIMSK), output compare interrupt enable (OCIE)
 
 	async command void CompareB.start()
@@ -219,7 +219,7 @@ implementation
 	}
 
 	async command bool CompareB.isOn() { return TIMSK3 & (1 << OCIE3B); }
-	
+
 // ----- COMPARE C: timer interrupt mask register (TIMSK), output compare interrupt enable (OCIE)
 
 	async command void CompareC.start()
@@ -251,37 +251,37 @@ implementation
 	{
 		return (TCCR3A >> COM3A0) & 0x3;
 	}
-	
+
 // ----- COMPARE B: timer control register (TCCR), compare output mode (COM)
 
 	async command void CompareB.setMode(uint8_t mode)
 	{
 		atomic
 		{
-			TCCR3B = (TCCR3B & ~(0x3 << COM3B0))
+			TCCR3A = (TCCR3A & ~(0x3 << COM3B0))
 				| (mode & 0x3) << COM3B0;
 		}
 	}
 
 	async command uint8_t CompareB.getMode()
 	{
-		return (TCCR3B >> COM3B0) & 0x3;
+		return (TCCR3A >> COM3B0) & 0x3;
 	}
-	
+
 // ----- COMPARE C: timer control register (TCCR), compare output mode (COM)
 
 	async command void CompareC.setMode(uint8_t mode)
 	{
 		atomic
 		{
-			TCCR3C = (TCCR3C & ~(0x3 << COM3C0))
+			TCCR3A = (TCCR3A & ~(0x3 << COM3C0))
 				| (mode & 0x3) << COM3C0;
 		}
 	}
 
 	async command uint8_t CompareC.getMode()
 	{
-		return (TCCR3C >> COM3C0) & 0x3;
+		return (TCCR3A >> COM3C0) & 0x3;
 	}
 
 // ----- COMPARE A: timer control register (TCCR), force output compare (FOC)
@@ -297,14 +297,14 @@ implementation
 	{
 		SET_BIT(TCCR3C, FOC3B);
 	}
-	
+
 // ----- COMPARE C: timer control register (TCCR), force output compare (FOC)
 
 	async command void CompareC.force()
 	{
 		SET_BIT(TCCR3C, FOC3C);
 	}
-	
+
 // ----- CAPTURE: input capture register (ICR)
 
 	async command uint16_t Capture.get()
