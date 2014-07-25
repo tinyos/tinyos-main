@@ -143,7 +143,12 @@ AM_COND_IF([CYGWIN], [], [
 	AC_CHECK_HEADERS([netinet/in.h ])
 	AC_CHECK_HEADERS([linux/if_tun.h])
 	AC_CHECK_HEADERS([arpa/inet.h])
-	AC_CHECK_HEADERS([sys/socket.h net/route.h net/if.h])
+	AC_CHECK_HEADERS([sys/socket.h net/route.h])
+        AC_CHECK_HEADERS([net/if.h], [], [],
+[#ifdef HAVE_SOCKET_H
+#include <sys/socket.h>
+#endif
+])
 
 	AC_MSG_CHECKING(whether struct in6_addr has u6_addrXX and defines s6_addrXX)
 	AC_TRY_COMPILE([#include <netinet/in.h>], [static struct in6_addr in6_u;
