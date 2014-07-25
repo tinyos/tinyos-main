@@ -1,0 +1,43 @@
+#local targets=`ls -1R ${TOSROOT}/support/make/*.target|sed 's/.*\///'|sed 's/.target//'`
+#local extras=`ls -1R ${TOSROOT}/support/make/*.extra|sed 's/.*\///'|sed 's/.extra//'`
+#debug() { echo "$@" >/dev/pts/0; }; export -f de
+
+_tos() 
+{
+	local cur prev
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	#debug ${targets}
+	case "${prev}" in
+	tmake)
+		if [ -f ${TOSROOT}/support/make/null.target ]; then
+			local targets=`ls -1R ${TOSROOT}/support/make/*.target|sed 's/.*\///'|sed 's/.target//'`
+		else
+			local targets=`ls -1R ${TOSROOT}/support/make/platforms/*.platform|sed 's/.*\///'|sed 's/.platform//'`
+		fi
+		COMPREPLY=( $( compgen -W '${targets}' -- $cur ) )
+		return 0
+		;;
+	*)
+		local extras=`ls -1R ${TOSROOT}/support/make/|grep '.extra'|sed 's/.*\///'|sed 's/.extra//'|grep -v avr109|grep -v mib510|grep -v mib520|grep -v zbp`
+		#adding install+nodeid
+		local extras+=" install,0 install,1 reinstall,0 reinstall,1"
+		if [[ `uname` == "CYGWIN*" ]]
+		then
+			for serial in "COM1 COM2"
+			do
+				local extras+=" avr109,$serial mib510,$serial mib520,$serial zbp,$serial bsl,$serial"
+			done
+		else
+			for serial in `ls -1 /dev/tty*|egrep 'ttyUSB|ttyACM'`
+			do
+				local extras+=" avr109,$serial mib510,$serial mib520,$serial zbp,$serial bsl,$serial"
+			done
+		fi
+		COMPREPLY=( $( compgen -W '${extras}' -- $cur ) )
+		return 0
+		;;
+	esac
+}
+complete -F _tos tmake
