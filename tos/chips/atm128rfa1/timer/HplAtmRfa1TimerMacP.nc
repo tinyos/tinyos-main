@@ -57,7 +57,7 @@ implementation
 	typedef union reg32_t
 	{
 		uint32_t full;
-		struct 
+		struct
 		{
 			uint8_t ll;
 			uint8_t lh;
@@ -86,7 +86,7 @@ implementation
 	async command void Counter.set(uint32_t value)
 	{
 		reg32_t time;
-		
+
 		time.full = value;
 
 		atomic
@@ -115,12 +115,12 @@ implementation
 
 	async command void Counter.start()
 	{
-		SET_BIT(SCIRQM, IRQMOF);
+		atomic SCIRQM = (SCIRQM | (1 << IRQMOF)) & 0x1F;
 	}
 
 	async command void Counter.stop()
 	{
-		CLR_BIT(SCIRQM, IRQMOF);
+		atomic SCIRQM = SCIRQM & (~(1 << IRQMOF) & 0x1F);
 	}
 
 	async command bool Counter.isOn() { return SCIRQM & (1 << IRQMOF); }
@@ -166,7 +166,7 @@ implementation
 	async command void CompareA.set(uint32_t value)
 	{
 		reg32_t time;
-		
+
 		time.full = value;
 
 		atomic
@@ -192,14 +192,14 @@ implementation
 
 	async command void CompareA.start()
 	{
-		SET_BIT(SCIRQM, IRQMCP1);
+		atomic SCIRQM = (SCIRQM | (1 << IRQMCP1)) & 0x1F;
 
 		call McuPowerState.update();
 	}
 
 	async command void CompareA.stop()
 	{
-		CLR_BIT(SCIRQM, IRQMCP1);
+		atomic SCIRQM = SCIRQM & (~(1 << IRQMCP1) & 0x1F);
 
 		call McuPowerState.update();
 	}
@@ -212,7 +212,7 @@ implementation
 	{
 		atomic
 		{
-			SCCR0 = (SCCR0 & ~(1 << SCCMP1)) 
+			SCCR0 = (SCCR0 & ~(1 << SCCMP1))
 				| (mode & 0x1) << SCCMP1;
 		}
 	}
@@ -246,7 +246,7 @@ implementation
 	async command void CompareB.set(uint32_t value)
 	{
 		reg32_t time;
-		
+
 		time.full = value;
 
 		atomic
@@ -272,14 +272,14 @@ implementation
 
 	async command void CompareB.start()
 	{
-		SET_BIT(SCIRQM, IRQMCP2);
+		atomic SCIRQM = (SCIRQM | (1 << IRQMCP2)) & 0x1F;
 
 		call McuPowerState.update();
 	}
 
 	async command void CompareB.stop()
 	{
-		CLR_BIT(SCIRQM, IRQMCP2);
+		atomic SCIRQM = SCIRQM & (~(1 << IRQMCP2) & 0x1F);
 
 		call McuPowerState.update();
 	}
@@ -292,7 +292,7 @@ implementation
 	{
 		atomic
 		{
-			SCCR0 = (SCCR0 & ~(1 << SCCMP2)) 
+			SCCR0 = (SCCR0 & ~(1 << SCCMP2))
 				| (mode & 0x1) << SCCMP2;
 		}
 	}
@@ -326,7 +326,7 @@ implementation
 	async command void CompareC.set(uint32_t value)
 	{
 		reg32_t time;
-		
+
 		time.full = value;
 
 		atomic
@@ -352,14 +352,14 @@ implementation
 
 	async command void CompareC.start()
 	{
-		SET_BIT(SCIRQM, IRQMCP3);
+		atomic SCIRQM = (SCIRQM | (1 << IRQMCP3)) & 0x1F;
 
 		call McuPowerState.update();
 	}
 
 	async command void CompareC.stop()
 	{
-		CLR_BIT(SCIRQM, IRQMCP3);
+		atomic SCIRQM = SCIRQM & (~(1 << IRQMCP3) & 0x1F);
 
 		call McuPowerState.update();
 	}
@@ -372,7 +372,7 @@ implementation
 	{
 		atomic
 		{
-			SCCR0 = (SCCR0 & ~(1 << SCCMP3)) 
+			SCCR0 = (SCCR0 & ~(1 << SCCMP3))
 				| (mode & 0x1) << SCCMP3;
 		}
 	}
@@ -403,8 +403,8 @@ implementation
 		return time.full;
 	}
 
-	async command void SfdCapture.set(uint32_t value) 
-	{ 
+	async command void SfdCapture.set(uint32_t value)
+	{
 		// SCTSR is read only
 	}
 
