@@ -16,7 +16,7 @@ tinyos.jar:
 	rm -f tinyos.jar
 	@# create the jar, as update requires it to exist. we use a
 	@# .class file we assume always exists
-	find . | grep -E "class|jpg|gif" | xargs jar cf tinyos.jar
+	find . | grep -E "class|jpg|gif|lib" | xargs jar cf tinyos.jar
 
 
 javadoc:

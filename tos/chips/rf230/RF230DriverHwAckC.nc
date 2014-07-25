@@ -68,13 +68,14 @@ configuration RF230DriverHwAckC
 		interface PacketFlag as TimeSyncFlag;
 		interface PacketFlag as AckReceivedFlag;
 		interface RadioAlarm;
+		interface Tasklet;
 	}
 }
 
 implementation
 {
 	components RF230DriverHwAckP as DriverLayerP, 
-		HplRF230C, BusyWaitMicroC, TaskletC, MainC, ActiveMessageAddressC;
+		HplRF230C, BusyWaitMicroC, MainC, ActiveMessageAddressC;
 
 	RadioState = DriverLayerP;
 	RadioSend = DriverLayerP;
@@ -112,7 +113,7 @@ implementation
 	DriverLayerP.RSTN -> HplRF230C.RSTN;
 
 	DriverLayerP.IRQ -> HplRF230C.IRQ;
-	DriverLayerP.Tasklet -> TaskletC;
+	Tasklet = DriverLayerP.Tasklet;
 	DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 #ifdef RADIO_DEBUG

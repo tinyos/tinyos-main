@@ -54,11 +54,11 @@ implementation
 {
 /*
 	Updating certain registers takes 1-2 clock ticks at 32768 KHz (regardless of
-	the prescaler) if the timer is running asynchronously, so we have to monitor 
-	when these updates are propagated. We always check ASSR before updating these 
-	registers, and we do not wait for completion after the change to make good use 
-	of the processor time. However, we force the mcu power state calculation and 
-	before entering power down mode we wait for the completion of these register 
+	the prescaler) if the timer is running asynchronously, so we have to monitor
+	when these updates are propagated. We always check ASSR before updating these
+	registers, and we do not wait for completion after the change to make good use
+	of the processor time. However, we force the mcu power state calculation and
+	before entering power down mode we wait for the completion of these register
 	updates.
 */
 // ----- TIMER: timer counter register (TCNT)
@@ -177,7 +177,7 @@ implementation
 	default async event void CompareA.fired() { }
 
 	AVR_ATOMIC_HANDLER(TIMER2_COMPA_vect)
-	{ 
+	{
 		// to keep the MCU from going to sleep too early
 		TCCR2A = TCCR2A;
 		call McuPowerState.update();
@@ -270,7 +270,7 @@ implementation
 	default async event void CompareB.fired() { }
 
 	AVR_ATOMIC_HANDLER(TIMER2_COMPB_vect)
-	{ 
+	{
 		// to keep the MCU from going to sleep too early
 		TCCR2A = TCCR2A;
 		call McuPowerState.update();
@@ -314,7 +314,7 @@ implementation
 		call McuPowerState.update();
 	}
 
-	async command uint8_t CompareA.getMode()
+	async command uint8_t CompareB.getMode()
 	{
 		return (TCCR2A >> COM2B0) & 0x3;
 	}

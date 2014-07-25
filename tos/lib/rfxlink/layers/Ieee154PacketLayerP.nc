@@ -52,7 +52,7 @@ generic module Ieee154PacketLayerP()
 
 implementation
 {
-/*----------------- Ieee154Packet -----------------*/
+/*----------------- Ieee154PacketLayer -----------------*/
 
 	enum
 	{

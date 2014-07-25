@@ -14,9 +14,6 @@ NESC_SEPARATOR ?= __
 # Add the standard TinyOS source directories to the build search path
 TOSMAKE_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
 
-# Define the TOS_AM_GROUP to be 0x22 by default
-TOSMAKE_AM_GROUP ?= 0x22
-
 ### ---
 ### --- Set common variables that are local to the Make system that are used in
 ### --- many .rules files.

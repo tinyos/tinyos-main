@@ -65,12 +65,13 @@ configuration RFA1DriverLayerC
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
 		interface AsyncStdControl as ExtAmpControl;
+		interface Tasklet;
 	}
 }
 
 implementation
 {
-	components RFA1DriverLayerP, BusyWaitMicroC, TaskletC,
+	components RFA1DriverLayerP, BusyWaitMicroC,
 		LocalTime62khzC, new Alarm62khz32C(), HplAtmRfa1TimerMacC;
 
 	RadioState = RFA1DriverLayerP;
@@ -101,7 +102,7 @@ implementation
 
 	Alarm = Alarm62khz32C;
 
-	RFA1DriverLayerP.Tasklet -> TaskletC;
+	Tasklet = RFA1DriverLayerP.Tasklet;
 	RFA1DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 #ifdef RADIO_DEBUG

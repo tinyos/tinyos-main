@@ -47,10 +47,10 @@ implementation
 	components McuInitC;
 	McuInitC.TimerInit -> AtmegaRtcCompareP;
 
-	components HplAtmRfa1Timer2C, CounterRtc16C;
+	components HplAtmRfa1Timer2AsyncC, CounterRtc16C;
 
-	AtmegaRtcCompareP.HplAtmegaCounter -> HplAtmRfa1Timer2C;
-	AtmegaRtcCompareP.HplAtmegaCompare -> HplAtmRfa1Timer2C.Compare[unique(UQ_RTC_ALARM)];
+	AtmegaRtcCompareP.HplAtmegaCounter -> HplAtmRfa1Timer2AsyncC;
+	AtmegaRtcCompareP.HplAtmegaCompare -> HplAtmRfa1Timer2AsyncC.Compare[unique(UQ_RTC_ALARM)];
 	AtmegaRtcCompareP.Counter -> CounterRtc16C;
 	AtmegaRtcCompareP.getCounterHigh -> CounterRtc16C;
 }

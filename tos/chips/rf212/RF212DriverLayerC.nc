@@ -64,12 +64,13 @@ configuration RF212DriverLayerC
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
 		interface RadioAlarm;
+		interface Tasklet;
 	}
 }
 
 implementation
 {
-	components RF212DriverLayerP, HplRF212C, BusyWaitMicroC, TaskletC, MainC;
+	components RF212DriverLayerP, HplRF212C, BusyWaitMicroC, MainC;
 
 	RadioState = RF212DriverLayerP;
 	RadioSend = RF212DriverLayerP;
@@ -107,7 +108,7 @@ implementation
 	RF212DriverLayerP.RSTN -> HplRF212C.RSTN;
 
 	RF212DriverLayerP.IRQ -> HplRF212C.IRQ;
-	RF212DriverLayerP.Tasklet -> TaskletC;
+	Tasklet = RF212DriverLayerP.Tasklet;
 	RF212DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 #ifdef RADIO_DEBUG

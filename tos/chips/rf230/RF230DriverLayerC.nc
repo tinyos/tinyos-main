@@ -64,13 +64,14 @@ configuration RF230DriverLayerC
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
 		interface RadioAlarm;
+		interface Tasklet;
 	}
 }
 
 implementation
 {
 	components RF230DriverLayerP as DriverLayerP, 
-		HplRF230C, BusyWaitMicroC, TaskletC, MainC;
+		HplRF230C, BusyWaitMicroC, MainC;
 
 	RadioState = DriverLayerP;
 	RadioSend = DriverLayerP;
@@ -108,7 +109,7 @@ implementation
 	DriverLayerP.RSTN -> HplRF230C.RSTN;
 
 	DriverLayerP.IRQ -> HplRF230C.IRQ;
-	DriverLayerP.Tasklet -> TaskletC;
+	Tasklet = DriverLayerP.Tasklet;
 	DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 #ifdef RADIO_DEBUG

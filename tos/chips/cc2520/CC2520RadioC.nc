@@ -94,6 +94,10 @@ implementation
 #define UQ_METADATA_FLAGS "UQ_CC2520_METADATA_FLAGS"
 #define UQ_RADIO_ALARM    "UQ_CC2520_RADIO_ALARM"
 
+// -------- TaskleC
+
+	components new TaskletC();
+
 // -------- RadioP
 
 	components CC2520RadioP as RadioP;
@@ -111,6 +115,7 @@ implementation
 
 	components new RadioAlarmC();
 	RadioAlarmC.Alarm -> RadioDriverLayerC;
+	RadioAlarmC.Tasklet -> TaskletC;
 
 // -------- Active Message
 
@@ -224,6 +229,7 @@ implementation
 	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
+	MessageBufferLayerC.Tasklet -> TaskletC;
 	RadioChannel = MessageBufferLayerC;
 
 // -------- UniqueLayer receive part (wired twice)
@@ -312,4 +318,5 @@ implementation
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+	RadioDriverLayerC.Tasklet -> TaskletC;
 }

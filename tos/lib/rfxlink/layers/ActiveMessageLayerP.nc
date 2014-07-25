@@ -173,7 +173,8 @@ implementation
 	inline command bool AMPacket.isForMe(message_t* msg)
 	{
 		am_addr_t addr = call AMPacket.destination(msg);
-		return addr == call AMPacket.address() || addr == AM_BROADCAST_ADDR;
+		
+		return (addr == AM_BROADCAST_ADDR || addr == call AMPacket.address()) && call AMPacket.group(msg) == call AMPacket.localGroup();
 	}
 
 	inline command am_addr_t AMPacket.destination(message_t* msg)

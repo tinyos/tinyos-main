@@ -1,0 +1,16 @@
+This is a bash comletion script for tinyos compilation
+
+INSTALLATION
+============
+-Copy the file tinyos to /etc/bash_completion.d
+-Set up tmake as an alias of make (e.g. add the line "alias tmake=make" into ~/.bashrc
+The later is needed because there is an official bash completion for make, and I didn't want to change it.
+
+FEATURES
+========
+-tmake <TAB> tries to complete with a platform (searched in the support/make or support/make/platforms)
+-tmake <platform> <TAB> tries to complete with an extra (searched in the support/make or support/make/platforms)
+-some extra handled specially:
+*instead of install/reinstall, it provides install,1/install,2/reinstall,1/reinstall,2. Therefor, it wont put automatically a space after the install keyword, so you can add a nodeid if you want
+*on linux, it searches for usb serial ports in /dev (ttyUSB* and ttyACM*), on windows, it assumes COM1 and COM2 (so you can write the correct number after COM, just like with install)
+*it expands the install extras (avr109, mib510, mib520, zbp and bsl) with the found serial ports. It excludes these extras if no serial port is found
