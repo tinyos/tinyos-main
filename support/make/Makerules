@@ -73,7 +73,6 @@ PFLAGS += $(NESC_FLAGS)
 PFLAGS += -fnesc-scheduler=$(NESC_SCHEDULER)
 PFLAGS += -fnesc-cfile=$(NESC_CFILE)
 PFLAGS += -fnesc-separator=$(NESC_SEPARATOR)
-PFLAGS += -DDEFINED_TOS_AM_GROUP=$(TOSMAKE_AM_GROUP)
 
 # Check for Cygwin
 OSNAME := $(shell uname -s)
