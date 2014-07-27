@@ -13,7 +13,9 @@ implementation {
   components StaticIPAddressTosIdP;
   components MainC;
   components IPAddressC;
+  components IPNeighborDiscoveryC;
 
   StaticIPAddressTosIdP.Boot -> MainC.Boot;
   StaticIPAddressTosIdP.SetIPAddress -> IPAddressC.SetIPAddress;
+  StaticIPAddressTosIdP.NeighborDiscovery -> IPNeighborDiscoveryC.NeighborDiscovery;
 }

@@ -31,7 +31,8 @@
 
 /**
  * RPLRoutingEngineP.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 #include <lib6lowpan/ip_malloc.h>
@@ -57,15 +58,17 @@ generic module RPLRoutingEngineP() {
     interface Random;
     interface RPLRank as RPLRankInfo;
     interface IPAddress;
-    interface Leds;
     interface StdControl as RankControl;
     interface RPLDAORoutingEngine;
+    interface RPLOF;
+    interface NeighborDiscovery;
   }
 }
 
 implementation{
 
-#define RPL_GLOBALADDR
+#define ADD_SECTION(SRC, LEN) ip_memcpy(cur, (uint8_t *)(SRC), LEN);\
+  cur += (LEN); length += (LEN);
 
   /* Declare Global Variables */
   uint32_t tricklePeriod;
@@ -102,6 +105,8 @@ implementation{
 
   bool UNICAST_DIO = FALSE;
 
+  uint16_t INCONSISTENCY_COUNT = 0;
+
   struct in6_addr DEF_PREFIX;
 
   struct in6_addr ADDR_MY_IP;
@@ -129,26 +134,18 @@ implementation{
     MOP = RPL_MOP_No_Storing;
 #endif
 
-#ifdef RPL_GLOBALADDR
     call IPAddress.getGlobalAddr(&ADDR_MY_IP);
-#else
-    call IPAddress.getLLAddr(&ADDR_MY_IP);
-#endif
 
     ROOT_RANK = MinHopRankInc;
 
-    /* SDH : FF02::2 -- link-local all-routers group? */
+    /* FF02::1A -- link-local all RPL nodes group */
     memset(MULTICAST_ADDR.s6_addr, 0, 16);
     MULTICAST_ADDR.s6_addr[0] = 0xFF;
     MULTICAST_ADDR.s6_addr[1] = 0x2;
     MULTICAST_ADDR.s6_addr[15] = 0x1A;
 
     if (I_AM_ROOT) {
-#ifdef RPL_GLOBALADDR
       call IPAddress.getGlobalAddr(&DODAGID);
-#else
-      call IPAddress.getLLAddr(&DODAGID);
-#endif
       /* Global recovery every 60 mins */
       //call IncreaseVersionTimer.startPeriodic(60*60*1024UL);
       post initDIO();
@@ -171,142 +168,100 @@ implementation{
   task void sendDIOTask() {
     struct ip6_packet pkt;
     struct ip_iovec   v[1];
-    uint8_t data[60];
+    uint8_t data[120];
     struct dio_base_t msg;
+    struct dio_metric_t metric;
     struct dio_metric_header_t metric_header;
     struct dio_etx_t etx_value;
     struct dio_dodag_config_t dodag_config;
-    uint16_t length;
+    struct dio_prefix_t prefix;
 
-#ifdef RPL_OF_MRHOF
-    struct dio_body_t body;
-#endif
-/*     struct in6_addr next_hop; */
+    uint16_t length = 0;
+    uint8_t *cur = (uint8_t*) data;
 
-/*     if ((call RPLRankInfo.nextHop(&DEF_PREFIX, &next_hop)) != SUCCESS) */
-/*       return; */
-
-    if ((!running)  || (!hasDODAG) /* || ((redunCounter < DIORedun) && (DIORedun != 0xFF))*/ ) {
-      // printf("RPL: NoTxDIO %d %d %d\n", redunCounter, DIORedun, hasDODAG);
-      return;
-    }
-
-    //call RPLDAORoutingEngine.startDAO();
-    // call IPAddress.setSource(&pkt.ip6_hdr);
+    if ((!running) || (!hasDODAG)) return;
 
     msg.icmpv6.type = ICMP_TYPE_RPL_CONTROL;
     msg.icmpv6.code = ICMPV6_CODE_DIO;
     msg.icmpv6.checksum = 0;
-    msg.flags = 0;
-    msg.flags = GROUND_STATE << 7;
-    msg.flags |= MOP << DIO_MOP_SHIFT;
-    msg.flags |= DAG_PREF << 0;
-    msg.version = DODAGVersionNumber;
     msg.instance_id.id = RPLInstanceID;
+    msg.version = DODAGVersionNumber;
+    msg.rank = call RPLRankInfo.getRank(&ADDR_MY_IP);
+    msg.flags = 0;
+    msg.flags |= GROUND_STATE << DIO_G_SHIFT;
+    msg.flags |= MOP << DIO_MOP_SHIFT;
+    msg.flags |= DAG_PREF << DIO_PRF_SHIFT;
     msg.dtsn = DTSN;
+    msg.flags_reserved = 0;
+    msg.reserved = 0;
     memcpy(&msg.dodagID, &DODAGID, sizeof(struct in6_addr));
+    ADD_SECTION(&msg, sizeof(struct dio_base_t));
 
-    if (I_AM_ROOT) {
-#ifdef RPL_GLOBALADDR
-      call IPAddress.getGlobalAddr(&DODAGID);
-#else
-      call IPAddress.getLLAddr(&DODAGID);
-#endif
-      msg.dagRank = ROOT_RANK;
-    } else {
-      msg.dagRank = call RPLRankInfo.getRank(&ADDR_MY_IP);
-    }
+    dodag_config.type = RPL_OPT_TYPE_DODAG;
+    dodag_config.option_length = 14;
+    dodag_config.reserved_flags = 0;
+    dodag_config.reserved_flags |= (0 << DIO_DODAG_A_SHIFT); // no auth
+    dodag_config.reserved_flags |= (0 << DIO_DODAG_PCS_SHIFT);
+    dodag_config.ocp = call RPLOF.getOCP();
+    dodag_config.default_lifetime = 0xFF;//6;  // six
+    dodag_config.lifetime_unit = 0xFFFF;//3600; // hours
+    dodag_config.DIOIntDoubl = DIOIntDouble;
+    dodag_config.DIOIntMin = DIOIntMin;
+    dodag_config.DIORedun = DIORedun;
+    dodag_config.MaxRankInc = MaxRankInc;
+    dodag_config.MinHopRankInc = MinHopRankInc;
+    dodag_config.reserved = 0;
+    ADD_SECTION(&dodag_config, sizeof(struct dio_dodag_config_t));
 
     if (!I_AM_LEAF) {
-      dodag_config.type = RPL_DODAG_CONFIG_TYPE;
-      dodag_config.length = 14;
-      dodag_config.flags = 0;
-      dodag_config.A = 0; // no auth
-      dodag_config.PCS = 0;
-#ifdef RPL_OF_MRHOF
-      dodag_config.ocp = 1; //MRHOF
-#else
-      dodag_config.ocp = 0; //OF0
-#endif
-      dodag_config.default_lifetime = 0xFF;//6;  // six
-      dodag_config.lifetime_unit = 0xFFFF;//3600; // hours
-      dodag_config.DIOIntDoubl = DIOIntDouble;
-      dodag_config.DIOIntMin = DIOIntMin;
-      dodag_config.DIORedun = DIORedun;
-      dodag_config.MaxRankInc = MaxRankInc;
-      dodag_config.MinHopRankInc = MinHopRankInc;
-      dodag_config.reserved = 0;
+      metric.type = RPL_OPT_TYPE_METRIC;
+      metric.option_length = 6;
+
+      metric_header.routing_mc_type = RPL_ROUTE_METRIC_ETX; // for etx
+      metric_header.reserved_flags = 0;
+      metric_header.reserved_flags |= (0 << DIO_METRIC_P_SHIFT);
+      metric_header.reserved_flags |= (0 << DIO_METRIC_C_SHIFT);
+      metric_header.reserved_flags |= (0 << DIO_METRIC_O_SHIFT);
+      metric_header.flags2 = 0;
+      metric_header.flags2 |= (0 << DIO_METRIC_R_SHIFT);
+      metric_header.flags2 |= (0 << DIO_METRIC_A_SHIFT);
+      metric_header.flags2 |= (0 << DIO_METRIC_PREC_SHIFT);
+      metric_header.length = sizeof(struct dio_etx_t);
 
       // For now just go with etx as the only metric
       etx_value.etx = call RPLRankInfo.getEtx();
 
-      metric_header.routing_obj_type = RPL_ROUTE_METRIC_ETX; // for etx
-      metric_header.reserved = 0;
-      metric_header.R_flag = 0;
-      metric_header.G_flag = 1;
-      metric_header.A_flag = 0; // aggregate additive!
-      metric_header.O_flag = 0;
-      metric_header.C_flag = 0;
-      metric_header.object_len = 2;
-
-#ifdef RPL_OF_MRHOF
-      body.type = RPL_DODAG_METRIC_CONTAINER_TYPE; // metric container
-      body.container_len = 6;
-#endif
-
-      {
-        uint8_t *cur = (uint8_t *)&data;
-#define ADD_SECTION(SRC, LEN) ip_memcpy(cur, (uint8_t *)(SRC), LEN);\
- cur += (LEN);
-#ifdef RPL_OF_MRHOF
-        length = sizeof(struct dio_base_t) + sizeof(struct dio_body_t) +
-          sizeof(struct dio_metric_header_t) + sizeof(struct dio_etx_t) +
-          sizeof(struct dio_dodag_config_t);
-        ADD_SECTION(&msg, sizeof(struct dio_base_t));
-        ADD_SECTION(&body, sizeof(struct dio_body_t));
-        ADD_SECTION(&metric_header, sizeof(struct dio_metric_header_t));
-        ADD_SECTION(&etx_value, sizeof(struct dio_etx_t));
-        ADD_SECTION(&dodag_config, sizeof(struct dio_dodag_config_t));
-#else
-        length = sizeof(struct dio_base_t) + sizeof(struct dio_dodag_config_t);
-        ADD_SECTION(&msg, sizeof(struct dio_base_t));
-        ADD_SECTION(&dodag_config, sizeof(struct dio_dodag_config_t));
-#endif
-#undef ADD_SECTION
-      }
-
-      // TODO: add prefix info (optional)
-      v[0].iov_base = (uint8_t*)&data;
-      v[0].iov_len = length;
-      v[0].iov_next = NULL;
-
-      pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
-      pkt.ip6_hdr.ip6_plen = htons(length);
-
-      pkt.ip6_data = &v[0];
-
-      //iov_print(&v[0]);
-
-    } else {
-      length = sizeof(struct dio_base_t);
-      pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
-      pkt.ip6_hdr.ip6_plen = htons(length);
-
-      v[0].iov_base = (uint8_t *)&msg;
-      v[0].iov_len  = sizeof(struct dio_base_t);
-      v[0].iov_next = NULL;
-
-      pkt.ip6_data = &v[0];
+      ADD_SECTION(&metric, sizeof(struct dio_metric_t));
+      ADD_SECTION(&metric_header, sizeof(struct dio_metric_header_t));
+      ADD_SECTION(&etx_value, sizeof(struct dio_etx_t));
     }
 
-    // printf("RPL: \n >>>>>> TxDIO etx %d %d %d %lu \n",
-    //         call RPLRankInfo.getEtx(),
-    //         ntohs(DODAGID.s6_addr16[7]), msg.dagRank, tricklePeriod);
-    printf("RPL: TXDIO %d %lu \n", TOS_NODE_ID, ++countdio);
-    // printf("RPL: RANK %d %d %d\n",
-    //        call RPLRankInfo.getRank(&ADDR_MY_IP),
-    //        call RPLRankInfo.getEtx(),
-    //        call RPLRankInfo.hasParent());
+    if (call NeighborDiscovery.havePrefix()) {
+      prefix.type = RPL_OPT_TYPE_PREFIX;
+      prefix.option_length = 30;
+      prefix.prefix_length = call NeighborDiscovery.getPrefixLength();
+      prefix.flags_reserved = 0;
+      prefix.flags_reserved |= (0 << DIO_PREFIX_L_SHIFT);
+      prefix.flags_reserved |= (1 << DIO_PREFIX_A_SHIFT);
+      prefix.flags_reserved |= (0 << DIO_PREFIX_R_SHIFT);
+      prefix.valid_lifetime = IP6_INFINITE_LIFETIME;
+      prefix.preferred_lifetime = IP6_INFINITE_LIFETIME;
+      prefix.valid_lifetime = IP6_INFINITE_LIFETIME;
+      prefix.reserved2 = 0;
+      memcpy(&prefix.prefix,
+             call NeighborDiscovery.getPrefix(),
+             sizeof(struct in6_addr));
+      ADD_SECTION(&prefix, sizeof(struct dio_prefix_t));
+    }
+
+    v[0].iov_base = (uint8_t*)&data;
+    v[0].iov_len = length;
+    v[0].iov_next = NULL;
+
+    pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
+    pkt.ip6_hdr.ip6_plen = htons(length);
+
+    pkt.ip6_data = &v[0];
 
     if (UNICAST_DIO) {
       UNICAST_DIO = FALSE;
@@ -317,9 +272,6 @@ implementation{
 
     call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
 
-    // call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
-    // memcpy(&pkt.ip6_hdr.ip6_src, &ADDR_MY_IP, 16);
-
     call IP_DIO.send(&pkt);
   }
 
@@ -329,15 +281,15 @@ implementation{
     struct dis_base_t msg;
     uint16_t length;
 
-    if (!running)
-      return;
+    if (!running) return;
 
     length = sizeof(struct dis_base_t);
     msg.icmpv6.type = ICMP_TYPE_RPL_CONTROL;
     msg.icmpv6.code = ICMPV6_CODE_DIS;
     msg.icmpv6.checksum = 0;
+    msg.flags = 0;
+    msg.reserved = 0;
 
-    // pkt.ip6_hdr.ip6_vfc = IPV6_VERSION;
     pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
     pkt.ip6_hdr.ip6_plen = htons(length);
 
@@ -348,19 +300,13 @@ implementation{
 
     memcpy(&pkt.ip6_hdr.ip6_dst, &MULTICAST_ADDR, 16);
     call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
-    //call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
-
-    // printf("RPL: \n >>>>>> TxDIS\n");
-    // printf("RPL: >> sendDIS %d %lu \n", TOS_NODE_ID, ++countdis);
 
     call IP_DIS.send(&pkt);
   }
 
-  uint16_t INCONSISTENCY_COUNT = 0;
-
   void inconsistencyDetected() {
     // when inconsistency detected, reset trickle
-    INCONSISTENCY_COUNT ++;
+    INCONSISTENCY_COUNT++;
 
     // inconsistency on my on node detected?
     call RPLRankInfo.inconsistencyDetected(/*&ADDR_MY_IP*/);
@@ -447,8 +393,6 @@ implementation{
     DIORedun = Redun;
     MaxRankInc = RankInc;
     MinHopRankInc = HopRankInc;
-    // printf("RPL: Config %d %d %d %d %d \n",
-    //        IntDouble, IntMin, Redun, RankInc, HopRankInc);
   }
 
   command struct in6_addr* RPLRouteInfo.getDodagId() {
@@ -502,7 +446,6 @@ implementation{
 
   /********************* StdControl *********************/
   command error_t StdControl.start() {
-    // printf("RPL: STARTING\n");
     if (!running) {
       post init();
       call RankControl.start();
@@ -523,7 +466,6 @@ implementation{
   }
 
   event void IncreaseVersionTimer.fired() {
-    // printf("RPL: >>>> Version Increase!! \n");
     DODAGVersionNumber++;
     call RPLRouteInfo.resetTrickle();
   }
@@ -538,7 +480,6 @@ implementation{
       // compute the remaining time
       // Change back to DIO
       post sendDIOTask();
-      //post sendDISTask();
       post computeRemaining();
     }
   }
@@ -557,20 +498,24 @@ implementation{
    */
   event void IP_DIS.recv(struct ip6_hdr *iph, void *payload,
                          size_t len, struct ip6_metadata *meta) {
-    // printf("RPL: Receiving DIS %d\n", TOS_NODE_ID);
     if (!running) return;
-    // I received a DIS
-    if (I_AM_LEAF) {
-      // I am a leaf so don't do anything
-      return;
-    }
+    if (I_AM_LEAF) return;
 
+    printf("RPL: DIS SOURCE: ");
+    printf_in6addr(&iph->ip6_src);
+    printf("\n");
+
+    // Check if this packet was destined for this node (either multicast, or
+    // unicast directly to it)
     if (call IPAddress.isLocalAddress(&iph->ip6_dst)) {
-      // This is a multicast message: reset Trickle
       if (iph->ip6_dst.s6_addr[0] == 0xff &&
          ((iph->ip6_dst.s6_addr[1] & 0xf) <= 0x3)) {
+        // This is a multicast message: reset Trickle (Section 8.3)
         call RPLRouteInfo.resetTrickle();
       } else {
+        printf("RPL: unicast DIO: ");
+        printf_in6addr(&iph->ip6_src);
+        printf("\n");
         UNICAST_DIO = TRUE;
         memcpy(&UNICAST_DIO_ADDR, &(iph->ip6_src), sizeof(struct in6_addr));
         post sendDIOTask();
@@ -583,9 +528,7 @@ implementation{
     struct dio_base_t *dio = (struct dio_base_t *)payload;
     if (!running) return;
 
-    if (I_AM_ROOT) {
-      return;
-    }
+    if (I_AM_ROOT) return;
 
     if (DIORedun != 0xFF) {
       redunCounter ++;
@@ -595,10 +538,9 @@ implementation{
 
     /* JK: The if () statement below is TinyRPL specific and ties up
        with the inconsistencyDectect case above */
-    if (dio->dagRank == INFINITE_RANK) {
+    if (dio->rank == INFINITE_RANK) {
       if ((call RPLRankInfo.getRank(&ADDR_MY_IP) != INFINITE_RANK) &&
           ((call InitDISTimer.getNow()%2) == 1)) { // send DIO if I can help!
-        // printf("RPL: Infinite Rank RX %d\n", TOS_NODE_ID);
         post sendDIOTask();
       }
       return;
@@ -620,8 +562,6 @@ implementation{
       // If a new DODAGID is reported probably the Rank layer
       // already took care of all the operations and decided to switch to the
       // new DODAGID
-      // printf("RPL: FOUND new dodag %d %d %d\n",
-      //        I_AM_LEAF, hasDODAG, compare_ip6_addr(&DODAGID,&dio->dodagID));
       hasDODAG = TRUE;
       // assume that this DIO is from the DODAG with the
       // highest preference and is the preferred parent's DIO packet?
@@ -634,9 +574,6 @@ implementation{
         hasDODAG) {
       // sequence number has changed - new iteration; restart the
       // trickle timer and configure DIO with new sequence number
-
-      // printf("RPL: New iteration %d %d %d\n",
-      //        dio->instance_id.id, dio->version, I_AM_LEAF);
       DODAGVersionNumber = dio->version;
       call RPLRouteInfo.resetTrickle();
 
@@ -644,10 +581,7 @@ implementation{
     } else if (call RPLRankInfo.getRank(&ADDR_MY_IP) != node_rank &&
                hasDODAG &&
                node_rank != INFINITE_RANK) {
-      /*  inconsistency detected! because rank is not what I
-          previously advertised */
-      // printf("RPL: ICD %d\n", node_rank);
-      // DO I Still need this?
+      // inconsistency detected because rank is not what I previously advertised
       if (call RPLRankInfo.getRank(&ADDR_MY_IP) > LOWRANK + MaxRankInc &&
           node_rank != INFINITE_RANK) {
         hasDODAG = FALSE;
@@ -666,30 +600,28 @@ implementation{
     if (call RPLRankInfo.hasParent() && !hasDODAG) {
       goto accept_dodag;
     } else if (!call RPLRankInfo.hasParent() && !I_AM_ROOT) {
-      /*  this else if can lead to errors!! */
-      /*  I have no parent at this point! */
-      // printf("RPL: noparent %d %d\n", node_rank, call RPLRankInfo.hasParent());
+      //  this else if can lead to errors!
+      //  I have no parent at this point!
       hasDODAG = FALSE;
-      GROUND_STATE = dio->flags & DIO_GROUNDED_MASK;
-      //GROUND_STATE = dio->flags.flags_element.grounded;
+      GROUND_STATE = dio->flags & DIO_G_MASK;
       call TrickleTimer.stop();
       // new add
       call RPLRouteInfo.resetTrickle();
       call RPLDAORoutingEngine.startDAO();
     }
+
     return;
+
   accept_dodag:
-    // printf("RPL: new dodag \n");
     // assume that this DIO is from the DODAG with the
     // highest preference and is the preferred parent's DIO packet?
     hasDODAG = TRUE;
     MOP = (dio->flags & DIO_MOP_MASK) >> DIO_MOP_SHIFT;
-    DAG_PREF = dio->flags & DIO_PREF_MASK;
+    DAG_PREF = dio->flags & DIO_PRF_MASK;
     RPLInstanceID = dio->instance_id.id;
     memcpy(&DODAGID, &dio->dodagID, sizeof(struct in6_addr));
     DODAGVersionNumber = dio->version;
-    GROUND_STATE = dio->flags & DIO_GROUNDED_MASK;
-    //GROUND_STATE = dio->flags.flags_element.grounded;
+    GROUND_STATE = dio->flags & DIO_G_MASK;
     call RPLRouteInfo.resetTrickle();
     return;
   }

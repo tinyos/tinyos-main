@@ -75,7 +75,6 @@ configuration UDPEchoC {
   //components StaticIPAddressC; // Use LocalIeee154 in address
 #else
   components Dhcp6C;
-  components DhcpCmdC;
 #endif
 
 #ifdef PRINTFUART_ENABLED

@@ -31,8 +31,8 @@
 
 /**
  * RPLRoutingC.nc
- * @ author Stephen Dawson-Haggerty
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author Stephen Dawson-Haggerty
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 /* Top-level component to wire together the RPL layers */
@@ -48,20 +48,17 @@ configuration RPLRoutingC {
   components RPLRoutingEngineC;
   components RPLDAORoutingEngineC;
 
-  /* we receive routing messages through the ICMP component, which
-     recieves all packets with the ICMP  */
   components IPStackC;
   components new ICMPCodeDispatchC(ICMP_TYPE_RPL_CONTROL) as ICMP_RA;
 
-  StdControl = RPLRoutingEngineC;
-  StdControl = RPLRankC;
+  StdControl = RPLRoutingEngineC.StdControl;
+  StdControl = RPLRankC.StdControl;
   /* Cancel below for no-downstream messages */
-  StdControl = RPLDAORoutingEngineC;
-  RootControl = RPLRoutingEngineC;
+  StdControl = RPLDAORoutingEngineC.StdControl;
+  RootControl = RPLRoutingEngineC.RootControl;
 
   RPLRankC.ICMP_RA -> ICMP_RA;
   RPLDAORoutingEngineC.ICMP_RA -> ICMP_RA;
   IPStackC.RoutingControl -> RPLRoutingEngineC.StdControl;
   IPStackC.RoutingControl -> RPLDAORoutingEngineC.StdControl;
-
 }

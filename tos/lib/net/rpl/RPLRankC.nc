@@ -29,11 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * RPLRankC.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
- */
-
 /*
  * Copyright (c) 2010 Stanford University. All rights reserved.
  *
@@ -66,11 +61,12 @@
  */
 
 /**
- * @ author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author Yiwei Yao <yaoyiwei@stanford.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 
-configuration RPLRankC{
+configuration RPLRankC {
   provides {
     interface IP as IP_DIO_Filter;
     interface RPLRank;
@@ -81,38 +77,32 @@ configuration RPLRankC{
   }
 }
 implementation {
-  components RPLRankP, IPAddressC;
+  components RPLRankP;
   components RPLRoutingEngineC;
-  components IPStackC, IPPacketC;
-  components LedsC;
+  components RPLOFC;
+
+  components IPAddressC;
+  components IPStackC;
+  components IPPacketC;
+  components IPNeighborDiscoveryC;
+
+#if RPL_ADDR_AUTOCONF
+  // If we are using RPL to handle our IPv6 address autoconfiguration, wire
+  // to the relevant interfaces.
+  components LocalIeeeEui64C;
+  RPLRankP.SetIPAddress -> IPAddressC.SetIPAddress;
+  RPLRankP.LocalIeeeEui64 -> LocalIeeeEui64C.LocalIeeeEui64;
+#endif
 
   RPLRank = RPLRankP;
   StdControl = RPLRankP;
   IP_DIO_Filter = RPLRankP.IP_DIO_Filter;
   RPLRankP.IP_DIO = ICMP_RA[ICMPV6_CODE_DIO];
 
-  RPLRankP.Leds -> LedsC;
-  RPLRankP.RouteInfo -> RPLRoutingEngineC;
-  RPLRankP.IPAddress -> IPAddressC;
-  //RPLRankP.ForwardingTable -> IPStackC;
+  RPLRankP.RouteInfo -> RPLRoutingEngineC.RPLRoutingEngine;
+  RPLRankP.IPAddress -> IPAddressC.IPAddress;
   RPLRankP.ForwardingEvents -> IPStackC.ForwardingEvents[RPL_IFACE];
-  RPLRankP.IPPacket -> IPPacketC;
-
-#ifdef RPL_OF_MRHOF
-  components RPLMRHOFP, RPLDAORoutingEngineC;
-  RPLRankP.RPLOF -> RPLMRHOFP;
-  RPLMRHOFP.ForwardingTable -> IPStackC;
-  RPLMRHOFP.RPLRoute -> RPLRoutingEngineC;
-  RPLMRHOFP.ParentTable -> RPLRankP;
-  RPLMRHOFP.RPLDAO -> RPLDAORoutingEngineC;
-  RPLMRHOFP.RPLRankInfo -> RPLRankP;
-#else
-  components RPLOF0P, RPLDAORoutingEngineC;
-  RPLRankP.RPLOF -> RPLOF0P;
-  RPLOF0P.ForwardingTable -> IPStackC;
-  RPLOF0P.RPLRoute -> RPLRoutingEngineC;
-  RPLOF0P.ParentTable -> RPLRankP;
-  RPLOF0P.RPLDAO -> RPLDAORoutingEngineC;
-#endif
-
+  RPLRankP.IPPacket -> IPPacketC.IPPacket;
+  RPLRankP.NeighborDiscovery -> IPNeighborDiscoveryC.NeighborDiscovery;
+  RPLRankP.RPLOF -> RPLOFC.RPLOF;
 }

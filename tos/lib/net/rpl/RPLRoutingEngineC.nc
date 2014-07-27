@@ -31,17 +31,18 @@
 
 /**
  * RPLRoutingEngineC.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 #include <RPL.h>
 #include <lib6lowpan/ip.h>
 
-configuration RPLRoutingEngineC{
+configuration RPLRoutingEngineC {
   provides {
     interface RootControl;
     interface StdControl;
-    interface RPLRoutingEngine; // This is for the ForwardingEngine to use
+    interface RPLRoutingEngine;
   }
 }
 
@@ -52,10 +53,11 @@ implementation{
   components new TimerMilliC() as InitDISTimer;
   components new TimerMilliC() as VersionTimer;
   components IPAddressC;
-  components LedsC, NoLedsC;
   components RPLRankC as RankC;
   components RPLDAORoutingEngineC;
+  components RPLOFC;
   components new ICMPCodeDispatchC(ICMP_TYPE_RPL_CONTROL) as ICMP_RS;
+  components IPNeighborDiscoveryC;
 
   RootControl = Routing;
   StdControl = Routing;
@@ -68,8 +70,9 @@ implementation{
   Routing.Random -> RandomC;
   Routing.RPLRankInfo -> RankC;
   Routing.IPAddress -> IPAddressC;
-  Routing.Leds -> LedsC;
   Routing.RankControl -> RankC;
   Routing.RPLDAORoutingEngine -> RPLDAORoutingEngineC;
   Routing.IncreaseVersionTimer -> VersionTimer;
+  Routing.RPLOF -> RPLOFC.RPLOF;
+  Routing.NeighborDiscovery -> IPNeighborDiscoveryC.NeighborDiscovery;
 }

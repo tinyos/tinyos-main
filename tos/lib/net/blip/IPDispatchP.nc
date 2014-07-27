@@ -279,12 +279,12 @@ void SENDINFO_DECR(struct send_info *si) {
   event void ExpireTimer.fired() {
     table_map(&recon_cache, reconstruct_age);
 
-    printf("Frag pool size: %i\n", call FragPool.size());
-    printf("SendInfo pool size: %i\n", call SendInfoPool.size());
-    printf("SendEntry pool size: %i\n", call SendEntryPool.size());
-    printf("Forward queue length: %i\n", call SendQueue.size());
-    ip_print_heap();
-    printfflush();
+    //printf("Frag pool size: %i\n", call FragPool.size());
+    //printf("SendInfo pool size: %i\n", call SendInfoPool.size());
+    //printf("SendEntry pool size: %i\n", call SendEntryPool.size());
+    //printf("Forward queue length: %i\n", call SendQueue.size());
+    //ip_print_heap();
+    //printfflush();
   }
 
   /*

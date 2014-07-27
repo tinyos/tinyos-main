@@ -10,14 +10,17 @@ Usage
 
 To use with BLIP, in your application `configuration` add the following:
 
-    #ifdef RPL_ROUTING
+    #if RPL_ROUTING
       components RPLRoutingC;
     #endif
 
-Then in your application `Makefile` be sure to add:
+In your application `Makefile` be sure to add:
 
-    PFLAGS += -DRPL_ROUTING
-    PFLAGS += -I$(TOSDIR)/lib/net/rpl
+    PFLAGS += -DRPL_ROUTING=1
+
+Then when running `make` add the extra `rpl`:
+
+    make <target> blip rpl
 
 
 Options
@@ -28,11 +31,10 @@ There are a couple `#defines` that may be useful.
 - **RPL_STORING_MODE**: Tells the node to keep routing information in its local
 memory. If this is not defined the root node will be responsible for keeping
 all routing information.
+- **RPL_OF_0**: Use the objective function 0 for choosing the best routes.
 - **RPL_OF_MRHOF**: Use the "Minimum Rank Objective Function with Hysteresis"
 objective function for choosing the best routes instead of just expected
 transmissions.
-- **RPL_GLOBALADDR**: Use the node's global address when routing instead of its
-link-local address.
 
 
 

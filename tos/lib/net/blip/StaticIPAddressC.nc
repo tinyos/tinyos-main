@@ -14,9 +14,11 @@ implementation {
   components MainC;
   components IPAddressC;
   components LocalIeeeEui64C;
+  components IPNeighborDiscoveryC;
 
   StaticIPAddressP.Boot -> MainC.Boot;
   StaticIPAddressP.IPAddress -> IPAddressC.IPAddress;
   StaticIPAddressP.SetIPAddress -> IPAddressC.SetIPAddress;
   StaticIPAddressP.LocalIeeeEui64 -> LocalIeeeEui64C.LocalIeeeEui64;
+  StaticIPAddressP.NeighborDiscovery -> IPNeighborDiscoveryC.NeighborDiscovery;
 }

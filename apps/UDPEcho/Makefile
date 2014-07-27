@@ -10,33 +10,85 @@ COMPONENT=UDPEchoC
 # enable dma on the radio
 # PFLAGS += -DENABLE_SPI0_DMA
 
-# you can compile with or without a routing protocol... of course,
-# without it, you will only be able to use link-local communication.
-PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TINYOS_OS_DIR)/lib/net/rpl
-# PFLAGS += -DRPL_OF_MRHOF
+################################################################################
+### Set the addressing scheme
+################################################################################
 
-# tell the 6lowpan layer to not generate hc-compressed headers
-# PFLAGS += -DLIB6LOWPAN_HC_VERSION=-1
+# Use IN6_PREFIX with static addressing modes
+PFLAGS += -DIN6_PREFIX=\"fec0::\"
+# Use BLIP Neighbor Discovery to autoconfigure an address
+PFLAGS += -DBLIP_ADDR_AUTOCONF=0
+# Use RPL and prefix information in DIO messages to autoconfigure an address
+PFLAGS += -DRPL_ADDR_AUTOCONF=0
+
+################################################################################
+### Configure BLIP
+################################################################################
+
+# Configure the Neighbor Discovery mechanism
+PFLAGS += -DBLIP_SEND_ROUTER_SOLICITATIONS=0
+PFLAGS += -DBLIP_SEND_ROUTER_ADVERTISEMENTS=0
+
+# Configure the number of times BLIP tries to send a packet and how long it
+# waits between attempts
+#PFLAGS += -DBLIP_L2_RETRIES=5
+#PFLAGS += -DBLIP_L2_DELAY=103
+
+# Configure how many of the 6LoWPAN headers we support
+#PFLAGS += -DLIB6LOWPAN_FULL=1
+
+# Configure the header compression for 6LoWPAN
+PFLAGS += -DLIB6LOWPAN_HC_VERSION=6
+
+# Keep statistics about various BLIP/IPv6 parameters. See BlipStatistics.h
+#PFLAGS += -DBLIP_STATS
+#PFLAGS += -DBLIP_STATS_IP_MEM
+
+################################################################################
+### Configure RPL
+################################################################################
+
+# Include the RPL layer if set to 1
+PFLAGS += -DRPL_ROUTING=1
+
+# If set keep routing information in each node. If not the root must keep all
+# routing information.
+PFLAGS += -DRPL_STORING_MODE=1
+
+# Choose the objective function RPL should use
+PFLAGS += -DRPL_OF_0=1
+PFLAGS += -DRPL_OF_MRHOF=0
+
+################################################################################
+### Configure LPL
+################################################################################
+
+PFLAGS += -DLOW_POWER_LISTENING
+PFLAGS += -DLPL_SLEEP_INTERVAL=512
+PFLAGS += -DLPL_DEF_LOCAL_WAKEUP=512
+PFLAGS += -DLPL_DEF_REMOTE_WAKEUP=512
+
+################################################################################
+### Configure printf() output
+################################################################################
+
+PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
+
+################################################################################
+### Configure this application
+################################################################################
 
 # if this is set, motes will send debugging information to the address
 # listed.  BLIP_STATS causes blip to record statistics.
 # you can log this information using the util/Listener.py script
-# PFLAGS += -DREPORT_DEST=\"fec0::100\" -DBLIP_STATS
+# PFLAGS += -DREPORT_DEST=\"fec0::100\"
 
-# if you're using DHCP, set this to try and derive a 16-bit address
-# from the IA received from the server.  This will work if the server
-# gives out addresses from a /112 prefix.  If this is not set, blip
-# will only use EUI64-based link addresses.  If not using DHCP, this
-# causes blip to use TOS_NODE_ID as short address.  Otherwise the
-# EUI will be used in either case.
-PFLAGS += -DBLIP_DERIVE_SHORTADDRS
-
-# Set this when you want to use statically assigned addresses. The stack will
-# not use DHCP in that case.
-PFLAGS += -DIN6_PREFIX=\"fec0::\"
-
-PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
+<<<<<<< HEAD
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
+=======
+GOALS += blip rpl
+>>>>>>> BLIP+RPL: updating /apps
 
 TINYOS_ROOT_DIR?=../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
-

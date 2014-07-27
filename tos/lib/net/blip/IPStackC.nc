@@ -51,6 +51,7 @@ configuration IPStackC {
   IPStackControlP.StdControl = StdControl;
   IPStackControlP.RoutingControl = RoutingControl;
   IPStackControlP.SubSplitControl -> IPDispatchC;
+  IPStackControlP.NeighborDiscoveryControl -> NdC.StdControl;
 
   ForwardingTable = FwdP.ForwardingTable;
   ForwardingTableEvents = FwdP.ForwardingTableEvents;

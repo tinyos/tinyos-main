@@ -31,7 +31,7 @@
 
 /**
  * RPLOF0P.nc
- * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
+ * @author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
 #include "blip_printf.h"
@@ -42,6 +42,7 @@ module RPLOF0P{
   uses interface RPLRoutingEngine as RPLRoute;
   uses interface RPLParentTable as ParentTable;
   uses interface RPLDAORoutingEngine as RPLDAO;
+  uses interface RPLRank as RPLRankInfo;
 }
 implementation{
 
@@ -64,6 +65,10 @@ implementation{
     if (ocp == RPLOF_OCP_OF0)
       return TRUE;
     return FALSE;
+  }
+
+  command uint16_t RPLOF.getOCP() {
+    return RPLOF_OCP_OF0;
   }
 
   /* Which metrics does this implementation support */
@@ -250,4 +255,6 @@ implementation{
     nodeRank = INFINITE_RANK;
     minMetric = 0xFFFF;
   }
+
+  event void RPLRankInfo.parentRankChange() {}
 }

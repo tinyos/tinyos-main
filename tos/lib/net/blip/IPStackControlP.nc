@@ -3,6 +3,7 @@
  * networking stack.
  *
  * @author Stephen Dawson-Haggerty <stevedh@cs.berkeley.edu>
+ * @author Brad Campbell <bradjc@umich.edu>
  */
 
 module IPStackControlP {
@@ -13,6 +14,7 @@ module IPStackControlP {
     interface StdControl;
     interface StdControl as RoutingControl;
     interface SplitControl as SubSplitControl;
+    interface StdControl as NeighborDiscoveryControl;
     interface IPAddress;
   }
 } implementation {
@@ -26,16 +28,28 @@ module IPStackControlP {
   }
 
   event void SubSplitControl.startDone(error_t error) {
-    struct in6_addr addr;
     if (error == SUCCESS) {
       blip_started = TRUE;
       call StdControl.start();
     }
 
-    // if we have a global address, we can start any routing protocols now.
-    if (call IPAddress.getGlobalAddr(&addr)) {
-      call RoutingControl.start();
+    call NeighborDiscoveryControl.start();
+
+#if RPL_ADDR_AUTOCONF
+    // If we are using the routing layer to get our full address, then
+    // we must start the routing layer immediately.
+    call RoutingControl.start();
+#else
+    // Otherwise, check to see if we have a global address before starting
+    // the routing layer.
+    {
+      struct in6_addr addr;
+      // if we have a global address, we can start any routing protocols now.
+      if (call IPAddress.getGlobalAddr(&addr)) {
+        call RoutingControl.start();
+      }
     }
+#endif
 
     signal SplitControl.startDone(error);
   }
@@ -55,10 +69,11 @@ module IPStackControlP {
   }
 
   event void IPAddress.changed(bool valid) {
-    if (valid)
+    if (valid) {
       call RoutingControl.start();
-    else
+    } else {
       call RoutingControl.stop();
+    }
   }
 
  default command error_t StdControl.start() { return SUCCESS; }

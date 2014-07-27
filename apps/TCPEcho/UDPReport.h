@@ -33,7 +33,7 @@
 #ifndef _UDPREPORT_H
 #define _UDPREPORT_H
 
-#include <Statistics.h>
+#include <BlipStatistics.h>
 
 nx_struct udp_report {
   nx_uint16_t seqno;
