@@ -44,7 +44,6 @@ tinyos/ncc/ncg
 tinyos/ncc/nesdoc
 tinyos/safe/tos-decode-flid
 tinyos/safe/tos-ramsize
-tinyos/tosthreads/tosthreads_standard_api.py
 tinyos/misc/tos-serlook.py
 tinyos/python/tos.py
 tinyos/misc/tos-sub-tosdir
@@ -56,7 +55,6 @@ tinyos/ncc/nesdoc-genhtml
 platforms/mica/cc1000-channelgen/tos-channelgen
 platforms/msp430/motelist/motelist
 tinyos/misc/tos-serial-debug
-tinyos/tosthreads/tosthreads-dynamic-app
 tinyos/python/message/SerialPacket.py
 tinyos/python/packet/Serial.py
 

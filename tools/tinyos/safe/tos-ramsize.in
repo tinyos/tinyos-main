@@ -30,8 +30,6 @@ use Getopt::Long;
 
 # TODO: 
 #
-# support TOSThreads
-#
 # support msp430
 #
 # optionally don't do recursion checking

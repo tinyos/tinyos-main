@@ -285,8 +285,6 @@ AC_OUTPUT(
 	tinyos/python/packet/Makefile
 	tinyos/python/tossim/Makefile
 	tinyos/python/utils/Makefile
-	tinyos/tosthreads/Makefile
-	tinyos/tosthreads/tosthreads_standard_api.py
 	tinyos/safe/Makefile
 	tinyos/safe/tos-decode-flid
 	tinyos/safe/tos-ramsize
