@@ -90,7 +90,6 @@ implementation {
     I2C_BUSY         = 2,      
     I2C_DATA         = 3,
     I2C_STARTING     = 4,
-    I2C_STOPPING     = 5,
     I2C_SLAVE_ACK    = 6
   } atm128_i2c_state_t;
 
@@ -207,6 +206,15 @@ implementation {
       signal I2CPacket.writeDone(SUCCESS, packetAddr, packetLen, packetPtr);
     }
   }
+  
+  task void stopTask(){
+    atomic{
+      if(reading)
+        readNextByte(TRUE);
+      else
+        writeNextByte();
+    }
+  }
 
   async command error_t I2CPacket.read(i2c_flags_t flags, uint16_t addr, uint8_t len, uint8_t* data) {
     atomic {
@@ -251,9 +259,8 @@ implementation {
         state = I2C_DATA;
       }
       else if (flags & I2C_STOP) {
-        state = I2C_STOPPING;
-        call I2C.enableAck(FALSE);
-        call I2C.setStop(TRUE);
+        post stopTask();//unfortunatly, the only way to prevent unwanted recursion is posting a task. That's slow, but safe
+        return SUCCESS;
       }
       call I2C.sendCommand();
     }
@@ -300,9 +307,8 @@ implementation {
         return SUCCESS;
       }
       else if (flags & I2C_STOP) {
-        state = I2C_STOPPING;
-        call I2C.enableAck(FALSE);
-        call I2C.setStop(TRUE);
+        post stopTask();//unfortunatly, the only way to prevent unwanted recursion is posting a task. That's slow, but safe
+        return SUCCESS;
       }
       else { // A 0-length packet with no start and no stop....
         state = I2C_IDLE;
