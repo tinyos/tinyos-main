@@ -40,7 +40,7 @@ AVRGCCMINOR = $(shell avr-gcc -v 2>&1 | grep "gcc version" | sed -n 's/gcc versi
 ifeq ($(AVRGCCMAJOR),4)
   PFLAGS += --param max-inline-insns-single=100000
   ifneq ($(AVRGCCMINOR),1)
-    PFLAGS+=-Wno-unused-but-set-variable 
+    PFLAGS+=-Wno-unused-but-set-variable -Wno-enum-compare
   endif
 else
   PFLAGS += -finline-limit=100000
