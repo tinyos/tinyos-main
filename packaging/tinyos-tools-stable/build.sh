@@ -1,11 +1,24 @@
 #!/bin/bash
 #
 # This version of tinyos-tools builds a package against the 2.1.2
-# release tree.
+# release tree.  This is gh:tinyos/tinyos-release.  As of 12/2/2012,
+# the 2.1.2/2.1.2.0 release has the SHA a2d4e21.  The tarball can
+# be found at 
 #
-# The tinyos-tools package will pick up various tool scripts and binaries
+# https://github.com/tinyos/tinyos-release/archive/release_tinyos_2_1_2.tar.gz
+#
+# and files within this tarball are relative to the following path:
+#
+#     tinyos-release-release_tinyos_2_1_2
+#
+# which is constructed from <repository-name>-<release-tag>.
+#
+# The tinyos-tools package normally picks up various tool scripts and binaries
 # built from the tinyos source tree.  This makes the tinyos-tools package
 # dependent on the current state of the tree.
+#
+# We build against the released version of the tinyos tree to force the build
+# to reflect the tools package at the time of the release.
 #
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
@@ -34,8 +47,8 @@ BUILD_ROOT=$(pwd)
 CODENAME=wheezy
 TINYOSVERSION=2_1_2
 SOURCEFILENAME=release_tinyos_${TINYOSVERSION}.tar.gz
-TARBALLDIR=tinyos-main-release_tinyos_${TINYOSVERSION}
-SOURCEURL=https://github.com/tinyos/tinyos-main/archive/${SOURCEFILENAME}
+TARBALLDIR=tinyos-release-release_tinyos_${TINYOSVERSION}
+SOURCEURL=https://github.com/tinyos/tinyos-release/archive/${SOURCEFILENAME}
 
 SOURCENAME=tinyos-tools
 SOURCEVERSION=1.4.2
