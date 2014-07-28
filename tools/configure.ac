@@ -26,20 +26,20 @@ if test "$CXX" = no || test "$$CXX:$GXX" = "g++"; then
 fi
 
 m4_include([m4/python.m4])
+m4_define_default([_AM_PYTHON_INTERPRETER_LIST], [python2 python2.7 python2.6 python2.5 python])
 AM_PATH_PYTHON([2.5])
-AM_PATH_PYTHON([3.0])
 
 AC_PATH_PROG(pathperl, perl)
 if test -z "$pathperl" ; then
   AC_MSG_ERROR(I can't find perl);
 fi
 
-AC_PATH_PROGS(pathpython, [python2 python])
+AC_PATH_PROGS(pathpython, [python2 python2.7 python2.6 python2.5 python])
 if test -z "$pathpython" ; then
   AC_MSG_ERROR(I can't find python);
 fi
 
-AC_PATH_PROGS(pathpython3, [python3 python])
+AC_PATH_PROGS(pathpython3, [python3 python3.5 python3.4 python3.3 python3.2 python3.1 python3.0])
 if test -z "$pathpython3" ; then
   AC_MSG_ERROR(I can't find python3);
 fi
