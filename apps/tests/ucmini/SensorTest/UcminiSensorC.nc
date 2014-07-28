@@ -38,16 +38,20 @@ configuration UcminiSensorC { }
 implementation {
   components UcminiSensorP, MainC, LedsC, new TimerMilliC();
   components new AtmegaTemperatureC(),
-             new VoltageC(),
              new LightC(),
              new PressureC(), new Ms5607TemperatureC(), new Ms5607CalibrationC(),
              new TemperatureC(), new HumidityC(),
-             BatterySwitchC,
              UserButtonC;
 #ifdef SERIAL_SEND
   components SerialActiveMessageC as ActiveMessageC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend;
 #else
   components ActiveMessageC, new AMSenderC(AM_MEASUREMENT) as MeasSend;
+#endif
+
+#if !defined(UCMINI_REV) || UCMINI_REV >= 200
+  components new VoltageC(), BatterySwitchC;
+  UcminiSensorP.VoltageRead -> VoltageC;
+  UcminiSensorP.SwitchRead -> BatterySwitchC;
 #endif
 
   UcminiSensorP.Boot -> MainC;
@@ -58,8 +62,6 @@ implementation {
   UcminiSensorP.PressRead -> PressureC;
   UcminiSensorP.TempMsRead -> Ms5607TemperatureC;
   UcminiSensorP.TempAtRead -> AtmegaTemperatureC;
-  UcminiSensorP.VoltageRead -> VoltageC;
-  UcminiSensorP.SwitchRead -> BatterySwitchC;
   UcminiSensorP.Get -> UserButtonC;
   UcminiSensorP.Timer->TimerMilliC;
   UcminiSensorP.MeasSend->MeasSend;

@@ -44,8 +44,10 @@ module UcminiSensorP {
     interface Read<uint32_t> as PressRead;
     interface Read<int16_t> as TempMsRead;
     interface Read<int16_t> as TempAtRead;
+#if !defined(UCMINI_REV) || UCMINI_REV >= 200
     interface Read<uint16_t> as VoltageRead;
     interface Read<uint8_t> as SwitchRead;
+#endif
     interface Get<button_state_t>;
     interface DiagMsg;
     interface AMSend as MeasSend;
@@ -78,26 +80,19 @@ implementation {
       call SplitControl.start();
     } else
       starting=FALSE;
-    call SwitchRead.read();
     call TempShtRead.read();
     call HumiRead.read();
     call LightRead.read();
     call PressRead.read();
     call TempMsRead.read();
     call TempAtRead.read();
+#if !defined(UCMINI_REV) || UCMINI_REV >= 200
     call VoltageRead.read();
-		meas->button = call Get.get();
+    call SwitchRead.read();
+#endif
+    meas->button = call Get.get();
   }
-  
-  event void SwitchRead.readDone(error_t error, uint8_t data){
-    if(error==SUCCESS){
-      meas->batswitch=data;
-    } else
-      call Leds.led3Toggle();
-  }
-  
 
-  
   event void TempShtRead.readDone(error_t error, int16_t data){
     if(error==SUCCESS){
       meas->temp_sht21=data;
@@ -136,6 +131,7 @@ implementation {
     
   }
   
+#if !defined(UCMINI_REV) || UCMINI_REV >= 200
   event void VoltageRead.readDone(error_t error, uint16_t data) { 
     if(error==SUCCESS){
       meas->voltage=data;
@@ -143,6 +139,14 @@ implementation {
       call Leds.led3Toggle();
   }
   
+  event void SwitchRead.readDone(error_t error, uint8_t data){
+    if(error==SUCCESS){
+      meas->batswitch=data;
+    } else
+      call Leds.led3Toggle();
+  }
+#endif
+
   event void TempAtRead.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
       meas->temp_atmel=data;
