@@ -26,7 +26,7 @@ if test "$CXX" = no || test "$$CXX:$GXX" = "g++"; then
 fi
 
 m4_include([m4/python.m4])
-m4_define_default([_AM_PYTHON_INTERPRETER_LIST], [python2 python2.7 python2.6 python2.5 python])
+AM_PATH_PYTHON([3.0],,,3)
 AM_PATH_PYTHON([2.5])
 
 AC_PATH_PROG(pathperl, perl)

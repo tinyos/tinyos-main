@@ -38,8 +38,8 @@ AC_DEFUN([AM_PATH_PYTHON],
   dnl Find a Python interpreter.  Python versions prior to 2.0 are not
   dnl supported. (2.0 was released on October 16, 2000).
   m4_define_default([_AM_PYTHON_INTERPRETER_LIST],
-[python python2 python3 python3.2 python3.1 python3.0 python2.7 dnl
- python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0])
+[python2 python2.7 python2.6 python2.5 python3 python3.5 python3.4 python3.3 dnl
+ python3.2 python3.1 python3.0 python])
 
   AC_ARG_VAR([PYTHON$4], [the Python$4 interpreter])
 
@@ -56,22 +56,22 @@ AC_DEFUN([AM_PATH_PYTHON],
       # If the user set $PYTHON, use it and don't search something else.
       AC_MSG_CHECKING([whether $PYTHON$4 version is >= $1])
       AM_PYTHON_CHECK_VERSION([$PYTHON$4], [$1],
-			      [AC_MSG_RESULT([yes])],
-			      [AC_MSG_RESULT([no])
-			       AC_MSG_ERROR([Python interpreter is too old])])
+                              [AC_MSG_RESULT([yes])],
+                              [AC_MSG_RESULT([no])
+                               AC_MSG_ERROR([Python interpreter is too old])])
       am_display_PYTHON$4=$PYTHON
     else
       # Otherwise, try each interpreter until we find one that satisfies
       # VERSION.
       AC_CACHE_CHECK([for a Python$4 interpreter with version >= $1],
-	[am_cv_pathless_PYTHON$4],[
-	for am_cv_pathless_PYTHON$4 in _AM_PYTHON_INTERPRETER_LIST none; do
-	  test "$am_cv_pathless_PYTHON" = none && break
-	  AM_PYTHON_CHECK_VERSION([$am_cv_pathless_PYTHON$4], [$1], [break])
-	done])
+        [am_cv_pathless_PYTHON$4],[
+        for am_cv_pathless_PYTHON$4 in _AM_PYTHON_INTERPRETER_LIST none; do
+          test "$am_cv_pathless_PYTHON" = none && break
+          AM_PYTHON_CHECK_VERSION([$am_cv_pathless_PYTHON$4], [$1], [break])
+        done])
       # Set $PYTHON to the absolute path of $am_cv_pathless_PYTHON$4.
       if test "$am_cv_pathless_PYTHON$4" = none; then
-	PYTHON=:
+        PYTHON=:
       else
         AC_PATH_PROG([PYTHON$4], [$am_cv_pathless_PYTHON$4])
       fi
@@ -133,8 +133,8 @@ AC_DEFUN([AM_PATH_PYTHON],
        case $am_py_prefix in
          /usr|/System*) ;;
          *)
-	  am_cv_python_pythondir=$PYTHON_PREFIX$4/lib/python$PYTHON_VERSION/site-packages
-	  ;;
+          am_cv_python_pythondir=$PYTHON_PREFIX$4/lib/python$PYTHON_VERSION/site-packages
+          ;;
        esac
        ;;
      esac
@@ -168,8 +168,8 @@ AC_DEFUN([AM_PATH_PYTHON],
        case $am_py_exec_prefix in
          /usr|/System*) ;;
          *)
-	   am_cv_python_pyexecdir=$PYTHON_EXEC_PREFIX/lib/python$PYTHON_VERSION/site-packages
-	   ;;
+           am_cv_python_pyexecdir=$PYTHON_EXEC_PREFIX/lib/python$PYTHON_VERSION/site-packages
+           ;;
        esac
        ;;
      esac
