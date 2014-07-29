@@ -154,15 +154,16 @@ will automatically be set by the build system (mostly in `Makefile.include`)
 which effectively removes setting environment variables from the TinyOS install.
 If needed, these defaults can be overridden with user set environment variables.
 
-| Old Variable          | New Variable Name            | Default Value                    | Purpose                                                             |
-|-----------------------|------------------------------|----------------------------------|---------------------------------------------------------------------|
-| `TOSROOT`             | `TINYOS_ROOT_DIR`            | relative to application Makefile | Base for all other variable defaults                                |
-| `TOSDIR`              | `TINYOS_OS_DIR`              | `$TINYOS_ROOT_DIR/tos`           | Path to `/tos` folder containing main system source to compile with |
-| `TINYOS_MAKE_PATH`    | `TINYOS_MAKE_DIR`            | `$TINYOS_ROOT_DIR/support/make`  | Path to `/make` that contains the targets, extras, and rules        |
-| `MAKERULES`           | `TINYOS_MAKERULES`           | `$TINYOS_MAKE_DIR/Makerules`     | Path to main makefile                                               |
-| `TINYOS_MAKELOCAL`    | `TINYOS_MAKELOCAL`           | `$TINYOS_MAKE_DIR/Makelocal`     | Path to optional Makelocal file                                     |
-| `TINYOS_MAKEDEFAULTS` | `TINYOS_MAKEDEFAULTS`        | `$TINYOS_MAKE_DIR/Makedefaults`  | Path to Makedefaults                                                |
-| `TOSMAKE_PATH`        | `TINYOS_ROOT_DIR_ADDITIONAL` | unset                            | Colon separated paths of additional TinyOS trees                    |
+| Old Variable          | New Variable Name               | Default Value                    | Purpose                                                             |
+|-----------------------|---------------------------------|----------------------------------|---------------------------------------------------------------------|
+| `TOSROOT`             | `TINYOS_ROOT_DIR`               | relative to application Makefile | Base for all other variable defaults                                |
+| `TOSDIR`              | `TINYOS_OS_DIR`                 | `$TINYOS_ROOT_DIR/tos`           | Path to `/tos` folder containing main system source to compile with |
+| `TINYOS_MAKE_PATH`    | `TINYOS_MAKE_DIR`               | `$TINYOS_ROOT_DIR/support/make`  | Path to `/make` that contains the targets, extras, and rules        |
+| `MAKERULES`           | `TINYOS_MAKERULES`              | `$TINYOS_MAKE_DIR/Makerules`     | Path to main makefile                                               |
+| `TINYOS_MAKELOCAL`    | `TINYOS_MAKELOCAL`              | `$TINYOS_MAKE_DIR/Makelocal`     | Path to optional Makelocal file                                     |
+| `TINYOS_MAKEDEFAULTS` | `TINYOS_MAKEDEFAULTS`           | `$TINYOS_MAKE_DIR/Makedefaults`  | Path to Makedefaults                                                |
+| `TOSMAKE_PATH`        | `TINYOS_ROOT_DIR_ADDITIONAL`    | unset                            | Colon separated paths of additional TinyOS trees                    |
+| n/a                   | `TINYOS_NO_DEPRECATION_WARNING` | unset                            | Hide warnings about deprecated environment variables                |
 
 
 
