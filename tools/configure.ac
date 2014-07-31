@@ -110,6 +110,7 @@ fi
 JDK=`dirname "$JAVAC_DIR"`
 AC_MSG_RESULT($JDK)
 
+AC_MSG_CHECKING(for location to put JARs)
 if test -d $prefix; then
     JAR_DIR="$prefix/lib/java"
 else
