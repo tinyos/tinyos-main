@@ -26,6 +26,11 @@ how to configure it, how to add a new target, platform, or extra, how to setup
 an external TinyOS tree and how to adapt TinyOS make system version 2 files
 to the current make system.
 
+Unlike prior versions of the TinyOS Make system, version 3 does not require
+configuring any environment variables: it automatically finds directories
+and files based on your current location. If you need to configure where
+the compilation toolchain looks for source files, see "External TinyOS
+Trees" below.
 
 
 Updated Make System (Summer 2014)
