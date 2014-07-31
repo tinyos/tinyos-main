@@ -1,6 +1,36 @@
 TinyOS Make System Version 3
 ============================
 
+Building a TinyOS application consists of running `make` followed by a target
+and a series of optional extras. For example, to compile Blink, a very basic
+app, for the `telosb` platform you simply run:
+
+    $ cd ../../apps/Blink
+    $ make telosb
+
+Compiling an application requires `nesc` to be installed, as well as the correct
+toolchain for the hardware you are compiling for.
+
+Targets tell the Make system which hardware platform you are intending to build
+the application for. Extras allow you to further configure how an application is
+built or run additional commands after compilation is complete. One example is
+loading the executable onto the hardware itself. This typically looks like:
+
+    $ make telosb install
+
+To get a list of all valid targets and extras, run `make` in any application
+directory.
+
+The remainder of this README explains in depth how the TinyOS make system works,
+how to configure it, how to add a new target, platform, or extra, how to setup
+an external TinyOS tree and how to adapt TinyOS make system version 2 files
+to the current make system.
+
+
+
+Updated Make System (Summer 2014)
+---------------------------------
+
 The new version of the make system started out as a method to remove the
 environment variable requirement from the TinyOS install. All parts of the build
 system that relied on having those environment variables set now use reasonable
@@ -68,15 +98,6 @@ There are several main changes from version two:
   - **Colored output.** I added colored tags to the stdout to make the output
     easier to read.
 
-
-
-Quick Start
------------
-
-To use this build system find an application, and try make
-
-    cd ../../apps/Blink  #or any app dir
-    make telos help
 
 
 
