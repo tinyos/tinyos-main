@@ -15,6 +15,8 @@ all: $(TARGETS)
 
 install:
 
+uninstall:
+
 check:
 	./run.sh
 

@@ -105,7 +105,10 @@ dist:	$(FILES) $(SUBDIRS)
 	tar czf $(package).tar.gz $(DISTDIR)
 
 install:
-	@echo "No need to install COAP"
+	@echo "No need to install CoAP"
+
+uninstall:
+	@echo "No need to uninstall CoAP"
 
 TAGS:	
 	$(ETAGS) -o $@.new $(SOURCES) 
