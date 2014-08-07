@@ -31,7 +31,7 @@ fi
 echo -e "\n*** TINYOS_ROOT_DIR: $TINYOS_ROOT_DIR"
 echo      "*** Destination: ${DEB_DEST}"
 
-NESC_VER=1.3.5
+NESC_VER=1.3.6
 NESC=nesc-${NESC_VER}
 
 setup_deb()
