@@ -83,12 +83,5 @@ PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 # you can log this information using the util/Listener.py script
 # PFLAGS += -DREPORT_DEST=\"fec0::100\"
 
-<<<<<<< HEAD
-TINYOS_ROOT_DIR?=../..
-include $(TINYOS_ROOT_DIR)/Makefile.include
-=======
-GOALS += blip rpl
->>>>>>> BLIP+RPL: updating /apps
-
 TINYOS_ROOT_DIR?=../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
