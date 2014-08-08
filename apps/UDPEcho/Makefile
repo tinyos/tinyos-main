@@ -26,7 +26,7 @@ PFLAGS += -DRPL_ADDR_AUTOCONF=0
 ################################################################################
 
 # Configure the Neighbor Discovery mechanism
-PFLAGS += -DBLIP_SEND_ROUTER_SOLICITATIONS=0
+PFLAGS += -DBLIP_SEND_ROUTER_SOLICITATIONS=1
 PFLAGS += -DBLIP_SEND_ROUTER_ADVERTISEMENTS=0
 
 # Configure the number of times BLIP tries to send a packet and how long it
@@ -82,13 +82,6 @@ PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 # listed.  BLIP_STATS causes blip to record statistics.
 # you can log this information using the util/Listener.py script
 # PFLAGS += -DREPORT_DEST=\"fec0::100\"
-
-<<<<<<< HEAD
-TINYOS_ROOT_DIR?=../..
-include $(TINYOS_ROOT_DIR)/Makefile.include
-=======
-GOALS += blip rpl
->>>>>>> BLIP+RPL: updating /apps
 
 TINYOS_ROOT_DIR?=../..
 include $(TINYOS_ROOT_DIR)/Makefile.include
