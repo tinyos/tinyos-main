@@ -23,10 +23,16 @@ COMPONENT=CoapBlipC
 # code if you don't use them
 # CFLAGS += -DNO_LIB6LOWPAN_ASCII
 
+################################################################################
+### Configure RPL
+################################################################################
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
 PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TINYOS_OS_DIR)/lib/net/rpl
 #PFLAGS += -DRPL_OF_MRHOF -DRPL_ROOT_ADDR=1
+PFLAGS += -DRPL_OF_0=1
+PFLAGS += -DRPL_OF_MRHOF=0
+
 
 # Set this when you want to use statically assigned addresses. The stack will
 # not use DHCP in that case.
