@@ -41,6 +41,7 @@ module IPNeighborDiscoveryP {
     interface IPLower;
     interface IPAddress;
     interface Ieee154Address;
+    interface NeighbrCache;
 
 #if BLIP_ADDR_AUTOCONF
     interface SetIPAddress;
@@ -511,13 +512,20 @@ module IPNeighborDiscoveryP {
 
     if (call NeighborDiscovery.resolveAddress(&local_addr, &fr_addr.ieee_src) !=
         SUCCESS) {
-      printf("IPND - local address resolution failed\n");
+     //this is if ip exist in the neighbor cache not in routing table
+     if(call NeighbrCache.resolveIP(&local_addr,&fr_addr.ieee_src)!=SUCCESS)	{
+	 // printf("IPND - local address resolution failed\n");
+         return FAIL;
+    	}
       return FAIL;
     }
 
     if (call NeighborDiscovery.resolveAddress(next, &fr_addr.ieee_dst) !=
         SUCCESS) {
-      printf("IPND - next-hop address resolution failed\n");
+      if(call NeighbrCache.resolveIP(next,&fr_addr.ieee_dst) != SUCCESS){
+      	//	printf("IPND - next-hop address resolution failed");
+	return FAIL;
+      }
       return FAIL;
     }
     printf("l2 source: "); printf_ieee154addr(&fr_addr.ieee_src);
@@ -540,4 +548,10 @@ module IPNeighborDiscoveryP {
 
   event void Ieee154Address.changed() {}
   event void IPAddress.changed(bool global_valid) {}
+
+  event void NeighbrCache.default_rtrlistempty(){}
+
+  event void NeighbrCache.NUD_reminder(struct in6_addr ip_address){}
+
+  event void NeighbrCache.prefixReg(){}
 }

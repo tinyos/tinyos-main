@@ -29,6 +29,8 @@ module IPForwardingEngineP {
     interface IPAddress;
     interface IPPacket;
     interface Pool<struct in6_iid>;
+    interface RouterList;
+    interface NeighbrCache;
 
 #ifdef PRINTFUART_ENABLED
     interface Timer<TMilli> as PrintTimer;
@@ -193,6 +195,7 @@ module IPForwardingEngineP {
   }
 
   command error_t IP.send(struct ip6_packet *pkt) {
+    struct in6_addr next;
     struct route_entry *next_hop_entry =
       call ForwardingTable.lookupRoute(pkt->ip6_hdr.ip6_dst.s6_addr, 128);
 
@@ -240,6 +243,25 @@ module IPForwardingEngineP {
       return do_send(next_hop_entry->ifindex, &next_hop_entry->next_hop, pkt);
     }
 
+    //check whether any entry exists in the Neighbor Cache
+    if(call NeighbrCache.findEntry(pkt->ip6_hdr.ip6_dst)){
+	//printf("found from neighbor cache");
+        return call IPForward.send[ROUTE_IFACE_154](&pkt->ip6_hdr.ip6_dst, pkt, NULL);
+    }
+
+    #ifdef NODE_ROUTER	//if u r a router and if u dont have any information about the destination send it to the LBR
+	call NeighbrCache.getLBRAddress(&next);
+	return do_send(ROUTE_IFACE_154,&next,pkt);
+   #endif
+   #ifdef NODE_HOST	//if u r a host and if u dont have any information about the destination send it to the router
+   //RFC 6775(Section 5.6) Send to the Default Router IP and send it to the Default Router as the destination is OFF-Link
+   if(call RouterList.getRouterIP(&next)!=-1)
+   {
+	//printf("\n Using Router to send the packet for:");
+	//printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+ 	return do_send(ROUTE_IFACE_154,&next,pkt);		//just convert it into linklocal address here
+   }
+   #endif
     printf("Forwarding -- no route found for packet. FAIL.\n");
     printf("Forwarding -- dest addr: ");
     printf_in6addr(&pkt->ip6_hdr.ip6_dst);
@@ -296,6 +318,12 @@ module IPForwardingEngineP {
           /* oops, no route. */
           /* RPL will reencapsulate the packet in some cases here */
           // call ForwardingEvents.drop(iph, payload, len, ROUTE_DROP_NOROUTE);
+	 if(call NeighbrCache.findEntry(iph->ip6_dst))
+	 {
+		 //printf("\n Got entry from destination cache");
+		 do_send(ROUTE_IFACE_154, &iph->ip6_dst,&pkt);
+		 return;	
+	}
           return;
         }
         next_hop = &next_hop_entry->next_hop;
@@ -383,5 +411,10 @@ module IPForwardingEngineP {
   default event void ForwardingTableEvents.defaultRouteAdded() {}
   default event void ForwardingTableEvents.defaultRouteRemoved() {}
 
+  event void NeighbrCache.default_rtrlistempty(){}
+
+  event void NeighbrCache.NUD_reminder(struct in6_addr ip_address){}
+
+  event void NeighbrCache.prefixReg(){}
   event void IPAddress.changed(bool global_valid) {}
 }
