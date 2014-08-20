@@ -177,10 +177,10 @@ module IPAddressP {
 
   event void Ieee154Address.changed() {}
 
-}
 
-command bool IPAddress.getEUILLAddress(struct in6_addr *addr)
-{
+
+  command bool IPAddress.getEUILLAddress(struct in6_addr *addr)
+  {
 	int i;
 	ieee154_laddr_t laddr = call Ieee154Address.getExtAddr();//getting the Extended Address
 
@@ -191,4 +191,5 @@ command bool IPAddress.getEUILLAddress(struct in6_addr *addr)
 	       	addr->s6_addr[8+i] = laddr.data[7-i];
 	addr->s6_addr[8] ^= 0x2;  /* toggle U/L bit */
 	return TRUE;
+ }
 }
