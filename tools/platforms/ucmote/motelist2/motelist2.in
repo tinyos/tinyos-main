@@ -1,8 +1,7 @@
 #!@pathpython@
 import getopt
 import sys
-sys.path.append("@tinyoslibdir@")
-from motelist2_getdevices import getAllDevices
+from tinyos.tosdevicesearch import getAllDevices
 
 classic=False
 parsable=False
