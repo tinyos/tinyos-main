@@ -69,9 +69,7 @@ build()
     ./bootstrap
     ./configure --host=avr\
                 --prefix="${PREFIX}" \
-                --disable-versioned-doc \
-                --mandir="${PREFIX}/share/man" \
-                --datadir="$PREFIX"
+                --disable-versioned-doc
     ${MAKE}
   )
 }
