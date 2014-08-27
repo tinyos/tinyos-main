@@ -42,28 +42,29 @@ download()
   if [ "$?" -eq "1" ]; then
     wget http://distribute.atmel.no/tools/opensource/Atmel-AVR-GNU-Toolchain/${ATMELVERSION}/${SOURCEFILENAME}
   fi
-  check_download ${HEADERFILENAME}
-  if [ "$?" -eq "1" ]; then
-    wget http://distribute.atmel.no/tools/opensource/Atmel-AVR-GNU-Toolchain/${ATMELVERSION}/${HEADERFILENAME}
-  fi
+#The header files are already included in the tarball
+#   check_download ${HEADERFILENAME}
+#   if [ "$?" -eq "1" ]; then
+#     wget http://distribute.atmel.no/tools/opensource/Atmel-AVR-GNU-Toolchain/${ATMELVERSION}/${HEADERFILENAME}
+#   fi
 }
 
 unpack()
 {
   tar -xjf ${SOURCEFILENAME}
-  unzip ${HEADERFILENAME}
+#   unzip ${HEADERFILENAME}
 }
 
 build()
 {
   set -e
   (
-    cd ${HEADERDIRNAME}
-    for i in io[0-9a-zA-Z]*.h
-    do
-      cp --verbose --force $i ../${SOURCEDIRNAME}/include/avr
-    done
-    cd ..
+#     cd ${HEADERDIRNAME}
+#     for i in io[0-9a-zA-Z]*.h
+#     do
+#       cp --verbose --force $i ../${SOURCEDIRNAME}/include/avr
+#     done
+#     cd ..
     cd ${SOURCEDIRNAME}
     ./bootstrap
     ./configure --host=avr\

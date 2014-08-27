@@ -83,18 +83,19 @@ build()
   set -e
   (
     cd ${SOURCEDIRNAME}
-    pushd gcc/config/avr/
-    sh genopt.sh avr-mcus.def > avr-tables.opt
-    cat avr-mcus.def | awk -f genmultilib.awk FORMAT="Makefile" > t-multilib 
-    popd
-    #don't force old autoconf
-    sed -i 's/  \[m4_fatal(\[Please use exactly Autoconf \]/  \[m4_errprintn(\[Please use exactly Autoconf \]/g' ./config/override.m4 || task_error "sed failed"
-    autoconf
+#     these were in the atmel script's but it didn't make any difference
+#     pushd gcc/config/avr/
+#     sh genopt.sh avr-mcus.def > avr-tables.opt
+#     cat avr-mcus.def | awk -f genmultilib.awk FORMAT="Makefile" > t-multilib 
+#     popd
+#     #don't force old autoconf
+#     sed -i 's/  \[m4_fatal(\[Please use exactly Autoconf \]/  \[m4_errprintn(\[Please use exactly Autoconf \]/g' ./config/override.m4 || task_error "sed failed"
+#     autoconf
     
     mkdir -p ${BUILDDIR}
     cd ${BUILDDIR}
-    CFLAGS="-Os -g0 -s" ../configure \
-            LDFLAGS="-L${PREFIX}/lib" CPPFLAGS=""\
+    CFLAGS="-Os -g0 -s" LDFLAGS="-L${PREFIX}/lib" CPPFLAGS="" \
+            ../configure \
             --target=avr\
             --prefix=${PREFIX}\
             --libdir=${PREFIX}/lib\

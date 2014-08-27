@@ -46,24 +46,19 @@ download()
 unpack()
 {
   tar -xjf ${SOURCEFILENAME}
+  pushd ${SOURCEDIRNAME}
+  patch -p1 < ../atmel-binutils-3.4.4-autotool.patch
+  popd
 }
 
 build()
 {
   set -e
   (
-    cd ${SOURCEDIRNAME}
+    pushd ${SOURCEDIRNAME}
 
-    #don't force old autoconf
-    sed -i 's/  \[m4_fatal(\[Please use exactly Autoconf \]/  \[m4_errprintn(\[Please use exactly Autoconf \]/g' ./config/override.m4
-
-
-    autoconf
-    cd ld
-    autoreconf
-    cd ..
     mkdir -p ${BUILDDIR}
-    cd ${BUILDDIR}
+    pushd ${BUILDDIR}
     CFLAGS="-Os -g0 -s" ../configure\
                       --prefix=${PREFIX}\
                       --disable-nls\
@@ -75,12 +70,11 @@ build()
                       --docdir=${PREFIX}/share/doc/avr-binutils\
                       --disable-werror\
                       --enable-install-libiberty\
-                      --enable-instal-libbfd\
-                      --enable-maintainer-mode
-    ${MAKE} all-bfd TARGET-bfd=headers
-    rm bfd/Makefile
+                      --enable-instal-libbfd
     ${MAKE} configure-host
     ${MAKE} all
+    popd
+    popd
   )
 }
 
@@ -125,6 +119,7 @@ cleaninstall(){
 BUILD_ROOT=$(pwd)
 case $1 in
   test)
+    unpack
     ;;
 
   download)
