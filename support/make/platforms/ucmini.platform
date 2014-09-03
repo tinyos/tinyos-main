@@ -1,7 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/ucmini
-PFLAGS += -I%T/platforms/ucmini/chips/cp2102
 PFLAGS += -I%T/platforms/ucmini/chips/stm25p
 PFLAGS += -I%T/platforms/ucmini/chips/sht21
 PFLAGS += -I%T/platforms/ucmini/chips/bh1750fvi
