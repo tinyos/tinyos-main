@@ -5,6 +5,10 @@ PROGRAMMER ?= avrdude
 
 PROGRAMMER_PART ?= -pm128rfa1
 
+ifeq ($(findstring avr109,$(GOALS)),avr109)
+  INSTALL_DEPS += reset
+endif
+
 TOSMAKE_VOLUME_ALLOCATOR_FLAGS ?= -s32
 
 AVR_FUSE_H ?= 0x98
@@ -29,7 +33,7 @@ ifneq (,$(findstring found,$(MOTELIST2_EXISTS)))
       endif
       
       USBSERIAL=$(AVR109)
-      -include $(TINYOS_MAKE_PATH)/usbdescriptornodeid.extra
+      $(call TOSMake_include,extras/usbdescriptornodeid.extra)
     endif
   endif
 endif 
