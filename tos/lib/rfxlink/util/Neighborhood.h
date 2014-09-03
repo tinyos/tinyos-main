@@ -36,7 +36,7 @@
 #define __NEIGHBORHOOD_H__
 
 #ifndef NEIGHBORHOOD_SIZE
-#define NEIGHBORHOOD_SIZE	5
+#define NEIGHBORHOOD_SIZE	5  /* no more than 8 */
 #endif
 
 #endif//__NEIGHBORHOOD_H__
