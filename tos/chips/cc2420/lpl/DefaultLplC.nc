@@ -79,7 +79,7 @@ implementation {
   SubReceive = DefaultLplP.SubReceive;
   SubSend = DefaultLplP.SubSend;
   
-  DefaultLplP.SplitControlState -> PowerCycleC.SplitControlState;
+  DefaultLplP.SubControlState -> PowerCycleC.SplitControlState;
   DefaultLplP.RadioPowerState -> PowerCycleC.RadioPowerState;
   DefaultLplP.SendState -> SendStateC;
   DefaultLplP.OffTimer -> OffTimerC;
