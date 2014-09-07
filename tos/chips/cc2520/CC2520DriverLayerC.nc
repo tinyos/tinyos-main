@@ -17,7 +17,7 @@
  *   from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
  * COPYRIGHT HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -28,6 +28,8 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Fix formatting.
  */
 
 /**
@@ -38,32 +40,28 @@
 #include <RadioConfig.h>
 #include <CC2520DriverLayer.h>
 
-configuration CC2520DriverLayerC
-{
-	provides
-	{
-		interface RadioState;
-		interface RadioSend;
-		interface RadioReceive;
-		interface RadioCCA;
-		interface RadioPacket;
+configuration CC2520DriverLayerC {
+  provides {
+    interface RadioState;
+    interface RadioSend;
+    interface RadioReceive;
+    interface RadioCCA;
+    interface RadioPacket;
 
-		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketField<uint8_t> as PacketTimeSyncOffset;
-		interface PacketField<uint8_t> as PacketLinkQuality;
+    interface PacketField<uint8_t> as PacketTransmitPower;
+    interface PacketField<uint8_t> as PacketRSSI;
+    interface PacketField<uint8_t> as PacketTimeSyncOffset;
+    interface PacketField<uint8_t> as PacketLinkQuality;
     //interface PacketField<uint8_t> as AckReceived;
 
-		interface LocalTime<TRadio> as LocalTimeRadio;
+    interface LocalTime<TRadio> as LocalTimeRadio;
     interface Alarm<TRadio, tradio_size>;
 
-		interface PacketAcknowledgements;
-	}
-
-	uses
-	{
-		interface CC2520DriverConfig as Config;
-		interface PacketTimeStamp<TRadio, uint32_t>;
+    interface PacketAcknowledgements;
+  }
+  uses {
+    interface CC2520DriverConfig as Config;
+    interface PacketTimeStamp<TRadio, uint32_t>;
 
     interface PacketFlag as TransmitPowerFlag;
     interface PacketFlag as RSSIFlag;    
@@ -71,46 +69,45 @@ configuration CC2520DriverLayerC
     interface PacketFlag as AckReceivedFlag;
     interface RadioAlarm;     
     interface Tasklet;
-	}
+  }
 }
 
-implementation
-{
-	components CC2520DriverLayerP as DriverLayerP,
-		BusyWaitMicroC,
-		MainC,
-		HplCC2520C as HplC;
+implementation {
+  components CC2520DriverLayerP as DriverLayerP,
+    BusyWaitMicroC,
+    MainC,
+    HplCC2520C as HplC;
 
-	MainC.SoftwareInit -> DriverLayerP.SoftwareInit;
+  MainC.SoftwareInit -> DriverLayerP.SoftwareInit;
 
-	RadioState = DriverLayerP;
-	RadioSend = DriverLayerP;
-	RadioReceive = DriverLayerP;
-	RadioCCA = DriverLayerP;
-	RadioPacket = DriverLayerP;
-	PacketAcknowledgements = DriverLayerP;
+  RadioState = DriverLayerP;
+  RadioSend = DriverLayerP;
+  RadioReceive = DriverLayerP;
+  RadioCCA = DriverLayerP;
+  RadioPacket = DriverLayerP;
+  PacketAcknowledgements = DriverLayerP;
 
-	LocalTimeRadio = HplC;
-	Config = DriverLayerP;
+  LocalTimeRadio = HplC;
+  Config = DriverLayerP;
 
-	DriverLayerP.VREN -> HplC.VREN;
-	DriverLayerP.CSN -> HplC.CSN;
-	DriverLayerP.CCA -> HplC.CCA;
-	DriverLayerP.RSTN -> HplC.RSTN;
-	DriverLayerP.FIFO -> HplC.FIFO;
-	DriverLayerP.FIFOP -> HplC.FIFOP;
-	DriverLayerP.SFD -> HplC.SFD;
+  DriverLayerP.VREN -> HplC.VREN;
+  DriverLayerP.CSN -> HplC.CSN;
+  DriverLayerP.CCA -> HplC.CCA;
+  DriverLayerP.RSTN -> HplC.RSTN;
+  DriverLayerP.FIFO -> HplC.FIFO;
+  DriverLayerP.FIFOP -> HplC.FIFOP;
+  DriverLayerP.SFD -> HplC.SFD;
 
-	PacketTransmitPower = DriverLayerP.PacketTransmitPower;
-	DriverLayerP.TransmitPowerFlag = TransmitPowerFlag;
+  PacketTransmitPower = DriverLayerP.PacketTransmitPower;
+  DriverLayerP.TransmitPowerFlag = TransmitPowerFlag;
 
-	PacketRSSI = DriverLayerP.PacketRSSI;
-	DriverLayerP.RSSIFlag = RSSIFlag;
+  PacketRSSI = DriverLayerP.PacketRSSI;
+  DriverLayerP.RSSIFlag = RSSIFlag;
 
-	PacketTimeSyncOffset = DriverLayerP.PacketTimeSyncOffset;
-	DriverLayerP.TimeSyncFlag = TimeSyncFlag;
+  PacketTimeSyncOffset = DriverLayerP.PacketTimeSyncOffset;
+  DriverLayerP.TimeSyncFlag = TimeSyncFlag;
 
-  /*
+/*
   AckReceived = DriverLayerP.AckReceived;
   components new CC2520MetadataFlagC() as AckFlagC;
   DriverLayerP.AckFlag -> AckFlagC;
@@ -118,31 +115,31 @@ implementation
 
   AckReceivedFlag = DriverLayerP.AckReceivedFlag;
 
-	PacketLinkQuality = DriverLayerP.PacketLinkQuality;
-	PacketTimeStamp = DriverLayerP.PacketTimeStamp;
+  PacketLinkQuality = DriverLayerP.PacketLinkQuality;
+  PacketTimeStamp = DriverLayerP.PacketTimeStamp;
 
-	RadioAlarm = DriverLayerP.RadioAlarm;
-	Alarm = HplC.Alarm;
+  RadioAlarm = DriverLayerP.RadioAlarm;
+  Alarm = HplC.Alarm;
 
-	DriverLayerP.SpiResource -> HplC.SpiResource;
-	DriverLayerP.SpiByte -> HplC;
+  DriverLayerP.SpiResource -> HplC.SpiResource;
+  DriverLayerP.SpiByte -> HplC;
 
-	DriverLayerP.SfdCapture -> HplC;
-	DriverLayerP.FifopInterrupt -> HplC.FifopInterrupt;
-	DriverLayerP.FifoInterrupt -> HplC.FifoInterrupt;
+  DriverLayerP.SfdCapture -> HplC;
+  DriverLayerP.FifopInterrupt -> HplC.FifopInterrupt;
+  DriverLayerP.FifoInterrupt -> HplC.FifoInterrupt;
 
-	Tasklet = DriverLayerP.Tasklet;
-	DriverLayerP.BusyWait -> BusyWaitMicroC;
+  Tasklet = DriverLayerP.Tasklet;
+  DriverLayerP.BusyWait -> BusyWaitMicroC;
 
-	DriverLayerP.LocalTime-> HplC.LocalTimeRadio;
+  DriverLayerP.LocalTime-> HplC.LocalTimeRadio;
 
 #ifdef RADIO_DEBUG_MESSAGES
-	components DiagMsgC;
-	DriverLayerP.DiagMsg -> DiagMsgC;
+  components DiagMsgC;
+  DriverLayerP.DiagMsg -> DiagMsgC;
 #endif
 
-	components LedsC, NoLedsC;
-	DriverLayerP.Leds -> NoLedsC;
+  components LedsC, NoLedsC;
+  DriverLayerP.Leds -> NoLedsC;
 
 #ifdef RADIO_LCD_DEBUG
   components LcdC;
