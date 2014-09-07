@@ -8,11 +8,12 @@ define NULL_HELP
 endef
 HELP += $(NULL_HELP)
 
-GCC = gcc
+GCC     = gcc
 OBJCOPY = objcopy
 OBJDUMP = objdump
-SIZE = size
-LIBS = -lm
+SIZE    = size
+NM      = nm
+LIBS    = -lm
 
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 

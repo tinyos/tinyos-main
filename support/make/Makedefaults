@@ -23,6 +23,8 @@ TOSMAKE_PFLAGS_STD_INCLUDE ?= -I%T/system -I%T/types -I%T/interfaces
 # these, but this way not all .rules files have to set all of them.
 TOSMAKE_BUILD_DIR ?= build/$(TARGET)
 MAIN_EXE  = $(TOSMAKE_BUILD_DIR)/main.exe
+MAIN_LST  = $(TOSMAKE_BUILD_DIR)/main.lst
+MAIN_SYM  = $(TOSMAKE_BUILD_DIR)/main.sym
 MAIN_IHEX = $(TOSMAKE_BUILD_DIR)/main.ihex
 MAIN_BIN  = $(TOSMAKE_BUILD_DIR)/main.bin
 MAIN_SREC = $(TOSMAKE_BUILD_DIR)/main.srec

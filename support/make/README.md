@@ -223,13 +223,15 @@ write a `.rules` file is to use an existing one as a guide.
 |-------------------------|---------------------------------------------------------------------------------|
 | `GCC`                   | The compiler.                                                                   |
 | `OBJCOPY`               | GCC tools.                                                                      |
-| `OBJDUMP`               | GCC tools.                                                                      |
-| `SIZE`                  | GCC tools.                                                                      |
+| `OBJDUMP`               | GCC tools. - for interspersed listing                                           |
+| `SIZE`                  | GCC tools. - for object size display                                            |
+| `NM`                    | GCC tools. - for symbol table                                                   |
 | `LIBS`                  | Flags for libraries that need to be compiled in. (Example: -lm)                 |
 | `TOSMAKE_BINARY_FORMAT` | Either `ihex`, `srec`, or `bin`. The format that will get loaded onto the chip. |
 | `TOSMAKE_BINARY_IN`     | The name of binary file that is created by the compiler.                        |
 | `TOSMAKE_BINARY_OUT`    | The name of the binary after TOS_NODE_ID has been set.                          |
 | `PFLAGS`                | General flags for the compiler.                                                 |
+|-------------------------|---------------------------------------------------------------------------------|
 
 
 
@@ -403,6 +405,7 @@ GCC     = msp430-gcc
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
 SIZE    = msp430-size
+NM      = msp430-nm
 LIBS    = -lm
 
 # Set some compiler/microcontroller specific pflags

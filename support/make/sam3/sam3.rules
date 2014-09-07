@@ -13,11 +13,12 @@ endef
 
 HELP += $(SAM3_HELP)
 
-GCC = arm-none-eabi-gcc
+GCC     = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
-SIZE = arm-none-eabi-size
-LIBS = -lm
+SIZE    = arm-none-eabi-size
+NM      = arm-none-eabi-nm
+LIBS    = -lm
 
 OPTFLAGS ?= -O3 -g
 CFLAGS += -mthumb -fno-strict-aliasing

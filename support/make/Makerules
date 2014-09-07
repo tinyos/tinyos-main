@@ -326,20 +326,31 @@ endif
 delsetid: program FORCE
 	rm -f $(subst .$(TOSMAKE_BINARY_FORMAT).,.exe.,$(TOSMAKE_BINARY_OUT)) $(TOSMAKE_BINARY_OUT)
 
-ihex: bytes FORCE
+ihex: bytes sym lst FORCE
 	@echo -e '$(INFO_STRING) creating ihex file'
 	@$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
 
-srec: bytes FORCE
+srec: bytes sym lst FORCE
 	@echo -e '$(INFO_STRING) creating srec file'
 	@$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
 
-bin: bytes FORCE
+bin: bytes sym lst FORCE
 	@echo -e '$(INFO_STRING) creating bin file'
 	@$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
 
 bytes: exe FORCE
+	@echo -e '$(INFO_STRING) script'
 	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+	@echo -e '$(INFO_STRING) size (toolchain):'
+	@$(SIZE) $(MAIN_EXE)
+
+lst: exe FORCE
+	@echo -e '$(INFO_STRING) generating listing'
+	@$(OBJDUMP) -d --source -w $(MAIN_EXE) > $(MAIN_LST)
+
+sym: exe FORCE
+	@echo -e '$(INFO_STRING) generating symbol table'
+	@$(NM) -an $(MAIN_EXE) > $(MAIN_SYM)
 
 ifeq ($(NO_WIRING_CHECK),)
 wiring_check: exe FORCE

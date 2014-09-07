@@ -17,9 +17,10 @@ HELP += $(PXA27X_HELP)
 
 OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
-SET_ID = tos-set-symbols
-SIZE = arm-none-eabi-size
-LIBS = -lm
+SIZE    = arm-none-eabi-size
+NM      = arm-none-eabi-nm
+LIBS    = -lm
+SET_ID  = tos-set-symbols
 
 PFLAGS += -mtune=iwmmxt -march=iwmmxt
 

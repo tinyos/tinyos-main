@@ -25,12 +25,14 @@ endif
 
 HELP += $(M16C60_HELP)
 
-GCC = m32c-elf-gcc
+GCC     = m32c-elf-gcc
 OBJCOPY = m32c-elf-objcopy
 OBJDUMP = m32c-elf-objdump
-SET_ID = tos-set-symbols --objcopy $(OBJCOPY) --objdump $(OBJDUMP)
-NESC = nescc
-LIBS = #-lm -lc -lgcc
+SIZE    = m32c-elf-size
+NM      = m32c-elf-nm
+LIBS    = #-lm -lc -lgcc
+NESC    = nescc
+SET_ID  = tos-set-symbols --objcopy $(OBJCOPY) --objdump $(OBJDUMP)
 
 TOSMAKE_AMADDR_STR = _ActiveMessageAddressC__addr
 TOSMAKE_TOS_NODE_ID_STR = _TOS_NODE_ID

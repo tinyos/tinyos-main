@@ -27,11 +27,12 @@ ifeq ("$(MSPGCC_VER_OK)","0")
   $(warning $(shell echo -e '$(WARN_STRING) Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)'))
 endif
 
-GCC = msp430-gcc
+GCC     = msp430-gcc
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
-SIZE = msp430-size
-LIBS = -lm
+SIZE    = msp430-size
+NM      = msp430-nm
+LIBS    = -lm
 
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
@@ -42,7 +43,6 @@ PFLAGS += -Wall -Wshadow
 ifndef TOSMAKE_PROGRAMMER_TYPE
   $(call TOSMake_include,msp/bsl.extra)
 endif
-
 
 TOSMAKE_BINARY_FORMAT = ihex
 TOSMAKE_BINARY_IN = $(MAIN_IHEX)

@@ -22,12 +22,13 @@ endef
 
 HELP += $(AVR_HELP)
 
-GCC ?= avr-gcc
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-SIZE = avr-size
+GCC        ?= avr-gcc
+OBJCOPY     = avr-objcopy
+OBJDUMP     = avr-objdump
+SIZE        = avr-size
+NM          = avr-nm
+LIBS        = -lm
 PROGRAMMER ?= avrdude
-LIBS = -lm
 
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 
