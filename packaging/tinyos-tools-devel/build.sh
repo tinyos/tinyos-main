@@ -39,7 +39,7 @@ SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
 PREFIX=/usr
-MAKE="make -j8"
+MAKE="make -j1"
 
 download()
 {
