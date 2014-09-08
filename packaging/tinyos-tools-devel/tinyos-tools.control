@@ -4,5 +4,7 @@ Section: devel
 Priority: optional
 Architecture: %{architecture}
 Depends: python, python-serial, perl, nesc, default-jdk, default-jre
+Provides: tinyos-tools
+Conflicts: tinyos-tools
 Maintainer: Eric B. Decker <cire831@gmail.com>, Andras Biro <andras.biro@ucmote.com>
 Description: Experimental (development trunk) tools for TinyOS.
