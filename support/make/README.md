@@ -209,7 +209,8 @@ The following are general variables the can be set anywhere.
 | `TOSMAKE_PRE_EXE_DEPS`   | All make targets that should be finished before running NesC.                   |
 | `TOSMAKE_POST_EXE_DEPS`  | All make targets that should happen after the application is compiled.          |
 | `TOSMAKE_DO_REINSTALL`   | Set to true to avoid the compilation step.                                      |
-| `TOSMAKE_NO_COLOR`       | Set to true to remove color from being printed to stdout                        |
+| `TOSMAKE_NO_COLOR`       | Set to true to remove color from being printed to stdout.                       |
+| `TOSMAKE_FIRST_FLAGS`    | Flags that are passed to nescc before any other flags.                          |
 
 
 ### Variables for `.rules` Files
