@@ -70,11 +70,11 @@ There are several main changes from version two:
 
   - **Changed the function of %T**. Instead of simply expanding to `$TOSDIR`, %T
     is now actually useful. It expands to all TinyOS /tos directories that are
-    specified in TINYOS_ROOT_DIR_ADDITIONAL where the expansion references a
-    folder that exists. This makes out-of-tree builds and multiple TinyOS trees
-    first class citizens. My goal was to allow a new platform to be developed in
-    a separate tree and require no code changes to be merged into tinyos-main,
-    and this new %T makes that possible.
+    specified in TINYOS_ROOT_DIR_ADDITIONAL (followed by TINYOS_ROOT_DIR) where
+    the expansion references a folder that exists. This makes out-of-tree builds
+    and multiple TinyOS trees first class citizens. My goal was to allow a new
+    platform to be developed in a separate tree and require no code changes to
+    be merged into tinyos-main, and this new %T makes that possible.
 
   - **Tried to separate "platforms" from "targets".** Targets should be a
     complete hardware system one wants to compile software for. Platforms are the
@@ -149,11 +149,14 @@ in tinyos-main. By setting the environment variable `TINYOS_ROOT_DIR_ADDITIONAL`
 the make system will search that tree for files, targets, platforms, etc. Add
 the following to something like `.bashrc`:
 
-    TINYOS_ROOT_DIR_ADDITIONAL = /path/to/tinyos-other:$TINYOS_ROOT_DIR_ADDITIONAL
+  TINYOS_ROOT_DIR_ADDITIONAL = /path/to/tinyos-other:$TINYOS_ROOT_DIR_ADDITIONAL
 
 The major change from `TOSMAKE_PATH` is that the external tree can pretend
 like it is the main tree. No hacks are needed and if the code is later
 merged into tinyos-main it shouldn't have to change at all.
+
+The build will search paths in each of the directories specified in order.
+The final path searched will be specified by TINYOS_ROOT_DIR.
 
 In order to compile apps in the external tree there must be a `Makefile.include`
 file in the root of the TinyOS tree. A generic example looks like:
