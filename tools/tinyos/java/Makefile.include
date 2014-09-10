@@ -53,12 +53,6 @@ here: printdir $(INITIAL_TARGETS) $(JAVA) $(CLASSES)
 printdir:
 	@echo "... $(PWD)";
 
-here-clean: FORCE
-	@rm -f *.class *~ javacore*.txt
-	@echo "cleaning $(PWD)"
-
-clean: here-clean $(OTHER_CLEAN)
-
 # some phony targets - FORCE forces a command to be run on all dependencies,
 # and .PHONY prevents badness if a phony target coincides with a filename
 
