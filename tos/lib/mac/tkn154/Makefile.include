@@ -3,7 +3,7 @@
 
 TKN154_PLATFORM_INCLUDE ?= $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
 TKN154_EXTRAS += $(wildcard $(TINYOS_OS_DIR)/lib/mac/tkn154/extras/*.extra)
-CFLAGS += -I$(TINYOS_OS_DIR)/lib/mac/tkn154 \
+TOSMAKE_FIRST_FLAGS += -I$(TINYOS_OS_DIR)/lib/mac/tkn154 \
 	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/dummies \
 	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/MCPS \
 	-I$(TINYOS_OS_DIR)/lib/mac/tkn154/interfaces/MLME \

@@ -1,8 +1,8 @@
 ifdef TKN154_PIERCEBOARD
-CFLAGS += -I$(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154/timer/pierceboard
+TOSMAKE_FIRST_FLAGS += -I$(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154/timer/pierceboard
 endif
 
-CFLAGS += -I$(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154 \
+TOSMAKE_FIRST_FLAGS += -I$(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154 \
 	-I$(TINYOS_OS_DIR)/platforms/telosb/mac/tkn154/timer \
 	-I$(TINYOS_OS_DIR)/chips/cc2420_tkn154
 
