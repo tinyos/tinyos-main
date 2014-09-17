@@ -1,0 +1,33 @@
+README for Phidget test application
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+Simple test application to show how easily a Phidget sensor can be
+connected to a Z1 mote, the implementation details and available
+Phidgets supported (but not limited) can be found at:
+
+/tos/platforms/z1/chips/phidgets/README
+
+To specify the input ADC channel and the Phidget device used, check
+the test application for the "enable" command.
+
+Note: not all phidget sensors deliver results in the expected units, some
+require calibration, be sure to check the README and PhidgetP.nc file for the
+current sensor status.
+
+The data is printed over the serial port, using a client like putty or
+picocom you can see the readings of the sensor adjusting the serial port
+to this configuration:
+
+bauds: 115200
+bits: 8
+parity: none
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.

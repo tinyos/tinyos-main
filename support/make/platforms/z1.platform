@@ -10,6 +10,7 @@ PFLAGS += -I%T/platforms/z1/chips/cc2420
 PFLAGS += -I%T/platforms/z1/chips/sht11
 PFLAGS += -I%T/platforms/z1/chips/stm25p
 PFLAGS += -I%T/platforms/z1/chips/tmp102
+PFLAGS += -I%T/platforms/z1/chips/phidgets
 PFLAGS += -I%T/chips/cc2420
 PFLAGS += -I%T/chips/cc2420/alarm
 PFLAGS += -I%T/chips/cc2420/control

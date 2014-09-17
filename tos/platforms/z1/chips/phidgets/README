@@ -1,0 +1,99 @@
+README for Phidget test application
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+This README sumarizes the implementation of a basic driver to allow
+Phidget-like sensors to be used with the Z1 motes
+
+The following phidgets are implemented:
+
+* Phidget 1109. Rotation sensor
+http://www.phidgets.com/products.php?product_id=1109
+Basic rotation sensor, ranging from 0-1000
+Normally powered at 3VDC
+
+* Phidget 1129. Touch sensor
+http://www.phidgets.com/products.php?product_id=1129
+Basic touch sensor, outputs either HIGH/LOW, represented by Vin/0V
+Normally powered at 3VDC
+
+* Phidget 1120: Flexiforce force sensor
+http://www.phidgets.com/documentation/Phidgets/3100_0_FlexiforceUserManual.pdf
+Please note that the ranges depend mostly on the FlexiForce model used.
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+Information on how to calibrate the sensor is available at:
+http://www.phidgets.com/documentation/Phidgets/3100_0_FlexiforceUserManual.pdf
+
+* Phidget 1108. Magnetic sensor
+http://www.phidgets.com/products.php?product_id=1108
+Magnetic hall-effect sensor, output is proportional to the the applied magnetic field
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+The values are given in Gauss according to Phidget user manual
+
+* Phidget 3522/3520. Sharp distance sensor
+http://www.phidgets.com/products.php?product_id=3522 / 3520
+3522: 20-150 cms
+3520: 54-30 cms
+Distance sensor,his popular sensor made by Sharp produces an analog output that varies
+depending on the distance (see reference page)
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+Note: this sensor does not have a standard 2.54mm pitch, the connector is not
+the standard phidget, the phidget 1101 adapter is recomended
+
+* Phidget 1135: Precision voltage sensor (up to 30VDC)
+http://www.phidgets.com/products.php?product_id=1135
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+Results are given in mV.
+
+* Phidget 1122: Current sensor AC/DC up to 30A:
+http://www.phidgets.com/products.php?product_id=1122
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+Results are given in mA.
+
+* Phidget 1130: pH/ORP Adapter
+http://www.phidgets.com/products.php?product_id=1130
+Tested with ph Lab Electrode ASP2000 from:
+http://www.phidgets.com/products.php?product_id=3550
+This sensor should be powered at 5VDC, it is recommended to use ADC0/ADC3 as
+explained below.
+
+
+Connection:
+
+The North port of the Z1 mote exposes the ADC input channels, as well as 
+3.3V/5VDC and GND pins, allowing to directly use 3.3/5VDC-powered phidgets
+connected to a standard 3-pin phidget connector.  Zolertia (upon client
+request) normally dispatch the Z1 motes with the following 3-pin connectors:
+
+Top row
+             ____________   ____________
+             |          |   |          |
+             --|--|--|---   --|--|--|---
+              GND 3V ADC7    GND 3V ADC1
+
+Bottom row
+             ____________   ____________
+             |          |   |          |
+             --|--|--|---   --|--|--|---
+              GND 5V ADC3    GND 5V ADC0
+
+ADC input ADC3 and ADC0 has resistor divider to allow 5V inputs, 5:3.
+
+The available ADC input channels are noted by the following constants:
+
+   // see device specific data sheet which pin Ax is mapped to
+   INPUT_CHANNEL_A0 = 0,                    // input channel A0 
+   INPUT_CHANNEL_A1 = 1,                    // input channel A1
+   INPUT_CHANNEL_A2 = 2,                    // input channel A2
+   INPUT_CHANNEL_A3 = 3,                    // input channel A3
+   INPUT_CHANNEL_A4 = 4,                    // input channel A4
+   INPUT_CHANNEL_A5 = 5,                    // input channel A5
+   INPUT_CHANNEL_A6 = 6,                    // input channel A6
+   INPUT_CHANNEL_A7 = 7,                    // input channel A7
+
+The driver does not check if a 5VDC phidget is connected to one of both available
+5V Phidget ports, it is recommended that these input channels are used.
