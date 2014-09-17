@@ -13,6 +13,9 @@ Tested with:
 
   tinyos-tools 2.2.0
 
+  GIT revision:
+    3a499120d412344471619b397803cdcc0829a524
+
 All test applications are working, but Ziglets/TestBMP085 fails, this is a known
 legacy problem with the current implementation of the BMP085 driver, current
 work-around is to use msp430-gcc 3.2.3
