@@ -41,6 +41,7 @@
  */
 
 #include "ADXL345.h"
+#include "PrintfUART.h"
  
 module TestIntADXLC{
 
@@ -56,13 +57,24 @@ module TestIntADXLC{
 implementation{
 
   bool source_int2=FALSE;
+
+  void printTitles(){
+    printfUART("\n\n");
+    printfUART("   ###############################\n");
+    printfUART("   #     Z1 ADXL345 Int Test     #\n");
+    printfUART("   ###############################\n");
+    printfUART("\n");
+  }
  
   event void Boot.booted(){
+    printfUART_init();
+    printTitles();
     call AccelControl.start();
   }
  
   event void IntAccel1.notify(adxlint_state_t val) {
 	source_int2=FALSE;
+    printfUART("Single tap !!!\n");
 	call Leds.led0Toggle();
 	call IntSource.read();		//this will clear the interruption
   }
@@ -83,8 +95,13 @@ implementation{
  
   event void IntSource.readDone(error_t result, uint8_t data){
     if(source_int2) {
-      if(data & ADXLINT_FREE_FALL) call Leds.led2Toggle();
-	else call Leds.led1Toggle();
+      if(data & ADXLINT_FREE_FALL){
+        printfUART("Free-fall !!!\n");
+        call Leds.led2Toggle();
+      } else {
+        printfUART("Double tap !!!\n");
+        call Leds.led1Toggle();
+      }
     }
   }
  

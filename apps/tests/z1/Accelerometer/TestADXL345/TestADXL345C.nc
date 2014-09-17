@@ -62,7 +62,6 @@ implementation {
   }
 
   event void Boot.booted() {
-    uint8_t state = 0;
     printfUART_init();
     printTitles();
     call TestTimer.startPeriodic(1024);
@@ -76,7 +75,7 @@ implementation {
     if (err == SUCCESS){
       call Xaxis.read();
     } else {
-      printfUART("Bad Start\n");
+      printfUART("Bad Start, aborting\n");
     }
   }
   
@@ -85,20 +84,20 @@ implementation {
   event void Xaxis.readDone(error_t result, uint16_t data){
     if (result == SUCCESS){
       call Leds.led0Toggle();
-      printfUART("Xaxis: %d\n", data);     
+      printfUART("Xaxis: %d\t", data);     
       call Yaxis.read();
     } else {
-      printfUART("Bad X\n");
+      printfUART("Bad X\t");
     }
   }
 
   event void Yaxis.readDone(error_t result, uint16_t data){
     if (result == SUCCESS){
       call Leds.led1Toggle();
-      printfUART("Yaxis: %d\n", data);     
+      printfUART("Yaxis: %d\t", data);     
       call Zaxis.read();
     } else {
-      printfUART("Bad Y\n");
+      printfUART("Bad Y\t");
     }
   }
 

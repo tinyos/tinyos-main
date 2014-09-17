@@ -84,22 +84,20 @@ implementation {
     if (error == SUCCESS){
      call Leds.led2Toggle();
      temp = (data/10) -400;
-    	printfUART("Temp: %d.%d\n", temp/10, temp>>2);
+    	printfUART("Temp: %d.%d\t", temp/10, temp>>2);
     }
   }
 
   event void Humidity.readDone(error_t error, uint16_t data){
     uint16_t hum;
     if (error == SUCCESS){
-        hum = data*0.0367;
-        hum -= 2.0468;
-        if (hum>100) hum = 100;
-	call Leds.led2Toggle();
-    	printfUART("Hum: %d\n", hum);
+      hum = data*0.0367;
+      hum -= 2.0468;
+      if (hum>100) hum = 100;
+	  call Leds.led2Toggle();
+      printfUART("Hum: %d\n", hum);
     }
   }
-
-  
 }
 
 

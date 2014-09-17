@@ -63,7 +63,6 @@ implementation {
   }
 
   event void Boot.booted() {
-    uint8_t state = 0;
     printfUART_init();
     printTitles();
     call TestTimer.startPeriodic(1024);
@@ -86,7 +85,7 @@ implementation {
   event void axis.readDone(error_t result, adxl345_readxyt_t data){
     if (result == SUCCESS){
       call Leds.led0Toggle();
-      printfUART("X [%d] Y [%d] Z [%d]\n", data.x_axis, data.y_axis, data.z_axis);     
+      printfUART("X [%d]\tY [%d]\tZ [%d]\n", data.x_axis, data.y_axis, data.z_axis);     
     } else {
       printfUART("Error reading axis\n");
     }
