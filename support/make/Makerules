@@ -68,9 +68,14 @@ endif
 #  Allow users to specify additional directories to find .target, .extra, and
 #  .rules files. This allows for platforms to be stored in separate repositories
 #  and still compile against the main TinyOS code.
+#
 #  To use this feature, set the environment variable TINYOS_ROOT_DIR_ADDITIONAL
-#  to a space separated list of additional paths to make folders you would
+#  to a space or colon separated list of additional paths to make folders you would
 #  like the make system to search.
+#
+#  Make expects space seperated lists, but ':' seperated is easier to read.  We
+#  convert ':' to ' ' below so Make is happy.
+#
 ROOT_DIR_ADDITIONAL = $(subst :, ,$(TINYOS_ROOT_DIR_ADDITIONAL))
 TOSMAKE_PATH = $(addsuffix /support/make,$(ROOT_DIR_ADDITIONAL))
 TOSMAKE_PATH += $(TINYOS_MAKE_DIR)
