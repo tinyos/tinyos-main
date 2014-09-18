@@ -465,8 +465,6 @@ implementation
 	event void SpiResource.granted()
 	{
 		
-		call CSN.makeOutput();
-		call CSN.set();
 
 		if( state == STATE_VR_ON )
 		{
@@ -484,9 +482,6 @@ implementation
 
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
-			call CSN.makeOutput();
-			call CSN.set();
-
 			return TRUE;
 		}
 

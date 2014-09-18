@@ -269,8 +269,6 @@ implementation
 
 	event void SpiResource.granted()
 	{
-		call SELN.makeOutput();
-		call SELN.set();
 
 		if( state == STATE_P_ON )
 		{
@@ -288,9 +286,6 @@ implementation
 
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
-			call SELN.makeOutput();
-			call SELN.set();
-
 			return TRUE;
 		}
 

@@ -754,9 +754,6 @@ implementation{
 
   event void SpiResource.granted(){
 
-    call CSN.makeOutput();
-    call CSN.set();
-
     if( state == STATE_VR_ON ){
       initRadio();
       call SpiResource.release();
@@ -768,15 +765,10 @@ implementation{
 
   bool isSpiAcquired(){
     if( call SpiResource.isOwner() ){
-      call CSN.makeOutput();
-      call CSN.set();
       return TRUE;
     }
 
     if( call SpiResource.immediateRequest() == SUCCESS ){
-      call CSN.makeOutput();
-      call CSN.set();
-
       return TRUE;
     }
 
