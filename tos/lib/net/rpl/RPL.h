@@ -130,7 +130,7 @@ enum {
 
 enum {
   RPL_IFACE = ROUTE_IFACE_154,
-  RPL_HBH_RANK_TYPE = 0x6b,     /* per draft-ietf-6man-rpl-option-02 */
+  RPL_HBH_RANK_TYPE = 0x63,     /* per rfc6553 */
 };
 
 struct dis_base_t {
