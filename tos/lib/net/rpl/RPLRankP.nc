@@ -186,14 +186,12 @@ implementation {
 
   uint8_t getParent(struct in6_addr *node);
 
-  // return the rank of the specified IP addr
+  // Return the rank of node with the specified IP addr.
+  // If NULL is passed, get the rank of the local node
   command uint16_t RPLRankInfo.getRank(struct in6_addr *node) {
     uint8_t indexset;
-    struct in6_addr my_addr;
 
-    call IPAddress.getGlobalAddr(&my_addr);
-
-    if (compare_ipv6(&my_addr, node)) {
+    if (node == NULL) {
       if (ROOT) return ROOT_RANK;
       return nodeRank;
     }
@@ -204,6 +202,7 @@ implementation {
       return parentSet[indexset].rank;
     }
 
+    // This means we don't know the rank of the node with the given IP address
     return 0x1234;
   }
 
