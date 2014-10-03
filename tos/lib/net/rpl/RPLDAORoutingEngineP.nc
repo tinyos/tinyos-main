@@ -149,7 +149,7 @@ generic module RPLDAORoutingEngineP() {
 
   command error_t RPLDAORouteInfo.startDAO() {
 
-#ifdef RPL_STORING_MODE
+#if RPL_STORING_MODE
     call RemoveTimer.startPeriodic(remove_time);
 #else
     if (call RPLRouteInfo.getRank() = ROOT_RANK) {
@@ -299,7 +299,7 @@ generic module RPLDAORoutingEngineP() {
 
     if (!m_running) return;
 
-#ifndef RPL_STORING_MODE
+#if !RPL_STORING_MODE
     if (!call RPLDAORouteInfo.getStoreState()) return;
 #endif
 

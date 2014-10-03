@@ -127,7 +127,7 @@ implementation{
 
   /* Start the routing with DIS message probing */
   task void init() {
-#ifdef RPL_STORING_MODE
+#if RPL_STORING_MODE
     MOP = RPL_MOP_Storing_No_Multicast;
 #else
     MOP = RPL_MOP_No_Storing;
