@@ -39,11 +39,13 @@ generic configuration Ieee154PacketLayerC()
 		interface Ieee154PacketLayer;
 		interface Ieee154Packet;
 		interface RadioPacket;
+		interface BareReceive as Receive;
 	}
 
 	uses
 	{
 		interface RadioPacket as SubPacket;
+		interface BareReceive as SubReceive;
 	}
 }
 
@@ -56,4 +58,6 @@ implementation
 	Ieee154Packet = Ieee154PacketLayerP;
 	RadioPacket = Ieee154PacketLayerP;
 	SubPacket = Ieee154PacketLayerP;
+	Receive = Ieee154PacketLayerP;
+	SubReceive = Ieee154PacketLayerP;
 }

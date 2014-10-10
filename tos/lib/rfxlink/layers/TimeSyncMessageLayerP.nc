@@ -235,9 +235,12 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len)
 	{
-		am_id_t id = call AMPacket.type(msg);
+		if( len >= sizeof(timesync_footer_t) ){
+			am_id_t id = call AMPacket.type(msg);
 
-		return signal Receive.receive[id](msg, payload, len - sizeof(timesync_footer_t));
+			return signal Receive.receive[id](msg, payload, len - sizeof(timesync_footer_t));
+		} else
+			return msg;
 	}
 
 	default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) { return msg; }

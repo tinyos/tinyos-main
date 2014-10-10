@@ -175,13 +175,14 @@ implementation
 	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
-	TinyosNetworkLayerC.SubReceive -> PacketLinkLayerC;
+	TinyosNetworkLayerC.SubReceive -> Ieee154PacketLayerC;
 	TinyosNetworkLayerC.SubPacket -> Ieee154PacketLayerC;
 
 // -------- IEEE 802.15.4 Packet
 
 	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
+	Ieee154PacketLayerC.SubReceive -> PacketLinkLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 

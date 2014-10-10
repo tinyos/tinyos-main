@@ -41,12 +41,14 @@ generic module Ieee154PacketLayerP()
 		interface Ieee154PacketLayer;
 		interface Ieee154Packet;
 		interface RadioPacket;
+		interface BareReceive as Receive;
 	}
 
 	uses
 	{
 		interface ActiveMessageAddress;
 		interface RadioPacket as SubPacket;
+		interface BareReceive as SubReceive;
 	}
 }
 
@@ -309,4 +311,15 @@ implementation
 		call Ieee154PacketLayer.createDataFrame(msg);
 		call SubPacket.clear(msg);
 	}
+
+/*------------------- Receive -------------------*/
+
+	event message_t* SubReceive.receive(message_t* msg)
+	{
+		if ( call SubPacket.payloadLength(msg) >= sizeof(ieee154_simple_header_t) )
+			return signal Receive.receive(msg);
+		else
+			return msg;
+	}
+	
 }

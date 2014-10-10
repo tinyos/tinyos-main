@@ -222,7 +222,10 @@ implementation
 	event message_t* SubReceive.receive(message_t* msg)
 	{
 		if( getHeader(msg)->network == TINYOS_6LOWPAN_NETWORK_ID )
-			return signal TinyosReceive.receive(msg);
+			if ( call SubPacket.payloadLength(msg) >= sizeof(activemessage_header_t) ) 
+				return signal TinyosReceive.receive(msg);
+			else
+				return msg;
 		else
 			return signal Ieee154Receive.receive(msg);
 	}

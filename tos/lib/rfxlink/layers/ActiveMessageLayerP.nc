@@ -127,14 +127,16 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg)
 	{
-		am_id_t id = call AMPacket.type(msg);
-		void* payload = getPayload(msg);
-		uint8_t len = call Packet.payloadLength(msg);
+		if( call SubPacket.payloadLength(msg) >= sizeof(activemessage_header_t) )
+		{
+			am_id_t id = call AMPacket.type(msg);
+			void* payload = getPayload(msg);
+			uint8_t len = call Packet.payloadLength(msg);
 
-		msg = call AMPacket.isForMe(msg) 
-			? signal Receive.receive[id](msg, payload, len)
-			: signal Snoop.receive[id](msg, payload, len);
-
+			msg = call AMPacket.isForMe(msg) 
+				? signal Receive.receive[id](msg, payload, len)
+				: signal Snoop.receive[id](msg, payload, len);
+		}
 		return msg;
 	}
 
