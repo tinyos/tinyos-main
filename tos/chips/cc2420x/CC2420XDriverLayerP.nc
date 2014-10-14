@@ -836,7 +836,7 @@ implementation
 #endif		
 		atomic {
 			// turn off the radio first
-			strobe(CC2420_SRFOFF);
+			strobe(CC2420X_SRFOFF);
 #ifdef RADIO_DEBUG	
 			sfd1 = call SFD.get();
 #endif		
@@ -853,7 +853,7 @@ implementation
 			fifop = call FIFOP.get();
 #endif		
 			// turn the radio back on
-			status = strobe(CC2420_SRXON);
+			status = strobe(CC2420X_SRXON);
 		}
 		RADIO_ASSERT(sfd1 == 0);			
 		RADIO_ASSERT(sfd2 == 0);			
