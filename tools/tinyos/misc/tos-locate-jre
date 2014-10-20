@@ -149,7 +149,8 @@ if [ "$jni" = "yes" ]; then
 	    jnilocate "$jhome/jre/lib/amd64" || \
 	    jnilocate "$jhome/lib/$arch" || \
 	    jnilocate "$jhome/lib/i386" || \
-	    jnilocate "$jhome/lib/amd64"
+	    jnilocate "$jhome/lib/amd64" || \
+	    jnilocate "$jhome/lib/arm"
     fi
 elif [ "$javac" = "yes" ]; then
  if [ `uname` = "Darwin" ];  then
