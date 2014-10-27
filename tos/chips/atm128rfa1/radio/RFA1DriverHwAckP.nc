@@ -216,6 +216,10 @@ implementation
     PHY_CC_CCA = RFA1_CCA_MODE_VALUE | channel;
 
     XAH_CTRL_0 = 0; //disable CSMA & Frame retries, disable slotted mode
+    /* Based on the datasheet, CSMA_BE=0 sets the backoff time to zero always.
+     * However, on testing (based on timestamping), it seemed 32us slower,
+     * and since we set the retries to 0, it shouldn't matter anyway.
+     */
     CSMA_BE = (3<<MAX_BE0) | (0<<MIN_BE0); //set csma to the maximum possible speed
     
     #ifdef RFA1_HWACK_FASTACK
@@ -427,8 +431,8 @@ implementation
   /*----------------- TRANSMIT -----------------*/
 
   enum {
-    // 16 us delay (1 tick), 4 bytes preamble (2 ticks each), 1 byte SFD (2 ticks)
-    TX_SFD_DELAY = 11,
+    // 16 us delay (1 tick), 4 bytes preamble (2 ticks each), 1 byte SFD (2 ticks), 11 tick csma/ca (measured)
+    TX_SFD_DELAY = 22,
   };
 
   tasklet_norace message_t* txMsg;
