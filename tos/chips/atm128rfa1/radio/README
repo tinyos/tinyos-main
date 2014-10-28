@@ -1,0 +1,103 @@
+
+The RFA1 radio driver has the following configuration options. Some of
+these are set in the platforms/xxx/RadioConfig.h header file,
+see the UCMini platform for example, others can be set in your Makefile.
+
+RFA1_CCA_MODE_VALUE:
+
+This is the default value of the CCA_MODE field in the PHY_CC_CCA register
+which is used to configure the default mode of the clear channel assesment
+
+RFA1_CCA_THRES_VALUE:
+
+This is the value of the CCA_THRES register that controls the energy levels
+used for clear channel assesment.
+
+RFA1_DEF_RFPOWER:
+
+This is the default value of the TX_PWR field of the PHY_TX_PWR register.
+This can be cahanged via the PacketTransmitPower interface provided by the
+RFA1ActiveMessageC.
+
+RFA1_DEF_CHANNEL:
+
+This is the default value of the CHANNEL field of the PHY_CC_CCA register.
+This can be cahanged via the RadioChannel interface provided by the
+RFA1ActiveMessageC.
+
+RFA1_RSSI_ENERGY:
+
+If you define this, then the content of the PHY_ED_LEVEL is queried
+instead of the RSSI value for eahc incoming message. This value can be
+obtained with the PacketRSSI interface.
+
+RFA1_ENABLE_PA:
+
+This enables the DIG0/DIG3 pins needed for controlling an external power
+amplifier. If this is enabled, those pins mustn't be used as gpio, the
+driver won't check this.
+
+RFA1_PA_BUF_LT and RFA1_PA_LT:
+These are controlling the lead time of the external power amplifier, and they
+are loaded into the PHY_TX_PWR register. Check the datasheet for more information.
+
+RFA1_ENABLE_EXT_ANT_SW:
+
+This enables the DIG1/DIG2 pins needed for controlling an external antenna
+switch (e.g. for antenna diversity). If this is enabled, those pins mustn't be
+used as gpio, the driver won't check this. If you enable this, you must set
+eighter RFA1_ANT_DIV_EN, RFA1_ANT_SEL0 or RFA1_ANT_SEL1.
+
+RFA1_ANT_DIV_EN:
+Enables antenna diversity. RFA1_ENABLE_EXT_ANT_SW must be set before of this,
+otherwise it has no effect.
+
+RFA1_ANT_SEL0 and RFA1_ANT_SEL1
+Selects antenna 0 and 1 respectively. RFA1_ENABLE_EXT_ANT_SW must be set before
+of this, otherwise it has no effect.
+
+RFA1_DATA_RATE
+
+Sets the default data rate of the radio. Can be set to 250 (defualt), 500,
+1000, 2000. All values are in kbit/s. However, the SHR and PHR are always
+transmitted with 250kbit/s
+
+RFA1_HARDWARE_ACK
+
+If you define this, then the radio stack will use hardware acknowledgements
+and address recognition. In particular, you will not be able to snoop on
+onther messages (without defining RFA1_HWACK_NO_ADDRESS_RECOGNITION). The
+load on the CPU is reduced, you should be able to send more messages under
+heavy load.
+
+RFA1_HWACK_64BIT
+
+Enables 64 bit addressing. Basicly, just loads the 64 bit address during init
+from LocalIeeeEui64C, it doesn't change the address length of the stack. It is
+disabled by default, because some platforms might not provide LocalIeeeEui64.
+
+RFA1_HWACK_FASTACK
+
+By default, the IC waits 12 symbol time (192us) before it sends the ack for a
+received message. Defining this shortens the time to 2 symbol time (32us). Testing
+showed that it enables higher throughput even with messages without ack request.
+
+RFA1_HWACK_NO_ADDRESS_RECOGNITION
+
+Disables the address recognition of the chip, without this, you will not be able
+to snoop on onther messages with RFA1_HARDWARE_ACK. It adds some cpu load, since
+every message will be downloaded to the stack. (The radio stack's address
+recognition will filter the messages in the receive interfaces)
+
+RFA1_HWACK_NO_ACKNOWLEDGEMENTS
+
+Disables the hardware generated acknowledgements. Since RFA1_HARDWARE_ACK disables
+the Software Acknowledgement layer of the stack, there will be no acknowledgements
+sent at all. Useful for packet sniffers.
+
+RFA1_BACKOFF_MIN
+RFA1_BACKOFF_INIT
+RFA1_BACKOFF_CONG
+
+The minimum backoff time, the initial backoff time, and the cognestion backoff
+time in microseconds for the random CSMA/CA algorithm. See the RFA1RadioP.nc.
