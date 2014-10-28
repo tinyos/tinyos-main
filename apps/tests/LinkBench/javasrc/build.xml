@@ -16,7 +16,6 @@
   <property name="java-package" value="benchmark.common"/>
 
   <property environment="env"/>
-  <property name="jar-tinyos" location="${env.TINYOS_ROOT_DIR}/support/sdk/java/tinyos.jar"/>
 
   <path id="classpath">
     <pathelement location="${build}"/>
@@ -52,8 +51,7 @@
   <target name="-init-mig">
 		<echo message="Generating TinyOS message classes (Mig)" />
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/StatT.java" />
 			<arg value="-java-classname=${java-package}.StatT" />
@@ -62,8 +60,7 @@
 			<arg value="stat_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/ProfileT.java" />
 			<arg value="-java-classname=${java-package}.ProfileT" />
@@ -72,8 +69,7 @@
 			<arg value="profile_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/SetupT.java" />
 			<arg value="-java-classname=${java-package}.SetupT" />
@@ -82,8 +78,7 @@
 			<arg value="setup_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/CtrlMsgT.java" />
 			<arg value="-java-classname=${java-package}.CtrlMsgT" />
@@ -92,8 +87,7 @@
 			<arg value="ctrlmsg_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/SyncMsgT.java" />
 			<arg value="-java-classname=${java-package}.SyncMsgT" />
@@ -102,8 +96,7 @@
 			<arg value="syncmsg_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/SetupMsgT.java" />
 			<arg value="-java-classname=${java-package}.SetupMsgT" />
@@ -112,8 +105,7 @@
 			<arg value="setupmsg_t" />
 		</exec>
 		
-		<exec executable="mig" failonerror="true">
-			<arg value="-target=iris" />
+		<exec executable="nescc-mig" failonerror="true">
 			<arg value="-o" />
 			<arg path="${src-common}/DataMsgT.java" />
 			<arg value="-java-classname=${java-package}.DataMsgT" />
@@ -122,8 +114,8 @@
 			<arg value="datamsg_t" />
 		</exec>
 
-		<exec executable="ncg" failonerror="true">
-			<arg line="-target=iris -o ${src-common}/BenchmarkStatic.java -java-classname=${java-package}.BenchmarkStatic java ${basedir}/../Messages.h MAX_TIMER_COUNT SETUP_BASE CTRL_SETUP_SYN SYNC_SETUP_ACK CTRL_START CTRL_RESET CTRL_STAT_REQ DATA_STAT_OK CTRL_PROFILE_REQ DATA_PROFILE_OK GLOBAL_USE_ACK GLOBAL_USE_BCAST GLOBAL_USE_MAC_LPL GLOBAL_USE_MAC_PLINK LPL_WAKEUP_OFFSET PLINK_RETRIES_OFFSET PLINK_DELAY_OFFSET MAC_SETUP_LENGTH" />
+		<exec executable="nescc-ncg" failonerror="true">
+			<arg line="-o ${src-common}/BenchmarkStatic.java -java-classname=${java-package}.BenchmarkStatic java ${basedir}/../Messages.h MAX_TIMER_COUNT SETUP_BASE CTRL_SETUP_SYN SYNC_SETUP_ACK CTRL_START CTRL_RESET CTRL_STAT_REQ DATA_STAT_OK CTRL_PROFILE_REQ DATA_PROFILE_OK GLOBAL_USE_ACK GLOBAL_USE_BCAST GLOBAL_USE_MAC_LPL GLOBAL_USE_MAC_PLINK LPL_WAKEUP_OFFSET PLINK_RETRIES_OFFSET PLINK_DELAY_OFFSET MAC_SETUP_LENGTH" />
 		</exec>
 		
 	</target>

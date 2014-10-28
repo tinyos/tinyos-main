@@ -1,5 +1,5 @@
 # microcontroller identification
-ATM128_PLATFORMS = iris mica mica2 mica2dot micaz btnode3 ucmini ucdual ucmote900
+ATM128_PLATFORMS = iris mica mica2 mica2dot micaz btnode3 ucmini ucprotonb ucbase
 MSP430_PLATFORMS = epic eyesIFX eyesIFXv1 eyesIFXv2 shimmer shimmer2 shimmer2r span telosa telosb tinynode z1
 PXA27X_PLATFORMS = intelmote2
 M16C62P_PLATFORMS= mulle
@@ -22,7 +22,7 @@ CONTROLLER_$(MCU) = $(MCU)
 CFLAGS += -DCONTROLLER_$(MCU)
 
 # radio chip identification
-RFA1_PLATFORMS   = ucmini ucdual ucmote900
+RFA1_PLATFORMS   = ucmini ucprotonb ucbase
 RF230_PLATFORMS  = iris mulle
 CC1000_PLATFORMS = mica mica2 mica2dot btnode3
 CC2420_PLATFORMS = micaz telosa telosb shimmer shimmer2 shimmer2r epic span intelmote2 z1 sam3u_ek
