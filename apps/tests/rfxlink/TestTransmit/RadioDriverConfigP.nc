@@ -47,10 +47,8 @@ module RadioDriverConfigP
 		interface RF212DriverConfig as RadioDriverConfig;
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
 		interface CC2420XDriverConfig as RadioDriverConfig;
-#elif defined(PLATFORM_UCMINI)
+#elif defined(PLATFORM_UCMINI) || defined(PLATFORM_UCPROTONB) || defined(PLATFORM_UCBASE)
 		interface RFA1DriverConfig as RadioDriverConfig;
-#elif defined(PLATFORM_UCDUAL)
-		interface Si443xDriverConfig as RadioDriverConfig;
 #endif
 	}
 }
@@ -72,7 +70,7 @@ implementation
 		return 0;
 	}
 
-#if ! defined(PLATFORM_UCMINI)
+#if !defined(PLATFORM_UCMINI) && !defined(PLATFORM_UCPROTONB) && !defined(PLATFORM_UCBASE)
 	async command uint8_t RadioDriverConfig.headerPreloadLength()
 	{
 		return 7;

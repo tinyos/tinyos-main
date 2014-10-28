@@ -67,10 +67,17 @@ implementation
 	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
 
+// -------- Tasklet
+
+	components new TaskletC();
+
 // -------- RadioAlarm
 
+#if !defined(PLATFORM_UCMINI) && !defined(PLATFORM_UCPROTONB) && !defined(PLATFORM_UCBASE)
 	components new RadioAlarmC();
 	RadioAlarmC.Alarm -> RadioDriverLayerC;
+	RadioAlarmC.Tasklet -> TaskletC;
+#endif
 
 // -------- RadioDriver
 
@@ -83,7 +90,7 @@ implementation
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
 	components CC2420XDriverLayerC as RadioDriverLayerC;
 	components CC2420XRadioP as RadioP;
-#elif defined(PLATFORM_UCMINI)
+#elif defined(PLATFORM_UCMINI) || defined(PLATFORM_UCPROTONB) || defined(PLATFORM_UCBASE)
 	components RFA1DriverLayerC as RadioDriverLayerC;
 	components RFA1RadioP as RadioP;
 #endif
@@ -95,5 +102,8 @@ implementation
 	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.Tasklet -> TaskletC;
+#if !defined(PLATFORM_UCMINI) && !defined(PLATFORM_UCPROTONB) && !defined(PLATFORM_UCBASE)
 	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+#endif
 }
