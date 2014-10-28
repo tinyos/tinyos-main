@@ -162,18 +162,11 @@ implementation
   tasklet_norace message_t* rxMsg;
   message_t rxMsgBuffer;
 
-  tasklet_norace uint8_t rssiClear;
-  tasklet_norace uint8_t rssiBusy;
-
   /*----------------- INIT -----------------*/
 
   command error_t PlatformInit.init()
   {
     rxMsg = &rxMsgBuffer;
-
-    // these are just good approximates
-    rssiClear = 0;
-    rssiBusy = 90;
 
     return SUCCESS;
   }
@@ -408,17 +401,13 @@ implementation
 
   task void changeAddress()
   {
+    uint16_t temp = call ActiveMessageAddress.amAddress();
     call Tasklet.suspend();
-    if(state != STATE_SLEEP){
-      uint16_t temp = call ActiveMessageAddress.amAddress();
-      //these are cached registers they must be written twice to update the cache (except in TRX_OFF, but that's very unlikely)
-      SHORT_ADDR_0 = temp;
-      SHORT_ADDR_0 = temp;
-      SHORT_ADDR_1 = temp<<8;
-      SHORT_ADDR_1 = temp<<8;
-    }
-    else
-      post changeAddress();
+    //these are cached registers they must be written twice to update the cache (except in TRX_OFF, but that's very unlikely)
+    SHORT_ADDR_0 = temp;
+    SHORT_ADDR_0 = temp;
+    SHORT_ADDR_1 = temp<<8;
+    SHORT_ADDR_1 = temp<<8;
     
     call Tasklet.resume();
   }
@@ -455,10 +444,6 @@ implementation
       txPower = length;
       PHY_TX_PWR=RFA1_PA_BUF_LT | RFA1_PA_LT | txPower<<TX_PWR0;
     }
-
-    if( call Config.requiresRssiCca(msg)
-          && (PHY_RSSI & RFA1_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
-      return EBUSY;
 
     TRX_STATE = CMD_TX_ARET_ON;
 
@@ -689,16 +674,13 @@ implementation
       {
         RADIO_ASSERT( state == STATE_RX_ON );
 
-        // the most likely place for busy channel and good SFD, with no other interrupts
         if( irq == IRQ_RX_START )
         {
-          temp = PHY_RSSI & RFA1_RSSI_MASK;
-          rssiBusy += temp - (rssiBusy >> 2);
 
           call PacketTimeStamp.set(rxMsg, time);
 
 #ifndef RFA1_RSSI_ENERGY
-          call PacketRSSI.set(rxMsg, temp);
+          call PacketRSSI.set(rxMsg, PHY_RSSI & RFA1_RSSI_MASK);
 #endif
         }
         else
@@ -717,9 +699,6 @@ implementation
     if( (irq & IRQ_RX_END) != 0 ) 
     {
       RADIO_ASSERT( state == STATE_RX_ON );
-
-      // the most likely place for clear channel (hope to avoid acks)
-      rssiClear += (PHY_RSSI & RFA1_RSSI_MASK) - (rssiClear >> 2);
 
       cmd = CMD_DOWNLOAD;
     }
