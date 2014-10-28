@@ -76,7 +76,7 @@ configuration RFA1DriverHwAckC
 implementation
 {
 	components RFA1DriverHwAckP as RFA1DriverLayerP, BusyWaitMicroC,
-		LocalTime62khzC, new Alarm62khz32C(), HplAtmRfa1TimerMacC, ActiveMessageAddressC, LocalIeeeEui64C;
+		LocalTime62khzC, new Alarm62khz32C(), HplAtmRfa1TimerMacC, ActiveMessageAddressC;
 
 	RadioState = RFA1DriverLayerP;
 	RadioSend = RFA1DriverLayerP;
@@ -126,7 +126,11 @@ implementation
 	
 	AckReceivedFlag = RFA1DriverLayerP.AckReceivedFlag;
 	RFA1DriverLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
-	RFA1DriverLayerP.LocalIeeeEui64 -> LocalIeeeEui64C;
 	PacketAcknowledgements = RFA1DriverLayerP;
 	Ieee154PacketLayer = RFA1DriverLayerP;
+	
+	#ifdef RFA1_HWACK_64BIT
+	components LocalIeeeEui64C;
+	RFA1DriverLayerP.LocalIeeeEui64 -> LocalIeeeEui64C;
+	#endif
 }

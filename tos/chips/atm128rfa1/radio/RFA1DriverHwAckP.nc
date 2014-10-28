@@ -85,7 +85,9 @@ module RFA1DriverHwAckP
     interface PacketFlag as AckReceivedFlag;
     interface Ieee154PacketLayer;
     interface ActiveMessageAddress;
+    #ifdef RFA1_HWACK_64BIT
     interface LocalIeeeEui64;
+    #endif
 
 #ifdef RADIO_DEBUG
     interface DiagMsg;
@@ -175,7 +177,9 @@ implementation
   command error_t SoftwareInit.init()
   {
     uint16_t temp;
+    #ifdef RFA1_HWACK_64BIT
     ieee_eui64_t longAddr;
+    #endif
     CCA_THRES=RFA1_CCA_THRES_VALUE;
 
 #ifdef RFA1_ENABLE_PA
@@ -228,9 +232,10 @@ implementation
     #endif
     //TODO AACK_FVN_MODE selects the frame version to be acked. This is currently v0&v1, tinyos uses v0. Probably some defined value would be better
     temp = call ActiveMessageAddress.amGroup();
-    longAddr = call LocalIeeeEui64.getId();
     PAN_ID_0 = temp;
     PAN_ID_1 = temp >> 8;
+    #ifdef RFA1_HWACK_64BIT
+    longAddr = call LocalIeeeEui64.getId();
     IEEE_ADDR_0 = longAddr.data[0];
     IEEE_ADDR_1 = longAddr.data[1];
     IEEE_ADDR_2 = longAddr.data[2];
@@ -239,6 +244,7 @@ implementation
     IEEE_ADDR_5 = longAddr.data[5];
     IEEE_ADDR_6 = longAddr.data[6];
     IEEE_ADDR_7 = longAddr.data[7];
+    #endif
 
     SET_BIT(TRXPR,SLPTR);
 
