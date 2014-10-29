@@ -236,14 +236,14 @@ implementation
     PAN_ID_1 = temp >> 8;
     #ifdef RFA1_HWACK_64BIT
     longAddr = call LocalIeeeEui64.getId();
-    IEEE_ADDR_0 = longAddr.data[0];
-    IEEE_ADDR_1 = longAddr.data[1];
-    IEEE_ADDR_2 = longAddr.data[2];
-    IEEE_ADDR_3 = longAddr.data[3];
-    IEEE_ADDR_4 = longAddr.data[4];
-    IEEE_ADDR_5 = longAddr.data[5];
-    IEEE_ADDR_6 = longAddr.data[6];
-    IEEE_ADDR_7 = longAddr.data[7];
+    IEEE_ADDR_0 = longAddr.data[7];
+    IEEE_ADDR_1 = longAddr.data[6];
+    IEEE_ADDR_2 = longAddr.data[5];
+    IEEE_ADDR_3 = longAddr.data[4];
+    IEEE_ADDR_4 = longAddr.data[3];
+    IEEE_ADDR_5 = longAddr.data[2];
+    IEEE_ADDR_6 = longAddr.data[1];
+    IEEE_ADDR_7 = longAddr.data[0];
     #endif
 
     SET_BIT(TRXPR,SLPTR);
