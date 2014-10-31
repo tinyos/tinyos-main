@@ -15,12 +15,10 @@
   
   <property name="java-package" value="benchmark.common"/>
 
-  <property environment="env"/>
-
   <path id="classpath">
     <pathelement location="${build}"/>
     <fileset dir="${lib}" includes="**/*.jar"/>
-    <fileset file="${jar-tinyos}"/>
+<!--     tinyos jar should be here -->
   </path>
 
   <target name="-check-init-build-done">
@@ -160,7 +158,8 @@
   <target name="jar-common" depends="compile-common" description="make the Common jar">
     <jar destfile="${lib}/benchmark-common.jar" basedir="${build}" includes="**/common/**">
       <manifest>
-        <attribute name="Class-Path" value="${jar-tinyos} snakeyaml-1.7.jar"/>
+        <!--     tinyos jar should be in classpath -->
+        <attribute name="Class-Path" value="snakeyaml-1.7.jar"/>
       </manifest>
     </jar>
   </target>
