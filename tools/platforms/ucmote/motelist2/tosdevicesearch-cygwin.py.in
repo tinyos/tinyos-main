@@ -3,12 +3,15 @@ import os.path
 import struct
 
 def readToVar(path):
-  file = open(path, "r")
-  variable=file.read()
-  file.close()
-  if(variable[-1]=="\n" or variable[-1]=="\x00"):
-    variable=variable[:-1]
-  return variable
+  if is.path.isfile(path):
+    file = open(path, "r")
+    variable=file.read()
+    file.close()
+    if(variable[-1]=="\n" or variable[-1]=="\x00"):
+      variable=variable[:-1]
+    return variable
+  else:
+    return ""
 
 #We search for devices like:
 #TODO

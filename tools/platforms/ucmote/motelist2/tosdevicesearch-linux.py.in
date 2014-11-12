@@ -24,12 +24,15 @@ def getSerialDevs():
   return devs
   
 def readToVar(path):
-  file = open(path, "r")
-  variable=file.read()
-  file.close()
-  if(variable[-1]=="\n"):
-    variable=variable[:-1]
-  return variable
+  if is.path.isfile(path):
+    file = open(path, "r")
+    variable=file.read()
+    file.close()
+    if(variable[-1]=="\n"):
+      variable=variable[:-1]
+    return variable
+  else:
+    return ""
 
 def getDevProperties(portpath):
   properties={'vid':"0", 'pid':"0", 'serialnum':"0", 'location':"0", 'port':"0", 'manufacturer':"0", 'description':"0", 'active':False}
