@@ -350,15 +350,44 @@ generic module RPLDAORoutingEngineP() {
       target_prefix.s6_addr,
       dao_target->prefix_length);
 
-    if ((entry != NULL) &&
-        (entry->prefixlen == dao_target->prefix_length)) {
-      /* exact match in the forwarding table */
+    if (entry != NULL && dao_transit->path_lifetime == 0) {
+      // This is a No-Path DAO message indicating loss of reachability to
+      // this target. Remove the route we had to this node.
       if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr,
                      (uint8_t*)iph->ip6_src.s6_addr, 16) == TRUE) {
-        // same old destination with same DTSN
+          printf("RPLDAORoutingEngineP: Dropping route because of No-Path DAO.\n");
+          call ForwardingTable.delRoute(entry->key);
+      }
+
+    } else {
+
+      if ((entry != NULL) &&
+          (entry->prefixlen == dao_target->prefix_length)) {
+        /* exact match in the forwarding table */
+        if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr,
+                       (uint8_t*)iph->ip6_src.s6_addr, 16) == TRUE) {
+          // same old destination with same DTSN
+        } else {
+          // new next hop for an existing downswards node
+          call RPLRouteInfo.setDTSN((call RPLRouteInfo.getDTSN()) + 1);
+          if (dao_target->prefix_length > 0) {
+            new_key = call ForwardingTable.addRoute(
+              target_prefix.s6_addr,
+              dao_target->prefix_length,
+              &iph->ip6_src,
+              RPL_IFACE);
+          }
+        }
       } else {
-        // new next hop for an existing downswards node
-        call RPLRouteInfo.setDTSN((call RPLRouteInfo.getDTSN()) + 1);
+        /* new prefix */
+
+        call IPAddress.getGlobalAddr(&my_addr);
+        if (downwards_table_count == ROUTE_TABLE_SZ ||
+            memcmp_rpl((void*)&my_addr, target_prefix.s6_addr, 16)) {
+          // printf("RPL: Downward table full -- not adding route\n");
+          // or this is my own address for some wierd reason
+          return;
+        }
         if (dao_target->prefix_length > 0) {
           new_key = call ForwardingTable.addRoute(
             target_prefix.s6_addr,
@@ -366,40 +395,24 @@ generic module RPLDAORoutingEngineP() {
             &iph->ip6_src,
             RPL_IFACE);
         }
-      }
-    } else {
-      /* new prefix */
 
-      call IPAddress.getGlobalAddr(&my_addr);
-      if (downwards_table_count == ROUTE_TABLE_SZ ||
-          memcmp_rpl((void*)&my_addr, target_prefix.s6_addr, 16)) {
-        // printf("RPL: Downward table full -- not adding route\n");
-        // or this is my own address for some wierd reason
-        return;
-      }
-      if (dao_target->prefix_length > 0) {
-        new_key = call ForwardingTable.addRoute(
-          target_prefix.s6_addr,
-          dao_target->prefix_length,
-          &iph->ip6_src,
-          RPL_IFACE);
+        if (new_key != ROUTE_INVAL_KEY) {
+          downwards_table[downwards_table_count].key = new_key;
+          // for next element
+          downwards_table_count++;
+        }
+
       }
 
       if (new_key != ROUTE_INVAL_KEY) {
-        downwards_table[downwards_table_count].key = new_key;
-        // for next element
-        downwards_table_count++;
-      }
-
-    }
-
-    if (new_key != ROUTE_INVAL_KEY) {
-      uint8_t i;
-      for (i=0;i<downwards_table_count;i++){
-        if (downwards_table[i].key == new_key){
-          downwards_table[i].lifetime = dao_transit->path_lifetime;
+        uint8_t i;
+        for (i=0;i<downwards_table_count;i++){
+          if (downwards_table[i].key == new_key){
+            downwards_table[i].lifetime = dao_transit->path_lifetime;
+          }
         }
       }
+
     }
 
     /***********************************************************************/
