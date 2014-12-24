@@ -321,7 +321,8 @@ enum {
   NUMBER_OF_PARENTS = 10,
   DIS_INTERVAL = 3*1024U,
   //DEFAULT_LIFETIME = 1024L * 60 * 20, // 20 mins
-  DEFAULT_LIFETIME = 0xFF, // all ones for now
+  //DEFAULT_LIFETIME = 0xFF, // all ones for now
+  DEFAULT_LIFETIME = 0xCC, // some other value
 };
 
 /*RFC defined parameters*/

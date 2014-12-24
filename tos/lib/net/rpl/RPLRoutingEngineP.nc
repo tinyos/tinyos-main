@@ -200,8 +200,8 @@ implementation{
     dodag_config.reserved_flags |= (0 << DIO_DODAG_A_SHIFT); // no auth
     dodag_config.reserved_flags |= (0 << DIO_DODAG_PCS_SHIFT);
     dodag_config.ocp = call RPLOF.getOCP();
-    dodag_config.default_lifetime = 0xFF;//6;  // six
-    dodag_config.lifetime_unit = 0xFFFF;//3600; // hours
+    dodag_config.default_lifetime = 6;  // six
+    dodag_config.lifetime_unit = 3600; // hours
     dodag_config.DIOIntDoubl = DIOIntDouble;
     dodag_config.DIOIntMin = DIOIntMin;
     dodag_config.DIORedun = DIORedun;
