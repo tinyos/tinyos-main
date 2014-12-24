@@ -575,11 +575,11 @@ module IPNeighborDiscoveryP {
     fr_addr.ieee_dstpan = call Ieee154Address.getPanId();
     call IPAddress.getLLAddr(&local_addr);
 
-    printf("IPNeighborDiscovery - send - next: ");
-    printf_in6addr(next);
-    printf(" - ll source: ");
-    printf_in6addr(&local_addr);
-    printf("\n");
+    // printf("IPNeighborDiscovery - send - next: ");
+    // printf_in6addr(next);
+    // printf(" - ll source: ");
+    // printf_in6addr(&local_addr);
+    // printf("\n");
     // iov_print(msg->ip6_data);
 
     if (call NeighborDiscovery.resolveAddress(&local_addr, &fr_addr.ieee_src) !=
@@ -593,9 +593,9 @@ module IPNeighborDiscoveryP {
       printf("IPND - next-hop address resolution failed\n");
       return FAIL;
     }
-    printf("l2 source: "); printf_ieee154addr(&fr_addr.ieee_src);
-    printf("\n");
-    printf("l2 dest: "); printf_ieee154addr(&fr_addr.ieee_dst);
+    printf("IPNeighborDiscovery: Converting to 15.4 addresses\n");
+    printf(  "  source: "); printf_ieee154addr(&fr_addr.ieee_src);
+    printf("\n  dest:   "); printf_ieee154addr(&fr_addr.ieee_dst);
     printf("\n");
 
     return call IPLower.send(&fr_addr, msg, ptr);

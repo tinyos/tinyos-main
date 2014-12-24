@@ -208,6 +208,13 @@ void SENDINFO_DECR(struct send_info *si) {
     // printf("deliver [%i]: ", recon->r_bytes_rcvd);
     // printf_buf(recon->r_buf, recon->r_bytes_rcvd);
 
+    printf("IPDispatchP: Received IPv6 Packet\n");
+    printf(  "  source:    ");
+    printf_in6addr(&iph->ip6_src);
+    printf("\n  dest:      ");
+    printf_in6addr(&iph->ip6_dst);
+    printf("\n  hop limit: %i\n", iph->ip6_hlim);
+
     /* the payload length field is always compressed, have to put it back here */
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
     signal IPLower.recv(iph, (void *)(iph + 1), &recon->r_meta);

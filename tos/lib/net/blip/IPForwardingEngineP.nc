@@ -203,7 +203,7 @@ module IPForwardingEngineP {
 
     if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) &&
         pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
-      printf("Forwarding -- send with local unicast address!\n");
+      // printf("Forwarding -- send with local unicast address!\n");
 
       return FAIL;
     } else if (call IPAddress.isLLAddress(&pkt->ip6_hdr.ip6_dst) &&
@@ -219,9 +219,9 @@ module IPForwardingEngineP {
          addressed don't work on other links...  we should probably do
          ND in this case, or at least keep a cache so we can reply to
          messages on the right interface. */
-      printf("Forwarding -- send to LL address:");
-      printf_in6addr(&pkt->ip6_hdr.ip6_dst);
-      printf("\n");
+      // printf("Forwarding -- send to LL address:");
+      // printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+      // printf("\n");
       pkt->ip6_hdr.ip6_hlim = 1;
       // only do this for unicast packets
       if (pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
@@ -230,7 +230,7 @@ module IPForwardingEngineP {
         return call IPForward.send[ROUTE_IFACE_154](&pkt->ip6_hdr.ip6_dst, pkt, NULL);
       }
     } else if (next_hop_entry) {
-      printf("Forwarding -- got from routing table\n");
+      // printf("Forwarding -- got from routing table\n");
 
       /* control messages do not need routing headers */
       if (!(signal ForwardingEvents.initiate[next_hop_entry->ifindex](pkt,
@@ -312,6 +312,15 @@ module IPForwardingEngineP {
       if (!(signal ForwardingEvents.approve[next_hop_ifindex](&pkt, next_hop)))
         return;
 
+      printf("IPForwardingEngineP: Forwarding IPv6 Packet:\n");
+      printf(  "  source:   ");
+      printf_in6addr(&pkt.ip6_hdr.ip6_src);
+      printf("\n  dest:     ");
+      printf_in6addr(&pkt.ip6_hdr.ip6_dst);
+      printf("\n  next hop: ");
+      printf_in6addr(next_hop);
+      printf("\n");
+
       do_send(next_hop_ifindex, next_hop, &pkt);
     }
   }
@@ -321,7 +330,7 @@ module IPForwardingEngineP {
     struct in6_iid *iid = (struct in6_iid *)status->upper_data;
     memset(next.s6_addr, 0, 16);
     next.s6_addr16[0] = htons(0xfe80);
-    printf("sendDone: iface: %i key: %p\n", ifindex, iid);
+    //printf("sendDone: iface: %i key: %p\n", ifindex, iid);
 
     if (iid != NULL) {
       memcpy(&next.s6_addr[8], iid->data, 8);
