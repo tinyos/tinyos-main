@@ -16,7 +16,9 @@
 
 enum {
   ICMPV6_CODE_RS = 0x00,
-  ICMPV6_CODE_RA = 0x00
+  ICMPV6_CODE_RA = 0x00,
+  ICMPV6_CODE_NS = 0x00,
+  ICMPV6_CODE_NA = 0x00
 };
 
 enum {
@@ -46,12 +48,34 @@ struct nd_router_advertisement_t {
   nx_uint32_t retransmit_time;
 };
 
-enum {
-  ND6_ADV_M_SHIFT = 7,
-  ND6_ADV_O_SHIFT = 6,
+struct nd_neighbor_solicitation_t {
+  struct icmpv6_header_t icmpv6;
+  nx_uint32_t reserved;
+  struct in6_addr target_address;
+};
 
-  ND6_ADV_M_MASK = 0x80,
-  ND6_ADV_O_MASK = 0x40,
+struct nd_neighbor_advertisement_t {
+  struct icmpv6_header_t icmpv6;
+  uint8_t flags;
+  uint8_t reserved1;
+  nx_uint16_t reserved2;
+  struct in6_addr target_address;
+};
+
+enum {
+  ND6_RADV_M_SHIFT = 7,
+  ND6_RADV_O_SHIFT = 6,
+
+  ND6_RADV_M_MASK = 0x80,
+  ND6_RADV_O_MASK = 0x40,
+
+  ND6_NADV_R_SHIFT = 7,
+  ND6_NADV_S_SHIFT = 6,
+  ND6_NADV_O_SHIFT = 5,
+
+  ND6_NADV_R_MASK = 0x80,
+  ND6_NADV_S_MASK = 0x40,
+  ND6_NADV_O_MASK = 0x20,
 };
 
 // source link-layer address option

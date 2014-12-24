@@ -32,6 +32,8 @@ module IPNeighborDiscoveryP {
   uses {
     interface IP as IP_RS;
     interface IP as IP_RA;
+    interface IP as IP_NS;
+    interface IP as IP_NA;
 
     interface Timer<TMilli> as RSTimer;
 
@@ -117,9 +119,9 @@ module IPNeighborDiscoveryP {
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       if (addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
-        /* U bit must not be set if a short address is in use */       
+        /* U bit must not be set if a short address is in use */
           link_addr->ieee_mode = IEEE154_ADDR_SHORT;
-          link_addr->i_saddr = htole16(ntohs(addr->s6_addr16[7]));       
+          link_addr->i_saddr = htole16(ntohs(addr->s6_addr16[7]));
       } else {
         int i;
         link_addr->ieee_mode = IEEE154_ADDR_EXT;
@@ -247,8 +249,8 @@ module IPNeighborDiscoveryP {
     ra.icmpv6.checksum = 0;
     ra.hop_limit = 16;
     ra.flags_reserved = 0;
-    ra.flags_reserved |= RA_FLAG_MANAGED_ADDR_CONF << ND6_ADV_M_SHIFT;
-    ra.flags_reserved |= RA_FLAG_OTHER_CONF << ND6_ADV_O_SHIFT;
+    ra.flags_reserved |= RA_FLAG_MANAGED_ADDR_CONF << ND6_RADV_M_SHIFT;
+    ra.flags_reserved |= RA_FLAG_OTHER_CONF << ND6_RADV_O_SHIFT;
     ra.router_lifetime = RTR_LIFETIME;
     ra.reachable_time = 0; // unspecified at this point...
     ra.retransmit_time = 0; // unspecified at this point...
@@ -321,6 +323,88 @@ module IPNeighborDiscoveryP {
     post send_rs_task();
   }
 
+  event void IP_NS.recv(struct ip6_hdr *hdr,
+                        void *packet,
+                        size_t len,
+                        struct ip6_metadata *meta) {
+
+    struct nd_neighbor_solicitation_t* ns;
+    uint8_t* cur = (uint8_t*) packet;
+    uint8_t type;
+    uint8_t olen;
+
+    ns = (struct nd_neighbor_solicitation_t*) packet;
+
+    if (len < sizeof(struct nd_neighbor_solicitation_t)) {
+      // Drop this packet
+      return;
+
+    }
+
+    // Check to see if the SLLAO option is present
+    cur += sizeof(struct nd_neighbor_solicitation_t);
+    len -= sizeof(struct nd_neighbor_solicitation_t);
+
+    if (len > 1) {
+      // Get the type byte of the first option
+      type = *cur;
+      olen = *(cur+1) << 3;
+
+      if (len >= olen && type == ND6_OPT_SLLAO) {
+        struct nd_option_slla_t* sllao = (struct nd_option_slla_t*) cur;
+
+        // TODO: handle this
+      }
+    }
+
+
+    // Generate a response Neighbor Advertisement
+
+    {
+      struct nd_neighbor_advertisement_t na;
+
+      struct ip6_packet pkt;
+      struct ip_iovec   v[1];
+
+      uint8_t data[120];
+      uint16_t length = 0;
+      cur = data;
+
+      na.icmpv6.type = ICMP_TYPE_NEIGHBOR_ADV;
+      na.icmpv6.code = ICMPV6_CODE_NS;
+      na.icmpv6.checksum = 0;
+      na.flags = 0;
+      na.flags |= (1 << ND6_NADV_R_SHIFT);
+      na.flags |= (1 << ND6_NADV_S_SHIFT);
+      na.flags |= (1 << ND6_NADV_O_SHIFT);
+      na.reserved1 = 0;
+      na.reserved2 = 0;
+      ip_memcpy((uint8_t*) &na.target_address, (uint8_t*) &ns->target_address,
+        sizeof(struct in6_addr));
+      ADD_SECTION(&na, sizeof(struct nd_neighbor_advertisement_t));
+
+      v[0].iov_base = data;
+      v[0].iov_len = length;
+      v[0].iov_next = NULL;
+
+      pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
+      pkt.ip6_hdr.ip6_plen = htons(length);
+
+      pkt.ip6_data = &v[0];
+
+      ip_memcpy((uint8_t*) &pkt.ip6_hdr.ip6_dst, (uint8_t*) &hdr->ip6_src,
+        sizeof(struct in6_addr));
+      call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
+      call IP_NA.send(&pkt);
+    }
+  }
+
+  event void IP_NA.recv(struct ip6_hdr *hdr,
+                        void *packet,
+                        size_t len,
+                        struct ip6_metadata *meta) {
+  }
+
   event void IP_RS.recv(struct ip6_hdr *hdr,
                         void *packet,
                         size_t len,
@@ -359,18 +443,7 @@ module IPNeighborDiscoveryP {
 
     // At this point cur is pointing at the SLLAO option
     sllao = (struct nd_option_slla_t*) cur;
-
-    // Add a route to this neighbor for now
-    // This should be improved with a more robust mechanism
-    if (prefix_exists) {
-      struct in6_addr dest_addr;
-      memcpy(&dest_addr, &prefix, sizeof(struct in6_addr));
-      memcpy(dest_addr.s6_addr+8, hdr->ip6_src.s6_addr+8, 8);
-      call ForwardingTable.addRoute((uint8_t*) &dest_addr,
-                                    128,
-                                    &hdr->ip6_src,
-                                    ROUTE_IFACE_154);
-    }
+    // TODO: handle this
 
     // Send a unicast RA in response to the RS
     send_ra(&sllao->ll_addr);
