@@ -42,8 +42,6 @@ configuration PlatformC
 implementation
 {
 	components PlatformP, McuInitC, MeasureClockC, Stm25pOffC, RF212OffC;
-	components HplStm25pPinsC, HplRF212C;
-	components HplAtm128GeneralIOC as GPIO;
 	components BoardInitC;
   
 	Init = PlatformP;

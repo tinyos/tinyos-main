@@ -34,7 +34,6 @@ module HplRF212P
 	{
 		interface GpioInterrupt as Interrupt;
 		interface LocalTime<TRadio>;
-		interface Leds;
 	}
 }
 
@@ -43,29 +42,21 @@ implementation
 	
 	async event void Interrupt.fired() {
 		uint16_t time = call LocalTime.get();
-		call Leds.led2Toggle();
-		call Leds.led3On();
 		signal IRQ.captured(time);
 	}
 	
 	async command error_t IRQ.captureRisingEdge()
 	{
-		call Leds.led1Off();
-		call Leds.led0On();
 		return call Interrupt.enableRisingEdge();
 	}
 
 	async command error_t IRQ.captureFallingEdge()
 	{
-		call Leds.led0Off();
-		call Leds.led1On();
 		return call Interrupt.enableFallingEdge();
 	}
 
 	async command void IRQ.disable()
 	{
-		call Leds.led0Off();
-		call Leds.led1Off();
 		call Interrupt.disable();
 	}
 	

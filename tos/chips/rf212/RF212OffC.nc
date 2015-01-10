@@ -2,16 +2,16 @@ configuration RF212OffC{
   provides interface Init;
 }
 implementation{
-  components RF212OffP, HplRF212C, BusyWaitMicroC;
+	components RF212OffP, HplRF212PinsC, BusyWaitMicroC;
   
   Init = RF212OffP;
 
-  RF212OffP.SELN -> HplRF212C.SELN;
-  RF212OffP.SpiResource -> HplRF212C.SpiResource;
-  RF212OffP.FastSpiByte -> HplRF212C;
+	RF212OffP.SELN -> HplRF212PinsC.SELN;
+	RF212OffP.SpiResource -> HplRF212PinsC.SpiResource;
+	RF212OffP.FastSpiByte -> HplRF212PinsC;
 
-  RF212OffP.SLP_TR -> HplRF212C.SLP_TR;
-  RF212OffP.RSTN -> HplRF212C.RSTN;
+	RF212OffP.SLP_TR -> HplRF212PinsC.SLP_TR;
+	RF212OffP.RSTN -> HplRF212PinsC.RSTN;
 
   RF212OffP.BusyWait -> BusyWaitMicroC;
 }
