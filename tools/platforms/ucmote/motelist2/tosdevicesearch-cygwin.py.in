@@ -3,7 +3,7 @@ import os.path
 import struct
 
 def readToVar(path):
-  if is.path.isfile(path):
+  if os.path.isfile(path):
     file = open(path, "r")
     variable=file.read()
     file.close()
