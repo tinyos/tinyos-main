@@ -73,6 +73,6 @@ typedef struct rf212packet_metadata_t
 	timestamp_metadata_t timestamp;
 	flags_metadata_t flags;
 	rf212_metadata_t rf212;
-} rf212packet_metadata_t;
+} __attribute__((packed)) rf212packet_metadata_t;
 
 #endif//__RF212RADIO_H__

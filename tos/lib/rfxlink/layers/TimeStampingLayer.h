@@ -38,6 +38,6 @@
 typedef struct timestamp_metadata_t
 {
 	uint32_t timestamp;
-} timestamp_metadata_t;
+} __attribute__((packed)) timestamp_metadata_t;
 
 #endif//__TIMESTAMPINGLAYER_H__

@@ -37,8 +37,8 @@ typedef struct cc2420x_metadata_t
 	{
 		uint8_t power;
 		uint8_t rssi;
-	}; 
-} cc2420x_metadata_t; 
+	}__attribute__((packed)); 
+} __attribute__((packed)) cc2420x_metadata_t; 
 
 enum cc2420X_timing_enums {
 	CC2420X_SYMBOL_TIME = 16, // 16us	

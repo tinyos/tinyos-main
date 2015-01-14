@@ -47,8 +47,8 @@ typedef struct rf212_metadata_t
 	{
 		uint8_t power;
 		uint8_t rssi;
-	};
-} rf212_metadata_t;
+	}__attribute__((packed));
+} __attribute__((packed)) rf212_metadata_t;
 
 enum rf212_registers_enum
 {

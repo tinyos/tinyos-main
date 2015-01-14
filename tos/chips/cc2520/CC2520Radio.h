@@ -95,7 +95,7 @@ typedef struct cc2520packet_metadata_t
   timestamp_metadata_t timestamp;
   flags_metadata_t flags;
   cc2520_metadata_t cc2520;
-} cc2520packet_metadata_t;
+} __attribute__((packed)) cc2520packet_metadata_t;
 
 enum cc2520_security_enums{
   NO_SEC = 0,

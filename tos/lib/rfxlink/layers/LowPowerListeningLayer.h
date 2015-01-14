@@ -38,6 +38,6 @@
 typedef struct lpl_metadata_t
 {
 	uint16_t sleepint;
-} lpl_metadata_t;
+} __attribute__((packed)) lpl_metadata_t;
 
 #endif//__LOWPOWERLISTENINGLAYER_H__

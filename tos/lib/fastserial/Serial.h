@@ -112,6 +112,6 @@ typedef struct serial_metadata {
   uint16_t space_for_crc;
   uint8_t length;
   nx_uint8_t protocol[3];
-} serial_metadata_t;
+} __attribute__((packed)) serial_metadata_t;
     
 #endif
