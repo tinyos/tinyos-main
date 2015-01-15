@@ -130,4 +130,9 @@ implementation
 	DriverLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 	PacketAcknowledgements = DriverLayerP;
 	Ieee154PacketLayer = DriverLayerP;
+	
+	#ifdef RF230_HWACK_64BIT
+	components LocalIeeeEui64C;
+	DriverLayerP.LocalIeeeEui64 -> LocalIeeeEui64C;
+	#endif
 }

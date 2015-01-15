@@ -48,12 +48,14 @@
 typedef nx_struct rf230packet_header_t
 {
 	rf230_header_t rf230;
+#ifndef IEEE154BARE_ENABLED
 	ieee154_simple_header_t ieee154;
 #ifndef TFRAMES_ENABLED
 	network_header_t network;
 #endif
 #ifndef IEEE154FRAMES_ENABLED
 	activemessage_header_t am;
+#endif
 #endif
 } rf230packet_header_t;
 

@@ -40,7 +40,17 @@ configuration RF230RadioC
 	{
 		interface SplitControl;
 
-#ifndef IEEE154FRAMES_ENABLED
+#ifdef IEEE154BARE_ENABLED
+		interface Send;
+		interface Receive;
+		interface Packet;
+		
+		interface Ieee154Address;
+		
+		interface ReadLqi;
+#endif
+
+#if !defined(IEEE154FRAMES_ENABLED) && !defined(IEEE154BARE_ENABLED)
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];
@@ -54,7 +64,7 @@ configuration RF230RadioC
 		interface Packet as PacketForActiveMessage;
 #endif
 
-#ifndef TFRAMES_ENABLED
+#if !defined(TFRAMES_ENABLED)  && !defined(IEEE154BARE_ENABLED)
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
 		interface SendNotifier as Ieee154Notifier;
@@ -116,7 +126,7 @@ implementation
 
 // -------- Active Message
 
-#ifndef IEEE154FRAMES_ENABLED
+#if !defined(IEEE154FRAMES_ENABLED) && !defined(IEEE154BARE_ENABLED)
 	components new ActiveMessageLayerC();
 	ActiveMessageLayerC.Config -> RadioP;
 	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
@@ -136,7 +146,7 @@ implementation
 
 // -------- Automatic RadioSend Resource
 
-#ifndef IEEE154FRAMES_ENABLED
+#if !defined(IEEE154FRAMES_ENABLED) && !defined(IEEE154BARE_ENABLED)
 #ifndef TFRAMES_ENABLED
 	components new AutoResourceAcquireLayerC();
 	AutoResourceAcquireLayerC.Resource -> SendResourceC.Resource[unique(RADIO_SEND_RESOURCE)];
@@ -148,7 +158,7 @@ implementation
 
 // -------- RadioSend Resource
 
-#ifndef TFRAMES_ENABLED
+#if !defined(TFRAMES_ENABLED) && !defined(IEEE154BARE_ENABLED)
 	components new SimpleFcfsArbiterC(RADIO_SEND_RESOURCE) as SendResourceC;
 	SendResource = SendResourceC;
 
@@ -169,17 +179,40 @@ implementation
 
 // -------- Tinyos Network
 
+#ifndef IEEE154BARE_ENABLED
 	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
 	TinyosNetworkLayerC.SubReceive -> Ieee154PacketLayerC;
 	TinyosNetworkLayerC.SubPacket -> Ieee154PacketLayerC;
+#endif
 
 // -------- IEEE 802.15.4 Packet
 
 	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
+#ifndef IEEE154BARE_ENABLED
+	//some layers needs this to understand the ieee154 header,
+	//but we don't want to actually process it in IEEE154BARE mode
 	Ieee154PacketLayerC.SubReceive -> PacketLinkLayerC;
+#endif
+
+// -------- Blip compatibility
+	
+#ifdef IEEE154BARE_ENABLED
+	components new BlipCompatibilityLayerC();
+	BlipCompatibilityLayerC.SubSend -> UniqueLayerC;
+	BlipCompatibilityLayerC.SubReceive -> PacketLinkLayerC;
+	BlipCompatibilityLayerC.SubPacket -> PacketLinkLayerC;
+	BlipCompatibilityLayerC.SubLqi -> RadioDriverLayerC.PacketLinkQuality;
+	BlipCompatibilityLayerC.SubRssi -> RadioDriverLayerC.PacketRSSI;
+	
+	Send = BlipCompatibilityLayerC;
+	Receive = BlipCompatibilityLayerC;
+	Packet = BlipCompatibilityLayerC;
+	Ieee154Address = BlipCompatibilityLayerC;
+	ReadLqi = BlipCompatibilityLayerC;
+#endif
 
 // -------- UniqueLayer Send part (wired twice)
 

@@ -90,6 +90,10 @@ module RF230DriverHwAckP
 		interface Ieee154PacketLayer;
 		interface ActiveMessageAddress;
 
+#ifdef RF230_HWACK_64BIT
+		interface LocalIeeeEui64;
+#endif
+
 #ifdef RADIO_DEBUG
 		interface DiagMsg;
 #endif
@@ -250,6 +254,9 @@ implementation
 	void initRadio()
 	{
 		uint16_t temp;
+		#ifdef RF230_HWACK_64BIT
+		ieee_eui64_t longAddr;
+		#endif
 
 		call BusyWait.wait(510);
 
@@ -277,6 +284,18 @@ implementation
 		temp = call ActiveMessageAddress.amGroup();
 		writeRegister(RF230_PAN_ID_0, temp);
 		writeRegister(RF230_PAN_ID_1, temp >> 8);
+		
+		#ifdef RF230_HWACK_64BIT
+		longAddr = call LocalIeeeEui64.getId();
+		writeRegister(RF230_IEEE_ADDR_0, longAddr.data[7]);
+		writeRegister(RF230_IEEE_ADDR_1, longAddr.data[6]);
+		writeRegister(RF230_IEEE_ADDR_2, longAddr.data[5]);
+		writeRegister(RF230_IEEE_ADDR_3, longAddr.data[4]);
+		writeRegister(RF230_IEEE_ADDR_4, longAddr.data[3]);
+		writeRegister(RF230_IEEE_ADDR_5, longAddr.data[2]);
+		writeRegister(RF230_IEEE_ADDR_6, longAddr.data[1]);
+		writeRegister(RF230_IEEE_ADDR_7, longAddr.data[0]);
+		#endif
 
 		call SLP_TR.set();
 		state = STATE_SLEEP;

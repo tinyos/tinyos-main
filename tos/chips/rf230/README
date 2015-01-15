@@ -67,3 +67,9 @@ RF230_BACKOFF_CONG
 
 The minimum backoff time, the initial backoff time, and the cognestion backoff
 time in microseconds for the random CSMA/CA algorithm. See the RF230RadioP.nc.
+
+RF230_HWACK_64BIT
+
+Enables 64 bit addressing. Basicly, just loads the 64 bit address during init
+from LocalIeeeEui64C, it doesn't change the address length of the stack. It is
+disabled by default, because some platforms might not provide LocalIeeeEui64.
