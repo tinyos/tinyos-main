@@ -62,6 +62,6 @@ typedef struct cc2420xpacket_metadata_t
 	timestamp_metadata_t timestamp;
 	flags_metadata_t flags;
 	cc2420x_metadata_t cc2420x;
-} cc2420xpacket_metadata_t;
+} __attribute__((packed)) cc2420xpacket_metadata_t;
 
 #endif//__CC2420XRADIO_H__

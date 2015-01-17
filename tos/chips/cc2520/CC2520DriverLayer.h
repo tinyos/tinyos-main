@@ -53,8 +53,8 @@ typedef struct cc2520_metadata_t
 		uint8_t power;
 	  uint8_t ack;
 		uint8_t rssi;
-	};
-} cc2520_metadata_t;
+	}__attribute__((packed));
+} __attribute__((packed)) cc2520_metadata_t;
 
 enum cc2520_reg_access_enums {
     CC2520_FREG_MASK      = 0x3F,    // highest address in FREG
