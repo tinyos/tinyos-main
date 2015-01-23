@@ -60,11 +60,16 @@ implementation {
   }
 
   event void Timer.fired() {
-  	printf("Hi I am writing to you from my TinyOS application!!\n");
-  	printf("Here is a uint8: %u\n", dummyVar1);
-  	printf("Here is a uint16: %u\n", dummyVar2);
-  	printf("Here is a uint32: %lu\n", dummyVar3);
-  	printfflush();
+    int i=32;
+    
+    pr_emergency("Emergency value:%d\n",i);
+    pr_alert("Alert value:%d\n",i);
+    pr_critical("Critical value:%d\n",i);
+    pr_error("Error value:%d\n",i);
+    pr_warning("Warning value:%d\n",i);
+    pr_info("Info value:%d\n",i);
+    pr_debug("Debug value:%d\n",i);
+    printfflush();
   }
 }
 
