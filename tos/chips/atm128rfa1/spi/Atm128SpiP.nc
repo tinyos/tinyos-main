@@ -322,7 +322,6 @@ implementation {
   async command error_t SpiPacket.send(uint8_t* writeBuf,
 				       uint8_t* readBuf,
 				       uint16_t  bufLen) {
-    uint8_t discard;
     atomic {
       len = bufLen;
       txBuffer = writeBuf;
@@ -330,7 +329,7 @@ implementation {
       pos = 0;
     }
     if (bufLen > 0) {
-      discard = call Spi.read();
+      call Spi.read();
       return sendNextPart();
     }
     else {
@@ -363,7 +362,6 @@ implementation {
      sendNextPart();
    }
    else {
-     uint8_t discard;
      uint16_t  myLen;
      uint8_t* COUNT_NOK(myLen) rx;
      uint8_t* COUNT_NOK(myLen) tx;
@@ -377,7 +375,7 @@ implementation {
        len = 0;
        pos = 0;
      }
-     discard = call Spi.read();
+     call Spi.read();
 
      signal SpiPacket.sendDone(tx, rx, myLen, SUCCESS);
    }
