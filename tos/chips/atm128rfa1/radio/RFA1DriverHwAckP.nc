@@ -352,16 +352,17 @@ implementation
 
       state = STATE_TRX_OFF;
       call ExtAmpControl.stop();
-    }
-
-    if( cmd == CMD_TURNOFF && state == STATE_TRX_OFF )
-    {
+      
       #ifdef RFA1_ENABLE_PA
       CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
       #endif
       #ifdef RFA1_ENABLE_EXT_ANT_SW
       ANT_DIV=3; //default value
       #endif
+    }
+
+    if( cmd == CMD_TURNOFF && state == STATE_TRX_OFF )
+    {
       
       SET_BIT(TRXPR,SLPTR);
       state = STATE_SLEEP;
