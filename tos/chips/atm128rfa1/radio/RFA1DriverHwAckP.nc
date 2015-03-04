@@ -335,7 +335,7 @@ implementation
 #endif
       temp = call ActiveMessageAddress.amAddress();
       SHORT_ADDR_0 = temp;
-      SHORT_ADDR_1 = temp<<8;
+      SHORT_ADDR_1 = temp>>8;
       
       TRX_STATE = CMD_RX_AACK_ON;
       state = STATE_TRX_OFF_2_RX_ON;
@@ -424,8 +424,8 @@ implementation
     //these are cached registers they must be written twice to update the cache (except in TRX_OFF, but that's very unlikely)
     SHORT_ADDR_0 = temp;
     SHORT_ADDR_0 = temp;
-    SHORT_ADDR_1 = temp<<8;
-    SHORT_ADDR_1 = temp<<8;
+    SHORT_ADDR_1 = temp>>8;
+    SHORT_ADDR_1 = temp>>8;
     
     call Tasklet.resume();
   }
