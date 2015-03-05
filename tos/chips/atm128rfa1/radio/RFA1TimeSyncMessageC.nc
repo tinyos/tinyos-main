@@ -85,7 +85,11 @@ implementation
 	TimeSyncMessageLayerC.PacketTimeStampRadio -> ActiveMessageC;
 	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC;
 
+#ifdef RFA1_HARDWARE_ACK
+	components RFA1DriverHwAckC as DriverLayerC;
+#else
 	components RFA1DriverLayerC as DriverLayerC;
+#endif
 	TimeSyncMessageLayerC.LocalTimeRadio -> DriverLayerC;
 	TimeSyncMessageLayerC.PacketTimeSyncOffset -> DriverLayerC.PacketTimeSyncOffset;
 
