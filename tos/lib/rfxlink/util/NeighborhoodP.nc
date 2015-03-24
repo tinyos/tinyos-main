@@ -34,13 +34,13 @@
 
 #include <Neighborhood.h>
 
-module NeighborhoodP
+generic module NeighborhoodP()
 {
 	provides
 	{
 		interface Init;
 		interface Neighborhood;
-		interface NeighborhoodFlag[uint8_t bit];
+		interface NeighborhoodFlag;
 	}
 }
 
@@ -48,7 +48,7 @@ implementation
 {
 	tasklet_norace am_addr_t nodes[NEIGHBORHOOD_SIZE];
 	tasklet_norace uint8_t ages[NEIGHBORHOOD_SIZE];
-	tasklet_norace uint8_t flags[NEIGHBORHOOD_SIZE];
+	tasklet_norace uint8_t flags = 0; /* one bit per node */
 	tasklet_norace uint8_t time;
 	tasklet_norace uint8_t last;
 
@@ -139,7 +139,7 @@ implementation
 				last = oldest;
 				nodes[oldest] = node;
 				ages[oldest] = ++time;
-				flags[oldest] = 0;
+				call NeighborhoodFlag.clear(oldest);
 			}
 		}
 
@@ -155,28 +155,23 @@ implementation
 		return last;
 	}
 
-	inline tasklet_async command bool NeighborhoodFlag.get[uint8_t bit](uint8_t idx)
+	inline tasklet_async command bool NeighborhoodFlag.get(uint8_t idx)
 	{
-		return flags[idx] & (1 << bit);
+		return flags & (1 << idx);
 	}
 
-	inline tasklet_async command void NeighborhoodFlag.set[uint8_t bit](uint8_t idx)
+	inline tasklet_async command void NeighborhoodFlag.set(uint8_t idx)
 	{
-		flags[idx] |= (1 << bit);
+		flags |= (1 << idx);
 	}
 
-	inline tasklet_async command void NeighborhoodFlag.clear[uint8_t bit](uint8_t idx)
+	inline tasklet_async command void NeighborhoodFlag.clear(uint8_t idx)
 	{
-		flags[idx] &= ~(1 << bit);
+		flags &= ~(1 << idx);
 	}
 
-	tasklet_async command void NeighborhoodFlag.clearAll[uint8_t bit]()
+	tasklet_async command void NeighborhoodFlag.clearAll()
 	{
-		uint8_t i;
-
-		bit = ~(1 << bit);
-
-		for(i = 0; i < NEIGHBORHOOD_SIZE; ++i)
-			flags[i] &= bit;
+		flags = 0;
 	}
 }

@@ -32,15 +32,17 @@
  * Author: Miklos Maroti
  */
 
-configuration NeighborhoodC
+generic configuration NeighborhoodC()
 {
 	provides interface Neighborhood;
+	provides interface NeighborhoodFlag;
 }
 
 implementation
 {
-	components NeighborhoodP, MainC;
+	components new NeighborhoodP(), MainC;
 
 	Neighborhood = NeighborhoodP;
+	NeighborhoodFlag = NeighborhoodP;
 	MainC.SoftwareInit -> NeighborhoodP;
 }

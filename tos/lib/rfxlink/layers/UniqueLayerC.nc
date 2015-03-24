@@ -51,11 +51,11 @@ generic configuration UniqueLayerC()
 
 implementation
 {
-	components new UniqueLayerP(), MainC, NeighborhoodC, new NeighborhoodFlagC();
+	components new UniqueLayerP(), MainC, new NeighborhoodC();
 
 	MainC.SoftwareInit -> UniqueLayerP;
 	UniqueLayerP.Neighborhood -> NeighborhoodC;
-	UniqueLayerP.NeighborhoodFlag -> NeighborhoodFlagC;
+	UniqueLayerP.NeighborhoodFlag -> NeighborhoodC;
 
 	Send = UniqueLayerP;
 	SubSend = UniqueLayerP;
