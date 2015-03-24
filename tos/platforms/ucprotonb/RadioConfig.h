@@ -87,9 +87,10 @@ enum
 #define RFA1_DEF_CHANNEL	26
 #endif
 
-#ifndef RF212_GC_TX_OFFS
-#define RF212_GC_TX_OFFS 2 //recommended modes by the datasheet Table 7-16 BPSK: 3, QPSK: 2
-#endif
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RFA1_NEIGHBORHOOD_SIZE 5
 
 //RF212 Part
 #ifndef RF212_PHY_MODE
@@ -148,6 +149,10 @@ enum
 	RF212_CCA_THRES_VALUE = 0x77,
 };
 
+#ifndef RF212_GC_TX_OFFS
+#define RF212_GC_TX_OFFS 2 //recommended modes by the datasheet Table 7-16 BPSK: 3, QPSK: 2
+#endif
+
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
 #ifndef RF212_DEF_RFPOWER
 #define RF212_DEF_RFPOWER	0xE8
@@ -157,5 +162,10 @@ enum
 #ifndef RF212_DEF_CHANNEL
 #define RF212_DEF_CHANNEL	0
 #endif
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RF212_NEIGHBORHOOD_SIZE 5
 
 #endif//__RADIOCONFIG_H__

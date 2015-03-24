@@ -138,6 +138,11 @@ typedef uint16_t tradio_size;
 #define RADIO_ALARM_MILLI_EXP	11
 
 /**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RF230_NEIGHBORHOOD_SIZE 5
+
+/**
  * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
  */
 #if !defined(TFRAMES_ENABLED) && !defined(PACKET_LINK)

@@ -90,10 +90,15 @@ implementation
 {
 	#define UQ_METADATA_FLAGS	"UQ_RF212_METADATA_FLAGS"
 	#define UQ_RADIO_ALARM		"UQ_RF212_RADIO_ALARM"
+	#define UQ_NEIGHBORHOOD_FLAG "UQ_RF212_NEIGHBORHOOD_FLAG"
 
 // -------- TaskleC
 
 	components new TaskletC();
+
+// -------- NeighborhoodC
+
+	components new NeighborhoodC(RF212_NEIGHBORHOOD_SIZE);
 
 // -------- RadioP
 
@@ -183,9 +188,11 @@ implementation
 
 // -------- UniqueLayer Send part (wired twice)
 
-	components new UniqueLayerC();
+	components new UniqueLayerC(RF212_NEIGHBORHOOD_SIZE);
 	UniqueLayerC.Config -> RadioP;
 	UniqueLayerC.SubSend -> PacketLinkLayerC;
+	UniqueLayerC.Neighborhood -> NeighborhoodC;
+	UniqueLayerC.NeighborhoodFlag -> NeighborhoodC.NeighborhoodFlag[unique(UQ_NEIGHBORHOOD_FLAG)];
 
 // -------- Packet Link
 

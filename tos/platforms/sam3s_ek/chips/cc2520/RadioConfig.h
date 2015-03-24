@@ -82,6 +82,11 @@ enum cc2520_timing_enums {
 #define RADIO_ALARM_MILLI_EXP	(5)
 
 /**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define CC2520_NEIGHBORHOOD_SIZE 5
+
+/**
  * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
  */
 #if !defined(TFRAMES_ENABLED) && !defined(PACKET_LINK)

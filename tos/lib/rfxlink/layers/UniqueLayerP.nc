@@ -33,9 +33,8 @@
  */
 
 #include <Tasklet.h>
-#include <Neighborhood.h>
 
-generic module UniqueLayerP()
+generic module UniqueLayerP(uint8_t neigborhoodSize)
 {
 	provides
 	{
@@ -88,7 +87,7 @@ implementation
 		return signal RadioReceive.header(msg);
 	}
 
-	tasklet_norace uint8_t receivedNumbers[NEIGHBORHOOD_SIZE];
+	tasklet_norace uint8_t receivedNumbers[neigborhoodSize];
 
 	tasklet_async event message_t* SubReceive.receive(message_t* msg)
 	{

@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-generic configuration UniqueLayerC()
+generic configuration UniqueLayerC(uint8_t neigborhoodSize)
 {
 	provides
 	{
@@ -46,16 +46,19 @@ generic configuration UniqueLayerC()
 		interface RadioReceive as SubReceive;
 
 		interface UniqueConfig as Config;
+		
+		interface Neighborhood;
+		interface NeighborhoodFlag;
 	}
 }
 
 implementation
 {
-	components new UniqueLayerP(), MainC, NeighborhoodC, new NeighborhoodFlagC();
+	components new UniqueLayerP(neigborhoodSize), MainC;
 
 	MainC.SoftwareInit -> UniqueLayerP;
-	UniqueLayerP.Neighborhood -> NeighborhoodC;
-	UniqueLayerP.NeighborhoodFlag -> NeighborhoodFlagC;
+	Neighborhood = UniqueLayerP.Neighborhood;
+	NeighborhoodFlag = UniqueLayerP.NeighborhoodFlag;
 
 	Send = UniqueLayerP;
 	SubSend = UniqueLayerP;

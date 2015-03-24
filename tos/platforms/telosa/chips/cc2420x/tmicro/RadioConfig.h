@@ -62,4 +62,9 @@ typedef uint16_t tradio_size;
  */
 #define RADIO_ALARM_MILLI_EXP	10
 
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define CC2420X_NEIGHBORHOOD_SIZE 5
+
 #endif//__RADIOCONFIG_H__

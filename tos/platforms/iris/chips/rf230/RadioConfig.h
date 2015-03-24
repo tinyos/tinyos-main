@@ -99,6 +99,11 @@ typedef uint16_t tradio_size;
 #define RADIO_ALARM_MICROSEC	(73728UL / MHZ / 32) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2) / 10000UL
 
 /**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RF230_NEIGHBORHOOD_SIZE 5
+
+/**
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	(5 + MICA_DIVIDE_ONE_FOR_32KHZ_LOG2)

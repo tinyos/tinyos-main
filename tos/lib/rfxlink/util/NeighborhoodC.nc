@@ -32,15 +32,17 @@
  * Author: Miklos Maroti
  */
 
-configuration NeighborhoodC
+generic configuration NeighborhoodC(uint8_t size)
 {
 	provides interface Neighborhood;
+	provides interface NeighborhoodFlag[uint8_t bit];
 }
 
 implementation
 {
-	components NeighborhoodP, MainC;
+	components new NeighborhoodP(size), MainC;
 
 	Neighborhood = NeighborhoodP;
+	NeighborhoodFlag = NeighborhoodP;
 	MainC.SoftwareInit -> NeighborhoodP;
 }

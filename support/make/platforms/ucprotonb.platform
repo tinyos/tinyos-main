@@ -3,7 +3,6 @@
 PFLAGS += -I%T/platforms/ucprotonb
 PFLAGS += -I%T/platforms/ucprotonb/chips/stm25p
 PFLAGS += -I%T/platforms/ucprotonb/chips/rf212
-#PFLAGS += -I%T/platforms/ucprotonb/chips/doubleradio
 PFLAGS += -I%T/chips/atm128rfa1
 PFLAGS += -I%T/chips/atm128rfa1/adc
 PFLAGS += -I%T/chips/atm128rfa1/pins
