@@ -1,4 +1,4 @@
-SUBDIRS = message misc packet tossim utils
+SUBDIRS = message misc packet tossim
 
 tospy_PYTHON = tos.py __init__.py
 tospydir = $(pythondir)/tinyos
