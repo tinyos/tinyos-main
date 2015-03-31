@@ -35,7 +35,7 @@ import struct
 import sys
 import traceback
 
-from tinyos.packet.Serial import Serial
+from tinyos.packet.SerialH import Serial
 from tinyos.message.SerialPacket import SerialPacket
 import tinyos.packet.PacketDispatcher
 import tinyos.packet.PacketSource

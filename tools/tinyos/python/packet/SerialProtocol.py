@@ -35,7 +35,7 @@
 
 from threading import Lock, Condition, Thread
 from IO import IODone
-from Serial import Serial
+from SerialH import Serial
 
 SYNC_BYTE = Serial.HDLC_FLAG_BYTE
 ESCAPE_BYTE = Serial.HDLC_CTLESC_BYTE 
