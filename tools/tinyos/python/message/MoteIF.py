@@ -34,7 +34,6 @@ import re
 import struct
 import sys
 import traceback
-from tinyos.utils.Watcher import Watcher
 
 from tinyos.packet.Serial import Serial
 from tinyos.message.SerialPacket import SerialPacket
@@ -55,7 +54,6 @@ class MoteIFException(Exception):
 class MoteIF:
     def __init__(self):
         self.listeners = {}
-        self.watcher = Watcher.getInstance()
 
     def addListener(self, listener, msgClass):
         if listener not in self.listeners:
