@@ -29,4 +29,4 @@
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
 
-__all__ = ["message", "packet", "utils", "tossim", "misc"]
+__all__ = ["message", "packet", "tossim", "misc"]
