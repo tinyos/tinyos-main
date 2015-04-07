@@ -34,6 +34,8 @@ BASEDIR = $(shell pwd | sed 's@\(.*\)/apps.*$$@\1@' )
 # The output directory for generated documentation
 DOCDIR = $(BASEDIR)/doc/nesdoc
 
+PLATFORMS=btnode3 epic eyesIFX eyesIFXv1 eyesIFXv2 intelmote2 iris mica2 mica2dot micaz mulle null sam3s_ek sam3u_ek shimmer shimmer2 shimmer2r span telos telosa telosb tinynode tmote ucbase ucmini ucprotonb z1
+
 nesdoc:
 	@echo This target rebuilds documentation for all known platforms.
 	@echo It DOES NOT overwrite any existing documentation, thus, it 
@@ -42,9 +44,9 @@ nesdoc:
 	@echo To delete all old documentation, delete the contents of the
 	@echo $(DOCDIR) directory.
 	@echo
-	@echo Press Enter to continue, or ^C to abort.
-	@read
-	for platform in `ncc -print-platforms`; do \
-	  $(MAKE) $$platform docs.nohtml.preserve; \
-	  nesdoc -o $(DOCDIR) -html -target=$$platform; \
+	#@echo Press Enter to continue, or ^C to abort.
+	#@read
+	@echo Building the platformdocumentation.
+	for platform in $(PLATFORMS); do \
+	  $(MAKE) $$platform docs; \
 	done
