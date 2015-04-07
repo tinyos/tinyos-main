@@ -44,8 +44,8 @@ nesdoc:
 	@echo To delete all old documentation, delete the contents of the
 	@echo $(DOCDIR) directory.
 	@echo
-	#@echo Press Enter to continue, or ^C to abort.
-	#@read
+	@echo Press Enter to continue, or ^C to abort.
+	@read docs
 	@echo Building the platformdocumentation.
 	for platform in $(PLATFORMS); do \
 	  $(MAKE) $$platform docs; \
