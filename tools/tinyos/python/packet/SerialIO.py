@@ -41,17 +41,21 @@ class SerialIO(IO):
 	
 	def open(self):
 		self.serial = serial.Serial(port=self.device,
-	                                baudrate=self.baud)
+	                                baudrate=self.baud, timeout=1)
 	
 	def close(self):
 		self.serial.close()
 	
 	def read(self, count):
-		while self.serial.inWaiting() < count:
+		data = ""
+		while count - len(data) > 0:
 			if self.isDone():
 				raise IODone()
-		
-		return self.serial.read(count)
+			p = self.serial.read(count)
+			if len(p) == 0:
+				self.serial.inWaiting() # A workaround: raises IOException if USB serial device is disconnected
+			data += p
+		return data
 	
 	def write(self, data):
 		return self.serial.write(data)

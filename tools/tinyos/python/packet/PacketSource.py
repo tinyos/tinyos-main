@@ -58,6 +58,7 @@ class PacketSource(ThreadTask):
         self.semaphore = Semaphore(1)
         self.semaphore.acquire()
 
+    # this will be called in the new thread
     def __call__(self):
         try:
             self.open()
@@ -111,6 +112,8 @@ class PacketSource(ThreadTask):
                     if DEBUG:
                         print "Unknown exception when dispatching packet"
 #                    break
+
+        self.cancel()
 
         try:
             self.close()

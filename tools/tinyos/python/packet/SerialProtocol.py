@@ -35,7 +35,7 @@
 
 from threading import Lock, Condition, Thread
 from IO import IODone
-from Serial import Serial
+from SerialH import Serial
 
 SYNC_BYTE = Serial.HDLC_FLAG_BYTE
 ESCAPE_BYTE = Serial.HDLC_CTLESC_BYTE 
@@ -88,14 +88,16 @@ class RXThread(Thread):
             #OK, kind of ugly. finishing the SerialSource (ThreadTask)
             # leads (ultimately) to an IODone exception coming up
             # through here. At this point, the thread should complete.
-            except IODone:
+            except Exception, e:
                 with self.prot.ackCV:
                     self.prot.lastAck = None
                     self.prot.ackCV.notify()
                 with self.prot.dataCV:
+                    self.prot.read_exception = e # storing exception to inform the other thread
                     self.prot.lastData = None
                     self.prot.dataCV.notify()
                 break
+
 
 class SerialProtocol:
     def __init__(self, ins, outs):
@@ -115,6 +117,7 @@ class SerialProtocol:
         self.ackCV = Condition(rxLock)
         self.lastData = None
         self.lastAck = None
+        self.read_exception = None
     
     #also a little ugly: can't start this thread until the
     # serial.Serial object has been opened. This should all be
@@ -125,7 +128,10 @@ class SerialProtocol:
         
     def readPacket(self):
         with self.dataCV:
+            self.read_exception = None
             self.dataCV.wait()
+            if self.read_exception != None:
+                raise self.read_exception # an exception from the other thread
             return self.lastData
 
     def readFramedPacket(self):

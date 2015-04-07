@@ -290,7 +290,6 @@ AC_OUTPUT(
 	tinyos/python/misc/Makefile
 	tinyos/python/packet/Makefile
 	tinyos/python/tossim/Makefile
-	tinyos/python/utils/Makefile
 	tinyos/safe/Makefile
 	tinyos/safe/tos-decode-flid
 	tinyos/safe/tos-ramsize

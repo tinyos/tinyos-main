@@ -57,8 +57,9 @@ class SocketIO(IO):
         self.socket.settimeout(1)
 
     def close(self):
-        self.socket.close()
-        self.socket = None
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
 
     def read(self, count):
         data = ""
@@ -67,8 +68,11 @@ class SocketIO(IO):
                 raise IODone()
 
             try:
-                data += self.socket.recv(count - len(data))
-            except:
+                p = self.socket.recv(count - len(data))
+                if len(p) == 0:
+                    raise IODone() # the remote side closed the connection
+                data += p
+            except socket.timeout:
                 pass
 
         return data
