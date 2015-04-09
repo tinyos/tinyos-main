@@ -130,22 +130,22 @@ implementation {
       call Spi.enableSpi(TRUE);
 
       //calculating prescaler for desired spi clockrate with floor function to the nearest available clockrate
-      #if (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=64
+      #if (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=128
         call Spi.setMasterDoubleSpeed(FALSE);
         call Spi.setClock(3);
-      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=32
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=64
         call Spi.setMasterDoubleSpeed(FALSE);
+        call Spi.setClock(2);
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=32
+        call Spi.setMasterDoubleSpeed(TRUE);
         call Spi.setClock(2);
       #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=16
-        call Spi.setMasterDoubleSpeed(TRUE);
-        call Spi.setClock(2);
-      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=8
         call Spi.setMasterDoubleSpeed(FALSE);
         call Spi.setClock(1);
-      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=4
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=8
         call Spi.setMasterDoubleSpeed(TRUE);
         call Spi.setClock(1);
-      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=2
+      #elif (PLATFORM_MHZ*1000)/SPI_CLOCKRATE>=4
         call Spi.setMasterDoubleSpeed(FALSE);
         call Spi.setClock(0);
       #else
