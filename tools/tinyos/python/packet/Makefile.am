@@ -1,6 +1,6 @@
 tospy_PYTHON = avrmote.py SerialIO.py SFProtocol.py __init__.py \
                PacketDispatcher.py SerialProtocol.py SFSource.py IO.py \
-               PacketSource.py Serial.py SocketIO.py Platform.py \
+               PacketSource.py SerialH.py SocketIO.py Platform.py \
                SerialSource.py ThreadTask.py
 
 tospydir = $(pythondir)/tinyos/packet
