@@ -49,11 +49,6 @@ configuration RFA1ActiveMessageC
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];
 		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
-
 		interface Packet;
 		interface AMPacket;
 
@@ -83,10 +78,6 @@ implementation
 	Receive = RadioC.Receive;
 	Snoop = RadioC.Snoop;
 	SendNotifier = RadioC;
-
-	ReceiveDefault = RadioC.ReceiveDefault;
-	SnoopDefault = RadioC.SnoopDefault;
-
 	Packet = RadioC.PacketForActiveMessage;
 	AMPacket = RadioC;
 

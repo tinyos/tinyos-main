@@ -46,10 +46,6 @@ generic module ActiveMessageLayerP()
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
 		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
 	}
 
 	uses
@@ -142,22 +138,12 @@ implementation
 
 	default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
 	{
-		return signal ReceiveDefault.receive[id](msg, payload, len);;
-	}
-
-	default event message_t* ReceiveDefault.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
-	{
-		return msg;
+                return msg;
 	}
 
 	default event message_t* Snoop.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
 	{
-		return signal SnoopDefault.receive[id](msg, payload, len);;
-	}
-
-	default event message_t* SnoopDefault.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
-	{
-		return msg;
+                return msg;
 	}
 
 /*----------------- AMPacket -----------------*/

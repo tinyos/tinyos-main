@@ -42,10 +42,6 @@ generic configuration ActiveMessageLayerC()
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
 		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
 	}
 
 	uses
@@ -68,9 +64,6 @@ implementation
 	Receive = ActiveMessageLayerP.Receive;
 	Snoop = ActiveMessageLayerP.Snoop;
 	SendNotifier = ActiveMessageLayerP;
-
-	ReceiveDefault = ActiveMessageLayerP.ReceiveDefault;
-	SnoopDefault = ActiveMessageLayerP.SnoopDefault;
 
 	SubPacket = ActiveMessageLayerP;
 	SubSend = ActiveMessageLayerP;
