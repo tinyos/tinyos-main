@@ -5,26 +5,27 @@
 >
 
 <p><b>TinyOS (TinyProd) Debian Development Repository</b></p>
-Last update: 20140715, cire
+Last update: 20151016, cire
 <br>(Changelog at end)
 
 <br><br>
 4 repositories are homed here that maybe useful to the TinyOS development community.
 
 <ul>
-<li><b><i>squeeze</i></b>/<b><i>wheezy</i></b>: contain general tinyos tools.   Useful for multiple target motes.
+<li><b><i>squeeze</i></b>: (debian 6.0.9 packages) provided for prior installations.
+
+<li><b><i>wheezy</i></b>: contain general tinyos tools.   Useful for multiple target motes.
 <li><b><i>msp430-46</i></b>: current cross compiler toolchain for msp430 based TinyOS development,
 <a href='http://tinyprod.net/repos/debian/README-46.html'> README-46</a>.
 <br>
 <li><b><i>msp430-47</i></b>: experimental mspgcc 4.7.0 cross compiler for msp430 platforms, (20 bit support),
 <a href='http://tinyprod.net/repos/debian/README-47.html'> README-47</a>.
 </ul>
-<p><b>Wheezy</b> is the main repository and provides packages built on Debian 7.5 (wheezy).  
-<b>Squeeze</b> (debian 6.0.9 packages) is provided for prior installations.
+<p><b>Wheezy</b> is the main repository and provides packages built on Debian 7.5 (wheezy).
 
 <p>Wheezy contains the following packages for <i>i386</i> and <i>amd64</i>:</p>
 <ul>
-<li>nesc: 1.3.5
+<li>nesc: 1.3.6
 <li>tinyos-tools: 1.4.2
 <li>tinyos-tools-14: 1.4.2
 <li>tinyos-tools-devel: 1.5.0
@@ -68,21 +69,18 @@ Sourcery</a>.
 </p>
 </div>
 <br>
-tinyos-tools is changing.
+tinyos-tools-devel has been updated to use the new build system (version 3).  It is not backward compatible with tinyos releases prior to 2.2.0.
 
 <br><br>
-tinyos-tools-devel and tinyos-tools >= 2.2.0 are not
-backward compatible with TinyOS releases < 2.2.0.
+If you are using the development trunk you must use tinyos-tools-devel (1.5.0).  This includes the TinyProd mutation of TinyOS.  TinyProd flavors track the development trunk of tinyos-main.
                                            
 <br><br>
-For the TinyOS 2.1.2 release, you should install tinyos-tools-14 (tinyos-tools).  Releases
+For the TinyOS 2.1.2 release, you should install tinyos-tools-14 (tinyos-tools).  TinyOS releases
 prior to 2.1.2 are not supported.
 
 <br><br>
-For the development trunk, one should use tinyos-tools-devel.
-
-<br><br>
-tinyos-tools and tinyos-tools-14 are incompatible with tinyos-tools-devel.  Mutually exclusive.
+tinyos-tools and tinyos-tools-14 are incompatible with tinyos-tools-devel.
+You can only have one of these packages installed.
 You must remove tinyos-tools (tinyos-tools-14) prior to installing tinyos-tools-devel and
 vice-versa.
 
@@ -164,7 +162,7 @@ vice-versa.
 </div>
 
 <br>
-<p>-- Eric Decker (cire831@gmail.com) (June 12, 2014)</p>
+<p>-- Eric Decker (cire831@gmail.com) (Oct 16, 2015)</p>
 
 <pre>
 
@@ -173,6 +171,12 @@ vice-versa.
 
 <p><b>Changelog:</b></p>
 <pre>
+  20151016, cire: reflect nesc-1.3.6 is in repository
+                  nesc-1.3.6 has support for Mac OS X alignment (16 bit)
+                  Xcode 5.1 needs -O2
+
+                  clean up information about tinyos-tools and tinyos-tools-devel
+                  incompatibilty.
   20140715, cire: add tinyos-tools-14, tinyos-tools-devel
                   create Wheezy compiled packages
                   make wheezy be the primary repository
