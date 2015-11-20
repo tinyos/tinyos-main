@@ -72,7 +72,8 @@ module IPNeighborDiscoveryP {
 
     inet_pton6(IPV6_ADDR_ALL_ROUTERS, &ALL_ROUTERS_ADDR);
 
-    memset(&prefix, 0, sizeof(struct in6_addr));
+    if (prefix_length == 0)
+      memset(&prefix, 0, sizeof(struct in6_addr));
 
 #if BLIP_SEND_ROUTER_SOLICITATIONS
     // Set timer to send RS messages
