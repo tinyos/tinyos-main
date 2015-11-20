@@ -84,6 +84,7 @@ module TknTschTssmRxP {
   tkntsch_slot_context_t* context = NULL;
   message_t m_ackFrame;
   plain154_txframe_t m_ackTxFrame;
+  uint32_t m_tracker;
 
   async command tkntsch_status_t SlotContext.passContext(tkntsch_slot_context_t* slot_context) {
     if (slot_context == NULL)
@@ -249,9 +250,12 @@ module TknTschTssmRxP {
     plain154_address_t srcAddr;
     uint8_t dstAddrMode;
     uint8_t srcAddrMode;
+    uint32_t trackval;
 
     atomic {
       slottype = context->slottype;
+      m_tracker++;
+      trackval = m_tracker;
     }
 
     switch (slottype) {
