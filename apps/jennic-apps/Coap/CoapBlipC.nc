@@ -14,7 +14,8 @@ configuration CoapBlipC {
   App.RadioControl ->  IPStackC;
 
 #ifdef IN6_PREFIX
- components StaticIPAddressTosIdC;
+// components StaticIPAddressTosIdC;
+ components StaticIPAddressC;
 #endif
 
 #ifdef RPL_ROUTING
