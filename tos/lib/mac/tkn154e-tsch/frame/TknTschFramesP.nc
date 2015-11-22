@@ -201,8 +201,8 @@ implementation {
         PLAIN154_FRAMEVERSION_2,
         FALSE  // PAN ID compression
       );
-    if (status != PLAIN154_SUCCESS) {
-      // TODO handle error in Frame.setAddressingFields
+    if (status != TKNTSCH_SUCCESS) {
+      return status;
     }
 
     call Frame.setFrameType(hdr, PLAIN154_FRAMETYPE_BEACON);

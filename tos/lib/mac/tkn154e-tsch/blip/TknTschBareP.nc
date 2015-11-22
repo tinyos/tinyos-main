@@ -290,8 +290,7 @@ implementation {
     plain154_header_t* header;
     plain154_address_t dstAddr; //, srcAddr;
     uint8_t srcMode = 0, dstMode = 0;
-    //uint16_t srcPan = 0;
-    uint16_t dstPan = 0;
+    uint16_t dstPan = 0; //, srcPan = 0;
 
     uint8_t *payload, payloadlen;
     uint8_t *from_data;
@@ -355,11 +354,11 @@ implementation {
         return FAIL;
       }
     }
+    // TODO the MCPS-DATA interface doesn't allow to pass the src address or pan but data_index has to be adjusted
     if (hints.hasSrcPanId == TRUE) {
       //srcPan = from_data[data_index] | (from_data[data_index+1] << 8);
       data_index += 2;
     }
-    // TODO the MCPS-DATA interface doesn't allow to pass the src address but data_index has to be adjusted
     if (hints.hasSrcAddr == TRUE) {
       srcMode = call Plain154Frame.getSrcAddrMode(header);
       //tmp = (uint8_t *) &srcAddr;

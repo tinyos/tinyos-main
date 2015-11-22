@@ -213,10 +213,13 @@ implementation
 
   task void init()
   {
-    //uint8_t ret;
-    /*ret =*/ call fsm.setEventHandlerTable((tknfsm_state_entry_t*) eventhandler_table,
-        sizeof(eventhandler_table) / sizeof(tknfsm_state_entry_t));
-    // TODO catch ret != TKNFSM_STATUS_SUCCESS
+    uint8_t ret;
+    ret = call fsm.setEventHandlerTable((tknfsm_state_entry_t*) eventhandler_table,
+      sizeof(eventhandler_table) / sizeof(tknfsm_state_entry_t));
+    if (ret != TKNFSM_STATUS_SUCCESS) {
+      T_LOG_ERROR("Could not set the EventHandler table! Status: %d\n", ret);
+      return;
+    }
 
     atomic {
       m_mcuSleepAllowedNext = FALSE;

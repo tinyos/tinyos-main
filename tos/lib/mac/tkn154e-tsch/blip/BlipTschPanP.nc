@@ -362,9 +362,9 @@ implementation
         call MLME_SET.macTimeParent(m_timeParent);
 #ifdef TKN_TSCH_LOG_INFO
         {
-        uint8_t *p;
-        p = (uint8_t *) &m_timeParent;
-        T_LOG_INFO("TimeParent adjusted to changed RPL parent (0x%x 0x%x 0x%x 0x%x)\n", p[0], p[1], p[6], p[7]);
+          uint8_t * p;
+          p = (uint8_t *) &m_timeParent;
+          T_LOG_INFO("TimeParent adjusted to changed RPL parent (0x%x 0x%x 0x%x 0x%x)\n", p[0], p[1], p[6], p[7]);
         }
 #endif
       }
