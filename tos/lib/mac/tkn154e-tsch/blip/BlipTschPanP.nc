@@ -40,12 +40,11 @@
 #include <lib6lowpan/ip.h>
 #include "RPL.h"
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_TSSM_TX
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 /*#ifndef APP_RADIO_CHANNEL
 #define APP_RADIO_CHANNEL RADIO_CHANNEL
@@ -118,44 +117,44 @@ implementation
   // Interface commands and events
   command error_t BlipTschPan.start()
   {
-    printf("BlipTschPan.start()\n");
+    T_LOG_INIT("BlipTschPan.start()\n");
 
     call PLME_SET.phyCurrentChannel(RADIO_CHANNEL);
     call TknTschInit.init();
 
-    printf("This node is a coordinator!\n");
+    T_LOG_INIT("This node is a coordinator!\n");
     atomic m_isCoordinator = TRUE;
     atomic m_scanRunning = FALSE;
     call MLME_SET.isCoordinator(m_isCoordinator);
     post startTsch();
     call MLME_SET.macPanId(DEFINED_TOS_AM_GROUP);
-    printfflush();
+    T_LOG_FLUSH;
     return SUCCESS;
   }
 
   command error_t BlipTschPan.join()
   {
-    printf("BlipTschPan.join()\n");
+    T_LOG_INIT("BlipTschPan.join()\n");
 
     call PLME_SET.phyCurrentChannel(RADIO_CHANNEL);
     call TknTschInit.init();
 
-    printf("Joining node.\n");
+    T_LOG_INIT("Joining node.\n");
     atomic m_isCoordinator = FALSE;
     call MLME_SET.isCoordinator(m_isCoordinator);
     post startScan();
 
-    printfflush();
+    T_LOG_FLUSH;
     return SUCCESS;
   }
 
   command error_t BlipTschPan.shutdown()
   {
-    printf("BlipTschPan.shutdown()\n");
+    T_LOG_INFO("BlipTschPan.shutdown()\n");
 
     post stopTsch();
 
-    printfflush();
+    T_LOG_FLUSH;
     return SUCCESS;
   }
 
@@ -183,9 +182,9 @@ implementation
                           NULL // plain154_security_t *security
                           );
     if (status == PLAIN154_SUCCESS) {
-      printf("Scan was requested successfully.\n");
+      T_LOG_INFO("Scan was requested successfully.\n");
     } else if (status == PLAIN154_INVALID_PARAMETER) {
-      printf("There was an invalid parameter in the scan request.\n");
+      T_LOG_ERROR("There was an invalid parameter in the scan request.\n");
     }
   }
 
@@ -203,7 +202,7 @@ implementation
   }
 
   event void TschMode.confirm(tkntsch_mode_t TSCHMode, tkntsch_status_t Status) {
-    printf("Received event TschMode.confirm with status 0x%x\n", Status);
+    T_LOG_DEBUG("Received event TschMode.confirm with status 0x%x\n", Status);
 
     // start beacon sending if this is the coordinator
     // TODO beacons should be sent by all nodes
@@ -241,8 +240,8 @@ implementation
     uint8_t beaconJoinPriority;
     uint16_t dstPanID;
 
-    printf("TknTschMlmeBeaconNotify.indication: received a beacon.\n");
-    printfflush();
+    T_LOG_BLIP_RXTX_STATE("TknTschMlmeBeaconNotify.indication: received a beacon.\n");
+    T_LOG_FLUSH;
 
     /* Here the beacon can be imediatly processed.
     But for now we don't want to do that... */
@@ -253,19 +252,19 @@ implementation
     payload = call PacketPayload.getPayload(beaconFrame, payloadLen);
 
     if (call TknTschInformationElement.presentPIEs(payload, 70, &frameIE) != TKNTSCH_SUCCESS) {
-      printf("IE parsing failed.\n");
+      T_LOG_ERROR("IE parsing failed.\n");
       return beaconFrame;
     }
 
     if (frameIE.syncIEpresent == FALSE) {
-      printf("Recv. Beacon doesn't include sync info\n");
+      T_LOG_INFO("Recv. Beacon doesn't include sync info\n");
       return beaconFrame;
     }
     if (call Frame.getDstPANId(header, &dstPanID) != SUCCESS){
         return beaconFrame; // No src nor dest PAN
     }
     if (dstPanID != DEFINED_TOS_AM_GROUP) {
-        printf("Wrong PAN (%x != %x) \n", dstPanID, DEFINED_TOS_AM_GROUP);
+        T_LOG_INFO("Wrong PAN (%x != %x) \n", dstPanID, DEFINED_TOS_AM_GROUP);
         return beaconFrame;  // src PAN there but the wrong
       }
 
@@ -277,14 +276,14 @@ implementation
       return beaconFrame;
 
     if (call TknTschInformationElement.parseMlmeSync( frameIE.syncIEfrom, &beaconASN, &beaconJoinPriority, NULL) != SUCCESS) {
-      printf("Parsing the MLME SYNC wasn't successful.\n");
+      T_LOG_INFO("Parsing the MLME SYNC wasn't successful.\n");
       return beaconFrame;
     }
 
     if (!metadata->valid_timestamp)
       return beaconFrame;
 
-    atomic printf("BCN_NTFY.ind (%x:%x:%x:%x:%x:%x:%x:%x)(A: %u, pr: %u, lqi: %u)\n",(uint8_t)(((uint8_t *)(&addr.extendedAddress))[0]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[1]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[2]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[3]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[4]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[5]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[6]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[7]), (uint32_t) beaconASN, beaconJoinPriority, metadata->lqi);
+    atomic T_LOG_INFO("BCN_NTFY.ind (%x:%x:%x:%x:%x:%x:%x:%x)(A: %u, pr: %u, lqi: %u)\n",(uint8_t)(((uint8_t *)(&addr.extendedAddress))[0]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[1]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[2]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[3]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[4]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[5]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[6]),(uint8_t)(((uint8_t *)(&addr.extendedAddress))[7]), (uint32_t) beaconASN, beaconJoinPriority, metadata->lqi);
 
     if (m_scanRunning) {
       uint8_t lqi = metadata->lqi;
@@ -298,8 +297,8 @@ implementation
       call MLME_SET.macBeaconSyncRxTimestamp(m_beaconReception);
       call MLME_SET.macTimeParent(addr);
       memcpy((uint8_t *) &m_timeParent, (uint8_t *) &addr.extendedAddress, 8);
-      printf("BeaconASN: %u \n", (uint32_t) beaconASN);
-      printf("BeaconJoin: %u\n", beaconJoinPriority);
+      T_LOG_INFO("BeaconASN: %u \n", (uint32_t) beaconASN);
+      T_LOG_INFO("BeaconJoin: %u\n", beaconJoinPriority);
     }
     return beaconFrame;
   }
@@ -322,7 +321,7 @@ implementation
 
     if (ret != TKNTSCH_SUCCESS) {
       call BeaconTimer.startOneShot(1024 * 5);
-      printf("MLME_BEACON.request returned: 0x%x\n", ret);
+      T_LOG_DEBUG("MLME_BEACON.request returned: 0x%x\n", ret);
     }
   }
 
@@ -335,11 +334,11 @@ implementation
                         uint8_t  PANDescriptorListNumResults,
                         plain154_PANDescriptor_t* PANDescriptorList
                       ){
-    printf("MLME_SCAN.confirm: Scan finished.\n");
-    printfflush();
+    T_LOG_INFO("MLME_SCAN.confirm: Scan finished.\n");
+    T_LOG_FLUSH;
 
     if (!m_synchronized) {
-      printf("No EBeacon received... Restarting scanning now.\n");
+      T_LOG_INFO("No EBeacon received... Restarting scanning now.\n");
       post startScan();
     } else {
       // start the TSSM
@@ -361,23 +360,23 @@ implementation
         memcpy((uint8_t *) &m_timeParent.extendedAddress, (uint8_t *) &(parent->s6_addr[8]), 8);
         ((uint8_t *) &m_timeParent.extendedAddress)[0] ^= 2;
         call MLME_SET.macTimeParent(m_timeParent);
-#ifdef NEW_PRINTF_SEMANTICS
+#ifdef TKN_TSCH_LOG_INFO
         {
         uint8_t *p;
         p = (uint8_t *) &m_timeParent;
-        printf("TimeParent adjusted to changed RPL parent (0x%x 0x%x 0x%x 0x%x)\n", p[0], p[1], p[6], p[7]);
+        T_LOG_INFO("TimeParent adjusted to changed RPL parent (0x%x 0x%x 0x%x 0x%x)\n", p[0], p[1], p[6], p[7]);
         }
 #endif
       }
     } else {
-      printf("RPLParent not available for timeparent selection\n");
+      T_LOG_WARN("RPLParent not available for timeparent selection\n");
     }
     call TimeParentTimer.startOneShot(1024 * 10);
   }
 
 
   event void MLME_BEACON.confirm(plain154_status_t Status) {
-    printf("Received event MLME_BEACON.confirm with status 0x%x\n", Status);
+    T_LOG_BLIP_RXTX_STATE("Received event MLME_BEACON.confirm with status 0x%x\n", Status);
     call BeaconTimer.startOneShot(6*1024);
   }
 }

@@ -38,12 +38,11 @@
 #include "tkntsch_types.h"
 #include "tkntsch_ie.h"
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_FRAMES
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 /**
  * Provides creation and(or) parsing capabilities for these frames:
@@ -152,7 +151,7 @@ implementation {
     timeCorrectionIEStatus = call IE.createTimeCorrection((uint8_t *) (hdr->hie), ack, timeCorrection, &ieLen);
 
     if (timeCorrectionIEStatus != TKNTSCH_SUCCESS) {
-      printf("Creation of time correction IE failed!\n");
+      T_LOG_ERROR("Creation of time correction IE failed!\n");
       hdr->hie[0] = HIE_TERM_NOPIE_LOWER;
       hdr->hie[1] = HIE_TERM_NOPIE_UPPER;
       return timeCorrectionIEStatus;
@@ -190,7 +189,7 @@ implementation {
     srcAddr.extendedAddress = call TknTschMlmeGet.macExtAddr();
     dstAddr.shortAddress = 0xffff;
 
-    //printf("macPanId: %x\n", call TknTschMlmeGet.macPanId());
+    //LOG_INFO("macPanId: %x\n", call TknTschMlmeGet.macPanId());
 
     status = call Frame.setAddressingFields(hdr,
         PLAIN154_ADDR_EXTENDED, // src. addressing mode

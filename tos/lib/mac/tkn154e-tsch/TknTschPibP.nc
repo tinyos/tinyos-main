@@ -31,13 +31,15 @@
  * ========================================================================
  */
 
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_PIB
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
+
 #include "tkntsch_pib.h"
 #include "tkntsch_lock.h"
 #include "static_config.h"
-
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#endif
 
 module TknTschPibP {
 
@@ -248,31 +250,31 @@ implementation {
 
   task void printPib()
   {
-#ifdef NEW_PRINTF_SEMANTICS
+#ifdef TKN_TSCH_LOG_DEBUG
     volatile uint32_t tmp;
     tkntsch_pib_t p, *ppib;
     ppib = call TknTschPib.getPib();
     TKNTSCH_ACQUIRE_LOCK(ppib->lock, tmp);
     if (tmp == FALSE) {
-      printf("printPib: Can't copy PIB, it's locked!\n"); printfflush();
+      T_LOG_ERROR("printPib: Can't copy PIB, it's locked!\n"); T_LOG_FLUSH;
       return;
     }
     atomic p = *ppib; // shallow copy
     TKNTSCH_RELEASE_LOCK(ppib->lock);
 
     for (tmp = 0; tmp < 300000; tmp++) {}
-    printf("printPib\n  macASN_MSB: %u, macASN: %lu\n", p.macASN_MSB, p.macASN);
-    printf("  macTSCHcapable: %u\n", p.macTSCHcapable);
-    printf("  macTSCHenabled: %u\n", p.macTSCHenabled);
-    printfflush();
+    T_LOG_DEBUG("printPib\n  macASN_MSB: %u, macASN: %lu\n", p.macASN_MSB, p.macASN);
+    T_LOG_DEBUG("  macTSCHcapable: %u\n", p.macTSCHcapable);
+    T_LOG_DEBUG("  macTSCHenabled: %u\n", p.macTSCHenabled);
+    T_LOG_FLUSH;
     for (tmp = 0; tmp < 300000; tmp++) {}
-    printf("  macHoppingSequenceID: %u\n", p.macHoppingSequenceID);
-    printf("  macHoppingSequenceLength: %u\n", p.macHoppingSequenceLength);
-    printf("  macHoppingSequence: N/A\n");
-    printf("  macCurrentHop: %u\n", p.macCurrentHop);
-    printf("  macMinBE: %u\n", p.macMinBE);
-    printf("  macMaxBE: %u\n", p.macMaxBE);
-    printfflush();
+    T_LOG_DEBUG("  macHoppingSequenceID: %u\n", p.macHoppingSequenceID);
+    T_LOG_DEBUG("  macHoppingSequenceLength: %u\n", p.macHoppingSequenceLength);
+    T_LOG_DEBUG("  macHoppingSequence: N/A\n");
+    T_LOG_DEBUG("  macCurrentHop: %u\n", p.macCurrentHop);
+    T_LOG_DEBUG("  macMinBE: %u\n", p.macMinBE);
+    T_LOG_DEBUG("  macMaxBE: %u\n", p.macMaxBE);
+    T_LOG_FLUSH;
 #endif
   }
 

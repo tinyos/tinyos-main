@@ -30,17 +30,16 @@
  * @author Jasper Büsch <buesch@tkn.tu-berlin.de>
  */
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
-
 #include "tkntsch_pib.h"
 #include "tssm_utils.h"
 #include "TknTschConfig.h"
 #include "TimerSymbol.h"
+
+#include "TknTschConfigLog.h"
+//#ifndef TKN_TSCH_LOG_ENABLED_TSSM_RX
+//#undef TKN_TSCH_LOG_ENABLED
+//#endif
+#include "tkntsch_log.h"
 
 // TODO record transmission count for statistics
 
@@ -148,7 +147,7 @@ module TknTschTssmRxP {
         // TODO handle full RX queue here?
         /*
         if (queue_size <= 0) {
-          printf("TxDataPrepare: idle TX slot\n");
+          T_LOG_SLOT_STATE("TxDataPrepare: idle TX slot\n");
           atomic {
             context->flags.inactive_slot = TRUE;
             context->frame = NULL;
@@ -161,7 +160,7 @@ module TknTschTssmRxP {
         break;
 
       default:
-        printf("RxDataPrepare: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("RxDataPrepare: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         call DebugHelper.endOfPacketPrepare();
@@ -297,7 +296,7 @@ module TknTschTssmRxP {
             rxTimestamp = metadata->timestamp;
             context->time_correction = (context->radio_t0) + TSSM_SYMBOLS_FROM_US((context->tmpl->macTsTxOffset));
             context->time_correction = TSSM_SYMBOLS_TO_US(((context->time_correction) - rxTimestamp));
-          } else printf("Frame rejected or radio ts invalid!\n");
+          } else T_LOG_ADDRESS_FILTERING("Frame rejected or radio ts invalid!\n");
 
           #ifdef TKN_TSCH_DISABLE_TIME_CORRECTION_BEACONS
             // TODO this does not happen as beacons are rejected above
@@ -325,14 +324,14 @@ module TknTschTssmRxP {
           // We are still in PhyRx INT; to get out we have to schedule the next state properly
           uint32_t refTime = call EventEmitter.getReferenceTime();
           if (call RxDataQueue.full()) {
-            printf("RxDataSuccess: RX w/ ACK (sending NACK)\n");
+            T_LOG_RXTX_STATE("RxDataSuccess: RX w/ ACK (sending NACK)\n");
             atomic context->flags.nack = TRUE;
           } else {
-            printf("RxDataSuccess: RX w/ ACK\n");
+            T_LOG_SLOT_STATE("RxDataSuccess: RX w/ ACK\n");
           }
           call EventEmitter.scheduleEventToReference(TSCH_EVENT_PREPARE_TXACK, TSCH_DELAY_SHORT, refTime, 100);
         } else {
-          printf("RxDataSuccess: RX w/o ACK\n");
+          T_LOG_RXTX_STATE("RxDataSuccess: RX w/o ACK\n");
           atomic {
             ret = FAIL;
             if ((type == PLAIN154_FRAMETYPE_BEACON) && (call Frame.isIEListPresent(header)) ) {
@@ -346,7 +345,7 @@ module TknTschTssmRxP {
               //TODO: ??
             }
             if (ret != SUCCESS) {
-              printf("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
+              T_LOG_WARN("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
               atomic call RxMsgPool.put(context->frame);
               context->flags.indicate_beacon = FALSE;
               context->flags.indicate_data = FALSE;
@@ -362,7 +361,7 @@ module TknTschTssmRxP {
         break;
 
       default:
-        printf("RxDataSuccess: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("RxDataSuccess: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         return;
@@ -400,7 +399,7 @@ module TknTschTssmRxP {
            ( context->link->macLinkOptions & PLAIN154E_LINK_OPTION_TIMEKEEPING )) {
         if (( memcmp((void *) &context->macpib->timeParentAddress, (void *) &peerAddress, sizeof(plain154_address_t)) == 0 )) {
         // received frame is from time parent; don't include time correction into ACK
-        //printf("Not including correction back to t.parent\n");
+        //LOG_TIME_CORRECTION("Not including correction back to t.parent\n");
         timeCorrection = 0;
         } else {
           // sending the time correction in ACK and don't apply it ourselves
@@ -416,7 +415,7 @@ module TknTschTssmRxP {
       // TODO ???
     } else {
       if (TKNTSCH_SUCCESS != (call Frame.getDstPANId(dataHeader, &srcPanID))) {
-        printf("RxFrame had no PanIDs!\n");
+        T_LOG_WARN("RxFrame had no PanIDs!\n");
         //TODO: Get our panid from pib and set it in the answer.
         //TODO: Or should we neglect PANid totally?
         srcPanID = 0xffff;
@@ -464,7 +463,7 @@ module TknTschTssmRxP {
       }
     }
     else {
-      printf("TxAckPrepare: Preparation failed!\n");
+      T_LOG_ERROR("TxAckPrepare: Preparation failed!\n");
       atomic context->flags.internal_error = TRUE;
       call EventEmitter.scheduleEvent(TSCH_EVENT_TX_FAILED, TSCH_DELAY_IMMEDIATE, 0);
     }
@@ -487,13 +486,13 @@ module TknTschTssmRxP {
   async event void TxAckSuccess.handle() {
     uint8_t ret;
 
-    printf("TxAckSuccess\n");
+    T_LOG_SLOT_STATE("TxAckSuccess\n");
     atomic {
       context->flags.success = TRUE;
       context->flags.indicate_data = TRUE;
       ret = call RxDataQueue.enqueue((message_t*) context->frame);
       if (ret != SUCCESS) {
-        printf("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
+        T_LOG_WARN("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
         atomic call RxMsgPool.put(context->frame);
       }
       context->frame = NULL;
@@ -547,13 +546,13 @@ module TknTschTssmRxP {
     switch (slottype) {
       case TSCH_SLOT_TYPE_RX:
         if (internal_error) {
-          printf("RxDataFail: RX error!\n");
+          T_LOG_ERROR("RxDataFail: RX error!\n");
           atomic {
             context->flags.indicate_data = TRUE;  // TODO: Does this make sense at all?
           }
         }
         else {
-          printf("Idle RX link.\n");
+          T_LOG_SLOT_STATE("Idle RX link.\n");
           atomic {
             context->flags.inactive_slot = TRUE;
           }
@@ -562,7 +561,7 @@ module TknTschTssmRxP {
         break;
 
       default:
-        printf("RxDataFail: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("RxDataFail: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         return;
@@ -584,7 +583,7 @@ module TknTschTssmRxP {
   }
 
   async event void CleanupSlotRx.handle() {
-    //printf("Cleaning up after TX slot.\n");
+    //LOG_SLOT_STATE("Cleaning up after RX slot.\n");
 
     // TODO any cleanup necessary after TX?
 

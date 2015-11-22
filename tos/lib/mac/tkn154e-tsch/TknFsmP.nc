@@ -33,16 +33,15 @@
 
 #ifdef TKNFSM_ENABLE_DEBUG_PRINT
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_FSM
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
-#define TKNFSM_DEBUG(str, fsmname) printf((str), (fsmname))
-#define TKNFSM_DEBUG_EVENT(s, e) printf("TknFsm[%s]: Received event 0x%x in state 0x%x\n", fsm_name, (e), (s))
-#define TKNFSM_DEBUG_TRANSITION(from, to) printf("TknFsm[%s]: Transition 0x%x -> 0x%x\n", fsm_name, (from), (to))
+#define TKNFSM_DEBUG(str, fsmname) T_LOG_DEBUG((str), (fsmname))
+#define TKNFSM_DEBUG_EVENT(s, e) T_LOG_DEBUG("TknFsm[%s]: Received event 0x%x in state 0x%x\n", fsm_name, (e), (s))
+#define TKNFSM_DEBUG_TRANSITION(from, to) T_LOG_DEBUG("TknFsm[%s]: Transition 0x%x -> 0x%x\n", fsm_name, (from), (to))
 #else
 #define TKNFSM_DEBUG(str, fsmname)
 #define TKNFSM_DEBUG_EVENT(s, e)

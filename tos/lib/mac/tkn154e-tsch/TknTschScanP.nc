@@ -38,12 +38,11 @@
 #include "plain154_message_structs.h"
 #include "TimerSymbol.h"
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_SCAN
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 /*
 This module is responsible for scanning and
@@ -425,7 +424,7 @@ module TknTschScanP {
     radioStatus = call PhyRx.enableRx(0, 0);
 
     if (radioStatus != SUCCESS) {
-      printf("ScanP: Re-enabling the radio failed.\n");
+      T_LOG_ERROR("ScanP: Re-enabling the radio failed.\n");
       post enableRadio();
     }
   }

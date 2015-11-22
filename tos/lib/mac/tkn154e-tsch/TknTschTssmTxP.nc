@@ -30,17 +30,16 @@
  * @author Jasper Büsch <buesch@tkn.tu-berlin.de>
  */
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
-
 #include "tkntsch_pib.h"
 #include "tssm_utils.h"
 #include "TknTschConfig.h"
 #include "TimerSymbol.h"
+
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_TSSM_TX
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 // TODO record transmission count for statistics
 
@@ -105,7 +104,7 @@ module TknTschTssmTxP {
 
   async event void InitSlotAdv.handle() {
     // TODO use proper logging
-    //printf("Initializing advertisement slot.\n");
+    //LOG_SLOT_STATE("Initializing advertisement slot.\n");
 
     // schedule event
     call EventEmitter.scheduleEvent(TSCH_EVENT_INIT_ADV_DONE, TSCH_DELAY_IMMEDIATE, 0);
@@ -119,8 +118,8 @@ module TknTschTssmTxP {
       //slottype = context->slottype;
     }
 
-    //if (slottype == TSCH_SLOT_TYPE_SHARED) printf("Initializing shared TX slot.\n");
-    //else printf("Initializing TX slot.\n");
+    //if (slottype == TSCH_SLOT_TYPE_SHARED) T_LOG_SLOT_STATE("Initializing shared TX slot.\n");
+    //else T_LOG_SLOT_STATE("Initializing TX slot.\n");
 
     // schedule event
     call EventEmitter.scheduleEvent(TSCH_EVENT_INIT_TX_DONE, TSCH_DELAY_IMMEDIATE, 0);
@@ -167,7 +166,7 @@ module TknTschTssmTxP {
           joinPriority = context->joinPriority;
         }
         if (queue_size <= 0) {
-          printf("TxDataPrepare: idle adv. slot\n");
+          T_LOG_INFO("TxDataPrepare: idle adv. slot\n");
           atomic {
             context->flags.inactive_slot = TRUE;
             context->frame = NULL;
@@ -212,7 +211,7 @@ module TknTschTssmTxP {
         }
 
         if (queue_size <= 0) {
-          printf("TxDataPrepare: idle TX slot\n");
+          T_LOG_INFO("TxDataPrepare: idle TX slot\n");
           atomic {
             context->flags.inactive_slot = TRUE;
             context->frame = NULL;
@@ -228,7 +227,7 @@ module TknTschTssmTxP {
         break;
 
       default:
-        printf("TxDataPrepare: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("TxDataPrepare: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         call DebugHelper.endOfPacketPrepare();
@@ -316,7 +315,7 @@ module TknTschTssmTxP {
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_ADVERTISEMENT:
-        printf("TxDataSuccess [ADV]!\n");
+        T_LOG_SLOT_STATE("TxDataSuccess [ADV]!\n");
 
         // NOTE no ACKs for advertisements
         call AdvQueue.dequeue();  // remove successfully transmitted frame from queue
@@ -335,12 +334,12 @@ module TknTschTssmTxP {
         if (send_ack == TRUE) {
           // We are still in PhyRx INT; to get out we have to schedule the next state properly
           call EventEmitter.scheduleEvent(TSCH_EVENT_PREPARE_RXACK, TSCH_DELAY_SHORT, (call EventEmitter.getReferenceToNowDt()) + 150);
-          printf("TxDataSuccess: TX w ACK\n");
+          T_LOG_SLOT_STATE("TxDataSuccess: TX w ACK\n");
           //call EventEmitter.scheduleEvent(TSCH_EVENT_PREPARE_RXACK, TSCH_DELAY_IMMEDIATE, 0);
         }
         else {
           call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
-          printf("TxDataSuccess: TX w/o ACK\n");
+          T_LOG_SLOT_STATE("TxDataSuccess: TX w/o ACK\n");
           atomic {
             context->flags.success = TRUE;
             context->flags.confirm_data = TRUE;
@@ -351,7 +350,7 @@ module TknTschTssmTxP {
         break;
 
       default:
-        printf("TxDataSuccess: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("TxDataSuccess: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         return;
@@ -450,19 +449,19 @@ module TknTschTssmTxP {
       decodedPeerAddress = TRUE;
 
     if (! call Frame.isIEListPresent(ackHeader)) {
-      printf("ERROR: ACK had no IEs!\n");
+      T_LOG_WARN("ERROR: ACK had no IEs!\n");
       return FALSE;
     }
     if (TKNTSCH_SUCCESS != call TknTschInformationElement.presentHIEs(ackHeader, &hie)) {
-      printf("ERROR: ACK HIE parsing failed!\n");
+      T_LOG_ERROR("ERROR: ACK HIE parsing failed!\n");
       return FALSE;
     }
     if (! hie.correctionIEpresent) {
-      printf("ERROR: ACK had no time correction IE!\n");
+      T_LOG_WARN("ERROR: ACK had no time correction IE!\n");
       return FALSE;
     }
     if ( TKNTSCH_SUCCESS != call TknTschInformationElement.parseTimeCorrection( hie.correctionIEfrom, &ack, &correction)) {
-      printf("ACK IE parsing failed!\n");
+      T_LOG_ERROR("ACK IE parsing failed!\n");
       return FALSE;
     }
 
@@ -473,7 +472,7 @@ module TknTschTssmTxP {
            (memcmp((void *) &context->macpib->timeParentAddress, (void *) &peerAddress, sizeof(plain154_address_t)) == 0 )) {
         context->time_correction = -correction;
       } else {
-        printf("Ignoring ACK HIE time correction!\n");
+        T_LOG_INFO("Ignoring ACK HIE time correction!\n");
         context->time_correction = 0;
       }
     #else
@@ -490,7 +489,7 @@ module TknTschTssmTxP {
     bool ackSuccess = FALSE;
     bool slottype;
 
-    printf("RxAckSuccess");
+    T_LOG_SLOT_STATE("RxAckSuccess");
 
     atomic {
       ackHeader = call Frame.getHeader(context->ack);
@@ -523,9 +522,9 @@ module TknTschTssmTxP {
         context->num_transmissions = 99;
         context->flags.confirm_data = TRUE;
       }
-      printf("\n");
+      T_LOG_SLOT_STATE("\n");
     } else {
-      printf(" (NACK)\n");
+      T_LOG_INFO(" (NACK)\n");
     }
 
     // Reset backoff scheme
@@ -558,7 +557,7 @@ module TknTschTssmTxP {
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_ADVERTISEMENT:
-        printf("TxDataFail: ADV!\n");
+        T_LOG_RXTX_STATE("TxDataFail: ADV!\n");
 
         atomic context->flags.confirm_beacon = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_ADV, TSCH_DELAY_IMMEDIATE, 0);
@@ -569,13 +568,13 @@ module TknTschTssmTxP {
         // TODO calculate CSMA backoff
         atomic {
           if ((context->num_transmissions - 1) >= max_retransmissions) {
-            printf("TxDataFail: Shared TX -> final!\n");
+            T_LOG_RXTX_STATE("TxDataFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             call TxQueue.dequeue();
           }
           else {
-            printf("TxDataFail: Shared TX!\n");
+            T_LOG_RXTX_STATE("TxDataFail: Shared TX!\n");
             // TODO plan retransmission
           }
         }
@@ -583,10 +582,10 @@ module TknTschTssmTxP {
         break;
 
       case TSCH_SLOT_TYPE_TX:
-        printf("TxDataFail: TX!\n");
+        T_LOG_RXTX_STATE("TxDataFail: TX!\n");
         atomic {
           if ((context->num_transmissions - 1) >= max_retransmissions) {
-            printf("TxDataFail: Ded. TX -> final!\n");
+            T_LOG_RXTX_STATE("TxDataFail: Ded. TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             //TODO: FIX THIS: Find the correct frame and remove it from queue (not necessary the first frame)
@@ -597,7 +596,7 @@ module TknTschTssmTxP {
         break;
 
       default:
-        printf("TxDataFail: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("TxDataFail: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         return;
@@ -619,13 +618,13 @@ module TknTschTssmTxP {
       case TSCH_SLOT_TYPE_SHARED:
         atomic {
           if ((context->num_transmissions - 1) >= max_retransmissions) {
-            printf("RxAckFail: Shared TX -> final!\n");
+            T_LOG_RXTX_STATE("RxAckFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             call TxQueue.dequeue();
           }
           else {
-            printf("RxAckFail: Shared TX!\n");
+            T_LOG_RXTX_STATE("RxAckFail: Shared TX!\n");
             // TODO plan retransmission
           }
         }
@@ -633,10 +632,10 @@ module TknTschTssmTxP {
         break;
 
       case TSCH_SLOT_TYPE_TX:
-        printf("ALERT: ACK for plain TX slots is not yet implemented!\n");
-        /*printf("RxAckFail: TX!\n");
+        T_LOG_ERROR("ALERT: ACK for plain TX slots is not yet implemented!\n");
+        /*LOG_RXTX_STATE("RxAckFail: TX!\n");
         if ((context->num_transmissions - 1) == max_retransmissions) {
-          printf("RxAckFail: Ded. TX -> final!\n");
+          T_LOG_RXTX_STATE("RxAckFail: Ded. TX -> final!\n");
           atomic {
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
@@ -648,7 +647,7 @@ module TknTschTssmTxP {
         break;
 
       default:
-        printf("RxAckFail: Unhandled slot type 0x%x\n", slottype);
+        T_LOG_ERROR("RxAckFail: Unhandled slot type 0x%x\n", slottype);
         atomic context->flags.internal_error = TRUE;
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         return;
@@ -658,7 +657,7 @@ module TknTschTssmTxP {
   }
 
   async event void CleanupSlotAdv.handle() {
-    //printf("Cleaning up after advertisement slot.\n");
+    //LOG_SLOT_STATE("Cleaning up after advertisement slot.\n");
 
     // TODO any cleanup necessary after advertisements?
 
@@ -667,7 +666,7 @@ module TknTschTssmTxP {
   }
 
   async event void CleanupSlotTx.handle() {
-    //printf("Cleaning up after TX slot.\n");
+    //LOG_SLOT_STATE("Cleaning up after TX slot.\n");
 
     // TODO any cleanup necessary after TX?
 

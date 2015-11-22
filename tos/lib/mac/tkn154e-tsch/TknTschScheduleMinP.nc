@@ -30,12 +30,11 @@
  * ========================================================================
  */
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_SCHEDULE_MIN
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 #include "tkntsch_pib.h"
 #include "static_config.h" // slotframe and template
@@ -93,7 +92,7 @@ implementation
   // Interface commands and events
   command error_t Init.init()
   {
-    printf("Initializing TknTschScheduleMinP\n"); printfflush();
+    T_LOG_INIT("Initializing TknTschScheduleMinP\n"); T_LOG_FLUSH;
     return SUCCESS;
   }
 
@@ -119,29 +118,29 @@ implementation
 
   task void printSchedule()
   {
-#ifdef NEW_PRINTF_SEMANTICS
+#ifdef TKN_TSCH_LOG_DEBUG
     volatile uint32_t tmp;
     uint8_t* ptmp;
     int i = 0;
     // TODO should all data be copied?
     macLinkEntry_t* link;
-    printf("macSlotframeTable\n  handle\tsize\n  %u\t%u\n",
+    T_LOG_DEBUG("macSlotframeTable\n  handle\tsize\n  %u\t%u\n",
         min_6tsch_slotframe.macSlotframeHandle, min_6tsch_slotframe.macSlotframeSize);
-    printf("macLinkTable\n  handle\toptions\ttype\tframe\taddr\t\t\t\tslot\tchannel\n");
+    T_LOG_DEBUG("macLinkTable\n  handle\toptions\ttype\tframe\taddr\t\t\t\tslot\tchannel\n");
     for (i = 0; i < slotframe_active_slots; i++) {
       link = call Schedule.getLink(i);
       ptmp = (uint8_t*) &link->macNodeAddress.addr;
-      printf("  %u\t\t", link->macLinkHandle);
-      printf("  %x\t", link->macLinkOptions);
-      printf("  %u\t", link->macLinkType);
-      printf("  %u\t", link->sfHandle);
-      printf("  (%u): %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\t", link->macNodeAddress.mode,
+      T_LOG_DEBUG("  %u\t\t", link->macLinkHandle);
+      T_LOG_DEBUG("  %x\t", link->macLinkOptions);
+      T_LOG_DEBUG("  %u\t", link->macLinkType);
+      T_LOG_DEBUG("  %u\t", link->sfHandle);
+      T_LOG_DEBUG("  (%u): %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\t", link->macNodeAddress.mode,
           ptmp[0], ptmp[2], ptmp[3],
           ptmp[3], ptmp[4], ptmp[5],
           ptmp[6], ptmp[7]);
-      printf("  %u\t", link->macTimeslot);
-      printf("  %u\n", link->macChannelOffset);
-      printfflush();
+      T_LOG_DEBUG("  %u\t", link->macTimeslot);
+      T_LOG_DEBUG("  %u\n", link->macChannelOffset);
+      T_LOG_FLUSH;
       for (tmp = 0; tmp < 300000; tmp++) {}
     }
 #endif

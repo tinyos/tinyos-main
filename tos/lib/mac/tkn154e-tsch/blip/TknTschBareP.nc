@@ -56,17 +56,11 @@
 #define MAX_ACK_WAIT_DURATION_32KHZ (MAX_ACK_WAIT_DURATION_SYMBOLS/2)
 #define ACK_DELAY_SYMBOLS 12
 
-#ifndef ENABLE_PRINTF
-  #define DBG(...)
-  #define DBG_1ARG(fmt, arg1)
-#else
-  #ifndef NEW_PRINTF_SEMANTICS
-    #define NEW_PRINTF_SEMANTICS
-  #endif
-  #include "printf.h"
-  #define DBG(fmt) printf(fmt); printfflush()
-  #define DBG_1ARG(fmt, arg1) printf(fmt, arg1); printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_BLIP_BARE
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 
 module TknTschBareP {
@@ -208,15 +202,15 @@ implementation {
     plain154_header_t* header;
     header = call Plain154Frame.getHeader(msg);
 
-    DBG_1ARG("Received a DATA frame with DSN %.2X\n", call Plain154Frame.getDSN(header));
+    T_LOG_BLIP_RXTX_STATE("Received a DATA frame with DSN %.2X\n", call Plain154Frame.getDSN(header));
 /*    for (i = 0; i < sizeof(message_t); i++) {
-    DBG_1ARG("%.2X ", ((uint8_t*) msg)[i]);
+    T_LOG_DEBUG("%.2X ", ((uint8_t*) msg)[i]);
     }
-    DBG("\n");
+    T_LOG_DEBUG("\n");
 */
     if (m_rxMsgBufferFree == FALSE) {
       // there is yet another packet waiting to be enqueued
-      DBG("TschBare: Dropping RX frame: The buffer is occupied\n");
+      T_LOG_WARN("TschBare: Dropping RX frame: The buffer is occupied\n");
       atomic call RxMessagePool.put(msg);
       return;
     }
@@ -225,14 +219,14 @@ implementation {
     #warning "TknTschBareP uses address filtering"
     // Address filtering
     if (call Plain154Frame.getDstAddrMode(header) == PLAIN154_ADDR_NOT_PRESENT) {
-      DBG("TschBare: Dropping RX frame: Filter: no dst addr\n");
+      T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: no dst addr\n");
       atomic call RxMessagePool.put(msg);
       return;
     }
 
     if (call Plain154Frame.getFrameType(header) != PLAIN154_FRAMETYPE_DATA) {
       // we are nothing else but data frames at or after this point
-      DBG("TschBare: Dropping RX frame: Filter: not a data frame\n");
+      T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: not a data frame\n");
       atomic call RxMessagePool.put(msg);
       return;
     }
@@ -245,7 +239,7 @@ implementation {
       call Plain154Frame.getDstAddr(header,&dst);
       sAddr = dst.shortAddress;
       if ((m_saddr != 0xffff) && (sAddr != 0xffff) && (sAddr != m_saddr)) {
-        DBG("TschBare: Dropping RX frame: Filter: short dst addr mismatch\n");
+        T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: short dst addr mismatch\n");
         atomic call RxMessagePool.put(msg);
         return;
       }
@@ -257,13 +251,13 @@ implementation {
       memcpy(eAddr.data, &(dst.extendedAddress), 8);
       for (i = 0; i < 7; i++){
         if (eAddr.data[7-i] != m_laddr.data[i]) {
-          DBG("TschBare: Dropping RX frame: Filter: extended dst addr mismatch\n");
+          T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: extended dst addr mismatch\n");
           atomic call RxMessagePool.put(msg);
           return;
         }
       }
     } else { // reserved dest. address formats
-      DBG("TschBare: Dropping RX frame: Filter: reserved dst addr\n");
+      T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: reserved dst addr\n");
       atomic call RxMessagePool.put(msg);
       return;
     }
@@ -274,7 +268,7 @@ implementation {
       call Plain154Frame.getDstPANId(header, &panID);
       if (panID != 0xffff) {
         if (m_panID != panID){
-          DBG("TschBare: Dropping RX frame: Filter: PAN ID mismatch\n");
+          T_LOG_ADDRESS_FILTERING("TschBare: Dropping RX frame: Filter: PAN ID mismatch\n");
           atomic call RxMessagePool.put(msg);
           return;
         }
@@ -382,14 +376,14 @@ implementation {
 
     // move any header IEs
     if (call Plain154Frame.isIEListPresent(header)) {
-      DBG("[WARNING] BLIP is sending a frame with IEs...\n");
+      T_LOG_WARN("[WARNING] BLIP is sending a frame with IEs...\n");
     }
 
     // copy payload
     payloadlen = ((uint8_t *) msg)[0] - data_index - 2; // two bytes CRC
     payload = call Plain154Packet.getPayload(&m_txMsg, payloadlen);
     if (payload == NULL) {
-      DBG("Could not allocate enough payload space!\n");
+      T_LOG_ERROR("Could not allocate enough payload space!\n");
     }
     memcpy(payload, &from_data[data_index], payloadlen);
 
@@ -499,11 +493,11 @@ implementation {
   // ----- Tasks ---------------------------------------
 
   task void enqueueRxedMsg() {
-    DBG("Enqueueing packet to rx queue.");
+    T_LOG_BLIP_RXTX_STATE("Enqueueing packet to rx queue.");
     if (call RxMessagePool.empty()) {
       // nothing left in pool, we have to wait for now
       post enqueueRxedMsg();  // repost to try again later
-      DBG(".");
+      T_LOG_DEBUG(".");
       return;
     }
     atomic {
@@ -511,7 +505,7 @@ implementation {
       //m_rxMsgBuffer = call RxMessagePool.get();
       m_rxMsgBufferFree = TRUE;
     }
-    DBG("\n");
+    T_LOG_BLIP_RXTX_STATE("\n");
     post deliverQueuedMsg();
   }
 
@@ -552,7 +546,7 @@ implementation {
     payloadlen = header->payloadlen;
 
     if(call Plain154Frame.getActualHeaderLength(header, &hdrlen) != SUCCESS) {
-      DBG("TknTschBare: Parsing error, dropping frame!\n");
+      T_LOG_WARN("TknTschBare: Parsing error, dropping frame!\n");
       atomic call RxMessagePool.put(msg);
       return;
     }
@@ -583,7 +577,7 @@ implementation {
         memcpy(&ptr[data_index], t, 8);
         data_index += 8;
       } else {
-        DBG("TknTschBare: Parsing error, dropping frame!\n");
+        T_LOG_WARN("TknTschBare: Parsing error, dropping frame!\n");
         atomic call RxMessagePool.put(msg);
         return;
       }
@@ -609,7 +603,7 @@ implementation {
         memcpy(&ptr[data_index], t, 8);
         data_index += 8;
       } else {
-        DBG("TknTschBare: Parsing error, dropping frame!\n");
+        T_LOG_WARN("TknTschBare: Parsing error, dropping frame!\n");
         atomic call RxMessagePool.put(msg);
         return;
       }
@@ -628,7 +622,7 @@ implementation {
     // copy the transformed frame back to the given buffer
     memcpy((uint8_t*)msg, ptmp_msg, sizeof(message_t));
 
-    //DBG("Delivering packet to upper layers...\n");
+    T_LOG_DEBUG("Delivering packet to upper layers...\n");
     payloadlen = call BarePacket.payloadLength(msg);
     payload = call BarePacket.getPayload(msg, 0);
     ret_msg = signal BareReceive.receive(msg,

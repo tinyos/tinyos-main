@@ -35,13 +35,6 @@
 //#include "Timer62500hz.h"
 #include "TimerSymbol.h"
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
-
 #ifndef APP_RADIO_CHANNEL
 #define APP_RADIO_CHANNEL RADIO_CHANNEL
 #endif
@@ -53,6 +46,12 @@
 #include "plain154_message_structs.h"
 #include "plain154_values.h"
 #include "TknTschConfig.h"
+
+#include "TknTschConfigLog.h"
+//#ifndef TKN_TSCH_LOG_ENABLED_TSSMP
+//#undef TKN_TSCH_LOG_ENABLED
+//#endif
+#include "tkntsch_log.h"
 
 module TknTschTssmP
 {
@@ -155,7 +154,7 @@ implementation
   // Interface commands and events
   command error_t SplitControl.start()
   {
-    printf("TknTschTssmP starting...\n"); printfflush();
+    T_LOG_INIT("TknTschTssmP starting...\n"); T_LOG_FLUSH;
     post init();
     return SUCCESS;
   }
@@ -191,7 +190,7 @@ implementation
       return TSCH_SLOT_TYPE_RX;
     }
 
-    atomic printf("getSlotType(%u): Unhandled link option combination!\n",
+    atomic T_LOG_ERROR("getSlotType(%u): Unhandled link option combination!\n",
         link->macTimeslot);
     return TSCH_SLOT_TYPE_OFF;
   }
@@ -224,7 +223,7 @@ implementation
       m_mcuSleepAllowed = FALSE;
     }
 
-    printf("Size of the FSM table: %i\n", sizeof(eventhandler_table));
+    T_LOG_INIT("Size of the FSM table: %i\n", sizeof(eventhandler_table));
 
     call fsm.forceState(TKNFSM_STATE_INIT);
     call EventEmitter.emit(TKNFSM_EVENT_INIT);
@@ -236,11 +235,11 @@ implementation
   {
     call DebugHelper.setErrorIndicator();
     atomic {
-      printf("ErrorReport [%lu] %u\n", ErrorReport.time, ErrorReport.error);
+      T_LOG_ERROR("ErrorReport [%lu] %u\n", ErrorReport.time, ErrorReport.error);
       ErrorReport.time = 0;
       ErrorReport.error = TSCH_ERROR_NONE;
     }
-    printfflush();
+    T_LOG_FLUSH;
   }
 
 
@@ -295,7 +294,7 @@ implementation
     macTimeslotTemplate_t* tmpl;
 
     // print PIB and schedule
-    printfflush();
+    T_LOG_FLUSH;
     //call Pib.printPib();
     //call Template.printTemplate();
     //call Schedule.printSchedule();
@@ -303,10 +302,8 @@ implementation
     // acquire current timeslot template (may change in SLOT_IDLE)
     tmpl = call Template.acquire(); // locks the template
     if (tmpl == NULL) {
-      // TODO handle error when trying to acquire the template
-      // TODO log error
-      printf("Could not acquire the timeslot template!\n");
-      printfflush();
+      T_LOG_ERROR("Could not acquire the timeslot template!\n");
+      T_LOG_FLUSH;
       return;
     }
 
@@ -416,14 +413,14 @@ implementation
     #endif
 
     if (correction != 0)
-      printf("TimeCorrection: %dus\n", correction);
+      T_LOG_TIME_CORRECTION("TimeCorrection: %dus\n", correction);
 
     call EventEmitter.scheduleEvent(TSCH_EVENT_START_SLOT, TSCH_DELAY_SHORT, slotlength);
     call EventEmitter.addToReferenceTime(slotlength);
     // NOTE later power management could be done here
     // NOTE also changes to the PIB and some MLME handling should happen here
 
-    printfflush();
+    T_LOG_FLUSH;
 
     atomic {
       if (m_mcuSleepAllowed != m_mcuSleepAllowedNext)
@@ -455,7 +452,7 @@ implementation
     }
     if (ret == FALSE) {
       // TODO log
-      atomic printf("SLOT_START: Couldn't acquire the MacPib lock!\n");
+      atomic T_LOG_ERROR("SLOT_START: Couldn't acquire the MacPib lock!\n");
       call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT,
           TSCH_DELAY_IMMEDIATE, 0);
       call DebugHelper.endOfSlotStart();
@@ -482,9 +479,9 @@ implementation
       atomic {
         uint32_t asn = (uint32_t) (MacPib->macASN);
         signal TknTschEvents.asn(&asn);
-        //printf("@\n");
-        //printfflush();
-        printf("ASN: %u\n", (uint32_t) (MacPib->macASN));
+        T_LOG_ACTIVE_SLOT_INFO("@\n");
+        T_LOG_FLUSH;
+        T_LOG_ACTIVE_SLOT_INFO("ASN: %u\n", (uint32_t) (MacPib->macASN));
       }
     }
 
@@ -523,7 +520,7 @@ implementation
         if (context.numBackoffSlots == 0) {
           context.numBackoffSlots = INVALID_BACKOFF;
         } else {
-          //printf("==>> %u (be: %u) ", context.numBackoffSlots, context.macBE);
+          T_LOG_COLLISION_AVOIDANCE("==>> %u (be: %u) \n", context.numBackoffSlots, context.macBE);
           context.numBackoffSlots -= 1;
           // Backoff active, overriding slot purpose to RX only
           slottype = TSCH_SLOT_TYPE_RX;
@@ -603,7 +600,7 @@ implementation
 
       default:
         // TODO use error report instead of printf
-        atomic printf("handleSlotStart: ASN: %lu, timeslot: %u, slottype: %u -> slottype is unknown -> OFF\n", (uint32_t) MacPib->macASN, timeslot, slottype);
+        atomic T_LOG_WARN("handleSlotStart: ASN: %lu, timeslot: %u, slottype: %u -> slottype is unknown -> OFF\n", (uint32_t) MacPib->macASN, timeslot, slottype);
         call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
         break;
     }
@@ -626,9 +623,9 @@ implementation
     status =  call PhyOff.off();
     if (status != SUCCESS) {
       if (status == EALREADY)
-        printf("Switching radio off failed (already off)!\n");
+        T_LOG_WARN("Switching radio off failed (already off)!\n");
       else {
-        printf("Radio off error!!!\n");
+        T_LOG_ERROR("Radio off error!!!\n");
       }
     }
 
@@ -647,7 +644,7 @@ implementation
     switch (slottype) {
       case TSCH_SLOT_TYPE_OFF:
         // nothing to do
-        //atomic printf("OFF ended [0x%X]\n", (uint32_t)asn);
+        //atomic T_LOG_INFO("OFF ended [0x%X]\n", (uint32_t)asn);
         break;
 
       case TSCH_SLOT_TYPE_ADVERTISEMENT:
@@ -668,13 +665,13 @@ implementation
           }
         }
         if (confirm_beacon) post signalBeaconConfirm();
-        //atomic printf("ADV ended [0x%X]\n", (uint32_t)asn);
+        //atomic T_LOG_INFO("ADV ended [0x%X]\n", (uint32_t)asn);
         break;
 
       case TSCH_SLOT_TYPE_SHARED:
-        //atomic printf("Shared ");
+        //atomic T_LOG_SLOT_STATE("Shared ");
       case TSCH_SLOT_TYPE_TX:
-        //atomic printf("TX ended [0x%X]\n", (uint32_t)asn);
+        //atomic T_LOG_SLOT_STATE("TX ended [0x%X]\n", (uint32_t)asn);
         // TODO handle TX slots
         atomic {
           confirm_data = context.flags.confirm_data;
@@ -693,7 +690,7 @@ implementation
         break;
 
       case TSCH_SLOT_TYPE_RX:
-        //atomic printf("RX ended [0x%X]\n", (uint32_t)asn);
+        //atomic T_LOG_SLOT_STATE("RX ended [0x%X]\n", (uint32_t)asn);
         // TODO handle RX slots
         atomic {
           if (context.flags.indicate_data) {
@@ -705,10 +702,10 @@ implementation
         break;
 
       default:
-        atomic printf("SLOT_END: Unhandled slot type 0x%x\n", slottype);
+        atomic T_LOG_WARN("SLOT_END: Unhandled slot type 0x%x\n", slottype);
     }
 
-    //atomic {printf("Ending test run at SLOT_END...\n"); printfflush();} return;
+    //atomic {LOG_DEBUG("Ending test run at SLOT_END...\n"); T_LOG_FLUSH;} return;
 
     call EventEmitter.scheduleEvent(TSCH_EVENT_SLOT_ENDED,
         TSCH_DELAY_IMMEDIATE, 0);
@@ -748,7 +745,6 @@ implementation
       return TKNTSCH_NOT_IMPLEMENTED_YET;
 
     atomic {
-      //printf("ADV: queue.size: %i; internal pool size: %i\n", call AdvQueue.size(), call AdvMsgPool.size());
       if ((call AdvQueue.full() == TRUE) || (call AdvMsgPool.empty() == TRUE)) {
         return TKNTSCH_BUSY;
       }
@@ -768,11 +764,12 @@ implementation
         TRUE  // include Slotframe & Link IE
       );
     if (ret != TKNTSCH_SUCCESS) {
-      printf("TssmP: Beacon frame creation failed!\n");
+      T_LOG_ERROR("TssmP: Beacon frame creation failed!\n");
     }
 
     // that's it
     atomic ret = call AdvQueue.enqueue(msg);
+    T_LOG_BUFFERING("ADV queue: %i/%i\n", call AdvQueue.size(), call AdvQueue.maxSize());
     if (ret == SUCCESS) {
       return TKNTSCH_SUCCESS;
     }
@@ -855,6 +852,7 @@ implementation
 
     // that's it
     atomic ret = call TxQueue.enqueue(msg);
+    T_LOG_BUFFERING("TX queue: %i/%i\n", call TxQueue.size(), call TxQueue.maxSize());
     if (ret == SUCCESS) {
       return TKNTSCH_SUCCESS;
     }
@@ -886,7 +884,7 @@ implementation
     }
 
     if (queue_size <= 0) {
-      printf("task signalDataIndicate: empty queue.\n");
+      T_LOG_WARN("task signalDataIndicate: empty queue.\n");
       return;
     }
 
@@ -897,6 +895,7 @@ implementation
     signal MCPS_DATA.indication(msg, 127, 0, 0, 0, 0);
     call RxMsgPool.put(msg);
 
+    T_LOG_BUFFERING("RX queue: %i/%i\n", call RxDataQueue.size(), call RxDataQueue.maxSize());
     atomic {
       queue_size = call RxDataQueue.size();
     }
@@ -916,7 +915,7 @@ implementation
     }
 
     if (queue_size <= 0) {
-      printf("task signalBeaconIndicate: empty queue.\n");
+      T_LOG_WARN("task signalBeaconIndicate: empty queue.\n");
       return;
     }
 

@@ -37,13 +37,6 @@
 #include "tkntsch_pib.h"
 #include "tkntsch_ie.h"
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
-
 module TknTschInformationElementP
 {
   provides {

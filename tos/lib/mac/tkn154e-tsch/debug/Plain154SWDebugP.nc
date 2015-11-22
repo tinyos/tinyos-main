@@ -29,12 +29,11 @@
  * @author Moksha Birk <birk@tkn.tu-berlin.de>
  */
 
-#ifdef NEW_PRINTF_SEMANTICS
-#include "printf.h"
-#else
-#define printf(...)
-#define printfflush()
-#endif
+#include "TknTschConfigLog.h"
+//ifndef TKN_TSCH_LOG_ENABLED_PLAIN154_SWDEBUG
+//undef TKN_TSCH_LOG_ENABLED
+//endif
+#include "tkntsch_log.h"
 
 #include "plain154_message_structs.h"
 #include "plain154_values.h"
@@ -46,67 +45,67 @@ module Plain154SWDebugP {
     interface Plain154SWDebug;
   }
 } implementation {
-  command void Plain154SWDebug.printFCF(uint8_t fcf1, uint8_t fcf2) {
-    printf("FCF: ");
+  command void Plain154SWDebug.LOG_DEBUGCF(uint8_t fcf1, uint8_t fcf2) {
+    T_LOG_DEBUG("FCF: ");
     // frame version
     switch (fcf2 & PLAIN154_FC2_MASK_VERSION) {
       case PLAIN154_FC2_FRAME_VERSION_1:
-        printf("v1");
+        T_LOG_DEBUG("v1");
         break;
       case PLAIN154_FC2_FRAME_VERSION_2:
-        printf("v2");
+        T_LOG_DEBUG("v2");
         break;
       default:
-        printf("v?");
+        T_LOG_DEBUG("v?");
     }
     switch (fcf1 & PLAIN154_FC1_MASK_FRAMETYPE) {
-	  case PLAIN154_FC1_BEACON:
-        printf(" BEACON");
+	    case PLAIN154_FC1_BEACON:
+        T_LOG_DEBUG(" BEACON");
         break;
-	  case PLAIN154_FC1_DATA:
-        printf(" DATA");
+	    case PLAIN154_FC1_DATA:
+        T_LOG_DEBUG(" DATA");
         break;
-	  case PLAIN154_FC1_ACK:
-        printf(" ACK");
+      case PLAIN154_FC1_ACK:
+        T_LOG_DEBUG(" ACK");
         break;
-	  case PLAIN154_FC1_CMD:
-        printf(" CMD");
+      case PLAIN154_FC1_CMD:
+        T_LOG_DEBUG(" CMD");
         break;
-	  default:
-        printf(" UNKNOWN");
+      default:
+        T_LOG_DEBUG(" UNKNOWN");
         break;
     }
     switch ((fcf2 & PLAIN154_FC2_MASK_ADDRMODE_SRC) >> PLAIN154_FC2_BITOFFSET_ADDRMODE_SRC) {
-	  case PLAIN154_ADDR_NOT_PRESENT:
-        printf(" SRC-NONE");
+      case PLAIN154_ADDR_NOT_PRESENT:
+        T_LOG_DEBUG(" SRC-NONE");
         break;
-	  case PLAIN154_ADDR_SHORT:
-        printf(" SRC-SHORT");
+      case PLAIN154_ADDR_SHORT:
+        T_LOG_DEBUG(" SRC-SHORT");
         break;
-	  case PLAIN154_ADDR_EXTENDED:
-        printf(" SRC-LONG");
+      case PLAIN154_ADDR_EXTENDED:
+        T_LOG_DEBUG(" SRC-LONG");
         break;
-	  default:
-        printf(" SRC-?");
+      default:
+        T_LOG_DEBUG(" SRC-?");
     }
     switch ((fcf2 & PLAIN154_FC2_MASK_ADDRMODE_DEST) >> PLAIN154_FC2_BITOFFSET_ADDRMODE_DEST) {
-	  case PLAIN154_ADDR_NOT_PRESENT:
-        printf(" DEST-NONE");
+      case PLAIN154_ADDR_NOT_PRESENT:
+        T_LOG_DEBUG(" DEST-NONE");
         break;
-	  case PLAIN154_ADDR_SHORT:
-        printf(" DEST-SHORT");
+      case PLAIN154_ADDR_SHORT:
+        T_LOG_DEBUG(" DEST-SHORT");
         break;
-	  case PLAIN154_ADDR_EXTENDED:
-        printf(" DEST-LONG");
+      case PLAIN154_ADDR_EXTENDED:
+        T_LOG_DEBUG(" DEST-LONG");
         break;
-	  default:
-        printf(" DEST-?");
+      default:
+        T_LOG_DEBUG(" DEST-?");
     }
-    if (fcf1 & PLAIN154_FC1_ACK_REQUEST) printf(" ack-req.");
-    if (fcf1 & PLAIN154_FC1_PANID_COMPRESSION) printf(" panid-comp.");
-    if (fcf1 & PLAIN154_FC1_FRAME_PENDING) printf(" f-pend.");
-    if (fcf1 & PLAIN154_FC1_SECURITY) printf(" sec");
-    printf("\n");
+    if (fcf1 & PLAIN154_FC1_ACK_REQUEST) T_LOG_DEBUG(" ack-req.");
+    if (fcf1 & PLAIN154_FC1_PANID_COMPRESSION) T_LOG_DEBUG(" panid-comp.");
+    if (fcf1 & PLAIN154_FC1_FRAME_PENDING) T_LOG_DEBUG(" f-pend.");
+    if (fcf1 & PLAIN154_FC1_SECURITY) T_LOG_DEBUG(" sec");
+    T_LOG_DEBUG("\n");
   }
 
 }
