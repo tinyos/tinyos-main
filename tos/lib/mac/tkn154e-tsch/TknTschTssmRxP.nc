@@ -433,7 +433,8 @@ module TknTschTssmRxP {
       plain154_header_t *ackHeader;
       uint8_t ackHeaderLen;
       plain154_txframe_t *txframe;
-      uint32_t radioDataEndTs, macTsTxAckDelay;
+      uint8_t rxDataFrameLen;
+      plain154_metadata_t* rxDataFrameMeta;
 
       // prepare the frame structure
       atomic {
@@ -442,8 +443,7 @@ module TknTschTssmRxP {
         ackHeader = call Frame.getHeader( (message_t*) &m_ackFrame );
         txframe->payload = call Packet.getPayload(&m_ackFrame, txframe->payloadLen);
         txframe->metadata = call Metadata.getMetadata(&m_ackFrame);
-        radioDataEndTs = context->radioDataEndTs;
-        macTsTxAckDelay = context->tmpl->macTsTxAckDelay;
+        rxDataFrameMeta = call Metadata.getMetadata((message_t*) context->frame);
       }
       call Frame.setDSN(ackHeader, call Frame.getDSN(dataHeader));
       call Frame.getActualHeaderLength(ackHeader, &ackHeaderLen);
@@ -451,10 +451,13 @@ module TknTschTssmRxP {
       txframe->headerLen = ackHeaderLen;
       txframe->payloadLen = 0;
 
-      ret = call PhyTx.transmit(txframe, radioDataEndTs,
-          TSSM_SYMBOLS_FROM_US(macTsTxAckDelay)
-        );
+      call Frame.getActualHeaderLength(dataHeader, &rxDataFrameLen);
+      rxDataFrameLen += call Packet.payloadLength((message_t*) context->frame);
 
+      ret = call PhyTx.transmit(txframe, rxDataFrameMeta->timestamp,
+          // (4 [preamb] + 1 [SFD] + 1 [len] + PSDU + 2 [CRC]) * 2 = air symbols
+          ((rxDataFrameLen + 8) * 2) + (uint16_t) TSSM_SYMBOLS_FROM_US(context->tmpl->macTsTxAckDelay)
+        );
       if (ret != SUCCESS) {
         call EventEmitter.scheduleEvent(TSCH_EVENT_TX_FAILED, TSCH_DELAY_IMMEDIATE, 0);
       }
