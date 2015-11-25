@@ -455,8 +455,13 @@ module TknTschTssmRxP {
       rxDataFrameLen += call Packet.payloadLength((message_t*) context->frame);
 
       ret = call PhyTx.transmit(txframe, rxDataFrameMeta->timestamp,
-          // (4 [preamb] + 1 [SFD] + 1 [len] + PSDU + 2 [CRC]) * 2 = air symbols
-          ((rxDataFrameLen + 8) * 2) + (uint16_t) TSSM_SYMBOLS_FROM_US(context->tmpl->macTsTxAckDelay)
+          // The RX timestamp refers to time when preamble starts
+          // PhyTx.transmit schedules the time when preamble should start
+          // 802.15.4 specifies eACKs need to be delayed for macTsTxAckDelay after
+          // data reception, more precisely, the point in time after the SFD
+          // rxTimestamp + (1 [PSDU len field] + PSDU + 2 [CRC]) * 2 + macTsTxAckDelay
+          //  = delay until preamble needs to start
+          ((1 + rxDataFrameLen + 2) * 2) + (uint16_t) TSSM_SYMBOLS_FROM_US(context->tmpl->macTsTxAckDelay)
         );
       if (ret != SUCCESS) {
         call EventEmitter.scheduleEvent(TSCH_EVENT_TX_FAILED, TSCH_DELAY_IMMEDIATE, 0);
