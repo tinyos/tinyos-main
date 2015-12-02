@@ -6,7 +6,7 @@ configuration AppLinkedListTestC
 	components LinkedListTestC;
 	components PrintfC;
 	components SerialStartC;
-	components new LinkedListC(uint8_t*, 10) as List;
+	components new LinkedListC(10) as List;
 
 	LinkedListTestC -> MainC.Boot;
 	LinkedListTestC.Queue -> List;
