@@ -237,9 +237,10 @@ implementation {
           iesTotalLen = savelen;
           break;
         }
-        if ((from->u8PayloadLength - 2) == (fromHdrIndex + ieLength)) {
+        if ((ieEid != 0x7f) &&
+            (from->u8PayloadLength - 2) == (fromHdrIndex + ieLength)) {
           // end of frame reached; HIE is not terminated
-          printf("!! MMAC->154: line 253\n");
+          LOW_WARN("HIE term. missing\n");
           break;
         }
       }
