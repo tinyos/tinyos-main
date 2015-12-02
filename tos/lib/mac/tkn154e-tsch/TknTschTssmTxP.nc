@@ -406,22 +406,26 @@ module TknTschTssmTxP {
 
   async event void RxAckHwScheduled.handle() {
     uint32_t maxRxAckDelay;
-    uint32_t macTsTxOffset;
-    uint32_t macTsMaxTx;
+    //uint32_t macTsTxOffset;
+    //uint32_t macTsMaxTx;
     uint32_t macTsTxAckDelay;
+    //uint32_t macTsAckWait;
     uint32_t macTsMaxAck;
-
     atomic {
-      macTsTxOffset = context->tmpl->macTsTxOffset;
-      macTsMaxTx = context->tmpl->macTsMaxTx;
+      //macTsTxOffset = context->tmpl->macTsTxOffset;
+      //macTsMaxTx = context->tmpl->macTsMaxTx;
       macTsTxAckDelay = context->tmpl->macTsTxAckDelay;
+      //macTsAckWait = context->tmpl->macTsAckWait;
       macTsMaxAck = context->tmpl->macTsMaxAck;
       context->flags.radio_irq_expected = TRUE;
     }
 
-    maxRxAckDelay =  macTsTxOffset + macTsMaxTx + macTsTxAckDelay + macTsMaxAck;
+    //maxRxAckDelay =  macTsTxOffset + macTsMaxTx + macTsTxAckDelay + macTsMaxAck;
+    maxRxAckDelay =  macTsTxAckDelay + macTsMaxAck;
 
-    call EventEmitter.scheduleEvent(TSCH_EVENT_RX_FAILED, TSCH_DELAY_SHORT, maxRxAckDelay);
+    //call EventEmitter.scheduleEvent(TSCH_EVENT_RX_FAILED, TSCH_DELAY_SHORT, maxRxAckDelay);
+    call EventEmitter.scheduleEvent(TSCH_EVENT_RX_FAILED, TSCH_DELAY_SHORT,
+                                   (call EventEmitter.getReferenceToNowDt()) + maxRxAckDelay);
   }
 
   async event message_t* PhyRx.received(message_t *frame) {
