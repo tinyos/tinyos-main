@@ -30,13 +30,13 @@
  */
 
 /**
- *  A general FIFO queue component, where intermediate elements can be removed.
+ *  A message_t* FIFO queue component, where intermediate elements can be removed.
  */
 
 
-generic module LinkedListC(typedef data_t, uint8_t LIST_SIZE) {
-  provides interface LinkedList<data_t>;
-  provides interface Queue<data_t>;
+generic module LinkedListC(uint8_t LIST_SIZE) {
+  provides interface LinkedList<message_t*>;
+  provides interface Queue<message_t*>;
 }
 
 implementation {
@@ -45,7 +45,7 @@ implementation {
 
   typedef struct listElement {
     struct listElement_t* prev;
-    data_t elem;
+    message_t* ONE_NOK elem;
     struct listElement_t* next;
     bool inUse;
   } listElement_t;
@@ -63,40 +63,48 @@ implementation {
     }
   }
 
-  command bool LinkedList.remove(data_t element) {
+  command bool LinkedList.remove(message_t* ONE element) {
     uint8_t i;
     listElement_t* entry;
+    listElement_t* newHead = head;
+    listElement_t* newTail = tail;
     entry = head;
 
     if (call Queue.empty())
       return FALSE;
 
-    for (i=0; i<LIST_SIZE; i++) {
-      data_t elem;
-      entry = (listElement_t*) entry->next;
-      elem = (data_t)(entry->elem);
-//      if (elem == element)
+    for (i=0; i<size; i++) {
+      message_t* ONE elem;
+      elem = (message_t* ONE) (entry->elem);
+      if (elem == element)
         break;
+      entry = (listElement_t*) entry->next;
     }
-    if (i == LIST_SIZE) return FALSE; // not found
+    if (i == LIST_SIZE)
+      return FALSE; // element not found
 
-    ((listElement_t*) entry->prev)->next = entry->next;
-    ((listElement_t*) entry->next)->prev = entry->prev;
+    if (entry != head)
+      ((listElement_t*) entry->prev)->next = entry->next;
+    if (entry != tail)
+      ((listElement_t*) entry->next)->prev = entry->prev;
     entry->inUse = FALSE;
     if (entry == head) {
-      ((listElement_t*) entry->next)->prev = NULL;
-      head = ((listElement_t*) entry->next);
+      newHead = ((listElement_t*) entry->next);
+      //if (entry != tail)((listElement_t*) entry->next)->prev = NULL;
     }
-    else if (entry == tail) {
-      ((listElement_t*) entry->prev)->next = NULL;
-      tail = ((listElement_t*) entry->prev);
+    if (entry == tail) {
+      newTail = ((listElement_t*) entry->prev);
+      //if (entry != head) ((listElement_t*) entry->prev)->next = NULL;
     }
+    head = newHead;
+    tail = newTail;
     size--;
     if (call Queue.empty()) {
       head = NULL;
       tail = NULL;
     }
-printQueue();
+  printQueue();
+  return TRUE;
   }
 
   command bool Queue.empty() {
@@ -115,25 +123,29 @@ printQueue();
     return LIST_SIZE;
   }
 
-  command data_t Queue.head() {
+  command message_t* Queue.head() {
     return head->elem;
   }
 
+#ifdef DTSCH_LINKED_LIST_DEBUG_PRINTF
   void printQueue() {
     int i;
-    printf("\n(%p, %p)\n", head, tail);
+    printf("(head: %p, tail: %p. size: %u)\n", head, tail, size);
     for (i=0; i<LIST_SIZE; i++) {
       if (list[i].inUse == TRUE)
         printf("--> ");
       else
         printf("    ");
-      printf("%p %u %p\n", list[i].prev, list[i].elem, list[i].next);
+      printf("%p: %p %p %p\n",&list[i], list[i].prev, list[i].elem, list[i].next);
     }
+    printfflush();
   }
+#else
+  void inline printQueue() {}
+#endif
 
-
-  command data_t Queue.dequeue() {
-    data_t t = head->elem;
+  command message_t* Queue.dequeue() {
+    message_t* t = head->elem;
     if (!call Queue.empty()) {
       ((listElement_t*) head->next)->prev = NULL;
       head->inUse = FALSE;
@@ -143,12 +155,12 @@ printQueue();
         head = NULL;
         tail = NULL;
       }
-printQueue();
+    printQueue();
     }
     return t;
   }
 
-  command error_t Queue.enqueue(data_t newVal) {
+  command error_t Queue.enqueue(message_t* ONE newVal) {
     if (call Queue.size() < call Queue.maxSize()) {
       uint8_t i;
       listElement_t* newEntry;
@@ -156,12 +168,16 @@ printQueue();
         if (list[i].inUse == FALSE)
           break;
       newEntry = &list[i];
+      if (head == NULL)
+        head = newEntry;
       newEntry->inUse = TRUE;
-      ((listElement_t*) tail->next) = newEntry;
-      ((listElement_t*) newEntry->prev) = tail;
+      newEntry->elem = newVal;
+      tail->next = (struct listElement_t*) newEntry;
+      newEntry->prev = (struct listElement_t*) tail;
+      newEntry->next = (struct listElement_t*) NULL;
       tail = newEntry;
       size++;
-printQueue();
+      printQueue();
       return SUCCESS;
     }
     else {
@@ -169,10 +185,10 @@ printQueue();
     }
   }
 
-  command data_t Queue.element(uint8_t idx) {
+  command message_t* Queue.element(uint8_t idx) {
     listElement_t* entry;
     uint8_t i;
-    // TODO: FIX THIS if ((idx >= size) || (idx >= LIST_SIZE) || (call Queue.empty())) return NULL;
+    if ((idx >= size) || (idx >= LIST_SIZE) || (call Queue.empty())) return NULL;
     entry = head;
     for (i=0; i<idx; i++)
       entry = ((listElement_t*) entry->next);

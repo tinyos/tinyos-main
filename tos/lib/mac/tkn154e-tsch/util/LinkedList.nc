@@ -50,6 +50,6 @@ interface LinkedList<t> {
    * @param index - the index of the element to return
    * @return Whether the removal was successful
    */
-  command bool remove(t element);
+  command bool remove(t ONE element);
 
 }
