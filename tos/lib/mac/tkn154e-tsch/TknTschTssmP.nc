@@ -183,6 +183,11 @@ implementation
         else {
           return TSCH_SLOT_TYPE_TX;
         }
+      } else {
+        if ((link->macLinkOptions & PLAIN154E_LINK_OPTION_SHARED) == 0) {
+          // TX slot, nothing to transmit and not shared
+          return TSCH_SLOT_TYPE_OFF;
+        }
       }
     }
 
@@ -623,12 +628,14 @@ implementation
     // TODO revoke all slot contexts to be sure
     call SlotContextTx.revokeContext();
 
-    status =  call PhyOff.off();
-    if (status != SUCCESS) {
-      if (status == EALREADY)
-        T_LOG_WARN("Switching radio off failed (already off)!\n");
-      else {
-        T_LOG_ERROR("Radio off error!!!\n");
+    if (context.slottype != TSCH_SLOT_TYPE_OFF) {
+      status =  call PhyOff.off();
+      if (status != SUCCESS) {
+        if (status == EALREADY){
+          T_LOG_WARN("Switching radio off failed (already off)!\n");
+        } else {
+          T_LOG_ERROR("Radio off error!!!\n");
+        }
       }
     }
 
