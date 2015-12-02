@@ -70,6 +70,7 @@ module TknTschTssmTxP {
     interface Plain154PhyOff as PhyOff;
     interface Queue<message_t*> as AdvQueue @safe();
     interface Queue<message_t*> as TxQueue @safe();
+    interface LinkedList<message_t*> as TxLinkedList @safe();
 
     interface Plain154Frame as Frame;
     interface Plain154Metadata as Metadata;
@@ -193,37 +194,55 @@ module TknTschTssmTxP {
         break;
 
       case TSCH_SLOT_TYPE_SHARED:
-        // Check if backoff is in action
-
       case TSCH_SLOT_TYPE_TX:
-        // TODO handle TX slots. falling through switch cases...
         atomic {
+          if (call TxQueue.empty()) {
+            T_LOG_INFO("TxDataPrepare: idle TX slot (empty queue)\n");
+            context->flags.inactive_slot = TRUE;
+            context->frame = NULL;
+            call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
+            call DebugHelper.endOfPacketPrepare();
+            return;
+          }
           queue_size = call TxQueue.size();
-          // TODO search for the right TX frame matching the link
-          // HACK all slots are shared for now, remove the frame after success
-          //      or final retransmission failure
-          msg = call TxQueue.head();
+          if (slottype == TSCH_SLOT_TYPE_TX) {
+            plain154_full_address_t* linkAddr;
+            plain154_address_t addr;
+            int i;
+            for (i=0; i<queue_size;i++) {
+              msg = call TxQueue.element(i);
+              header = call Frame.getHeader(msg);
+              call Frame.getDstAddr(header, &addr);
+              linkAddr = &(context->link->macNodeAddress);
+              if (linkAddr->mode != call Frame.getDstAddrMode(header))
+                continue;
+              if (linkAddr->mode == PLAIN154_ADDR_EXTENDED) {
+                if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *) &addr, 8) == 0)
+                  break;
+              } else if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *)&addr, 2) == 0)
+                  break;
+            }
+            if (i == queue_size) {
+              T_LOG_INFO("TxDataPrepare: idle TX slot (no match found)\n");
+              context->flags.inactive_slot = TRUE;
+              context->frame = NULL;
+              call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
+              call DebugHelper.endOfPacketPrepare();
+              return;
+            }
+          } else {  // (slottype != TSCH_SLOT_TYPE_TX)
+            msg = call TxQueue.head();
+            header = call Frame.getHeader(msg);
+          }
           context->frame = msg;
           meta = call Metadata.getMetadata(msg);
           context->num_transmissions = meta->transmissions;
           num_transmissions = meta->transmissions;
           macTsTxOffset = context->tmpl->macTsTxOffset;
-        }
-
-        if (queue_size <= 0) {
-          T_LOG_INFO("TxDataPrepare: idle TX slot\n");
-          atomic {
-            context->flags.inactive_slot = TRUE;
-            context->frame = NULL;
+          if (context->num_transmissions == 0) {
+            call Frame.setDSN(header, m_dsn++);
           }
-          call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
-          call DebugHelper.endOfPacketPrepare();
-          return;
         }
-
-        header = call Frame.getHeader(msg);
-        if (num_transmissions == 0)
-          call Frame.setDSN(header, m_dsn++);
         break;
 
       default:
@@ -311,7 +330,7 @@ module TknTschTssmTxP {
       msg = context->frame;
     }
     meta = call Metadata.getMetadata(msg);
-    meta->transmissions += 1;
+    meta->transmissions = context->num_transmissions;
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_ADVERTISEMENT:
@@ -515,8 +534,8 @@ module TknTschTssmTxP {
       if (slottype == TSCH_SLOT_TYPE_SHARED) {
         call TxQueue.dequeue();
       } else {
-        // TODO: Search for the corret frame to remove from queue
-
+        if (call TxLinkedList.remove(context->frame) == FALSE)
+          T_LOG_ERROR("Msg not found in queue for removing!\n");
       }
       atomic {
         context->num_transmissions = 99;
@@ -588,8 +607,9 @@ module TknTschTssmTxP {
             T_LOG_RXTX_STATE("TxDataFail: Ded. TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            //TODO: FIX THIS: Find the correct frame and remove it from queue (not necessary the first frame)
-            call TxQueue.dequeue();
+            // Find the correct frame and remove it from queue (not necessary the first frame)
+            if (call TxLinkedList.remove(context->frame) == FALSE)
+              T_LOG_ERROR("Msg not found in queue for removing!\n");
           }
         }
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
@@ -632,18 +652,17 @@ module TknTschTssmTxP {
         break;
 
       case TSCH_SLOT_TYPE_TX:
-        T_LOG_ERROR("ALERT: ACK for plain TX slots is not yet implemented!\n");
-        /*LOG_RXTX_STATE("RxAckFail: TX!\n");
+        //T_LOG_ERROR("ALERT: ACK for plain TX slots is not yet implemented!\n");
+        T_LOG_RXTX_STATE("RxAckFail: TX!\n");
         if ((context->num_transmissions - 1) == max_retransmissions) {
           T_LOG_RXTX_STATE("RxAckFail: Ded. TX -> final!\n");
           atomic {
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            //TODO: FIX THIS: Find the correct frame and remove it from queue (not necessary the first frame)
             call TxQueue.dequeue();
           }
         }
-        call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);*/
+        call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
         break;
 
       default:

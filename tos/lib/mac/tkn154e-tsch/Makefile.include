@@ -9,5 +9,6 @@ PFLAGS := -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch \
         -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/types \
         -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/phy \
         -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/frame \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/util \
   $(PFLAGS)
 

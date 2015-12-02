@@ -151,8 +151,10 @@ implementation
   components new QueueC(message_t*, TKNTSCH_ADV_QUEUE_SIZE) as AdvQueue;
   HandlerTx.AdvQueue -> AdvQueue;
   Tssm.AdvQueue -> AdvQueue;
-  components new QueueC(message_t*, TKNTSCH_TX_QUEUE_SIZE) as TxQueue;
+  //components new QueueC(message_t*, TKNTSCH_TX_QUEUE_SIZE) as TxQueue;
+  components new LinkedListC(TKNTSCH_TX_QUEUE_SIZE) as TxQueue;
   HandlerTx.TxQueue -> TxQueue;
+  HandlerTx.TxLinkedList -> TxQueue;
   Tssm.TxQueue -> TxQueue;
   components new QueueC(message_t*, TKNTSCH_RX_QUEUE_SIZE) as RxDataQueue;
   HandlerRx.RxDataQueue -> RxDataQueue;

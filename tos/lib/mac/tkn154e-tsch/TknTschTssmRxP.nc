@@ -144,7 +144,7 @@ module TknTschTssmRxP {
           macTsRxOffset = context->tmpl->macTsRxOffset;
         }
 
-        // TODO handle full RX queue here?
+        // TODO handle full RX queue here? No we accept the RX and signal NACK
         /*
         if (queue_size <= 0) {
           T_LOG_SLOT_STATE("TxDataPrepare: idle TX slot\n");
@@ -266,6 +266,7 @@ module TknTschTssmRxP {
           type = call Frame.getFrameType(header);
           //payloadLen = call Packet.payloadLength((message_t*) context->frame);
           //payload = call Packet.getPayload((message_t*) context->frame, payloadLen);
+          srcAddrMode = call Frame.getSrcAddrMode(header);
 
           context->flags.with_ack = send_ack;
 
@@ -285,13 +286,31 @@ module TknTschTssmRxP {
           }
           #endif
 
-          srcAddrMode = call Frame.getSrcAddrMode(header);
           if (!reject && ((srcAddrMode != PLAIN154_ADDR_EXTENDED) || (call Frame.getSrcAddr(header, &srcAddr) != SUCCESS))) {
             reject = TRUE;
           }
           if ((type != PLAIN154_FRAMETYPE_BEACON) && (type != PLAIN154_FRAMETYPE_DATA))
             reject = TRUE;
 
+          if (!reject && (type == PLAIN154_FRAMETYPE_BEACON)) {
+            if ((context->link->macLinkOptions & PLAIN154E_LINK_TYPE_ADVERTISING) == 0)
+              // receiving a beacon in a direct slot
+              reject = TRUE;
+          }
+
+          if (!reject && ((context->link->macLinkOptions & PLAIN154E_LINK_OPTION_SHARED) == 0)) {
+            // not a shared slot
+            plain154_full_address_t* linkAddr;
+            linkAddr = &(context->link->macNodeAddress);
+            if (linkAddr->mode != srcAddrMode){
+              reject = TRUE;
+            }
+            if (srcAddrMode == PLAIN154_ADDR_EXTENDED) {
+              if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *) &srcAddr, 8) != 0)
+                reject = TRUE;
+            } else if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *)&srcAddr, 2) != 0)
+                reject = TRUE;
+          }
           if (!reject && (metadata->valid_timestamp)) {
             rxTimestamp = metadata->timestamp;
             context->time_correction = (context->radio_t0) + TSSM_SYMBOLS_FROM_US((context->tmpl->macTsTxOffset));
@@ -299,7 +318,6 @@ module TknTschTssmRxP {
           } else T_LOG_ADDRESS_FILTERING("Frame rejected or radio ts invalid!\n");
 
           #ifdef TKN_TSCH_DISABLE_TIME_CORRECTION_BEACONS
-            // TODO this does not happen as beacons are rejected above
             if (type == PLAIN154_FRAMETYPE_BEACON) {
                 context->time_correction = 0;
             }
