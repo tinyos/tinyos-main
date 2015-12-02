@@ -68,7 +68,7 @@ implementation
             u8AHI_UartReadData(UART);
           }
         }
-      }       
+      }
     }
   }
 
@@ -84,7 +84,7 @@ implementation
 
       frame = &(recvPackets[recvEnd].phyFrame);
       ptr = (uint8_t *) &(recvPackets[recvEnd].timestamp);
-    
+
       vAHI_UartWriteData(UART, 0xCA);
       vAHI_UartWriteData(UART, 0xFE);
       vAHI_UartWriteData(UART, 0xBA);
@@ -111,7 +111,7 @@ implementation
 
   void radioCallback(uint32_t bitmap) {
     tsPhyFrame* frame;
-    uint32_t radioTime = u32MMAC_GetTime();
+    uint32_t radioTime = u32MMAC_GetRxTime();
 
     if (numRecvPackets >= 9) {
       return;
@@ -127,7 +127,7 @@ implementation
   }
 
   event void Boot.booted() {
-    LED_INIT(); 
+    LED_INIT();
 
     // UART
     bAHI_UartEnable(UART, tx_buffer, BUF_LEN, rx_buffer, BUF_LEN);
@@ -144,6 +144,6 @@ implementation
     vMMAC_ConfigureRadio();
     vMMAC_SetChannel(JN516_SNIFFER_CHANNEL);
     vMMAC_StartPhyReceive(&(recvPackets[recvStart].phyFrame), E_MMAC_RX_START_NOW);
-    
+
   }
-}                              
+}
