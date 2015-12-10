@@ -1,0 +1,6 @@
+#-*-Makefile-*- vim:syntax=make
+
+NODEID ?= $(INSTALL)
+
+BUILD_DEPS = exe setid $(POST_BUILD_EXTRA_DEPS) program delsetid
+#include port.extra

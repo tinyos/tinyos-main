@@ -1,0 +1,51 @@
+--- Chip/JN5168/Build/AppBuildEnd_JN5168.ld	2015-12-03 22:24:09.964631207 +0100
++++ Chip/JN5168/Build/AppBuildEnd_JN5168.new.ld	2015-12-10 14:46:30.904455372 +0100
+@@ -66,6 +66,14 @@
+             _bss_end = ABSOLUTE(.);
+         } > ram
+ 
++        /* fix: adding memory section for libc functions */
++        .sbrk ALIGN (0x4) :
++        {
++            _stack = ABSOLUTE(.);
++            . += 0x100;
++            end = ABSOLUTE(.);
++        } > ram
++
+         /* reserve minimum heap size */
+         .heap ALIGN (0x4) :
+         {
+--- Chip/JN5164/Build/AppBuildEnd_JN5164.ld	2015-12-03 22:24:09.932631058 +0100
++++ Chip/JN5164/Build/AppBuildEnd_JN5164.new.ld	2015-12-10 14:47:19.108835835 +0100
+@@ -66,6 +66,14 @@
+             _bss_end = ABSOLUTE(.);
+         } > ram
+ 
++        /* fix: adding memory section for libc functions */
++        .sbrk ALIGN (0x4) :
++        {   
++            _stack = ABSOLUTE(.);
++            . += 0x100;
++            end = ABSOLUTE(.);
++        } > ram
++
+         /* reserve minimum heap size */
+         .heap ALIGN (0x4) :
+         {
+--- Chip/JN5161/Build/AppBuildEnd_JN5161.ld	2015-12-03 22:24:09.940631095 +0100
++++ Chip/JN5161/Build/AppBuildEnd_JN5161.new.ld	2015-12-10 14:49:03.941613742 +0100
+@@ -66,6 +66,14 @@
+             _bss_end = ABSOLUTE(.);
+         } > ram
+ 
++        /* fix: adding memory section for libc functions */
++        .sbrk ALIGN (0x4) :
++        {   
++            _stack = ABSOLUTE(.);
++            . += 0x100;
++            end = ABSOLUTE(.);
++        } > ram
++
+         /* reserve minimum heap size */
+         .heap ALIGN (0x4) :
+         {
