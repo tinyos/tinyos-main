@@ -1,0 +1,9 @@
+TARGET = nxp_jn516_dongle
+
+PFLAGS += -I%T/platforms/nxp_jn516/dongle
+
+$(call TOSMake_include_platform,nxp_jn516)
+$(call TOSMake_include_make_platform,jn516)
+
+nxp_jn516_dongle: $(BUILD_DEPS)
+	@:

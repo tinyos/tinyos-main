@@ -34,8 +34,8 @@ TOSMAKE_BINARY_OUT    = $(INSTALL_BIN)
 MAIN_MAP = $(TOSMAKE_BUILD_DIR)/main.map
 
 # Set some compiler/microcontroller specific pflags
-PFLAGS += -Wall -Wshadow 
-#PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) 
+PFLAGS += -Wall -Wshadow
+#PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 PFLAGS += $(NESC_FLAGS)
 #PFLAGS += -target=$(PLATFORM)
 PFLAGS += -DWORDS_BIGENDIAN #for coap
@@ -43,6 +43,7 @@ PFLAGS += -DHAS_SSIZE_T
 PFLAGS += -gcc=ba-elf-gcc
 
 PFLAGS += -fnesc-optimize-atomic
+#PFLAGS += -fnesc-no-debug
 
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
@@ -86,4 +87,3 @@ AS = ba-elf-as
 STRIP = ba-elf-strip
 SIZE = ba-elf-size
 RANLIB = ba-elf-ranlib
-

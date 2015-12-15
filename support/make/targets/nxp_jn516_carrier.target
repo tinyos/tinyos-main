@@ -1,0 +1,9 @@
+TARGET = nxp_jn516_carrier
+
+PFLAGS += -I%T/platforms/nxp_jn516/carrier
+
+$(call TOSMake_include_platform,nxp_jn516)
+$(call TOSMake_include_make_platform,jn516)
+
+nxp_jn516_carrier: $(BUILD_DEPS)
+	@:
