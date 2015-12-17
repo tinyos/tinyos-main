@@ -3,7 +3,7 @@
 NXP_MAKE_BASE_DIR = $(JENNIC_SDK_DIR) # needed?
 SDK_BASE_DIR = $(JENNIC_SDK_DIR)
 
-#use tinyos linker script (modifies start vectors), instead of standard jennic 
+#use tinyos linker script (modifies start vectors), instead of standard jennic
 TOS_COMPILE = TRUE
 
 include $(JENNIC_SDK_DIR)/Chip/Common/Build/config.mk
@@ -22,8 +22,9 @@ CFLAGS += -Ubool -Wno-packed
 #radio includes
 APPLIBS += MMAC
 #INCFLAGS += -I$(COMPONENTS_BASE_DIR)/MAC/Include
+PFLAGS += -I$(TINYOS_ROOT_DIR)/support/make/jn516/include
 PFLAGS += $(INCFLAGS)
-PFLAGS += -DIEEE154FRAMES_ENABLED
+PFLAGS += -DTOS_BUILD
 
 #endian: jn516x is big endian
 #CFLAGS += -D__BYTE_ORDER__=4321
@@ -64,5 +65,3 @@ PFLAGS := $(subst -I$(COMPONENTS_BASE_DIR)/TimerServer/Include, , $(PFLAGS))
 PFLAGS := $(subst -I$(COMPONENTS_BASE_DIR)/Common/Include, , $(PFLAGS))
 LDFLAGS := $(subst -flto, , $(LDFLAGS))
 CFLAGS := $(subst -flto, , $(CFLAGS))
-PFLAGS += -I$(TINYOS_ROOT_DIR)/support/make/jn516/include
-
