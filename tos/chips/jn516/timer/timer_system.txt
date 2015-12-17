@@ -1,0 +1,36 @@
+HilTimerMilliC
+  virtualized millisec timers
+HilTimerMilliP
+  initialisation dummy
+
+
+CounterMilli32C
+  static millisec 32bit counter on timer 0
+CounterMilli16P
+  millisec 16bit counter implementation
+
+Counter32khz32C
+  static 32khz 32bit counter on waketimer 0
+Counter32khz32P
+  32khz 32bit counter implementation
+
+
+AlarmMilli32C
+  static millisec 32bit alarm on timer 1
+AlarmMilli16P
+  millisec 16bit alarm implemenation
+
+Alarm32khz32C
+  static 32khz 32bit alarm on waketimer 1
+Alarm32khz32P
+  32khz 32bit alarm implemenation
+
+
+Jn516TimerP
+  jn516 timer wrapper
+Jn516WakeTimerP
+  jn516 wake timer wrapper
+Jn516TimerInitC
+  jn516 timer initialisation wiring
+Jn516TimerInitP
+  jn516 timer initialisation calls
