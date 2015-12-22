@@ -1,0 +1,139 @@
+/*
+ * Copyright (c) 2015, Technische Universitaet Berlin
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions 
+ * are met:
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright 
+ *   notice, this list of conditions and the following disclaimer in the 
+ *   documentation and/or other materials provided with the distribution.
+ * - Neither the name of the Technische Universitaet Berlin nor the names 
+ *   of its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Jan Hauer <hauer@tkn.tu-berlin.de>
+ * @author Moksha Birk <birk@tkn.tu-berlin.de>
+ *
+ * ========================================================================
+ */
+
+#ifndef _PLAIN154_VALUES_H_
+#define _PLAIN154_VALUES_H_
+
+enum {
+	PLAIN154_ADDR_NOT_PRESENT = 0x00,
+	PLAIN154_ADDR_SIMPLE = 0x01,
+	PLAIN154_ADDR_SHORT = 0x02,
+	PLAIN154_ADDR_EXTENDED = 0x03,
+
+	PLAIN154_FRAMETYPE_BEACON = 0x00,
+	PLAIN154_FRAMETYPE_DATA = 0x01,
+	PLAIN154_FRAMETYPE_ACK = 0x02,
+	PLAIN154_FRAMETYPE_CMD = 0x03,
+	PLAIN154_FRAMETYPE_LLDN = 0x04,
+	PLAIN154_FRAMETYPE_MULTIPURPOSE = 0x05,
+
+	PLAIN154_FRAMEVERSION_0 = 0x00, // 15.4-2003
+	PLAIN154_FRAMEVERSION_1 = 0x01, // 15.4-2006
+	PLAIN154_FRAMEVERSION_2 = 0x02, // 15.4-2011
+
+	PLAIN154_FC1_MASK_FRAMETYPE = 0x07,
+	PLAIN154_FC2_MASK_ADDRMODE_DEST = 0x0c,
+	PLAIN154_FC2_MASK_ADDRMODE_SRC = 0xc0,
+	PLAIN154_FC2_MASK_VERSION = 0x30,
+
+	PLAIN154_FC2_BITOFFSET_ADDRMODE_SRC = 0x06,
+	PLAIN154_FC2_BITOFFSET_ADDRMODE_DEST = 0x02,
+	PLAIN154_FC1_BITOFFSET_FRAMETYPE = 0x00,
+	PLAIN154_FC2_BITOFFSET_VERSION = 0x04,
+
+	PLAIN154_FC1_BEACON = 0x00,
+	PLAIN154_FC1_DATA = 0x01,
+	PLAIN154_FC1_ACK = 0x02,
+	PLAIN154_FC1_CMD = 0x03,
+	PLAIN154_FC1_LLDN = 0x04,
+	PLAIN154_FC1_MULTIPURPOSE = 0x05,
+	PLAIN154_FC1_SECURITY = 0x08,
+	PLAIN154_FC1_FRAME_PENDING = 0x10,
+	PLAIN154_FC1_ACK_REQUEST = 0x20,
+	PLAIN154_FC1_PANID_COMPRESSION = 0x40,
+
+	PLAIN154_FC2_SRC_SHORT = 0x80,
+	PLAIN154_FC2_SRC_EXTENDED = 0xc0,
+	PLAIN154_FC2_DEST_SHORT = 0x08,
+	PLAIN154_FC2_DEST_EXTENDED = 0x0c,
+	PLAIN154_FC2_SEQNO_SUPPRESSION = 0x01,
+	PLAIN154_FC2_IE_LIST_PRESENT = 0x02,
+	PLAIN154_FC2_FRAME_VERSION_1 = 0x10,
+	PLAIN154_FC2_FRAME_VERSION_2 = 0x20
+};
+
+enum {
+  ENERGY_DETECTION_SCAN    = 0x00,
+  ACTIVE_SCAN              = 0x01,
+  PASSIVE_SCAN             = 0x02,
+  ORPHAN_SCAN              = 0x03,
+};
+
+
+typedef enum plain154_status 
+{
+  PLAIN154_SUCCESS                 = 0x00,
+  PLAIN154_BEACON_LOSS             = 0xE0,
+  PLAIN154_CHANNEL_ACCESS_FAILURE  = 0xE1,
+  PLAIN154_COUNTER_ERROR           = 0xDB,
+  PLAIN154_DENIED                  = 0xE2,
+  PLAIN154_DISABLE_TRX_FAILURE     = 0xE3,
+  PLAIN154_FRAME_TOO_LONG          = 0xE5,
+  PLAIN154_IMPROPER_KEY_TYPE       = 0xDC,
+  PLAIN154_IMPROPER_SECURITY_LEVEL = 0xDD,
+  PLAIN154_INVALID_ADDRESS         = 0xF5,
+  PLAIN154_INVALID_GTS             = 0xE6,
+  PLAIN154_INVALID_HANDLE          = 0xE7,
+  PLAIN154_INVALID_INDEX           = 0xF9,
+  PLAIN154_INVALID_PARAMETER       = 0xE8,
+  PLAIN154_LIMIT_REACHED           = 0xFA,
+  PLAIN154_NO_ACK                  = 0xE9,
+  PLAIN154_NO_BEACON               = 0xEA,
+  PLAIN154_NO_DATA                 = 0xEB,
+  PLAIN154_NO_SHORT_ADDRESS        = 0xEC,
+  PLAIN154_ON_TIME_TOO_LONG        = 0xF6,
+  PLAIN154_OUT_OF_CAP              = 0xED,
+  PLAIN154_PAN_ID_CONFLICT         = 0xEE,
+  PLAIN154_PAST_TIME               = 0xF7,
+  PLAIN154_READ_ONLY               = 0xFB,
+  PLAIN154_REALIGNMENT             = 0xEF,
+  PLAIN154_SCAN_IN_PROGRESS        = 0xFC,
+  PLAIN154_SECURITY_ERROR          = 0xE4,  //FAILED_SECURITY_CHECK  = 0xE4 //802.15.4_2003
+  PLAIN154_SUPERFRAME_OVERLAP      = 0xFD,
+  PLAIN154_TRACKING_OFF            = 0xF8,
+  PLAIN154_TRANSACTION_EXPIRED     = 0xF0,
+  PLAIN154_TRANSACTION_OVERFLOW    = 0xF1,
+  PLAIN154_TX_ACTIVE               = 0xF2,
+  PLAIN154_UNAVAILABLE_KEY         = 0xF3,
+  PLAIN154_UNSUPPORTED_ATTRIBUTE   = 0xF4,
+  PLAIN154_UNSUPPORTED_LEGACY      = 0xDE,
+  PLAIN154_UNSUPPORTED_SECURITY    = 0xDF,
+  PLAIN154_PURGED                  = 0xDA, // custom attribute
+  PLAIN154_NOT_IMPLMENTED_YET      = 0xC0, // added for features control in TknTsch
+  PLAIN154_BUSY                    = 0xC1,
+  PLAIN154_USER_ABORTED            = 0xC2,
+} plain154_status_e;
+
+
+#endif /* _PLAIN154_VALUES_H_ */
