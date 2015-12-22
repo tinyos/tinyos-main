@@ -1,0 +1,25 @@
+Tools for sniffing with Jennic platform.
+
+The sniffing includes two components: 1. the sniffing application on the jennic
+and 2. the processing app on the computer that gets the serial output of the jennic.
+
+To compile and install the image on a jennic (on port X) run:
+  -- make nxp_jn516_carrier install port,/dev/ttyUSBX
+
+The radio channel has to be configured in TestC.nc or via compile flag.
+
+# ---
+
+On the computer side there are different options:
+
+ - live view of the parsed frames with wireshark: ./run_live_ws.sh
+
+ - one can display the raw output of the sniffer using 'python listener.py <PORT>'
+    or '(python listener.py <PORT>) > <FILENAME>' to store the output to a file
+
+ - almost the same does pcap_listener.py, but it also dumps a pcap file called sniff.pcap.
+
+ - pcap_parser.py can transform the output format of listener.py to actual pcap file format.
+    pcap_parser.py has a command line help. Call 'python pcap_parser.py --help' to see it.
+    If pcap_parser.py get input and/or output files explicitly set it will use
+    them, otherwise it will expects to get pipe input/output. 

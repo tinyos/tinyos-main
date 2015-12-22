@@ -1,0 +1,26 @@
+Glow
+
+Description:
+
+Diagnostic application for jennic.
+Is able to cause an unaligned access and a stack overflow on purpose by enabling these flags:
+#PFLAGS += -DCAUSE_STACK_OVERFLOW
+#PFLAGS += -DCAUSE_UNALIGNED_ACCESS
+
+Printfs information about:
+
+32MHz Clock
+internal RC oscillator
+clock rate
+
+and the sizes and alignments of:
+
+void*
+float
+double
+long double
+short
+int
+long
+long long
+wchar_t
