@@ -1,0 +1,13 @@
+$(info $(shell echo -e '$(INFO_STRING) Included lib/mac/tkn154e-tsch/Makefile.include'))
+
+PFLAGS := -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/debug \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/interfaces \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/interfaces/mlme \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/interfaces/mcps \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/interfaces/phy \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/types \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/phy \
+        -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/frame \
+  $(PFLAGS)
+
