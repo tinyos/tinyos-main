@@ -51,13 +51,13 @@ module TknTschPibP {
 }
 implementation {
   tkntsch_pib_t pib;
+  const uint8_t m_hoppingSequenceList[] = TSCH_HOPPING_SEQUENCE;
 
   // TODO figure out how to ensure atomic accesses to the pib
   // TODO atomic sections are costly
 
   command error_t Init.init()
   {
-    const uint8_t hoppingSequenceList[] = TSCH_HOPPING_SEQUENCE;
     atomic pib.lock = TKNTSCH_LOCK_LOCKED;
 
     // general
@@ -72,8 +72,8 @@ implementation {
     pib.macMaxBE = 3; // TSCH-CA default: 7 (range: 3 - 8), 6TiSCH default: 3
     pib.macMaxFrameRetries = 6;
 
-    pib.macHoppingSequenceList = (uint8_t*)hoppingSequenceList;
-    pib.macHoppingSequenceLength = (uint16_t) sizeof(hoppingSequenceList);
+    pib.macHoppingSequenceList = (uint8_t*)m_hoppingSequenceList;
+    pib.macHoppingSequenceLength = (uint8_t) sizeof(m_hoppingSequenceList);
     }
 
 
