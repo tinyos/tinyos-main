@@ -38,6 +38,7 @@
 #include "plain154_types.h"
 #include "tkntsch_types.h"
 #include "tkntsch_lock.h"
+#include "message.h"
 
 //#define MAC802154E_DISABLE_CHANNEL_HOPPING 1
 
