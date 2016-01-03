@@ -131,6 +131,7 @@ module TknTschTssmRxP {
     uint32_t macTsRxOffset;
 
     call DebugHelper.startOfPacketPrepare();
+    T_LOG_DEBUG("RxP-RxDataPrepare\n");
 
     atomic {
       slottype = context->slottype;
@@ -139,24 +140,9 @@ module TknTschTssmRxP {
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_RX:
-        // TODO handle RX slots
         atomic {
           macTsRxOffset = context->tmpl->macTsRxOffset;
         }
-
-        // TODO handle full RX queue here? No we accept the RX and signal NACK
-        /*
-        if (queue_size <= 0) {
-          T_LOG_SLOT_STATE("TxDataPrepare: idle TX slot\n");
-          atomic {
-            context->flags.inactive_slot = TRUE;
-            context->frame = NULL;
-          }
-          call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
-          call DebugHelper.endOfPacketPrepare();
-          return;
-        }
-        */
         break;
 
       default:
@@ -194,6 +180,7 @@ module TknTschTssmRxP {
     uint32_t macTsMaxTx;
     uint32_t dataRxMaxDelay;
 
+    T_LOG_DEBUG("RxP-RxDataHwScheduled\n");
     atomic {
       macTsTxOffset = context->tmpl->macTsTxOffset;
       macTsMaxTx = context->tmpl->macTsMaxTx;
@@ -206,8 +193,9 @@ module TknTschTssmRxP {
   }
 
   async event message_t* PhyRx.received(message_t *frame) {
+    message_t* msgPtr = frame;
     call DebugHelper.startOfPhyIrq();
-
+    T_LOG_DEBUG("RxP-PhyRx\n");
     atomic {
       // check whether the IRQ is expected
       if (context->flags.radio_irq_expected == FALSE) {
@@ -224,14 +212,19 @@ module TknTschTssmRxP {
       context->flags.radio_irq_expected = FALSE;
     }
 
+    atomic {
+      if (call RxMsgPool.empty() == TRUE)
+        context->flags.nack = TRUE;
+      else
+        // return an unused frame from the pool
+        msgPtr = call RxMsgPool.get();
+        call Packet.clear(msgPtr);
+    }
     call EventEmitter.cancelEvent();
-
     call EventEmitter.emit(TSCH_EVENT_RX_SUCCESS);
-
     call DebugHelper.endOfPhyIrq();
 
-    // return an unused frame from the pool
-    return call RxMsgPool.get();
+    return msgPtr;
   }
 
   async event void RxDataSuccess.handle() {
@@ -250,12 +243,16 @@ module TknTschTssmRxP {
     uint8_t dstAddrMode;
     uint8_t srcAddrMode;
     uint32_t trackval;
+    uint8_t linkOptions;
 
     atomic {
       slottype = context->slottype;
       m_tracker++;
       trackval = m_tracker;
+      linkOptions = context->link->macLinkOptions;
     }
+
+    T_LOG_DEBUG("RxP-RxDataSuccess\n");
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_RX:
@@ -269,62 +266,74 @@ module TknTschTssmRxP {
           srcAddrMode = call Frame.getSrcAddrMode(header);
 
           context->flags.with_ack = send_ack;
-
-          #ifndef TKN_TSCH_DISABLE_ADDRESS_FILTERING
-          if (call Frame.getFrameVersion(header) < PLAIN154_FRAMEVERSION_2)
+        }
+        #ifndef TKN_TSCH_DISABLE_ADDRESS_FILTERING
+        if (call Frame.getFrameVersion(header) != PLAIN154_FRAMEVERSION_2)
+          reject = TRUE;
+        if (call Frame.getDstAddr(header, &dstAddr) != SUCCESS) {
+          if (type != PLAIN154_FRAMETYPE_BEACON)  // we accept ebeacons without dst addr
             reject = TRUE;
-          if (call Frame.getDstAddr(header, &dstAddr) != SUCCESS) {
-            if (type != PLAIN154_FRAMETYPE_BEACON)  // we accept ebeacons without dst addr
-              reject = TRUE;
-          } else {
-            dstAddrMode = call Frame.getDstAddrMode(header);
+        } else {
+          dstAddrMode = call Frame.getDstAddrMode(header);
+          atomic {
             if ((dstAddrMode == PLAIN154_ADDR_EXTENDED) &&
-                (memcmp( &dstAddr.extendedAddress, &context->macpib->macExtendedAddress, 8) != 0))
+                (memcmp( &dstAddr.extendedAddress, &context->macpib->macExtendedAddress, 8) != 0)) {
               reject = TRUE;
-            else if ((dstAddrMode == PLAIN154_ADDR_SHORT) && (dstAddr.shortAddress != 0xffff))
-              reject = TRUE;
-          }
-          #endif
-
-          if (!reject && ((srcAddrMode != PLAIN154_ADDR_EXTENDED) || (call Frame.getSrcAddr(header, &srcAddr) != SUCCESS))) {
-            reject = TRUE;
-          }
-          if ((type != PLAIN154_FRAMETYPE_BEACON) && (type != PLAIN154_FRAMETYPE_DATA))
-            reject = TRUE;
-
-          if (!reject && (type == PLAIN154_FRAMETYPE_BEACON)) {
-            if ((context->link->macLinkOptions & PLAIN154E_LINK_TYPE_ADVERTISING) == 0)
-              // receiving a beacon in a direct slot
-              reject = TRUE;
-          }
-
-          if (!reject && ((context->link->macLinkOptions & PLAIN154E_LINK_OPTION_SHARED) == 0)) {
-            // not a shared slot
-            plain154_full_address_t* linkAddr;
-            linkAddr = &(context->link->macNodeAddress);
-            if (linkAddr->mode != srcAddrMode){
+            } else if ((dstAddrMode == PLAIN154_ADDR_SHORT) && (dstAddr.shortAddress != 0xffff)) {
               reject = TRUE;
             }
-            if (srcAddrMode == PLAIN154_ADDR_EXTENDED) {
-              if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *) &srcAddr, 8) != 0)
-                reject = TRUE;
-            } else if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *)&srcAddr, 2) != 0)
-                reject = TRUE;
           }
-          if (!reject && (metadata->valid_timestamp)) {
-            rxTimestamp = metadata->timestamp;
+        }
+        #endif
+        if (!reject &&
+             ((srcAddrMode != PLAIN154_ADDR_EXTENDED) || (call Frame.getSrcAddr(header, &srcAddr) != SUCCESS)))
+          reject = TRUE;
+
+        if ((type != PLAIN154_FRAMETYPE_BEACON) && (type != PLAIN154_FRAMETYPE_DATA))
+          reject = TRUE;
+
+        if (!reject && (type == PLAIN154_FRAMETYPE_BEACON)) {
+          if ((linkOptions & PLAIN154E_LINK_TYPE_ADVERTISING) == 0)
+            // receiving a beacon in a non-advertising slot
+            reject = TRUE;
+        }
+        // Filtering source addresses in non-shared (dedicated) slots
+        if (!reject && ((linkOptions & PLAIN154E_LINK_OPTION_SHARED) == 0)) {
+          plain154_full_address_t* linkAddr;
+          atomic {
+            linkAddr = &(context->link->macNodeAddress);
+            if (linkAddr->mode != srcAddrMode)
+              reject = TRUE;
+            if (srcAddrMode == PLAIN154_ADDR_EXTENDED) {
+              if (memcmp((uint8_t *) &linkAddr->addr, (uint8_t *) &srcAddr, 8) != 0)
+                reject = TRUE;
+            } else {
+              if (memcmp((uint8_t *) &linkAddr->addr, (uint8_t *) &srcAddr, 2) != 0)
+                reject = TRUE;
+            }
+          }
+        }
+if (reject) printf("3");
+        if (!reject && (metadata->valid_timestamp)) {
+          rxTimestamp = metadata->timestamp;
+          atomic {
             context->time_correction = (context->radio_t0) + TSSM_SYMBOLS_FROM_US((context->tmpl->macTsTxOffset));
             context->time_correction = TSSM_SYMBOLS_TO_US(((context->time_correction) - rxTimestamp));
-          } else T_LOG_ADDRESS_FILTERING("Frame rejected or radio ts invalid!\n");
+          }
+        } else {
+          reject = TRUE;
+          T_LOG_ADDRESS_FILTERING("Frame rejected or radio ts invalid!\n");
+        }
 
-          #ifdef TKN_TSCH_DISABLE_TIME_CORRECTION_BEACONS
-            if (type == PLAIN154_FRAMETYPE_BEACON) {
-                context->time_correction = 0;
-            }
-          #endif
+        #ifdef TKN_TSCH_DISABLE_TIME_CORRECTION_BEACONS
+          if (!reject && (type == PLAIN154_FRAMETYPE_BEACON)) {
+              atomic context->time_correction = 0;
+          }
+        #endif
 
-          // Check if the received frame is from time parent, if we don't send an ACK (otherwise we check later)
-          if ( !send_ack && (context->link->macLinkOptions & PLAIN154E_LINK_OPTION_TIMEKEEPING) ) {
+        // Check if the received frame is from time parent, if we don't send an ACK (otherwise we check later)
+        atomic {
+          if ((!reject) && (!send_ack) && (context->link->macLinkOptions & PLAIN154E_LINK_OPTION_TIMEKEEPING) ) {
             if (( memcmp((void *) &context->macpib->timeParentAddress, (void *) &srcAddr, sizeof(plain154_address_t)) != 0 )) {
               context->time_correction = 0;
             }
@@ -333,22 +342,30 @@ module TknTschTssmRxP {
 
         if (reject) {
           atomic {
-            context->flags.success = TRUE;
+            // The frame is not for us, so it should be as if it never happened
+            call RxMsgPool.put(context->frame);
             context->frame = NULL;
+            context->time_correction = 0;
           }
           call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_RX, TSCH_DELAY_IMMEDIATE, 0);
+          break;
         }
-        else if (send_ack == TRUE) {
+
+        if (send_ack == TRUE) {
           // We are still in PhyRx INT; to get out we have to schedule the next state properly
           uint32_t refTime = call EventEmitter.getReferenceTime();
-          if (call RxDataQueue.full()) {
-            T_LOG_RXTX_STATE("RxDataSuccess: RX w/ ACK (sending NACK)\n");
-            atomic context->flags.nack = TRUE;
-          } else {
-            T_LOG_SLOT_STATE("RxDataSuccess: RX w/ ACK\n");
+          atomic {
+            if (call RxDataQueue.full()) {
+              T_LOG_RXTX_STATE("RxDataSuccess: RX w/ ACK (sending NACK)\n");
+              context->flags.nack = TRUE;
+            } else {
+              T_LOG_SLOT_STATE("RxDataSuccess: RX w/ ACK\n");
+            }
           }
           call EventEmitter.scheduleEventToReference(TSCH_EVENT_PREPARE_TXACK, TSCH_DELAY_SHORT, refTime, 100);
-        } else {
+          break;
+
+        } else { // (send_ack == FALSE)
           T_LOG_RXTX_STATE("RxDataSuccess: RX w/o ACK\n");
           atomic {
             ret = FAIL;
@@ -356,25 +373,23 @@ module TknTschTssmRxP {
               // TODO: Check if macAutoRequest is FALSE
               ret = call RxBeaconQueue.enqueue((message_t*) context->frame);
               context->flags.indicate_beacon = TRUE;
-            } else if ((call Frame.getFrameType(header) == PLAIN154_FRAMETYPE_DATA)) {
+            } else if (type == PLAIN154_FRAMETYPE_DATA) {
               ret = call RxDataQueue.enqueue((message_t*) context->frame);
               context->flags.indicate_data = TRUE;
-            } else {
-              //TODO: ??
             }
             if (ret != SUCCESS) {
               T_LOG_WARN("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
               atomic call RxMsgPool.put(context->frame);
+              context->flags.indicate_data = FALSE;
               context->flags.indicate_beacon = FALSE;
-              context->flags.indicate_data = FALSE;
-              context->flags.success = TRUE;
-              context->flags.indicate_data = FALSE;
+              context->flags.success = FALSE;
             } else {
+              context->frame = NULL;
               context->flags.success = TRUE;
             }
-            context->frame = NULL;
           }
         }
+
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_RX, TSCH_DELAY_IMMEDIATE, 0);
         break;
 
@@ -386,19 +401,18 @@ module TknTschTssmRxP {
     }
   }
 
-
   async event void TxAckPrepare.handle() {
     plain154_header_t *dataHeader;
     plain154_address_t peerAddress;
     uint8_t ret;
     int16_t timeCorrection;
-    //bool success = FALSE;
-    uint16_t srcPanID;
+    uint16_t panID;
     bool extendedPeerAddress = FALSE;
     bool decodedPeerAddress = FALSE;
     bool reqAck;
 
     call DebugHelper.startOfPacketPrepare();
+    T_LOG_DEBUG("RxP-TxAckPrepare\n");
 
     atomic {
       dataHeader = call Frame.getHeader( (message_t*) context->frame );
@@ -429,14 +443,12 @@ module TknTschTssmRxP {
     #endif
     }
 
-    if (TKNTSCH_SUCCESS == (call Frame.getSrcPANId(dataHeader, &srcPanID))) {
-      // TODO ???
-    } else {
-      if (TKNTSCH_SUCCESS != (call Frame.getDstPANId(dataHeader, &srcPanID))) {
+    if (TKNTSCH_SUCCESS != (call Frame.getSrcPANId(dataHeader, &panID))) {
+      if (TKNTSCH_SUCCESS != (call Frame.getDstPANId(dataHeader, &panID))) {
         T_LOG_WARN("RxFrame had no PanIDs!\n");
         //TODO: Get our panid from pib and set it in the answer.
         //TODO: Or should we neglect PANid totally?
-        srcPanID = 0xffff;
+        panID = 0xffff;
       }
     }
 
@@ -444,7 +456,7 @@ module TknTschTssmRxP {
                                     &m_ackFrame,
                                     call Frame.getSrcAddrMode(dataHeader),
                                     &peerAddress,
-                                    srcPanID,
+                                    panID,
                                     timeCorrection,
                                     reqAck)))
     {
@@ -500,6 +512,7 @@ module TknTschTssmRxP {
   async event void TxAckHwScheduled.handle() {
     uint16_t maxAckWaitDelay;
 
+    T_LOG_DEBUG("RxP-TxAckHwScheduled\n");
     atomic {
       maxAckWaitDelay = context->tmpl->macTsTxOffset + context->tmpl->macTsMaxTx
           + context->tmpl->macTsTxAckDelay + context->tmpl->macTsMaxAck;
@@ -509,32 +522,15 @@ module TknTschTssmRxP {
     call EventEmitter.scheduleEvent(TSCH_EVENT_TX_FAILED, TSCH_DELAY_SHORT, maxAckWaitDelay);
   }
 
-  async event void TxAckSuccess.handle() {
-    uint8_t ret;
-
-    T_LOG_SLOT_STATE("TxAckSuccess\n");
-    atomic {
-      context->flags.success = TRUE;
-      context->flags.indicate_data = TRUE;
-      ret = call RxDataQueue.enqueue((message_t*) context->frame);
-      if (ret != SUCCESS) {
-        T_LOG_WARN("RxDataSuccess: RX queue is full, DROPPING FRAME!\n");
-        atomic call RxMsgPool.put(context->frame);
-      }
-      context->frame = NULL;
-    }
-    call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
-  }
-
   async event void PhyTx.transmitDone(plain154_txframe_t *frame, error_t result) {
     bool radio_irq_expected;
     call DebugHelper.startOfPhyIrq();
 
     atomic {
       radio_irq_expected = context->flags.radio_irq_expected;
-      // ensure only one frame is received
       context->flags.radio_irq_expected = FALSE;
     }
+    T_LOG_DEBUG("RxP-PhyTx\n");
 
     // check whether the IRQ is expected
     if (radio_irq_expected == FALSE) {
@@ -555,11 +551,31 @@ module TknTschTssmRxP {
     call DebugHelper.endOfPhyIrq();
   }
 
+  async event void TxAckSuccess.handle() {
+    uint8_t ret;
+
+    T_LOG_SLOT_STATE("TxAckSuccess\n");
+    atomic {
+      if (context->flags.nack != TRUE) {
+        context->flags.success = TRUE;
+        context->flags.indicate_data = TRUE;
+        ret = call RxDataQueue.enqueue((message_t*) context->frame);
+        if (ret != SUCCESS) {
+          T_LOG_ERROR("RxDataSuccess: RX Q full, DROPPING FRAME! ACK sent!\n");
+          atomic call RxMsgPool.put(context->frame);
+        }
+      }
+      context->frame = NULL;
+    }
+    call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
+  }
+
   async event void RxDataFail.handle() {
     // TODO log error
 
     uint8_t slottype;
     bool internal_error;
+    T_LOG_DEBUG("RxP-RxDataFail\n");
 
     atomic {
       slottype = context->slottype;
@@ -572,13 +588,9 @@ module TknTschTssmRxP {
     switch (slottype) {
       case TSCH_SLOT_TYPE_RX:
         if (internal_error) {
-          T_LOG_ERROR("RxDataFail: RX error!\n");
-          atomic {
-            context->flags.indicate_data = TRUE;  // TODO: Does this make sense at all?
-          }
-        }
-        else {
-          T_LOG_SLOT_STATE("Idle RX link.\n");
+          T_LOG_ERROR("RxDataFail: RX error (internal)!\n");
+        } else {
+          T_LOG_SLOT_STATE("Idle RX link. (pool %d)\n", call RxMsgPool.size());
           atomic {
             context->flags.inactive_slot = TRUE;
           }
@@ -596,6 +608,7 @@ module TknTschTssmRxP {
 
   async event void TxAckFail.handle() {
     call PhyOff.off();
+    T_LOG_DEBUG("RxP-TxAckFail\n");
 
     atomic {
       context->flags.radio_irq_expected = FALSE;
