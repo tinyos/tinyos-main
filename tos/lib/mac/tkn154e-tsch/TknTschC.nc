@@ -68,6 +68,7 @@ configuration TknTschC {
 
     interface TknTschInformationElement;
     interface TknTschFrames;
+    interface TknTschEvents;
   }
   uses {
     interface Pool<message_t> as RxMsgPool @safe();
@@ -180,6 +181,7 @@ configuration TknTschC {
   Tssm.PLME_SET -> RadioPhy;
 
   components TknTschEventsC;
+  TknTschEvents = TknTschEventsC;
   TknTschEventsC.TknTschEventsProxy -> Tssm.TknTschEvents;
 
   components new MuxAlarm32khz32C() as TssmAlarm; // TODO necessary?
