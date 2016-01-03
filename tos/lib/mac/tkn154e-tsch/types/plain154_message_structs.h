@@ -103,6 +103,7 @@ typedef nx_struct {
   nx_uint8_t lqi;
   nx_uint8_t transmissions;
   nx_uint32_t tracker;
+  nx_uint8_t handle;
 } plain154_metadata_t;
 
 typedef struct

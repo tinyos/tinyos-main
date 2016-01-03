@@ -137,6 +137,7 @@ implementation
     uint8_t status;
     uint8_t handle;
   } m_data;
+  m_dataLock = FALSE;
   const tknfsm_state_entry_t eventhandler_table[] = TSSM_EVENT_TABLE_INIT;
 
   bool m_mcuSleepAllowedNext = FALSE;
@@ -227,6 +228,7 @@ implementation
   task void init()
   {
     uint8_t ret;
+    m_dataLock = FALSE;
     ret = call fsm.setEventHandlerTable((tknfsm_state_entry_t*) eventhandler_table,
       sizeof(eventhandler_table) / sizeof(tknfsm_state_entry_t));
     if (ret != TKNFSM_STATUS_SUCCESS) {
@@ -284,7 +286,6 @@ implementation
 
     atomic {
       MacPib = call Pib.getPib();
-
       context.num_transmissions = 0;
     }
 
@@ -429,7 +430,7 @@ implementation
     #endif
 
     if (correction != 0)
-      T_LOG_TIME_CORRECTION("TimeCorrection: %dus\n", correction);
+      atomic T_LOG_TIME_CORRECTION("TC: %dus\n", correction);
 
     call EventEmitter.scheduleEvent(TSCH_EVENT_START_SLOT, TSCH_DELAY_SHORT, slotlength);
     call EventEmitter.addToReferenceTime(slotlength);
@@ -536,7 +537,7 @@ implementation
         if (context.numBackoffSlots == 0) {
           context.numBackoffSlots = INVALID_BACKOFF;
         } else {
-          T_LOG_COLLISION_AVOIDANCE("==>> %u (be: %u) \n", context.numBackoffSlots, context.macBE);
+          T_LOG_COLLISION_AVOIDANCE("B-O-S: %u (be: %u) \n", context.numBackoffSlots, context.macBE);
           context.numBackoffSlots -= 1;
           // Backoff active, overriding slot purpose to RX only
           slottype = TSCH_SLOT_TYPE_RX;
@@ -547,10 +548,13 @@ implementation
 
     // Radio channel setting
     if (link != NULL) {
+      uint8_t channel;
+      uint8_t* hoppingSequence = call MLME_GET.macHoppingSequenceList();
       atomic {
-        context.channel = MacPib->macHoppingSequenceList[(context.macASN + link->macChannelOffset) % MacPib->macHoppingSequenceLength];
-        call PLME_SET.phyCurrentChannel(context.channel);
+        channel = hoppingSequence[(context.macASN + link->macChannelOffset) % MacPib->macHoppingSequenceLength];
+        context.channel = channel;
       }
+      call PLME_SET.phyCurrentChannel(channel);
     }
 
     switch (slottype) {
@@ -581,6 +585,11 @@ implementation
 
       case TSCH_SLOT_TYPE_SHARED:
       case TSCH_SLOT_TYPE_TX:
+        if (m_dataLock) {
+          // buffer for TxConfirm data is not free
+          call EventEmitter.scheduleEvent(TSCH_EVENT_END_SLOT, TSCH_DELAY_IMMEDIATE, 0);
+          break;
+        }
         call DebugHelper.setActiveSlotIndicator();
         call EventEmitter.scheduleEvent(TSCH_EVENT_INIT_TX,
             TSCH_DELAY_IMMEDIATE, 0);
@@ -633,6 +642,7 @@ implementation
     bool confirm_beacon;
     bool confirm_data;
     error_t status;
+    plain154_metadata_t* metadata;
     // TODO revoke all slot contexts to be sure
     call SlotContextTx.revokeContext();
 
@@ -658,6 +668,12 @@ implementation
       slottype = context.slottype;
     }
 
+    atomic {
+      if (context.flags.internal_error) {
+        context.flags.confirm_data = FALSE;
+        context.flags.confirm_beacon = FALSE;
+      }
+    }
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_OFF:
@@ -692,9 +708,11 @@ implementation
         //atomic T_LOG_SLOT_STATE("TX ended [0x%X]\n", (uint32_t)asn);
         // TODO handle TX slots
         atomic {
+          metadata = call Metadata.getMetadata(context.frame);
           confirm_data = context.flags.confirm_data;
           if (confirm_data) {
-            m_data.handle = 0; // TODO pass TX frame handle !
+            m_dataLock = TRUE;
+            m_data.handle = metadata->handle;
             if (context.flags.success == TRUE) {
               m_data.status = TKNTSCH_SUCCESS;
             }
@@ -704,7 +722,8 @@ implementation
             }
           }
         }
-        if (confirm_data) post signalDataConfirm();
+        if (confirm_data)
+          post signalDataConfirm();
         break;
 
       case TSCH_SLOT_TYPE_RX:
@@ -842,6 +861,7 @@ implementation
     metadata = call Metadata.getMetadata(msg);
 
     metadata->transmissions = 0;
+    metadata->handle = msduHandle;
 
     // TODO check return values
 
@@ -886,6 +906,7 @@ implementation
     uint8_t status;
     uint8_t handle;
     atomic {
+      m_dataLock = FALSE;
       status = m_data.status;
       handle = m_data.handle;
     }
