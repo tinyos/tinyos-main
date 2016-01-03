@@ -34,9 +34,10 @@
  */
 
 
-generic module LinkedListC(uint8_t LIST_SIZE) {
-  provides interface LinkedList<message_t*>;
-  provides interface Queue<message_t*>;
+generic module LinkedListC(typedef data_t, uint8_t LIST_SIZE) {
+  provides interface LinkedList<data_t>;
+  provides interface Queue<data_t>;
+  uses interface Compare<data_t>;
 }
 
 implementation {
@@ -45,7 +46,7 @@ implementation {
 
   typedef struct listElement {
     struct listElement_t* prev;
-    message_t* ONE_NOK elem;
+    data_t ONE_NOK elem;
     struct listElement_t* next;
     bool inUse;
   } listElement_t;
@@ -63,70 +64,74 @@ implementation {
     }
   }
 
-  command bool LinkedList.remove(message_t* ONE element) {
+  command bool LinkedList.remove(data_t ONE element) {
     uint8_t i;
     listElement_t* entry;
-    listElement_t* newHead = head;
-    listElement_t* newTail = tail;
-    entry = head;
+    listElement_t* newHead;
+    listElement_t* newTail;
 
-    if (call Queue.empty())
-      return FALSE;
+    atomic {
+      newHead = head;
+      newTail = tail;
+      entry = head;
+      if (call Queue.empty())
+        return FALSE;
 
-    for (i=0; i<size; i++) {
-      message_t* ONE elem;
-      elem = (message_t* ONE) (entry->elem);
-      if (elem == element)
-        break;
-      entry = (listElement_t*) entry->next;
-    }
-    if (i == LIST_SIZE)
-      return FALSE; // element not found
+      for (i=0; i<size; i++) {
+        data_t ONE elem;
+        elem = (data_t ONE) (entry->elem);
+        if (call Compare.equal(elem, element)) {
+          break;
+        }
+        entry = (listElement_t*) entry->next;
+      }
+      if (i == size)
+        return FALSE; // element not found
 
-    if (entry != head)
-      ((listElement_t*) entry->prev)->next = entry->next;
-    if (entry != tail)
-      ((listElement_t*) entry->next)->prev = entry->prev;
-    entry->inUse = FALSE;
-    if (entry == head) {
-      newHead = ((listElement_t*) entry->next);
-      //if (entry != tail)((listElement_t*) entry->next)->prev = NULL;
+      entry->inUse = FALSE;
+      if (entry == head) {
+        newHead = ((listElement_t*) entry->next);
+      } else { //(entry != head)
+        ((listElement_t*) entry->prev)->next = entry->next;
+      }
+      if (entry == tail) {
+        newTail = ((listElement_t*) entry->prev);
+      } else { //(entry != tail)
+        ((listElement_t*) entry->next)->prev = entry->prev;
+      }
+      head = newHead;
+      tail = newTail;
+      size--;
+      if (call Queue.empty()) {
+        head = NULL;
+        tail = NULL;
+      }
+      printQueue();
     }
-    if (entry == tail) {
-      newTail = ((listElement_t*) entry->prev);
-      //if (entry != head) ((listElement_t*) entry->prev)->next = NULL;
-    }
-    head = newHead;
-    tail = newTail;
-    size--;
-    if (call Queue.empty()) {
-      head = NULL;
-      tail = NULL;
-    }
-  printQueue();
-  return TRUE;
+    return TRUE;
   }
 
   command bool Queue.empty() {
-    return size == 0;
+    atomic return size == 0;
   }
 
   command bool Queue.full() {
-     return size >= LIST_SIZE;
+     atomic return size >= LIST_SIZE;
   }
 
   command uint8_t Queue.size() {
-    return size;
+    atomic return size;
   }
 
   command uint8_t Queue.maxSize() {
-    return LIST_SIZE;
+    atomic return LIST_SIZE;
   }
 
-  command message_t* Queue.head() {
-    return head->elem;
+  command data_t Queue.head() {
+    atomic return head->elem;
   }
 
+//#define DTSCH_LINKED_LIST_DEBUG_PRINTF
 #ifdef DTSCH_LINKED_LIST_DEBUG_PRINTF
   void printQueue() {
     int i;
@@ -144,40 +149,44 @@ implementation {
   void inline printQueue() {}
 #endif
 
-  command message_t* Queue.dequeue() {
-    message_t* t = head->elem;
-    if (!call Queue.empty()) {
-      ((listElement_t*) head->next)->prev = NULL;
-      head->inUse = FALSE;
-      head = ((listElement_t*) head->next);
-      size--;
-      if (call Queue.empty()) {
-        head = NULL;
-        tail = NULL;
+  command data_t Queue.dequeue() {
+    data_t t = head->elem;
+    atomic {
+      if (!call Queue.empty()) {
+        ((listElement_t*) head->next)->prev = NULL;
+        head->inUse = FALSE;
+        head = ((listElement_t*) head->next);
+        size--;
+        if (call Queue.empty()) {
+          head = NULL;
+          tail = NULL;
+        }
       }
-    printQueue();
+      printQueue();
     }
     return t;
   }
 
-  command error_t Queue.enqueue(message_t* ONE newVal) {
+  command error_t Queue.enqueue(data_t ONE newVal) {
     if (call Queue.size() < call Queue.maxSize()) {
       uint8_t i;
       listElement_t* newEntry;
-      for (i=0; i<LIST_SIZE; i++)
-        if (list[i].inUse == FALSE)
-          break;
-      newEntry = &list[i];
-      if (head == NULL)
-        head = newEntry;
-      newEntry->inUse = TRUE;
-      newEntry->elem = newVal;
-      tail->next = (struct listElement_t*) newEntry;
-      newEntry->prev = (struct listElement_t*) tail;
-      newEntry->next = (struct listElement_t*) NULL;
-      tail = newEntry;
-      size++;
-      printQueue();
+      atomic {
+        for (i=0; i<LIST_SIZE; i++)
+          if (list[i].inUse == FALSE)
+            break;
+        newEntry = &list[i];
+        if (head == NULL)
+          head = newEntry;
+        newEntry->inUse = TRUE;
+        newEntry->elem = newVal;
+        tail->next = (struct listElement_t*) newEntry;
+        newEntry->prev = (struct listElement_t*) tail;
+        newEntry->next = (struct listElement_t*) NULL;
+        tail = newEntry;
+        size++;
+        printQueue();
+      }
       return SUCCESS;
     }
     else {
@@ -185,13 +194,15 @@ implementation {
     }
   }
 
-  command message_t* Queue.element(uint8_t idx) {
+  command data_t Queue.element(uint8_t idx) {
     listElement_t* entry;
     uint8_t i;
-    if ((idx >= size) || (idx >= LIST_SIZE) || (call Queue.empty())) return NULL;
-    entry = head;
-    for (i=0; i<idx; i++)
-      entry = ((listElement_t*) entry->next);
+    //if ((idx >= size) || (idx >= LIST_SIZE) || (call Queue.empty())) return NULL;
+    atomic {
+      entry = head;
+      for (i=0; i<idx; i++)
+        entry = ((listElement_t*) entry->next);
+    }
     return entry->elem;
   }
 

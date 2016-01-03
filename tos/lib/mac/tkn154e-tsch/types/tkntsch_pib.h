@@ -54,6 +54,13 @@ enum Plain154eLinkOptions_e
   PLAIN154E_LINK_OPTION_TIMEKEEPING = 8
 };
 
+enum Plain154eLinkOperations_e
+{
+  PLAIN154E_ADD_LINK = 0,
+  PLAIN154E_DELETE_LINK = 1,
+  PLAIN154E_MODIFY_LINK = 2,
+};
+
 typedef struct
 {
   /* TSCH macSlotframeTable PIB attributes */

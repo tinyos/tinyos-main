@@ -44,7 +44,7 @@ interface TknTschMlmeSetLink
    * The sfHandle and linkHandle are supplied by a higher layer.
    *
    * @param Operation   Type of link management operation to be performed.
-                        ADD_LINK, DELETE_LINK, MODIFY_LINK
+                        PLAIN154E_ADD_LINK, PLAIN154E_DELETE_LINK, PLAIN154E_MODIFY_LINK
    * @param LinkHandle  Unique identifier (local to specified slotframe) 
                         for the link.  
    * @param sfHandle   The sfHandle of the slotframe to which 
@@ -71,7 +71,7 @@ interface TknTschMlmeSetLink
                           uint8_t  ChannelOffset, 
                           uint8_t  LinkOptions, 
                           tkntsch_link_type_t  LinkType, 
-                          uint16_t NodeAddr
+                          plain154_full_address_t* NodeAddr
                         );
 
   /**

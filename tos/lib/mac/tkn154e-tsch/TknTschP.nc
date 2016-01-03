@@ -43,7 +43,6 @@ module TknTschP {
     interface TknTschMlmeAssociate;
     interface TknTschMlmeDisassociate;
     interface TknTschMlmeKeepAlive;
-    interface TknTschMlmeSetLink;
     interface TknTschMlmeSetSlotframe;
 
     //interface TknTschMcpsData;
@@ -280,7 +279,7 @@ module TknTschP {
 
 /******* TknTschMlmeSetLink ******************************************/
 
-  command tkntsch_status_t TknTschMlmeSetLink.request  (
+/*  command tkntsch_status_t TknTschMlmeSetLink.request  (
                           tkntsch_slotframe_operation_t  Operation,
                           uint16_t LinkHandle,
                           uint8_t  sfHandle,
@@ -295,7 +294,7 @@ module TknTschP {
   }
 
   default event void TknTschMlmeSetLink.confirm( tkntsch_status_t Status, uint16_t LinkHandle, uint8_t sfHandle ) {}
-
+*/
 
 
 /******* TknTschMlmeSetSlotframe *************************************/

@@ -62,6 +62,7 @@ module TknTschTssmP
     interface TknTschMlmeBeaconNotify as MLME_BEACON_NOTIFY;
     interface McuPowerOverride;
     interface TknTschEvents;
+    interface Compare<message_t*> as MessagePtrCompare;
   }
   uses {
 //    interface Timer<TMilli> as Timer0;
@@ -151,7 +152,14 @@ implementation
   task void signalDataIndicate();
   task void signalBeaconIndicate();
 
+
   // Interface commands and events
+  command bool MessagePtrCompare.equal(message_t* elem1, message_t* elem2) {
+    if (elem1 == elem2)
+        return TRUE;
+    return FALSE;
+  }
+
   command error_t SplitControl.start()
   {
     T_LOG_INIT("TknTschTssmP starting...\n"); T_LOG_FLUSH;

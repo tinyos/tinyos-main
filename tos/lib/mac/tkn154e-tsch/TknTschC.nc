@@ -39,6 +39,7 @@
 #endif
 
 #include "TimerSymbol.h"
+#include "TknTschConfig.h"
 
 configuration TknTschC {
   provides {
@@ -186,7 +187,20 @@ configuration TknTschC {
 
   components TknTschScheduleMinP as Schedule;
   Tssm.Schedule -> Schedule;
+  TknTschMlmeSetLink = Schedule.TknTschMlmeSetLink;
   Tssm.InitSchedule -> Schedule;
+  components new LinkedListC(macSlotframeEntry_t*, TKNTSCH_SF_POOL_SIZE) as SFQueue;
+  components new LinkedListC(macLinkEntry_t*, TKNTSCH_LINK_POOL_SIZE) as LinkQueue;
+  components new PoolC(macSlotframeEntry_t,TKNTSCH_SF_POOL_SIZE) as SFPool;
+  components new PoolC(macLinkEntry_t,TKNTSCH_LINK_POOL_SIZE) as LinkPool;
+  Schedule.SFQueue -> SFQueue;
+  Schedule.SFLinkedList -> SFQueue;
+  Schedule.SFCompare <- SFQueue;
+  Schedule.LinkQueue -> LinkQueue;
+  Schedule.LinkLinkedList -> LinkQueue;
+  Schedule.LinkCompare <- LinkQueue;
+  Schedule.SFPool -> SFPool;
+  Schedule.LinkPool -> LinkPool;
 
   components TknTschTemplateMinP as Template;
   Tssm.Template -> Template;
@@ -212,7 +226,6 @@ configuration TknTschC {
   TknTschMlmeKeepAlive = TknTschP;
   TknTschMlmeSet = TknTschPibP;
   TknTschMlmeGet = TknTschPibP;
-  TknTschMlmeSetLink = TknTschP;
   TknTschMlmeSetSlotframe = TknTschP;
 
 
