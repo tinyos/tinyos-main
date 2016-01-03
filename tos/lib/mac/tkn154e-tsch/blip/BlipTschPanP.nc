@@ -88,6 +88,7 @@ module BlipTschPanP
     interface TknTschFrames;
 
     interface RPLOF;
+    interface Random;
   }
 }
 implementation
@@ -320,7 +321,7 @@ implementation
       );
 
     if (ret != TKNTSCH_SUCCESS) {
-      call BeaconTimer.startOneShot(1024 * 5);
+      call BeaconTimer.startOneShot(1024 * TSCH_BEACON_INTERVAL);
       T_LOG_DEBUG("MLME_BEACON.request returned: 0x%x\n", ret);
     }
   }
@@ -346,7 +347,7 @@ implementation
       call MLME_SET.macPanId(DEFINED_TOS_AM_GROUP);
       post startTsch();
       call TimeParentTimer.startOneShot(1024 * 10);
-      call BeaconTimer.startOneShot(1024 * 5);
+      call BeaconTimer.startOneShot(1024 * TSCH_BEACON_INTERVAL);
     }
   }
 
@@ -377,6 +378,6 @@ implementation
 
   event void MLME_BEACON.confirm(plain154_status_t Status) {
     T_LOG_BLIP_RXTX_STATE("Received event MLME_BEACON.confirm with status 0x%x\n", Status);
-    call BeaconTimer.startOneShot(6*1024);
+    call BeaconTimer.startOneShot( (TSCH_BEACON_INTERVAL*1024) - ((TSCH_BEACON_INTERVAL*1024)/2) + (call Random.rand32() % (TSCH_BEACON_INTERVAL*1024)));
   }
 }

@@ -71,8 +71,11 @@ configuration Ieee154BareC {
 }
 
 implementation {
-  components new QueueC(message_t*, RX_QUEUE_SIZE) as RxQueue;
-  TknTschBareP.RxQueue -> RxQueue;
+  components RandomC;
+  BlipTschPanP.Random -> RandomC;
+
+  components new QueueC(message_t*, RX_QUEUE_SIZE) as RxBlipQueue;
+  TknTschBareP.RxBlipQueue -> RxBlipQueue;
 
   components new PoolC(message_t, RX_QUEUE_SIZE) as RxMessagePool;
   TknTschBareP.RxMessagePool -> RxMessagePool;
