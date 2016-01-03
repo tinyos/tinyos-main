@@ -72,6 +72,7 @@ implementation {
 
   tsPhyFrame rx_frame;
   message_t rx_msg;
+  message_t* rx_msg_ptr = &rx_msg;
   error_t rx_error;
   bool m_radioIntFlag = FALSE;
   uint8_t m_channel = 255;
@@ -170,17 +171,17 @@ implementation {
             // which is 4 byte, together with SFD we get 10 symbols
             stamp -= 10;
 
-            if (SUCCESS != call PacketTransform.MMACToPlain154(&rx_frame, &rx_msg)) {
-              printf("MMACToPlain154 failed. Rejecting frame.\n");
+            if (SUCCESS != call PacketTransform.MMACToPlain154(&rx_frame, rx_msg_ptr)) {
+              //printf("MMACToPlain154 failed. Rejecting frame.\n");
               vMMAC_StartPhyReceive(&rx_frame, E_MMAC_RX_START_NOW);
               radio_state = RADIO_RX;
             } else {
-              meta = call Plain154Metadata.getMetadata(&rx_msg);
+              meta = call Plain154Metadata.getMetadata(rx_msg_ptr);
               meta->timestamp = stamp;
               meta->valid_timestamp = TRUE;
               meta->lqi = u8MMAC_GetRxLqi(NULL);
               radio_state = RADIO_IDLE;
-              signal Plain154PhyRx.received(&rx_msg);
+              rx_msg_ptr = signal Plain154PhyRx.received(rx_msg_ptr);
             }
           } else {
             rx_error = FAIL;
