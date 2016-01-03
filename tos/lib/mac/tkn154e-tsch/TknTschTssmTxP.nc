@@ -219,8 +219,14 @@ module TknTschTssmTxP {
               if (linkAddr->mode == PLAIN154_ADDR_EXTENDED) {
                 if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *) &addr, 8) == 0)
                   break;
-              } else if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *)&addr, 2) == 0)
+              } else {
+                #ifdef TKN_TSCH_DISABLE_UNICASTS_IN_SHARED_SLOTS
+                if ( (slottype == TSCH_SLOT_TYPE_SHARED) && (PLAIN154_ADDR_EXTENDED == call Frame.getDstAddrMode(header)) )
+                  continue;
+                #endif
+                if (memcmp((uint8_t *)&linkAddr->addr, (uint8_t *)&addr, 2) == 0)
                   break;
+              }
             }
             if (i == queue_size) {
               T_LOG_INFO("TxDataPrepare: idle TX slot (no match found)\n");
@@ -363,7 +369,9 @@ module TknTschTssmTxP {
             context->flags.success = TRUE;
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            call TxQueue.dequeue();  // TODO: search for correct frame to remove! Doesn't have to be first frame!
+            //call TxQueue.dequeue();  // TODO: search for correct frame to remove! Doesn't have to be first frame!
+            if (call TxLinkedList.remove(context->frame) == FALSE)
+              T_LOG_ERROR("Msg not found in queue for removing!\n");
           }
         }
         break;
@@ -501,53 +509,72 @@ module TknTschTssmTxP {
     #else
       context->time_correction = 0;
     #endif
-      context->flags.success = TRUE;
     }
-
     return ack;
   }
 
   async event void RxAckSuccess.handle() {
     plain154_header_t *ackHeader;
-    bool ackSuccess = FALSE;
-    bool slottype;
+    plain154_header_t *frameHeader;
+    plain154_address_t ackAddress;
+    plain154_address_t frameAddress;
+    bool ackSuccess = TRUE;
 
     T_LOG_SLOT_STATE("RxAckSuccess");
 
     atomic {
       ackHeader = call Frame.getHeader(context->ack);
-      slottype = context->slottype;
+      frameHeader = call Frame.getHeader(context->frame);
     }
 
-    // TODO: Check if this is the ACK that we are waiting for
-    /*
-    dstAddrMode = call Frame.getSrcAddrMode(ackHeader);
-    if (dstAddrMode == PLAIN154_ADDR_EXTENDED) {
+    // Check if this is the ACK that we are waiting for
 
-    } else if (dstAddrMode == PLAIN154_ADDR_SHORT) {
+    // not the same addressing modes
+    if ( (call Frame.getSrcAddrMode(frameHeader)) != (call Frame.getDstAddrMode(ackHeader)) )
+      ackSuccess = FALSE;
 
-    else {
-      // not present!
-    }
-    call Frame.getDSN(ackHeader)
-    call Frame.getDSN(dataHeader)
-    */
+    // same addr mode, check addr themselves
+    if (ackSuccess && (call Frame.getSrcAddr(frameHeader, &frameAddress) != TKNTSCH_SUCCESS))
+      ackSuccess = FALSE;
 
-    ackSuccess = processAck(ackHeader);
-    if (ackSuccess == TRUE) {  // ACK was successfully decoded and no NACK
-      if (slottype == TSCH_SLOT_TYPE_SHARED) {
-        call TxQueue.dequeue();
+    if (ackSuccess && (call Frame.getDstAddr(ackHeader, &ackAddress) != TKNTSCH_SUCCESS))
+      ackSuccess = FALSE;
+
+    if (ackSuccess) {
+      uint8_t addrMode = call Frame.getDstAddrMode(ackHeader);
+      if (PLAIN154_ADDR_EXTENDED == addrMode) {
+        if (memcmp((uint8_t *) &frameAddress, (uint8_t *) &ackAddress, 8) != 0)
+          ackSuccess = FALSE;
+      } else if (PLAIN154_ADDR_SHORT == addrMode) {
+        if (memcmp((uint8_t *) &frameAddress, (uint8_t *) &ackAddress, 2) != 0)
+          ackSuccess = FALSE;
       } else {
-        if (call TxLinkedList.remove(context->frame) == FALSE)
-          T_LOG_ERROR("Msg not found in queue for removing!\n");
+        ackSuccess = FALSE;
       }
-      atomic {
+    }
+
+    if (ackSuccess && (call Frame.getDSN(ackHeader) != call Frame.getDSN(frameHeader))) {
+      ackSuccess = FALSE;
+    }
+
+    if (ackSuccess)
+      ackSuccess = processAck(ackHeader);
+    atomic {
+      if (ackSuccess == TRUE) {  // ACK was successfully decoded and no NACK
+        context->flags.success = TRUE;
+        if (context->slottype == TSCH_SLOT_TYPE_SHARED) {
+          if (call TxLinkedList.remove(context->frame) == FALSE)
+            T_LOG_ERROR("Msg not found in queue for removing!\n");
+        } else {
+          if (call TxLinkedList.remove(context->frame) == FALSE)
+            T_LOG_ERROR("Msg not found in queue for removing!\n");
+        }
         context->num_transmissions = 99;
         context->flags.confirm_data = TRUE;
+        T_LOG_SLOT_STATE("\n");
+      } else {
+        T_LOG_INFO(" (NACK)\n");
       }
-      T_LOG_SLOT_STATE("\n");
-    } else {
-      T_LOG_INFO(" (NACK)\n");
     }
 
     // Reset backoff scheme
@@ -562,7 +589,7 @@ module TknTschTssmTxP {
       }
     }
 
-    call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_SHORT, (call EventEmitter.getReferenceToNowDt()) + 250);
+    call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_SHORT, (call EventEmitter.getReferenceToNowDt()) + 150);
   }
 
   async event void TxDataFail.handle() {
@@ -577,7 +604,6 @@ module TknTschTssmTxP {
       // deny the IRQ
       context->flags.radio_irq_expected = FALSE;
     }
-
     switch (slottype) {
       case TSCH_SLOT_TYPE_ADVERTISEMENT:
         T_LOG_RXTX_STATE("TxDataFail: ADV!\n");
@@ -594,7 +620,8 @@ module TknTschTssmTxP {
             T_LOG_RXTX_STATE("TxDataFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            call TxQueue.dequeue();
+            if (call TxLinkedList.remove(context->frame) == FALSE)
+              T_LOG_ERROR("Msg not found in queue for removing!\n");
           }
           else {
             T_LOG_RXTX_STATE("TxDataFail: Shared TX!\n");
@@ -645,7 +672,9 @@ module TknTschTssmTxP {
             T_LOG_RXTX_STATE("RxAckFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            call TxQueue.dequeue();
+            //call TxQueue.dequeue();
+            if (call TxLinkedList.remove(context->frame) == FALSE)
+              T_LOG_ERROR("Msg not found in queue for removing!\n");
           }
           else {
             T_LOG_RXTX_STATE("RxAckFail: Shared TX!\n");
@@ -663,7 +692,9 @@ module TknTschTssmTxP {
           atomic {
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
-            call TxQueue.dequeue();
+            //call TxQueue.dequeue();
+            if (call TxLinkedList.remove(context->frame) == FALSE)
+              T_LOG_ERROR("Msg not found in queue for removing!\n");
           }
         }
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
