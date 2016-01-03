@@ -2,6 +2,9 @@
 
 module LinkedListTestC
 {
+  provides {
+    interface Compare<message_t*>;
+  }
   uses {
     interface Boot;
     interface Queue<message_t*>;
@@ -12,6 +15,12 @@ module LinkedListTestC
   //#define DTSCH_LINKED_LIST_DEBUG_PRINTF
 
   void run();
+
+  command bool Compare.equal(message_t* elem1, message_t* elem2) {
+    if (elem1 == elem1)
+        return TRUE;
+    return FALSE;
+  }
 
   event void Boot.booted() {
     call LinkedList.init();
@@ -25,11 +34,19 @@ module LinkedListTestC
 
     printfflush();
 
+    printf("\nEnqueue [1](%p)\n", &msgs[1]);
+    call Queue.enqueue(&msgs[1]);
+
+    printf("\nElement(0): %p\n", call Queue.element(0));
+
+    printf("\nElement(1): %p\n", call Queue.element(1));
+
+    printf("\nElement(2) not there: %p\n", call Queue.element(2));
+
+
     printf("\nRemove [0](%p)\n", &msgs[0]);
     call LinkedList.remove(&msgs[0]);
 
-    printf("\nEnqueue [1](%p)\n", &msgs[1]);
-    call Queue.enqueue(&msgs[1]);
 
 
     printf("\nRemove [1](%p)\n", &msgs[1]);
@@ -38,9 +55,6 @@ module LinkedListTestC
     printf("\nEnqueue [1](%p)\n", &msgs[1]);
     call Queue.enqueue(&msgs[1]);
 
-    printf("\nElement(0): %p\n", call Queue.element(0));
-
-    printf("\nElement(1): %p\n", call Queue.element(1));
 
     printf("\nEnqueue [2](%p)\n", &msgs[2]);
     call Queue.enqueue(&msgs[2]);
