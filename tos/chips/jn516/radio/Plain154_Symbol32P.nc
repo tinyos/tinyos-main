@@ -35,6 +35,7 @@
 
 #include "plain154_message_structs.h"
 #include "Timer.h"
+#include "TimerSymbol.h"
 #include "plain154_phy_pib.h"
 
 /*

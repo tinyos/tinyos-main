@@ -34,7 +34,6 @@
 #include "Jn516.h"
 //#include "plain154_message_structs.h"
 #include "plain154_values.h"
-#include "printf.h"
 
 module Plain154PhyPacketTransformP {
   provides {
@@ -169,7 +168,6 @@ implementation {
     checksum -= from_data[from->u8PayloadLength-2];
     checksum -= from_data[from->u8PayloadLength-1] << 8;
     if (checksum != 0) {
-      printf("MMAC->154: chksum error\n");
       return FAIL;
     }
 
@@ -191,7 +189,6 @@ implementation {
         memcpy(tmp, &from_data[data_index], 8);
         data_index += 8;
       } else {
-        printf("MMAC->154: unknown dst addr mode\n");
         return FAIL;
       }
     }
@@ -209,7 +206,6 @@ implementation {
         memcpy(tmp, &from_data[data_index], 8);
         data_index += 8;
       } else {
-        printf("MMAC->154: unknown src addr mode\n");
         return FAIL;
       }
     }

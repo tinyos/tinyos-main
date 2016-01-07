@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Technische Universitaet Berlin
+ * Copyright (c) 2015, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @author Moksha Birk <birk@tkn.tu-berlin.de>
- * @author Jasper Buesch <buesch@tkn.tu-berlin.de>
+ * @author Moksha Birk <code@tkn.tu-berlin.de>
  */
 
-#include "TimerSymbol.h"
+#ifndef TIMER_SYMBOL_H_
+#define TIMER_SYMBOL_H_
 
-configuration Plain154_Symbol32C {
-  provides {
-    interface Plain154PhyTx<TSymbol, uint32_t>;
-    interface Plain154PhyRx<TSymbol, uint32_t>;
-    interface Plain154PhyOff;
-    interface Plain154PlmeGet;
-    interface Plain154PlmeSet;
-    interface Init;
-  } 
-}
-implementation {
-  components Plain154PhyPibP;
-  Plain154PlmeGet = Plain154PhyPibP;
-  Plain154PlmeSet = Plain154PhyPibP;
-  Init = Plain154PhyPibP;
+typedef struct { int notUsed; } TSymbol;
 
-  components Plain154_Symbol32P;
-  Plain154_Symbol32P.Plain154PlmeGet -> Plain154PhyPibP.Plain154PlmeGet;
-  Plain154_Symbol32P.Plain154PlmeSet -> Plain154PhyPibP.Plain154PlmeSet;
+#endif /* TIMER_SYMBOL_H_ */
 
-  Plain154PhyTx = Plain154_Symbol32P;
-  Plain154PhyRx = Plain154_Symbol32P;
-  Plain154PhyOff = Plain154_Symbol32P;
-
-  components Plain154PacketTransformC;
-  Plain154_Symbol32P.PacketTransform -> Plain154PacketTransformC;
-
-  components Plain154MetadataC;
-  Plain154_Symbol32P.Plain154Metadata -> Plain154MetadataC;
-
-  components MainC, Jn516HWDebugC;
-  Jn516HWDebugC.Boot -> MainC.Boot;
-
-  components new MuxAlarm32khz32C() as AlarmFrom; //virtualized 32khz alarm
-  Plain154_Symbol32P.Alarm -> AlarmFrom.Alarm;
-}

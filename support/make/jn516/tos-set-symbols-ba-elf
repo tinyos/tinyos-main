@@ -102,7 +102,7 @@ close( FILE_IN );
 
 if( $G_opts{readdata} ) {
 
-  my %nums = ( 1 => 'C', 2 => 'v', 4 => 'V' );
+  my %nums = ( 1 => 'C', 2 => 'n', 4 => 'N' );
   %user_symbols = %exe_symbols unless %user_symbols;
 
   my $maxlen = 0;
@@ -137,6 +137,7 @@ if( $G_opts{readdata} ) {
 
 } else {
 
+  my %nums = ( 1 => 'C', 2 => 'n', 4 => 'N' );
   # change the desired symbols at their file offsets
   for my $symbol (sort keys %user_symbols) {
     my $outsym = $symbol;
@@ -147,7 +148,8 @@ if( $G_opts{readdata} ) {
       my $addr = $exe_symbols{$outsym}->{addr};
       my $size = $exe_symbols{$outsym}->{size};
       my $filepos = $segment_off + ($addr - $segment_vma);
-      my $bytes = substr( pack("V", $value) . ("\000" x $size), 0, $size );
+      #my $bytes = substr( pack("N", $value) . ("\000" x $size), 0, $size );
+      my $bytes = substr( pack($nums{$size}, $value) . ("\000" x $size), 0, $size );
       substr( $exe, $filepos, $size ) = $bytes;
     } else {
       warn "Could not find symbol $symbol in $exein, ignoring symbol.\n";

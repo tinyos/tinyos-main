@@ -45,6 +45,9 @@ PFLAGS += -gcc=ba-elf-gcc
 PFLAGS += -fnesc-optimize-atomic
 #PFLAGS += -fnesc-no-debug
 
+PFLAGS += "-Dcoap_malloc\(size\)=ip_malloc\(size\) -Dcoap_free\(size\)=ip_free\(size\)"
+PFLAGS += "-Duthash_malloc\(size\)=ip_malloc\(size\) -Duthash_free\(ptr,size\)=ip_free\(ptr\)"
+
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
 endif
@@ -54,6 +57,12 @@ endif
 #endif
 
 $(if $(PROGRAM),,$(call TOSMake_include,jn516/port.extra))
+
+# This chip uses big endian byte order
+$(call TOSMake_include,extras/big_endian.extra)
+
+# This chip needs 32 bit aligned memory allocation
+PFLAGS += -DUSE_IP_MALLOC_32BIT
 
 #PFLAGS += -fnesc-separator=__
 
