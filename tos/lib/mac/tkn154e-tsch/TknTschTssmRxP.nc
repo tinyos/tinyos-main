@@ -40,6 +40,7 @@
 #include "tkntsch_pib.h"
 #include "tssm_utils.h"
 #include "TknTschConfig.h"
+#include "TimerSymbol.h"
 
 // TODO record transmission count for statistics
 
@@ -238,8 +239,8 @@ module TknTschTssmRxP {
     bool send_ack;
     plain154_header_t *header;
     plain154_metadata_t* metadata;
-    uint8_t* payload;
-    uint8_t payloadLen;
+    //uint8_t* payload;
+    //uint8_t payloadLen;
     uint32_t rxTimestamp;
     uint8_t ret;
     uint8_t type;
@@ -260,8 +261,8 @@ module TknTschTssmRxP {
           metadata = call Metadata.getMetadata(context->frame);
           send_ack = call Frame.isAckRequested(header);
           type = call Frame.getFrameType(header);
-          payloadLen = call Packet.payloadLength((message_t*) context->frame);
-          payload = call Packet.getPayload((message_t*) context->frame, payloadLen);
+          //payloadLen = call Packet.payloadLength((message_t*) context->frame);
+          //payload = call Packet.getPayload((message_t*) context->frame, payloadLen);
 
           context->flags.with_ack = send_ack;
 
@@ -370,7 +371,7 @@ module TknTschTssmRxP {
     plain154_address_t peerAddress;
     uint8_t ret;
     int16_t timeCorrection;
-    bool success = FALSE;
+    //bool success = FALSE;
     uint16_t srcPanID;
     bool extendedPeerAddress = FALSE;
     bool decodedPeerAddress = FALSE;
@@ -429,6 +430,7 @@ module TknTschTssmRxP {
       plain154_header_t *ackHeader;
       uint8_t ackHeaderLen;
       plain154_txframe_t *txframe;
+      uint32_t radioDataEndTs, macTsTxAckDelay;
 
       // prepare the frame structure
       atomic {
@@ -437,6 +439,8 @@ module TknTschTssmRxP {
         ackHeader = call Frame.getHeader( (message_t*) &m_ackFrame );
         txframe->payload = call Packet.getPayload(&m_ackFrame, txframe->payloadLen);
         txframe->metadata = call Metadata.getMetadata(&m_ackFrame);
+        radioDataEndTs = context->radioDataEndTs;
+        macTsTxAckDelay = context->tmpl->macTsTxAckDelay;
       }
       call Frame.setDSN(ackHeader, call Frame.getDSN(dataHeader));
       call Frame.getActualHeaderLength(ackHeader, &ackHeaderLen);
@@ -444,8 +448,8 @@ module TknTschTssmRxP {
       txframe->headerLen = ackHeaderLen;
       txframe->payloadLen = 0;
 
-      ret = call PhyTx.transmit(txframe, context->radioDataEndTs,
-          TSSM_SYMBOLS_FROM_US(context->tmpl->macTsTxAckDelay)
+      ret = call PhyTx.transmit(txframe, radioDataEndTs,
+          TSSM_SYMBOLS_FROM_US(macTsTxAckDelay)
         );
 
       if (ret != SUCCESS) {

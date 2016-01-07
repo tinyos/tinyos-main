@@ -33,6 +33,7 @@
 
 #include "Timer.h"
 //#include "Timer62500hz.h"
+#include "TimerSymbol.h"
 
 #ifdef NEW_PRINTF_SEMANTICS
 #include "printf.h"
@@ -213,8 +214,8 @@ implementation
 
   task void init()
   {
-    uint8_t ret;
-    ret = call fsm.setEventHandlerTable((tknfsm_state_entry_t*) eventhandler_table,
+    //uint8_t ret;
+    /*ret =*/ call fsm.setEventHandlerTable((tknfsm_state_entry_t*) eventhandler_table,
         sizeof(eventhandler_table) / sizeof(tknfsm_state_entry_t));
     // TODO catch ret != TKNFSM_STATUS_SUCCESS
 
@@ -373,7 +374,7 @@ implementation
     // just entered the idle state, coming from slot end
     uint32_t slotlength;
     int16_t correction;
-    uint8_t slottype;
+    //uint8_t slottype;
 
     uint16_t slotFrameLength;
     uint16_t currSlotIndex;
@@ -383,7 +384,7 @@ implementation
     macLinkEntry_t* link;
 
     atomic {
-      slottype = context.slottype;
+      //slottype = context.slottype;
       correction = context.time_correction;
       slotlength = context.tmpl->macTsTimeslotLength;
       slotlength -= correction;
@@ -533,8 +534,10 @@ implementation
 
     // Radio channel setting
     if (link != NULL) {
-      atomic context.channel = MacPib->macHoppingSequenceList[(context.macASN + link->macChannelOffset) % MacPib->macHoppingSequenceLength];
-      call PLME_SET.phyCurrentChannel(context.channel);
+      atomic {
+        context.channel = MacPib->macHoppingSequenceList[(context.macASN + link->macChannelOffset) % MacPib->macHoppingSequenceLength];
+        call PLME_SET.phyCurrentChannel(context.channel);
+      }
     }
 
     switch (slottype) {

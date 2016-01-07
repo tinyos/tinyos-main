@@ -353,7 +353,7 @@ implementation
 
   event void TimeParentTimer.fired() {
     struct in6_addr *parent;
-    uint8_t * p;
+
     parent = call RPLOF.getParent();
     if (parent != NULL) {
       if ( (((parent->s6_addr[8]) ^ 2) != ((uint8_t *) &m_timeParent.extendedAddress)[0]) ||
@@ -361,8 +361,13 @@ implementation
         memcpy((uint8_t *) &m_timeParent.extendedAddress, (uint8_t *) &(parent->s6_addr[8]), 8);
         ((uint8_t *) &m_timeParent.extendedAddress)[0] ^= 2;
         call MLME_SET.macTimeParent(m_timeParent);
+#ifdef NEW_PRINTF_SEMANTICS
+        {
+        uint8_t *p;
         p = (uint8_t *) &m_timeParent;
         printf("TimeParent adjusted to changed RPL parent (0x%x 0x%x 0x%x 0x%x)\n", p[0], p[1], p[6], p[7]);
+        }
+#endif
       }
     } else {
       printf("RPLParent not available for timeparent selection\n");

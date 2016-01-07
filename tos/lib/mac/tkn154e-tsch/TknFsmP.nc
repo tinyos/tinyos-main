@@ -125,7 +125,7 @@ implementation
   }
 
   default async event void StateHandler.handle[uint8_t shandler]() {
-#ifdef NEW_PRINTF_SEMANTICS
+#ifdef TKNFSM_ENABLE_DEBUG_PRINT
     tknfsm_state_t s;
 
     atomic s = current_state;

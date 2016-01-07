@@ -202,6 +202,9 @@ implementation {
         PLAIN154_FRAMEVERSION_2,
         FALSE  // PAN ID compression
       );
+    if (status != PLAIN154_SUCCESS) {
+      // TODO handle error in Frame.setAddressingFields
+    }
 
     call Frame.setFrameType(hdr, PLAIN154_FRAMETYPE_BEACON);
     call Frame.setFramePending(hdr, FALSE);

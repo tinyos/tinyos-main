@@ -35,6 +35,10 @@
 #include "tkntsch_lock.h"
 #include "static_config.h"
 
+#ifdef NEW_PRINTF_SEMANTICS
+#include "printf.h"
+#endif
+
 module TknTschPibP {
 
   provides interface TknTschMlmeGet;
@@ -66,7 +70,7 @@ implementation {
     pib.macMaxBE = 3; // TSCH-CA default: 7 (range: 3 - 8), 6TiSCH default: 3
     pib.macMaxFrameRetries = 6;
 
-    pib.macHoppingSequenceList = hoppingSequenceList;
+    pib.macHoppingSequenceList = (uint8_t*)hoppingSequenceList;
     pib.macHoppingSequenceLength = (uint16_t) sizeof(hoppingSequenceList);
     }
 
@@ -244,6 +248,7 @@ implementation {
 
   task void printPib()
   {
+#ifdef NEW_PRINTF_SEMANTICS
     volatile uint32_t tmp;
     tkntsch_pib_t p, *ppib;
     ppib = call TknTschPib.getPib();
@@ -268,6 +273,7 @@ implementation {
     printf("  macMinBE: %u\n", p.macMinBE);
     printf("  macMaxBE: %u\n", p.macMaxBE);
     printfflush();
+#endif
   }
 
   async command void TknTschPib.printPib() { post printPib(); }

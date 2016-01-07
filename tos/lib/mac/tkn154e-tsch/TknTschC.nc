@@ -38,6 +38,8 @@
 #error Using TKN-TSCH without platform support!
 #endif
 
+#include "TimerSymbol.h"
+
 configuration TknTschC {
   provides {
     interface TknTschMlmeReset;

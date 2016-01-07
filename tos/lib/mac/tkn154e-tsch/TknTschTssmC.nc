@@ -30,6 +30,8 @@
  * @author Jasper Büsch <buesch@tkn.tu-berlin.de>
  */
 
+#include "TimerSymbol.h"
+
 #ifndef TKNTSCH_ADV_QUEUE_SIZE
 #define TKNTSCH_ADV_QUEUE_SIZE 5
 #endif

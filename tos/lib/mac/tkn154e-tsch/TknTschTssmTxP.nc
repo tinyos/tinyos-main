@@ -40,6 +40,7 @@
 #include "tkntsch_pib.h"
 #include "tssm_utils.h"
 #include "TknTschConfig.h"
+#include "TimerSymbol.h"
 
 // TODO record transmission count for statistics
 
@@ -112,10 +113,10 @@ module TknTschTssmTxP {
 
   async event void InitSlotTx.handle() {
     // TODO use proper logging
-    uint8_t slottype;
+    //uint8_t slottype;
 
     atomic {
-      slottype = context->slottype;
+      //slottype = context->slottype;
     }
 
     //if (slottype == TSCH_SLOT_TYPE_SHARED) printf("Initializing shared TX slot.\n");
@@ -144,6 +145,8 @@ module TknTschTssmTxP {
     plain154_header_t *header;
     uint8_t headerLen = 0;
     plain154_metadata_t* meta;
+    uint8_t num_transmissions;
+
     call DebugHelper.startOfPacketPrepare();
 
     atomic {
@@ -204,6 +207,7 @@ module TknTschTssmTxP {
           context->frame = msg;
           meta = call Metadata.getMetadata(msg);
           context->num_transmissions = meta->transmissions;
+          num_transmissions = meta->transmissions;
           macTsTxOffset = context->tmpl->macTsTxOffset;
         }
 
@@ -219,7 +223,7 @@ module TknTschTssmTxP {
         }
 
         header = call Frame.getHeader(msg);
-        if (context->num_transmissions == 0)
+        if (num_transmissions == 0)
           call Frame.setDSN(header, m_dsn++);
         break;
 
@@ -480,13 +484,18 @@ module TknTschTssmTxP {
 
     return ack;
   }
+
   async event void RxAckSuccess.handle() {
     plain154_header_t *ackHeader;
     bool ackSuccess = FALSE;
+    bool slottype;
 
     printf("RxAckSuccess");
 
-    atomic ackHeader = call Frame.getHeader(context->ack);
+    atomic {
+      ackHeader = call Frame.getHeader(context->ack);
+      slottype = context->slottype;
+    }
 
     // TODO: Check if this is the ACK that we are waiting for
     /*
@@ -504,7 +513,7 @@ module TknTschTssmTxP {
 
     ackSuccess = processAck(ackHeader);
     if (ackSuccess == TRUE) {  // ACK was successfully decoded and no NACK
-      if (context->slottype == TSCH_SLOT_TYPE_SHARED) {
+      if (slottype == TSCH_SLOT_TYPE_SHARED) {
         call TxQueue.dequeue();
       } else {
         // TODO: Search for the corret frame to remove from queue
@@ -558,26 +567,26 @@ module TknTschTssmTxP {
       case TSCH_SLOT_TYPE_SHARED:
         // TODO check retransmit behavior
         // TODO calculate CSMA backoff
-        if ((context->num_transmissions - 1) >= max_retransmissions) {
-          printf("TxDataFail: Shared TX -> final!\n");
-          atomic {
+        atomic {
+          if ((context->num_transmissions - 1) >= max_retransmissions) {
+            printf("TxDataFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             call TxQueue.dequeue();
           }
-        }
-        else {
-          printf("TxDataFail: Shared TX!\n");
-          // TODO plan retransmission
+          else {
+            printf("TxDataFail: Shared TX!\n");
+            // TODO plan retransmission
+          }
         }
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
         break;
 
       case TSCH_SLOT_TYPE_TX:
         printf("TxDataFail: TX!\n");
-        if ((context->num_transmissions - 1) >= max_retransmissions) {
-          printf("TxDataFail: Ded. TX -> final!\n");
-          atomic {
+        atomic {
+          if ((context->num_transmissions - 1) >= max_retransmissions) {
+            printf("TxDataFail: Ded. TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             //TODO: FIX THIS: Find the correct frame and remove it from queue (not necessary the first frame)
@@ -598,9 +607,9 @@ module TknTschTssmTxP {
   async event void RxAckFail.handle() {
     uint8_t maxBE;
     uint8_t slottype, max_retransmissions;
-    maxBE = context->macpib->macMaxBE;
 
     atomic {
+      maxBE = context->macpib->macMaxBE;
       context->macBE = context->macBE < maxBE ? context->macBE + 1 : maxBE;
       slottype = context->slottype;
       max_retransmissions = context->macpib->macMaxFrameRetries;
@@ -608,17 +617,17 @@ module TknTschTssmTxP {
 
     switch (slottype) {
       case TSCH_SLOT_TYPE_SHARED:
-        if ((context->num_transmissions - 1) >= max_retransmissions) {
-          printf("RxAckFail: Shared TX -> final!\n");
-          atomic {
+        atomic {
+          if ((context->num_transmissions - 1) >= max_retransmissions) {
+            printf("RxAckFail: Shared TX -> final!\n");
             context->flags.confirm_data = TRUE;
             context->num_transmissions = 99;
             call TxQueue.dequeue();
           }
-        }
-        else {
-          printf("RxAckFail: Shared TX!\n");
-          // TODO plan retransmission
+          else {
+            printf("RxAckFail: Shared TX!\n");
+            // TODO plan retransmission
+          }
         }
         call EventEmitter.scheduleEvent(TSCH_EVENT_CLEANUP_TX, TSCH_DELAY_IMMEDIATE, 0);
         break;

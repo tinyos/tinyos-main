@@ -36,6 +36,7 @@
 #include "tkntsch_types.h"
 #include "plain154_values.h"
 #include "plain154_message_structs.h"
+#include "TimerSymbol.h"
 
 #ifdef NEW_PRINTF_SEMANTICS
 #include "printf.h"

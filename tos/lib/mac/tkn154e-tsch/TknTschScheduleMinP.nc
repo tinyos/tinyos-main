@@ -99,12 +99,12 @@ implementation
 
   async command macLinkEntry_t* Schedule.getLink(uint16_t timeslot)
   {
-    uint16_t index = 0;
-    while (index < slotframe_active_slots) {
-      if (min_6tsch_links[index].macTimeslot < timeslot) {
-        index++;
-      } else if (min_6tsch_links[index].macTimeslot == timeslot) {
-        return (macLinkEntry_t*) &min_6tsch_links[index];
+    uint16_t slot_index = 0;
+    while (slot_index < slotframe_active_slots) {
+      if (min_6tsch_links[slot_index].macTimeslot < timeslot) {
+        slot_index++;
+      } else if (min_6tsch_links[slot_index].macTimeslot == timeslot) {
+        return (macLinkEntry_t*) &min_6tsch_links[slot_index];
       } else {
         break;
       }
@@ -119,6 +119,7 @@ implementation
 
   task void printSchedule()
   {
+#ifdef NEW_PRINTF_SEMANTICS
     volatile uint32_t tmp;
     uint8_t* ptmp;
     int i = 0;
@@ -143,6 +144,7 @@ implementation
       printfflush();
       for (tmp = 0; tmp < 300000; tmp++) {}
     }
+#endif
   }
 
   async command void Schedule.printSchedule() { post printSchedule(); }
