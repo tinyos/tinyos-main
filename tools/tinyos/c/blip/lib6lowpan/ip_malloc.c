@@ -1,6 +1,8 @@
 /*
  * "Copyright (c) 2008, 2009 The Regents of the University  of California.
  * All rights reserved."
+ * "Copyright (c) 2014, Technische Universitaet Berlin
+ * All rights reserved."
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
@@ -18,13 +20,19 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
+ * @author Moksha Birk <code@tkn.tu-berlin.de>
  */
+
 #ifndef NO_IP_MALLOC
 #include <stdint.h>
 #include <stdio.h>
 #include "ip_malloc.h"
 
+#ifdef USE_IP_MALLOC_32BIT
+uint8_t heap[IP_MALLOC_HEAP_SIZE] __attribute__ ((aligned (32)));
+#else
 uint8_t heap[IP_MALLOC_HEAP_SIZE];
+#endif
 
 void ip_malloc_init() {
   bndrt_t *b = (bndrt_t *)heap;
@@ -34,36 +42,42 @@ void ip_malloc_init() {
 void *ip_malloc(uint16_t sz) {
   bndrt_t *cur = (bndrt_t *)heap;
 
-  sz += sizeof(bndrt_t) * 2;
-  sz += (sz % IP_MALLOC_ALIGN);
+  // if the requested size is not a multiple of the alignment size, increase the size
+  if (sz % IP_MALLOC_ALIGN) sz += IP_MALLOC_ALIGN - (sz % IP_MALLOC_ALIGN);
+  // need to add space for two bndrt_t variables. start with one ...
+  uint8_t metasize = sizeof(bndrt_t);
+  // there might already be some extra bytes from the alignment step
+  if (metasize % IP_MALLOC_ALIGN) metasize += IP_MALLOC_ALIGN - (metasize % IP_MALLOC_ALIGN);
+  // add missing bytes to have space for two bndrt_t variables
+  sz += metasize;
 
-  while (((*cur & IP_MALLOC_LEN) < sz || (*cur & IP_MALLOC_INUSE) != 0)
-         && (uint8_t *)cur - heap < IP_MALLOC_HEAP_SIZE) {
+  while ((((*cur & IP_MALLOC_LEN) < (sz + metasize) || (*cur & IP_MALLOC_INUSE) != 0))
+         && (((uint8_t *)cur - heap) < IP_MALLOC_HEAP_SIZE)) {
     cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
   }
 
-  if ((uint8_t *)cur < heap + IP_MALLOC_HEAP_SIZE) {
+  if ((uint8_t *)cur < (heap + IP_MALLOC_HEAP_SIZE)) {
     uint16_t oldsize = *cur & IP_MALLOC_LEN;
     bndrt_t *next;
-    sz -= sizeof(bndrt_t);
     next = ((bndrt_t *)(((uint8_t *)cur) + sz));
 
     *cur = (sz & IP_MALLOC_LEN) | IP_MALLOC_INUSE;
     *next = (oldsize - sz) & IP_MALLOC_LEN;
 
-    return cur + 1;
+    return cur + (IP_MALLOC_ALIGN / sizeof(bndrt_t));
   } else return NULL;
 }
 
 void ip_free(void *ptr) {
   bndrt_t *prev = NULL, *cur, *next = NULL;
+  bndrt_t off = (IP_MALLOC_ALIGN / sizeof(bndrt_t));
   cur = (bndrt_t *)heap;
 
-  while (cur + 1 != ptr && (uint8_t *)cur - heap < IP_MALLOC_HEAP_SIZE) {
+  while (((cur + off) != ptr) && (((uint8_t *)cur - heap) < IP_MALLOC_HEAP_SIZE)) {
     prev = cur;
     cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
   }
-  if (cur + 1 == ptr) {
+  if ((cur + off) == ptr) {
     next = (bndrt_t *)((*cur & IP_MALLOC_LEN) + ((uint8_t *)cur));
 
     *cur &= ~IP_MALLOC_INUSE;
