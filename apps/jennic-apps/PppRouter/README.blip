@@ -1,0 +1,171 @@
+
+blip-2.0 development tree
+
+This tree contains support for a stack built on top of:
+ draft-6lowpan-hc-06 for IPv6 header compression
+ draft-roll-rpl-17 for IPv6 routing
+ linux ppp for communicating with external networks
+   - from the peoplepower osian stack
+   - merged in from the osian-squashed-ppp branch
+ dhcpv6 for doing address assignment
+
+We track trunk, periodically re-merging.  In the future this release
+will be integrated with trunk.
+
+Some of the apps are tight on code space (PppRouter).  You should use
+mspgcc4 (http://mspgcc4.sourceforge.net/) to compile, since it
+generates 5-10% code size reductions when used with -Os.
+
+Address assignment
+========================================
+
+The stack either assigns IPv6 addresses statically at compile time, or
+dynamically using DHCPv6.  It is configured to use static addressing
+out of the box.  By default, each mote configures itsself with three
+addresses: two link-local addresses and one global address on the
+prefix fec0::/64.
+
+ == Static Address Mode ==
+
+Static addressing is selected by defining the IN6_PREFIX macro at
+compile time; this is set by default for PppRouter and UDPEcho.  The
+802.15.4 interface is assigned three addresses:
+
+Link-local address 1 is configured from the unique EUI-64 obtained
+ from the DS2411 serial chip.  If you want to figure out what address
+ a mote has, you can install the apps/tests/TestEui app (make epic
+ msp-hack) and then look at the printf output:
+
+"stty -F /dev/ttyUSB0 57600 && tail -f /dev/ttyUSB0"
+
+Link-local address 2 is chosen based on the panid and nodeid as
+ specified in RFC4944.  The default panid is 0x22, so if you install an
+ image with ID=1, the corresponding link-local address would be
+ fe80::22:ff:fe00:1.
+
+Note that the Unique/Local bit in the IPv6 Interface Identifier is not
+set for addresses derived from the 16-bit id, but is set when using
+the EUI-64.  For instance, if my EUI-64 is 00:17:3B:00:11:0F:FD, the
+corresponding IPv6 link-local address is fe80::2:173B:11:0FFD.
+The U/L bit has been toggled.
+
+Finally, a global address is configured using the prefix defined at
+compile time.  The default prefix is fec0::/64, so if the node id is
+1, the ipv6 address is fec0::1.
+
+You can disable all global addresses by defining IN6_NO_GLOBAL in your
+Makefile.
+
+Summary:
+ IN6_NO_GLOBAL : disable global addresses, only link-local
+ IN6_PREFIX : configure a global address using the specified prefix.
+
+ == DHCPv6 Address Mode ==
+
+If IN6_PREFIX is not set, blip instead assumes that you wish to assign
+addresses using DHCP.  This requres running a DHCPv6 server somewhere
+in your network; I use dibbler with a small patch to reduce the size
+of the messages.
+
+In this architecture, motes configure themselves only with link-local
+address 1 (based on the EUI-64) on boot.  They send DHCPv6
+solicitations to the link-local dhcpv6 all-agents multicast group to
+find neighboring servers or relay agents.  Each router also runs a
+DHCPv6 relay agent, which forwards address solications up the routing
+tree to the edge where the DHCPv6 server is presumed to be located.
+
+Once the DHCPv6 server has assigned the mote a global address (based
+on its configuration), the mote will attempt to assign itsself a
+16-bit address based on the assigned address; it then starts running
+the routing protocol (RPL).
+
+The only way to find out what address a mote has received is by
+looking in the DHCP logs; the allocation request contains the mote's
+EUI-64, so it is possible to configure the server to maintain a
+consistent mapping between EUI-64's and short addresses.
+
+Compile and install PppRouterC
+========================================
+
+PppRouterC is an application which advertises itsself as a RPL DODAG
+root.  It also has a second ppp interface which allows it to route
+packets between the 6lowpan network and other networks.
+
+$ cd $TINYOS_ROOT_DIR/apps/PppRouter
+$ make epic blip
+
+Then install it on a mote with ID 1 -- static addressing is default.
+
+You should then be able to initiate a ppp connection with that mote using:
+
+$ pppd debug passive noauth nodetach 115200 /dev/ttyUSB0 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::23,::24
+$ ifconfig ppp0 add fec0::100/64
+
+as root.  A few notes
+ - Once this link is up, you need to assign it a routable address on
+   the prefix; that's what the second command does.
+
+The ppp stack has some trouble on the tmote and epic platforms due to
+timing issues.  You may want to try out different baud rates; you can
+do this by mirroring tos/platforms/telosa/TelosSerialP.nc in your app
+directory and changing the baud rate defines in there.  I've found
+that 38400 is a pretty good compromise.  We may go back to a DMA
+solution for this in the future to fix this problem at higher baud
+rates.
+
+ == More good stuff ==
+
+Once you have a ppp connection working, you can use the udp shell on
+the ppp node to look at the routing table:
+
+Type the following command, then type "route\n"
+$ nc6 -u fec0::1 2000
+route
+destination             gateway         iface
+ff02::1:2/128           ::              ppp
+fec0::f6/128            fe80::22:ff:fe00:f6             pan
+fec0::a4/128            fe80::22:ff:fe00:a4             pan
+::/0            ::              ppp
+
+In this example, the other nodes have been assigned dhcpv6 addresses,
+and RPL provisioned downward routes in the forwarding table using the
+DAOs.
+
+UDPEcho
+========================================
+
+The stock image for motes not needing ppp is UDPEcho -- make and
+install it the same way
+
+$ cd $TINYOS_ROOT_DIR/apps/UDPEcho
+$ make epic blip install.2 bsl,/dev/ttyUSB1
+
+Since we're not using DHCP here, we give it a new address based on
+TOS_NODE_ID.  You can use the udp shell to inspect his routing table,
+as well:
+
+$ nc6 -u fec0::2 2000
+route
+destination             gateway         iface
+::/0            fe80::22:ff:fe00:2             pan
+
+As you can see, RPL has provisioned a default route through the PPP
+edge router.
+
+For more fun, you can ping the link-local all-nodes multicast group to
+see who your neighbors are:
+
+$ nc6 -u fec0::f6 2000
+ping6 ff02::1
+fe80::22:ff:fe00:e0 icmp_seq=0 ttl=1 time=52 ms
+fe80::22:ff:fe00:a4 icmp_seq=0 ttl=1 time=83 ms
+...
+fe80::22:ff:fe00:e0 icmp_seq=9 ttl=1 time=46 ms
+fe80::22:ff:fe00:a4 icmp_seq=9 ttl=1 time=76 ms
+10 packets transmitted, 20 received
+
+Finally, if you're using DHCP the 'leases' command will show you your lease:
+leases
+lease on fec0::f6
+iaid: 1 valid: 3265 t1: 3600 t2: 5400
+duid: 00:01:00:01:14:7a:bc:51:00:50:8d:ca:5a:06
