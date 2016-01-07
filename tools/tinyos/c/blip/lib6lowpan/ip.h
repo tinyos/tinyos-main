@@ -37,6 +37,16 @@
 // host computer
 
 #if ! PC
+#ifndef TOS_LITTLE_ENDIAN
+#define TOS_LITTLE_ENDIAN 1234
+#endif
+#ifndef TOS_BIG_ENDIAN
+#define TOS_BIG_ENDIAN 4321
+#endif
+#ifndef TOS_BYTE_ORDER
+#define TOS_BYTE_ORDER TOS_LITTLE_ENDIAN
+#endif
+
 // update to use netinet/in definition of an IPv6 address; this is a
 //  lot more elegent.
 struct in6_addr
@@ -89,14 +99,14 @@ struct ip6_hdr {
 #define IPV6_VERSION            0x60
 #define IPV6_VERSION_MASK       0xf0
 
-#if BYTE_ORDER == BIG_ENDIAN
+#if TOS_BYTE_ORDER == TOS_BIG_ENDIAN
 #define IPV6_FLOWINFO_MASK      0x0fffffff      /* flow info (28 bits) */
 #define IPV6_FLOWLABEL_MASK     0x000fffff      /* flow label (20 bits) */
 #else
-#if BYTE_ORDER == LITTLE_ENDIAN
+#if TOS_BYTE_ORDER == TOS_LITTLE_ENDIAN
 #define IPV6_FLOWINFO_MASK      0xffffff0f      /* flow info (28 bits) */
 #define IPV6_FLOWLABEL_MASK     0xffff0f00      /* flow label (20 bits) */
-#endif /* LITTLE_ENDIAN */
+#endif /* TOS_LITTLE_ENDIAN */
 #endif
 #if 1
 /* ECN bits proposed by Sally Floyd */

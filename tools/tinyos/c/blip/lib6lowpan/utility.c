@@ -101,7 +101,7 @@ uint16_t ieee154_hashaddr(ieee154_addr_t *addr) {
 }
 
 #ifndef PC
-
+#if TOS_BYTE_ORDER == TOS_LITTLE_ENDIAN
 uint32_t ntohl(uint32_t i) {
   uint16_t lo = (uint16_t)i;
   uint16_t hi = (uint16_t)(i >> 16);
@@ -109,6 +109,7 @@ uint32_t ntohl(uint32_t i) {
   hi = (hi << 8) | (hi >> 8);
   return (((uint32_t)lo) << 16) | ((uint32_t)hi);
 }
+#endif
 
 uint8_t *ip_memcpy(uint8_t *dst0, const uint8_t *src0, uint16_t len) {
   uint8_t *dst = (uint8_t *) dst0;

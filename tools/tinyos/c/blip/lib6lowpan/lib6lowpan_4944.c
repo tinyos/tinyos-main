@@ -23,6 +23,16 @@
 #include "6lowpan.h"
 #include "nwbyte.h"
 
+#ifndef TOS_LITTLE_ENDIAN
+#define TOS_LITTLE_ENDIAN 1234
+#endif
+#ifndef TOS_BIG_ENDIAN
+#define TOS_BIG_ENDIAN 4321
+#endif
+#ifndef TOS_BYTE_ORDER
+#define TOS_BYTE_ORDER TOS_LITTLE_ENDIAN
+#endif
+
 /*
  *  Library implementation of packing of 6lowpan packets.
  *
@@ -267,6 +277,8 @@ inline uint8_t getFragDgramSize(struct packed_lowmsg *msg, uint16_t *size) {
   *size = ((uint16_t)s[0]) << 8 | s[1];
   return 0;
 }
+
+
 inline uint8_t getFragDgramTag(struct packed_lowmsg *msg, uint16_t *tag) {
   uint8_t *buf = msg->data;
   if (buf == NULL || tag == NULL) return 1;
@@ -277,10 +289,15 @@ inline uint8_t getFragDgramTag(struct packed_lowmsg *msg, uint16_t *tag) {
   if ((*buf >> 3) != LOWPAN_FRAG1_PATTERN &&
       (*buf >> 3) != LOWPAN_FRAGN_PATTERN) return 1;
   buf += 2;
-  //*tag = (*buf << 8) | *(buf + 1);  ;
-  *tag = ntohs( *(uint16_t *)buf);
+#if TOS_BYTE_ORDER == TOS_BIG_ENDIAN
+  *tag = (*buf << 8) | *(buf + 1);
+#else
+  *tag = (*(buf + 1) << 8) | *buf;
+#endif
   return 0;
 }
+
+
 inline uint8_t getFragDgramOffset(struct packed_lowmsg *msg, uint8_t *size) {
   uint8_t *buf = msg->data;
   if (buf == NULL || size == NULL) return 1;
