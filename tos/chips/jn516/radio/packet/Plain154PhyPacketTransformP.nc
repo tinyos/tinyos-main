@@ -240,7 +240,7 @@ implementation {
         if ((ieEid != 0x7f) &&
             (from->u8PayloadLength - 2) == (fromHdrIndex + ieLength)) {
           // end of frame reached; HIE is not terminated
-          LOG_WARN("HIE term. missing\n");
+          printf("HIE term. missing\n");
           break;
         }
       }
