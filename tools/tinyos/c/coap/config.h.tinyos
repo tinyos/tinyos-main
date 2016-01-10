@@ -70,5 +70,9 @@
 #ifndef BYTE_ORDER
 #endif /* BYTE_ORDER */
 
+#ifdef HAS_COAP_PLATFORM_INCLUDE
+#include "coap_platform.h"
+#endif
+
 #endif /* _CONFIG_H_ */
 

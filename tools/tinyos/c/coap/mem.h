@@ -11,8 +11,11 @@
 #define _COAP_MEM_H_
 
 #include <stdlib.h>
-
+#ifndef coap_malloc
 #define coap_malloc(size) malloc(size)
+#endif
+#ifndef coap_free
 #define coap_free(size) free(size)
+#endif
 
 #endif /* _COAP_MEM_H_ */
