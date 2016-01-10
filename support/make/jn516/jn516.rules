@@ -45,8 +45,8 @@ PFLAGS += -gcc=ba-elf-gcc
 PFLAGS += -fnesc-optimize-atomic
 #PFLAGS += -fnesc-no-debug
 
-PFLAGS += "-Dcoap_malloc\(size\)=ip_malloc\(size\) -Dcoap_free\(size\)=ip_free\(size\)"
-PFLAGS += "-Duthash_malloc\(size\)=ip_malloc\(size\) -Duthash_free\(ptr,size\)=ip_free\(ptr\)"
+# CoAP needs to include coap_platform.h
+PFLAGS += -DHAS_COAP_PLATFORM_INCLUDE
 
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
