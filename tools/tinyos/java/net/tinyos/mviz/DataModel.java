@@ -56,7 +56,7 @@ public class DataModel {
 	for (int i = 0; i < messageNames.size(); i++) {
 	    try {
 		System.out.println("Making " + messageNames.elementAt(i));
-		Class c = Class.forName((String)messageNames.elementAt(i));
+		Class c = Class.forName((String)messageNames.elementAt(i), true, ClassLoader.getSystemClassLoader());
 		packetClasses.add(c);
 	    }
 	    catch (ClassNotFoundException ex) {
