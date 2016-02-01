@@ -32,6 +32,7 @@
  * Author: Miklos Maroti
  */
 
+#include <TinyError.h>
 #include <Tasklet.h>
 
 interface RadioState

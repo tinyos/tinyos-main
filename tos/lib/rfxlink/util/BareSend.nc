@@ -32,6 +32,9 @@
  * Author: Miklos Maroti
  */
 
+#include <message.h>
+#include <TinyError.h>
+
 interface BareSend
 {
 	/**

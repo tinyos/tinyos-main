@@ -32,6 +32,7 @@
  * Author: Miklos Maroti
  */
 
+#include <message.h>
 #include <Tasklet.h>
 
 interface RadioReceive

@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include <TinyError.h>
+
 interface RadioChannel
 {
 	/**

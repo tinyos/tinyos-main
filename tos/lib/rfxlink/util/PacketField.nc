@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include <message.h>
+
 interface PacketField<value_type>
 {
 	/**

@@ -34,8 +34,10 @@
  * Author: Morten Tranberg Hansen
  */
 
-#include <PacketLinkLayer.h>
+#include <message.h>
+#include <TinyError.h>
 #include <RadioAssert.h>
+#include <PacketLinkLayer.h>
 
 generic module PacketLinkLayerP()
 {
