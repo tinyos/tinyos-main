@@ -33,7 +33,6 @@
  */
 
 #include <AM.h>
-#include <Neighborhood.h>
 
 generic module NeighborhoodP(uint8_t size)
 {
