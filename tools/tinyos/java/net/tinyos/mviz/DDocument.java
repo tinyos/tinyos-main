@@ -109,7 +109,7 @@ public class DDocument
 	moteIndex = new HashMap();
 	linkIndex = new HashMap();
 		
-	String imgName = directory + "/mote.gif";
+	String imgName = directory + "/node.png";
 	try {
 	    image = Toolkit.getDefaultToolkit().getImage(imgName);
 	}
