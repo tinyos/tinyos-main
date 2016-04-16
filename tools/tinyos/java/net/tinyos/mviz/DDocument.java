@@ -245,6 +245,36 @@ public class DDocument
 	    if (m2 == null) {
 		m2 = createNewMote(endMote);
 	    }
+
+
+	    String name1 = null;
+            for (Iterator ite = linkIndex.keySet().iterator()  ;ite.hasNext();) {
+                    String name2 = (String)ite.next();
+                    String  temp = name2.substring( 0,name2.indexOf(' '));
+                   // System.out.println("name:"+name2+"\n");
+                    if(Integer.parseInt(temp) == startMote){//link with the same start mote
+                    	String name3 = startMote+" " + endMote;
+                    	if(!name2.equals(name3) )//whether they are the same link
+                    	{
+                    	     name1 = name2;
+                             break;
+                    	}
+                    }
+            }
+           if(name1 != null){
+           DLinkModel deleteModel = null;
+          //we still have to remove linkmode in links
+           try {
+        	  deleteModel = getDLinkModeWithFlag(name1);
+              links.remove(deleteModel);
+              linkIndex.remove(name1);
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e);
+		}
+            }
+
+
 	    DLinkModel dl = (DLinkModel)linkIndex.get(startMote + " " + endMote);
 	    if (dl == null) {
 		//System.out.println("Does not contain key <" + startMote + " " + endMote + ">");
