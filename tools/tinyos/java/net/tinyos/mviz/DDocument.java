@@ -288,7 +288,21 @@ public class DDocument
 	    super.processEvent(event);
 	}
     }
-	
+    /**
+     * Get link mode with start and end node id
+     * @param flag
+     * @return
+     */
+    private DLinkModel getDLinkModeWithFlag(String flag){
+    	for (Iterator it = links.iterator();it.hasNext();) {
+            DLinkModel model = (DLinkModel)it.next();
+            if(model.getLinkFlag().equals( flag)){
+             //   del = true;
+                return model;
+            }
+        }
+        return null;
+    }
     public static void usage() {
 	System.err.println("usage: tos-mviz [-comm source] [-dir image_dir] message_type [message_type ...]");
     }
