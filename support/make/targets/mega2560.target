@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = mega2560
+
+$(call TOSMake_include_platform,mega2560)
+
+$(call TOSMake_include_make_platform,avr)
+
+mega2560: $(BUILD_DEPS)
+	@:

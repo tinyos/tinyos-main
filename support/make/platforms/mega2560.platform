@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/mega2560
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+
+PFLAGS += -mmcu=atmega2560
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug
+
