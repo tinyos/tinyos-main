@@ -62,7 +62,7 @@ implements Serializable {
     
     DMoteModel m1;
     DMoteModel m2;
-    
+    private String linkFlag;
     protected int COLOR_MAX = 230;
 	
     public DLinkModel(DMoteModel m1, DMoteModel m2, Random rand, DDocument root){
@@ -72,6 +72,8 @@ implements Serializable {
         
         x12 = getMiddle(m1.x, m2.x);
         y12 = getMiddle(m1.y, m2.y);
+        
+        linkFlag  = m1.getId()+" " + m2.getId();
         
         values = new int[root.sensed_links.size()];
         
@@ -83,6 +85,14 @@ implements Serializable {
         //.listeners = null;
     }
 
+    /**
+     * Get the link flag（startNode+“ ”+endNode）
+     * @return 
+     */
+    public String getLinkFlag(){
+      return linkFlag;
+    }
+    
     protected void setLinkValue(String name, int value) {
 	int index = root.sensed_links.indexOf(name);
 	if (index < 0) return;
