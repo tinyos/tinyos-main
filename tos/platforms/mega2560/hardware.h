@@ -19,7 +19,7 @@
 // as per TEP 112.
 // As this is not a real platform, just set it to 0.
 enum {
-	TOS_SLEEP_NONE = 0,
+	TOS_SLEEP_NONE = ATM128_POWER_IDLE,
 };
 
 #ifndef PLATFORM_BAUDRATE 

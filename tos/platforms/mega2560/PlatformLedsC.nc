@@ -15,8 +15,8 @@ implementation {
 
 	Init = PlatformP.LedsInit;
 
-	Led0 = IO.PortD6;
-	Led1 = IO.PortC1;
+	Led0 = IO.PortB7;
+	Led1 = NoPinC;
 	Led2 = NoPinC;
 }
 

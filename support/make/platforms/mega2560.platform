@@ -1,8 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/mega2560
-#PFLAGS += -I%T/platforms/micaz
-#PFLAGS += -I%T/platforms/mica
 PFLAGS += -I%T/chips/atm2560
 PFLAGS += -I%T/chips/atm2560/pins
 PFLAGS += -I%T/chips/atm1281

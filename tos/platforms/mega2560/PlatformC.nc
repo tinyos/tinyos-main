@@ -8,17 +8,16 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
-/**
- * Dummy implementation to support the null platform.
- */
 
-module PlatformC { 
+configuration PlatformC { 
 	provides interface Init;
 }
 
 implementation {
-	command error_t Init.init() {
-		return SUCCESS;
-	}
+    components PlatformP, HplAtm128GeneralIOC as IO;
+    
+    Init = PlatformP;
+    
+    PlatformP.OrangeLedPin -> IO.PortB7;
 }
 
