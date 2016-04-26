@@ -11,26 +11,30 @@ module LedsP @safe() {
 }
 
 implementation {
+	void flashLeds() {
+		uint16_t i = 0;
+
+		do {
+			call Led0.toggle();
+			_delay_ms(50);
+			call Led0.toggle();
+			_delay_ms(450);
+		} while (i++ < 10);
+
+		call Led0.clr();
+	}
+
 	command error_t Init.init() {
-		uint16_t i;
-
 		atomic {
-			dbg("Init", "LEDS: initialized.\n");
-
 			call Led0.makeOutput();
 			call Led1.makeOutput();
 			call Led2.makeOutput();
+
 			call Led0.clr();
 			call Led1.clr();
 			call Led2.clr();
 
-			for (i = 0; i < 10; ++i) {
-				call Led0.toggle();
-				_delay_ms(50);
-				call Led0.toggle();
-				_delay_ms(450);
-			}
-			call Led0.set();
+			flashLeds();
 		}
 		return SUCCESS;
 	}
