@@ -12,6 +12,8 @@ PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/serial
 
 PFLAGS += -mmcu=atmega2560
+PFLAGS += -DF_CPU=16000000UL
+PFLAGS += -D__OPTIMIZE__
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug
 

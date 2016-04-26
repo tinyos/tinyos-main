@@ -1,3 +1,6 @@
+#include <avr/io.h>
+#include <util/delay.h>
+
 #include "hardware.h"
 
 module PlatformP @safe() {
@@ -15,19 +18,18 @@ implementation {
 	    
         ok = call McuInit.init();
         ok = ecombine(ok, call LedsInit.init());
-        
         return ok;
 	}
-	
+
 	default command error_t McuInit.init() {
-	    CLKPR = 1 << CLKPCE;
-	    CLKPR = 0;
+		uint16_t i;
+		for (i = 0; i < 10; ++i) {
+			_delay_ms(200);
+		}
 	    return SUCCESS;
 	}
 
 	default command error_t LedsInit.init() {
-        call OrangeLedPin.makeOutput(); 
-        call OrangeLedPin.clr();
         return SUCCESS; 
 	}
 }
