@@ -1,6 +1,3 @@
-#include <avr/io.h>
-#include <util/delay.h>
-
 #include "hardware.h"
 
 module PlatformP @safe() {
@@ -22,10 +19,6 @@ implementation {
 	}
 
 	default command error_t McuInit.init() {
-		uint16_t i;
-		for (i = 0; i < 10; ++i) {
-			_delay_ms(200);
-		}
 	    return SUCCESS;
 	}
 

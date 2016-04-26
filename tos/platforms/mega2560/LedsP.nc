@@ -1,3 +1,6 @@
+#include <avr/io.h>
+#include <util/delay.h>
+
 module LedsP @safe() {
 	provides {
 		interface Init;
@@ -21,7 +24,7 @@ implementation {
 			_delay_ms(450);
 		} while (i++ < 10);
 
-		call Led0.clr();
+		call Led0.set();
 	}
 
 	command error_t Init.init() {
