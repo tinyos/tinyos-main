@@ -22,9 +22,9 @@ implementation {
 			_delay_ms(50);
 			call Led0.toggle();
 			_delay_ms(450);
-		} while (i++ < 10);
+		} while (i++ < 4);
 
-		call Led0.set();
+		call Led0.clr();
 	}
 
 	command error_t Init.init() {
