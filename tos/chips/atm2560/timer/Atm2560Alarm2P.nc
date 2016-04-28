@@ -110,13 +110,6 @@ implementation {
 	   reaches this value before we can set the compare register. */
 
 	void setOcr2A(uint8_t n) {
-		/**
- 		 * THIS is where it breaks. Now figure out why.
-		 */
-		PORTB |= _BV(PORTB7);	// Turn LED on
-		_delay_ms(50);
-		PORTB &= ~_BV(PORTB7);	// Turn LED off
-		_delay_ms(150);
 
 		if (n == call Timer.get()) {
 			n++;
