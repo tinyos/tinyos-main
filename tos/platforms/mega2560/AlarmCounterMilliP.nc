@@ -28,10 +28,18 @@ configuration AlarmCounterMilliP {
 }
 
 implementation {
-	components new Atm2560Alarm2C(TMilli, ATM128_CLK8_DIVIDE_1024);
+	components 
+		new Atm2560Alarm2C(T64khz, ATM128_CLK8_DIVIDE_1024),
+		new TransformAlarmC(TMilli, uint32_t, T64khz, uint32_t, 4 /* divide by 2^4 */) as TransformAlarm32,
+		new TransformCounterC(TMilli, uint32_t, T64khz, uint32_t, 4 /* divide by 2^4 */, uint32_t) as TransformCounter32;
+
+	CounterMilli32 = TransformCounter32;
+	TransformCounter32.CounterFrom -> Atm2560Alarm2C;
 
 	Init = Atm2560Alarm2C;
-	AlarmMilli32 = Atm2560Alarm2C;
-	CounterMilli32 = Atm2560Alarm2C;
+	TransformAlarm32.AlarmFrom -> Atm2560Alarm2C;
+	TransformAlarm32.Counter -> TransformCounter32;
+	
+	AlarmMilli32 = TransformAlarm32;
 }
 

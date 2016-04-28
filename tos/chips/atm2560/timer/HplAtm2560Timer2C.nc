@@ -1,4 +1,4 @@
-/// $Id: HplAtm2560Timer2AsyncC.nc,v 1.2 2010-06-29 22:07:43 scipio Exp $
+/// $Id: HplAtm2560Timer2C.nc,v 1.2 2010-06-29 22:07:43 scipio Exp $
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.

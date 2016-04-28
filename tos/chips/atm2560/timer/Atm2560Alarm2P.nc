@@ -1,4 +1,4 @@
-// $Id: Atm2560AlarmAsyncP.nc,v 1.3 2010-06-29 22:07:43 scipio Exp $
+// $Id: Atm2560Alarm2P.nc,v 1.3 2010-06-29 22:07:43 scipio Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -138,12 +138,12 @@ implementation {
 			uint8_t interrupt_in = 1 + call Compare.get() - call Timer.get();
 			uint8_t newOcr2A;
 			uint8_t tifr2 = call TimerCtrl.getInterruptFlag();
-			dbg("Atm2560AlarmAsyncP", "Atm2560AlarmAsyncP: TIFR is %hhx\n", tifr2);
+			dbg("Atm2560Alarm2P", "Atm2560Alarm2P: TIFR is %hhx\n", tifr2);
 			if ((interrupt_in != 0 && interrupt_in < MINDT) || (tifr2 & (1 << OCF2A))) {
 				if (interrupt_in < MINDT) {
-					dbg("Atm2560AlarmAsyncP", "Atm2560AlarmAsyncP: under min: %hhu.\n", interrupt_in);
+					dbg("Atm2560Alarm2P", "Atm2560Alarm2P: under min: %hhu.\n", interrupt_in);
 				} else {
-					dbg("Atm2560AlarmAsyncP", "Atm2560AlarmAsyncP: OCF2A set.\n");
+					dbg("Atm2560Alarm2P", "Atm2560Alarm2P: OCF2A set.\n");
 				}
 				return; // wait for next interrupt
 			}
@@ -151,12 +151,12 @@ implementation {
 			/* When no alarm is set, we just ask for an interrupt every MAXT */
 			if (!set) {
 				newOcr2A = MAXT;
-				dbg("Atm2560AlarmAsyncP", "Atm2560AlarmAsyncP: no alarm set, set at max.\n");
+				dbg("Atm2560Alarm2P", "Atm2560Alarm2P: no alarm set, set at max.\n");
 			}
 			else
 			{
 				uint32_t now = call Counter.get();
-				dbg("Atm2560AlarmAsyncP", "Atm2560AlarmAsyncP: now-t0 = %llu, dt = %llu\n", (now-t0), dt);
+				dbg("Atm2560Alarm2P", "Atm2560Alarm2P: now-t0 = %llu, dt = %llu\n", (now-t0), dt);
 				/* Check if alarm expired */
 				if ((uint32_t)(now - t0) >= dt)
 				{
