@@ -1,4 +1,4 @@
-// $Id: HplAtm128TimerAsync.nc,v 1.2 2010-06-29 22:07:43 scipio Exp $
+// $Id: Atm128AlarmAsyncC.nc,v 1.2 2010-06-29 22:07:43 scipio Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -41,59 +41,37 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+ 
 /**
- * HPL Interface to Atmega2560 8-bit asynchronous timer control registers
+ * Build a 32-bit alarm and counter from the atmega2560's 8-bit timer 2
+ * in asynchronous mode. Attempting to use the generic Atm128AlarmC
+ * component and the generic timer components runs into problems
+ * apparently related to letting timer 2 overflow.
+ * 
+ * So, instead, this version (inspired by the 1.x code and a remark from
+ * Martin Turon) directly builds a 32-bit alarm and counter on top of timer 2
+ * and never lets timer 2 overflow.
  *
  * @author David Gay
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
-interface HplAtm128TimerAsync {
-	/**
-	* Read timer2 asynchronous status register (ASSR)
-	* @return Current value of ASSR
-	*/
-	async command Atm128_ASSR_t getAssr();
+generic configuration Atm2560Alarm2C(typedef precision, int divider) {
+	provides {
+		interface Init @atleastonce();
+		interface Alarm<precision, uint32_t>;
+		interface Counter<precision, uint32_t>;
+	}
+}
 
-	/**
-	* Set timer2 asynchronous status register (ASSR)
-	* @param x New value for ASSR
-	*/
-	async command void setAssr(Atm128_ASSR_t x);
+implementation {
+	components new Atm2560Alarm2P(precision, divider), HplAtm2560Timer2C;
 
-	/**
-	* Turn on timer 2 asynchronous mode
-	*/
-	async command void setTimer2Asynchronous();
+	Init = Atm2560Alarm2P;
+	Alarm = Atm2560Alarm2P;
+	Counter = Atm2560Alarm2P;
 
-	/**
-	* Check if control register TCCR2A is busy (should not be updated if true)
-	* @return TRUE if TCCR2A is busy, FALSE otherwise (can be updated)
-	*/
-	async command int controlABusy();
-
-	/**
-	* Check if control register TCCR2B is busy (should not be updated if true)
-	* @return TRUE if TCCR2B is busy, FALSE otherwise (can be updated)
-	*/
-	async command int controlBBusy();
-
-	/**
-	* Check if compare register OCR2A is busy (should not be updated if true)
-	* @return TRUE if OCR2A is busy, FALSE otherwise (can be updated)
-	*/
-	async command int compareABusy();
-
-	/**
-	* Check if compare register OCR2B is busy (should not be updated if true)
-	* @return TRUE if OCR2B is busy, FALSE otherwise (can be updated)
-	*/
-	async command int compareBBusy();
-
-	/**
-	* Check if current timer value (TCNT2) is busy (should not be updated if true)
-	* @return TRUE if TCNT2 is busy, FALSE otherwise (can be updated)
-	*/
-	async command int countBusy();
+	Atm2560Alarm2P.Timer -> HplAtm2560Timer2C;
+	Atm2560Alarm2P.TimerCtrl -> HplAtm2560Timer2C;
+	Atm2560Alarm2P.Compare -> HplAtm2560Timer2C;
 }
 

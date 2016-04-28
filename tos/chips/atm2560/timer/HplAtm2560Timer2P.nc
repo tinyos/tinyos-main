@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -64,182 +63,195 @@
  */
 
 /**
- * Internal component of the HPL interface to Atmega2560 timer 1.
+ * HPL interface to Atmega2560 timer 2 in ASYNC mode. This is a specialised
+ * HPL component that assumes that timer 2 is used in ASYNC mode and
+ * includes some workarounds for some of the weirdnesses (delayed overflow
+ * interrupt) of that mode.
  *
  * @author Martin Turon <mturon@xbow.com>
+ * @author David Gay <dgay@intel-research.net>
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
 
 #include <Atm128Timer.h>
 
-module HplAtm2560Timer1P @safe() {
+module HplAtm2560Timer2P @safe() {
 	provides {
-		// 16-bit Timers
-		interface HplAtm128Timer<uint16_t>   as Timer;
-		interface HplAtm128TimerCtrl16       as TimerCtrl;
-		interface HplAtm128Capture<uint16_t> as Capture;
-		interface HplAtm128Compare<uint16_t> as CompareA;
-		interface HplAtm128Compare<uint16_t> as CompareB;
-		interface HplAtm128Compare<uint16_t> as CompareC;
+		// 8-bit Timers
+		interface HplAtm128Timer<uint8_t>   as Timer;
+		interface HplAtm128TimerCtrl8       as TimerCtrl;
+		interface HplAtm128Compare<uint8_t> as Compare;
+		interface McuPowerOverride;
 	}
 }
 
 implementation {
+//  bool inOverflow;
+
+//	command error_t Init.init() {
+//		SET_BIT(ASSR, AS2);  // set Timer/Counter2 to asynchronous mode
+//		return SUCCESS;
+//	}
+
 	//=== Read the current timer value. ===================================
-	async command uint16_t Timer.get() { return TCNT1; }
+	async command uint8_t  Timer.get() { return TCNT2; }
 
 	//=== Set/clear the current timer value. ==============================
-	async command void Timer.set(uint16_t t) { TCNT1 = t; }
+	async command void Timer.set(uint8_t t)  {
+		while (ASSR & 1 << TCN2UB)
+			;
+		TCNT2 = t;
+	}
 
 	//=== Read the current timer scale. ===================================
-	async command uint8_t Timer.getScale() { return TCCR1B & 0x7; }
+	async command uint8_t Timer.getScale() { return TCCR2B & 0x7; }
 
 	//=== Turn off the timers. ============================================
 	async command void Timer.off() { call Timer.setScale(AVR_CLOCK_OFF); }
 
 	//=== Write a new timer scale. ========================================
 	async command void Timer.setScale(uint8_t s)  {
-		Atm128_TCCRB_t x = (Atm128_TCCRB_t) call TimerCtrl.getControlB();
+		Atm128_TCCR2B_t x = (Atm128_TCCR2B_t) call TimerCtrl.getControlB();
 		x.bits.cs = s;
 		call TimerCtrl.setControlB(x.flat);
 	}
 
 	//=== Read the control registers. =====================================
 	async command uint8_t TimerCtrl.getControlA() {
-		return TCCR1A;
+		return TCCR2A;
 	}
 
 	async command uint8_t TimerCtrl.getControlB() {
-		return TCCR1B;
-	}
-
-	async command uint8_t TimerCtrl.getControlC() {
-		return TCCR1C;
+		return TCCR2B;
 	}
 
 	//=== Write the control registers. ====================================
 	async command void TimerCtrl.setControlA( uint8_t x ) {
-		TCCR1A = x;
+		while (ASSR & 1 << TCR2AUB)
+			;
+		TCCR2A = ((Atm128_TCCR2A_t)x).flat;
 	}
 
 	async command void TimerCtrl.setControlB( uint8_t x ) {
-		TCCR1B = x;
-	}
-
-	async command void TimerCtrl.setControlC( uint8_t x ) {
-		TCCR1C = x;
+		while (ASSR & 1 << TCR2BUB)
+			;
+		TCCR2B = ((Atm128_TCCR2B_t)x).flat;
 	}
 
 	//=== Read the interrupt mask. =====================================
 	async command uint8_t TimerCtrl.getInterruptMask() {
-		return TIMSK1;
+		return TIMSK2;
 	}
 
 	//=== Write the interrupt mask. ====================================
 	async command void TimerCtrl.setInterruptMask( uint8_t x ) {
-		TIMSK1 = x;
+		TIMSK2 = x;
 	}
 
 	//=== Read the interrupt flags. =====================================
 	async command uint8_t TimerCtrl.getInterruptFlag() {
-		return TIFR1;
+		return TIFR2;
 	}
 
 	//=== Write the interrupt flags. ====================================
 	async command void TimerCtrl.setInterruptFlag( uint8_t x ) {
-		TIFR1 = x;
+		TIFR2 = x;
 	}
 
-	//=== Capture 16-bit implementation. ===================================
-	async command void Capture.setEdge(bool up) { WRITE_BIT(TCCR1B,ICES1, up); }
+	//=== Timer 8-bit implementation. ====================================
+	async command void Timer.reset() { TIFR2 = 1 << TOV2; }
+	async command void Timer.start() { SET_BIT(TIMSK2, TOIE2); }
+	async command void Timer.stop()  { CLR_BIT(TIMSK2, TOIE2); }
 
-	//=== Timer 16-bit implementation. ===================================
-	async command void Timer.reset()    { TIFR1 = 1 << TOV1; }
-	async command void Capture.reset()  { TIFR1 = 1 << ICF1; }
-	async command void CompareA.reset() { TIFR1 = 1 << OCF1A; }
-	async command void CompareB.reset() { TIFR1 = 1 << OCF1B; }
-	async command void CompareC.reset() { TIFR1 = 1 << OCF1C; }
-
-	async command void Timer.start()    { SET_BIT(TIMSK1,TOIE1); }
-	async command void Capture.start()  { SET_BIT(TIMSK1,ICIE1); }
-	async command void CompareA.start() { SET_BIT(TIMSK1,OCIE1A); }
-	async command void CompareB.start() { SET_BIT(TIMSK1,OCIE1B); }
-	async command void CompareC.start() { SET_BIT(TIMSK1,OCIE1C); }
-
-	async command void Timer.stop()    { CLR_BIT(TIMSK1,TOIE1); }
-	async command void Capture.stop()  { CLR_BIT(TIMSK1,ICIE1); }
-	async command void CompareA.stop() { CLR_BIT(TIMSK1,OCIE1A); }
-	async command void CompareB.stop() { CLR_BIT(TIMSK1,OCIE1B); }
-	async command void CompareC.stop() { CLR_BIT(TIMSK1,OCIE1C); }
-
-	async command bool Timer.test() {
-		return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.tov;
-	}
-	async command bool Capture.test()  {
-		return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.icf;
-	}
-	async command bool CompareA.test() {
-		return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfa;
-	}
-	async command bool CompareB.test() {
-		return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfb;
-	}
-	async command bool CompareC.test() {
-		return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfc;
+	bool overflowed() {
+		return ((Atm128_TIFR2_t)call TimerCtrl.getInterruptFlag()).bits.tov;
 	}
 
-	async command bool Timer.isOn() {
-		return ((Atm128_TIMSK_t)call TimerCtrl.getInterruptMask()).bits.toie;
+	async command bool Timer.test()  {
+		return overflowed();
 	}
-	async command bool Capture.isOn()  {
-		return ((Atm128_TIMSK_t)call TimerCtrl.getInterruptMask()).bits.icie;
+
+	async command bool Timer.isOn()  {
+		return ((Atm128_TIMSK2_t)call TimerCtrl.getInterruptMask()).bits.toie;
 	}
-	async command bool CompareA.isOn() {
-		return ((Atm128_TIMSK_t)call TimerCtrl.getInterruptMask()).bits.ociea;
+
+	async command void Compare.reset() { TIFR2 = 1 << OCF2A; }
+	async command void Compare.start() { SET_BIT(TIMSK2,OCIE2A); }
+	async command void Compare.stop()  { CLR_BIT(TIMSK2,OCIE2A); }
+	async command bool Compare.test()  {
+		return ((Atm128_TIFR2_t)call TimerCtrl.getInterruptFlag()).bits.ocfa;
 	}
-	async command bool CompareB.isOn() {
-		return ((Atm128_TIMSK_t)call TimerCtrl.getInterruptMask()).bits.ocieb;
-	}
-	async command bool CompareC.isOn() {
-		return ((Atm128_TIMSK_t)call TimerCtrl.getInterruptMask()).bits.ociec;
+	async command bool Compare.isOn()  {
+		return ((Atm128_TIMSK2_t)call TimerCtrl.getInterruptMask()).bits.ociea;
 	}
 
 	//=== Read the compare registers. =====================================
-	async command uint16_t CompareA.get() { return OCR1A; }
-	async command uint16_t CompareB.get() { return OCR1B; }
-	async command uint16_t CompareC.get() { return OCR1C; }
+	async command uint8_t Compare.get(){ return OCR2A; }
 
 	//=== Write the compare registers. ====================================
-	async command void CompareA.set(uint16_t t) { OCR1A = t; }
-	async command void CompareB.set(uint16_t t) { OCR1B = t; }
-	async command void CompareC.set(uint16_t t) { OCR1C = t; }
-
-	//=== Read the capture registers. =====================================
-	async command uint16_t Capture.get() { return ICR1; }
-
-	//=== Write the capture registers. ====================================
-	async command void Capture.set(uint16_t t)  { ICR1 = t; }
+	async command void Compare.set(uint8_t t)   {
+		atomic
+		{
+			while (ASSR & 1 << OCR2AUB)
+				;
+			OCR2A = t;
+		}
+	}
 
 	//=== Timer interrupts signals ========================================
-	default async event void CompareA.fired() { }
-	AVR_NONATOMIC_HANDLER(SIG_OUTPUT_COMPARE1A) {
-		signal CompareA.fired();
+	inline void stabiliseTimer2() {
+		TCCR2A = TCCR2A;
+		while (ASSR & 1 << TCR2AUB)
+			;
 	}
-	default async event void CompareB.fired() { }
-	AVR_NONATOMIC_HANDLER(SIG_OUTPUT_COMPARE1B) {
-		signal CompareB.fired();
+
+	/**
+	 * On the atm128, there is a small latency when waking up from
+	 * POWER_SAVE mode. So if a timer is going to go off very soon, it's
+	 * better to drop down until EXT_STANDBY, which has a 6 cycle wakeup
+	 * latency. This function calculates whether staying in EXT_STANDBY
+	 * is needed. If the timer is not running it returns POWER_DOWN.
+	 * Please refer to TEP 112 and the atm128 datasheet for details.
+	 */
+
+	async command mcu_power_t McuPowerOverride.lowestState() {
+		uint8_t diff;
+
+		// We need to make sure that the sleep wakeup latency will not
+		// cause us to miss a timer. POWER_SAVE
+		if (TIMSK2 & (1 << OCIE2A | 1 << TOIE2)) {
+			// need to wait for timer 2 updates propagate before sleeping
+			// (we don't need to worry about reentering sleep mode too early,
+			// as the wake ups from timer2 wait at least one TOSC1 cycle
+			// anyway - see the stabiliseTimer2 function)
+			while (ASSR & (1 << TCN2UB | 1 << OCR2AUB | 1 << TCR2AUB))
+				;
+
+			diff = OCR2A - TCNT2;
+			if (diff < EXT_STANDBY_T0_THRESHOLD || TCNT2 > 256 - EXT_STANDBY_T0_THRESHOLD) {
+				return ATM128_POWER_EXT_STANDBY;
+			}
+
+			return ATM128_POWER_SAVE;
+		} else {
+			return ATM128_POWER_DOWN;
+		}
 	}
-	default async event void CompareC.fired() { }
-	AVR_NONATOMIC_HANDLER(SIG_OUTPUT_COMPARE1C) {
-		signal CompareC.fired();
+
+	default async event void Compare.fired() { }
+		AVR_ATOMIC_HANDLER(SIG_OUTPUT_COMPARE2A) {
+		stabiliseTimer2();
+		//    __nesc_enable_interrupt();
+
+		signal Compare.fired();
 	}
-	default async event void Capture.captured(uint16_t time) { }
-	AVR_NONATOMIC_HANDLER(SIG_INPUT_CAPTURE1) {
-		signal Capture.captured(call Capture.get());
-	}
+
 	default async event void Timer.overflow() { }
-	AVR_NONATOMIC_HANDLER(SIG_OVERFLOW1) {
+		AVR_ATOMIC_HANDLER(SIG_OVERFLOW2) {
+		stabiliseTimer2();
+		//    inOverflow = TRUE;
 		signal Timer.overflow();
+		//    inOverflow = FALSE;
 	}
 }
 

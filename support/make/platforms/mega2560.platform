@@ -9,7 +9,7 @@ PFLAGS += -I%T/chips/atm128
 PFLAGS += -I%T/chips/atm128/pins
 PFLAGS += -I%T/chips/atm128/timer
 PFLAGS += -I%T/lib/timer
-PFLAGS += -I%T/lib/serial
+//PFLAGS += -I%T/lib/serial
 
 PFLAGS += -mmcu=atmega2560
 PFLAGS += -DF_CPU=16000000UL

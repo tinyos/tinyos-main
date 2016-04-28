@@ -42,28 +42,28 @@
 #include "Timer.h"
 
 configuration HilTimerMilliC {
-  provides interface Init;
-  provides interface Timer<TMilli> as TimerMilli[uint8_t num];
-  provides interface LocalTime<TMilli>;
+	provides interface Init;
+	provides interface Timer<TMilli> as TimerMilli[uint8_t num];
+	provides interface LocalTime<TMilli>;
 }
 implementation {
 
-  enum {
-    TIMER_COUNT = uniqueCount(UQ_TIMER_MILLI)
-  };
+	enum {
+		TIMER_COUNT = uniqueCount(UQ_TIMER_MILLI)
+	};
 
-  components AlarmCounterMilliP, new AlarmToTimerC(TMilli),
-    new VirtualizeTimerC(TMilli, TIMER_COUNT),
-    new CounterToLocalTimeC(TMilli);
+	components AlarmCounterMilliP, 
+	new AlarmToTimerC(TMilli),
+	new VirtualizeTimerC(TMilli, TIMER_COUNT),
+	new CounterToLocalTimeC(TMilli);
 
-  Init = AlarmCounterMilliP;
+	Init = AlarmCounterMilliP;
 
-  TimerMilli = VirtualizeTimerC;
-  VirtualizeTimerC.TimerFrom -> AlarmToTimerC;
-  AlarmToTimerC.Alarm -> AlarmCounterMilliP;
+	TimerMilli = VirtualizeTimerC;
+	VirtualizeTimerC.TimerFrom -> AlarmToTimerC;
+	AlarmToTimerC.Alarm -> AlarmCounterMilliP;
 
-  LocalTime = CounterToLocalTimeC;
-  CounterToLocalTimeC.Counter -> AlarmCounterMilliP;
+	LocalTime = CounterToLocalTimeC;
+	CounterToLocalTimeC.Counter -> AlarmCounterMilliP;
 }
-
 

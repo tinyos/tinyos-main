@@ -55,7 +55,7 @@
  * @author David Gay
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
-generic module Atm2560AlarmAsyncP(typedef precision, int divider) @safe() {
+generic module Atm2560Alarm2P(typedef precision, int divider) @safe() {
 	provides {
 		interface Init;
 		interface Alarm<precision, uint32_t>;
@@ -65,7 +65,6 @@ generic module Atm2560AlarmAsyncP(typedef precision, int divider) @safe() {
 		interface HplAtm128Timer<uint8_t> as Timer;
 		interface HplAtm128TimerCtrl8 as TimerCtrl;
 		interface HplAtm128Compare<uint8_t> as Compare;
-		interface HplAtm128TimerAsync as TimerAsync;
 	}
 }
 
@@ -87,14 +86,11 @@ implementation {
 
 	/* Configure timer 2 */
 	command error_t Init.init() {
-		uint16_t i;
-
 		atomic
 		{
 			Atm128_TCCR2A_t x;
 			Atm128_TCCR2B_t y;
 
-			call TimerAsync.setTimer2Asynchronous();
 			x.flat = 0;
 			x.bits.wgm21 = 1; /* We use the clear-on-compare mode */
 			call TimerCtrl.setControlA(x.flat);
@@ -104,16 +100,7 @@ implementation {
 			call Compare.set(MAXT); /* setInterrupt needs a valid value here */
 			call Compare.start();
 		}
-		for (i = 0; i < 3; ++i) {
-			PORTB |= _BV(PORTB7);	// Turn LED on
-			_delay_ms(250);
-			PORTB &= ~_BV(PORTB7);	// Turn LED off
-			_delay_ms(250);
-		}
 
-		/**
- 		 * THIS is where it breaks. Now figure out why.
-		 */
 		setInterrupt();
 
 		return SUCCESS;
@@ -121,24 +108,31 @@ implementation {
 
 	/* Set compare register for timer 2 to n. But increment n by 1 if TCNT2
 	   reaches this value before we can set the compare register. */
-	void setOcr2A(uint8_t n) {
-		while (call TimerAsync.compareABusy())
-			;
 
-		if (n == call Timer.get())
+	void setOcr2A(uint8_t n) {
+		/**
+ 		 * THIS is where it breaks. Now figure out why.
+		 */
+		PORTB |= _BV(PORTB7);	// Turn LED on
+		_delay_ms(50);
+		PORTB &= ~_BV(PORTB7);	// Turn LED off
+		_delay_ms(150);
+
+		if (n == call Timer.get()) {
 			n++;
+		}
 
 		/* Support for overflow. Force interrupt at wrap around value.
-		This does not cause a backwards-in-time value as we do this
-		every time we set OCR2A. */
-		if (base + n + 1 < base)
+		   This does not cause a backwards-in-time value as we do this
+		   every time we set OCR2A. */
+		if (base + n + 1 < base) {
 			n = -base - 1;
+		}
 		call Compare.set(n);
 	}
 
 	/* Update the compare register to trigger an interrupt at the
-	appropriate time based on the current alarm settings
-	*/
+	   appropriate time based on the current alarm settings */	
 	void setInterrupt() {
 		bool fired = FALSE;
 
@@ -147,6 +141,7 @@ implementation {
 			/* interrupt_in is the time to the next interrupt. Note that
 			   compare register values are off by 1 (i.e., if you set OCR2A to
 			   3, the interrupt will happen when TCNT2 is 4) */
+
 			uint8_t interrupt_in = 1 + call Compare.get() - call Timer.get();
 			uint8_t newOcr2A;
 			uint8_t tifr2 = call TimerCtrl.getInterruptFlag();
@@ -281,3 +276,4 @@ implementation {
 
 	async event void Timer.overflow() { }
 }
+
