@@ -14,19 +14,6 @@ module LedsP @safe() {
 }
 
 implementation {
-	void flashLeds() {
-		uint16_t i = 0;
-
-		do {
-			call Led0.toggle();
-			_delay_ms(50);
-			call Led0.toggle();
-			_delay_ms(450);
-		} while (i++ < 4);
-
-		call Led0.clr();
-	}
-
 	command error_t Init.init() {
 		atomic {
 			call Led0.makeOutput();
@@ -36,8 +23,6 @@ implementation {
 			call Led0.clr();
 			call Led1.clr();
 			call Led2.clr();
-
-			flashLeds();
 		}
 		return SUCCESS;
 	}
