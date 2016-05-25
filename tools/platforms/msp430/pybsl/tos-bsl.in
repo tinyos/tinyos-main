@@ -1341,7 +1341,11 @@ class BootStrapLoader(LowLevel):
         self.bslTxRx(self.BSL_CHANGEBAUD,   #Command: change baudrate
                     a, l)                   #args are coded in adr and len
         time.sleep(0.010)                   #recomended delay
-        self.serialport.setBaudrate(baudrate)
+        #handle pyserial 2.x and 3.0.1
+	try:
+	    self.serialport.setBaudrate(baudrate)
+        except AttributeError:
+            self.serialport.baudrate = baudrate
 
     def actionReadBSLVersion(self):
         """informational output of BSL version number.
@@ -1523,7 +1527,7 @@ def hexify(line, bytes, width=16):
         )
 
 #Main:
-def main(itest=1):
+def main():
     global DEBUG
     import getopt
     filetype    = None
@@ -1547,8 +1551,8 @@ def main(itest=1):
     dumpivt     = 0
     dumpinfo    = 0
 
-    bsl.invertRST = 1
-    bsl.invertTEST = itest
+#    bsl.invertRST = 1
+#    bsl.invertTEST = itest
 
     if comPort is None and os.environ.get("GOODFET")!=None:
         glob_list = glob.glob(os.environ.get("GOODFET"));
@@ -1903,7 +1907,7 @@ def main(itest=1):
 
 if __name__ == '__main__':
     try:
-        main(1)
+        main()
     except SystemExit:
         raise               #let pass exit() calls
     except KeyboardInterrupt:
@@ -1912,7 +1916,7 @@ if __name__ == '__main__':
         sys.exit(1)         #set errorlevel for script usage
     except Exception, msg:  #every Exception is caught and displayed
         if DEBUG: raise     #show full trace in debug mode
-        #sys.stderr.write("\nAn error occoured:\n%s\n" % msg) #short messy in user mode
-        #sys.exit(1)         #set errorlevel for script usage
-        main(0);
+        sys.stderr.write("\nAn error occoured:\n%s\n" % msg) #short messy in user mode
+        sys.exit(1)         #set errorlevel for script usage
+
 
