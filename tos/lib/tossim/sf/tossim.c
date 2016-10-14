@@ -63,7 +63,7 @@ Variable::Variable(char* str, char* formatStr, int array, int which) {
   format = formatStr;
   isArray = array;
   mote = which;
-  
+
   int sLen = strlen(name);
   realName = (char*)malloc(sLen + 1);
   memcpy(realName, name, sLen + 1);
@@ -101,10 +101,10 @@ static unsigned int tossim_hash(void* key) {
   char* str = (char*)key;
   unsigned int hashVal = 0;
   int c;
-  
+
   while ((c = *str++))
     hashVal = c + (hashVal << 6) + (hashVal << 16) - hashVal;
-  
+
   return hashVal;
 }
 
@@ -179,7 +179,7 @@ Variable* Mote::getVariable(char* name) {
   char* typeStr = (char*)"";
   int isArray;
   Variable* var;
-  
+
   var = (Variable*)hashtable_search(varTable, name);
   if (var == NULL) {
     // Could hash this for greater efficiency,
@@ -210,7 +210,7 @@ void Mote::createNoiseModel() {
 }
 
 int Mote::generateNoise(int when) {
-  return (int)sim_noise_generate(id(), when);
+  return (int)sim_noise_generate(id(), sim_mote_get_radio_channel(id()), when);
 }
 
 Tossim::Tossim(nesc_app_t* n) {
