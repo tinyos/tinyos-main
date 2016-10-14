@@ -50,10 +50,10 @@ implementation
     TestCaptureC.Draw -> LcdC;
 
     components HplSam3uGeneralIOC as GeneralIOC;
-    components HplSam3uTCC;
+    components HplSam3TCC;
     components new GpioCaptureC() as CaptureSFDC;
 
-    CaptureSFDC.TCCapture -> HplSam3uTCC.TC0Capture;
+    CaptureSFDC.TCCapture -> HplSam3TCC.TC0Capture;
     CaptureSFDC.GeneralIO -> GeneralIOC.HplPioA1;
 
     TestCaptureC.Capture -> CaptureSFDC;

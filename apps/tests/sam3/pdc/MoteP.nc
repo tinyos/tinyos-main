@@ -38,9 +38,9 @@
 
 
 #include "sam3uDmahardware.h"
-#include "sam3updchardware.h"
+#include "pdchardware.h"
 #include "sam3uadc12bhardware.h"
-#include "sam3umatrixhardware.h"
+#include "sam3matrixhardware.h"
 #include <color.h>
 #include <lcd.h>
 
@@ -54,8 +54,8 @@ module MoteP
     interface Timer<TMilli>;
     interface Lcd;
     interface Draw;
-    interface HplSam3uPdc as PDC;
-    interface HplSam3uPeripheralClockCntl as ClockControl;
+    interface HplSam3Pdc as PDC;
+    interface HplSam3PeripheralClockCntl as ClockControl;
   }
 }
 

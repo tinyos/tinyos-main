@@ -54,6 +54,6 @@ implementation
     components new AlarmTMicro32C() as Alarm32;
     TestAlarmTMicroP.Alarm -> Alarm32;
 
-    components HilSam3uTCCounterTMicroC as HilCounter;
+    components HilSam3TCCounterTMicroC as HilCounter;
     TestAlarmTMicroP.HilCounter -> HilCounter;
 }
