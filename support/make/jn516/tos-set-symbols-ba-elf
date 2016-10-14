@@ -1,0 +1,175 @@
+#!/usr/bin/perl -w
+#
+# This program changes the mote ID of a TinyOS image. It is used to
+# install a program for a specific mote.
+use strict;
+
+my %G_opts = (
+  compat => 1,
+  objdump => 'ba-elf-objdump',
+  objcopy => 'ba-elf-objcopy',
+  target => 'bin',
+  readdata => 0,
+);
+
+
+# default to backward compatability mode
+while( @ARGV && $ARGV[0] =~ /^-/ ) {
+  (my $opt = shift @ARGV) =~ s/^-+//;
+  if( $opt eq "srec" ) { $G_opts{compat} = 1; }
+  elsif( $opt eq "exe" ) { $G_opts{compat} = 0; }
+  elsif( $opt eq "read" ) { $G_opts{readdata} = 1; $G_opts{compat} = 0; }
+  elsif( exists $G_opts{$opt} ) { $G_opts{$opt} = shift @ARGV; }
+  else { die "Unknown command line option $opt\n"; }
+}
+
+# print usage if we have the wrong number of arguments
+if( @ARGV < ($G_opts{readdata} ? 1 : 3) ) {
+    print "usage: tos-set-symbols --srec [--objcopy=...] [--objdump=...]\n";
+    print "                       [--target=TARGETFILETYPE]\n";
+    print "                       INFILE OUTFILE [SYMBOL=]VALUE...\n";
+    print "       tos-set-symbols --exe [--objcopy=...] [--objdump=...]\n";
+    print "                       INFILE OUTFILE [SYMBOL]=VALUE...\n";
+    print "       tos-set-symbols --read [--objdump=...] INFILE SYMBOL...\n";
+    print "\nNote: If omitted, SYMBOL defaults to TOS_LOCAL_ADDRESS.\n";
+    print "(for TinyOS 1.x compatibility).\n";
+    exit 0;
+}
+
+# get the args and default variables set up
+my $exein = shift @ARGV;
+my $exeout = $G_opts{readdata} ? $exein : shift @ARGV;
+my %user_symbols = ();
+if( $G_opts{readdata} ) {
+  for my $name (@ARGV) {
+    $name =~ s/\./\$/g;
+    $user_symbols{$name} = 1;
+  }
+} else {
+  for my $value (@ARGV) {
+    my $name = 'TOS_LOCAL_ADDRESS';
+    ($name,$value) = ($1,$2) if $value =~ /^([^=]+)=(.*)/;
+    $value = hex $value if $value =~ /^0x/;
+    $user_symbols{$name} = $value;
+
+  }
+}
+my $segment_vma = undef;
+my $segment_lma = undef;
+my $segment_off = undef;
+
+# if in compatability mode, derive the names of the exes from the srecs
+my $srecin = undef;
+my $srecout = undef;
+if( $G_opts{compat} ) {
+  $srecin = $exein;
+  $srecout = $exeout;
+  $exein =~ s/$G_opts{target}/exe/;
+  $exeout =~ s/$G_opts{target}/exe/;
+}
+
+# find the data section
+open( SECTS, "$G_opts{objdump} -h $exein |" )
+  or die "Cannot extract section information: $!\n";
+while(<SECTS>) {
+  if( /^\s*\d+\s+\.data\s+\S+\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+    $segment_vma = hex $1;
+    $segment_lma = hex $2;
+    $segment_off = hex $3;
+    last;
+  }
+}
+close(SECTS);
+warn "Could not find data section in $exein, aborting.\n"
+  unless defined $segment_vma && defined $segment_lma && defined $segment_off;
+
+# build a hash of all data segment symbols to their address and size
+my %exe_symbols = ();
+open( SYMBOL, "$G_opts{objdump} -t $exein |" )
+  or die "Cannot extract symbol information: $!\n";
+while(<SYMBOL>) {
+  if( /^(\S+)\s+\S+\s+\S+\s+\.data\s+(\S+)\s+(\S+)\s*$/ ) {
+    $exe_symbols{$3} = { addr => hex($1), size => hex($2) };
+  }
+}
+close(SYMBOL);
+
+# slurp the input exe
+open (FILE_IN, "<$exein") or die "Could not open $exein: $!\n";
+binmode FILE_IN;
+my $exe = join("",<FILE_IN>);
+close( FILE_IN );
+
+if( $G_opts{readdata} ) {
+
+  my %nums = ( 1 => 'C', 2 => 'n', 4 => 'N' );
+  %user_symbols = %exe_symbols unless %user_symbols;
+
+  my $maxlen = 0;
+  for (keys %user_symbols) { $maxlen = length if length > $maxlen; }
+
+  for my $symbol (sort keys %user_symbols) {
+    my $outsym = $symbol;
+    $outsym =~ s/^_//;
+
+    if( defined $exe_symbols{$symbol} ) {
+
+      my $addr = $exe_symbols{$outsym}->{addr};
+      my $size = $exe_symbols{$outsym}->{size};
+      my $filepos = $segment_off + ($addr - $segment_vma);
+      my $value = substr( $exe, $filepos, $size );
+
+      (my $valbytes = $value) =~ s/(.)/sprintf('%02x ',ord $1)/eg;
+      $valbytes =~ s/\s+$//;
+      (my $valstr = $value) =~ s/[^\040-\200]/./g;
+      (my $symstr = $symbol) =~ s/\$/./g;
+      my $numstr = "";
+      if( $nums{length($value)} ) {
+	$numstr = sprintf( '  (%d)', unpack($nums{length($value)},$value) );
+      }
+
+      print sprintf("%-${maxlen}s  :  %s  %s\n", $symstr, $valbytes, "[$valstr]$numstr" );
+
+    } else {
+      warn "Could not find symbol $symbol in $exein, ignoring symbol.\n";
+    }
+  }
+
+} else {
+
+  my %nums = ( 1 => 'C', 2 => 'n', 4 => 'N' );
+  # change the desired symbols at their file offsets
+  for my $symbol (sort keys %user_symbols) {
+    my $outsym = $symbol;
+    $outsym =~ s/^_//;
+
+    my $value = $user_symbols{$symbol};
+    if( defined $exe_symbols{$outsym} ) {
+      my $addr = $exe_symbols{$outsym}->{addr};
+      my $size = $exe_symbols{$outsym}->{size};
+      my $filepos = $segment_off + ($addr - $segment_vma);
+      #my $bytes = substr( pack("N", $value) . ("\000" x $size), 0, $size );
+      my $bytes = substr( pack($nums{$size}, $value) . ("\000" x $size), 0, $size );
+      substr( $exe, $filepos, $size ) = $bytes;
+    } else {
+      warn "Could not find symbol $symbol in $exein, ignoring symbol.\n";
+    }
+  }
+
+  # barf the output exe
+  open (FILE_OUT, ">$exeout") or die "Could not open $exeout: $!\n";
+  binmode FILE_OUT;
+  print FILE_OUT $exe;
+  close( FILE_OUT );
+
+  # if in compatability mode, convert the output exe to the output srec
+  if( $G_opts{compat} ) {
+	if($G_opts{objcopy} eq "ba-elf-objcopy" && $G_opts{target} eq "bin") {
+    	my $cmd = "$G_opts{objcopy} --output-target=binary $exeout $srecout";
+    	system( $cmd ) == 0 or die "Command \"$cmd\" failed";
+	} else {
+		warn "invalid options";
+	}
+  }
+
+}

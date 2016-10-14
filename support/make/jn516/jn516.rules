@@ -1,0 +1,98 @@
+#-*-Makefile-*- vim:syntax=make
+
+# TODO define help message
+
+# toolchain
+LINUX_CROSS_COMPILE=ba-elf
+JENNIC_CHIP ?= JN5168
+JENNIC_PCB ?= DEVKIT4
+JENNIC_STACK = None
+
+ifndef JENNIC_SDK_DIR
+$(error JENNIC_SDK_DIR needs to be defined)
+endif
+
+ifndef JENNIC_FLASH_TOOL
+$(error JENNIC_FLASH_TOOL needs to be defined)
+endif
+
+#$(info >> PFLAGS >> $(PFLAGS))
+#$(info ...)
+
+GCC     = ba-elf-gcc
+LIBS    = -lm
+
+# Define the filename for the output file after the node id has been updated
+INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
+
+# Define which binary format should be built
+TOSMAKE_BINARY_FORMAT = bin
+TOSMAKE_BINARY_IN     = $(MAIN_BIN)
+TOSMAKE_BINARY_OUT    = $(INSTALL_BIN)
+
+# location and name of the link map
+MAIN_MAP = $(TOSMAKE_BUILD_DIR)/main.map
+
+# Set some compiler/microcontroller specific pflags
+PFLAGS += -Wall -Wshadow
+#PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+PFLAGS += $(NESC_FLAGS)
+#PFLAGS += -target=$(PLATFORM)
+PFLAGS += -DWORDS_BIGENDIAN #for coap
+PFLAGS += -DHAS_SSIZE_T
+PFLAGS += -gcc=ba-elf-gcc
+
+PFLAGS += -fnesc-optimize-atomic
+#PFLAGS += -fnesc-no-debug
+
+# CoAP needs to include coap_platform.h
+PFLAGS += -DHAS_COAP_PLATFORM_INCLUDE
+
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+
+#ifndef NOWIRING
+#$(call TOSMake_include,jn516/wiring.extra)
+#endif
+
+$(if $(PROGRAM),,$(call TOSMake_include,jn516/port.extra))
+
+# This chip uses big endian byte order
+$(call TOSMake_include,extras/big_endian.extra)
+
+# This chip needs 32 bit aligned memory allocation
+PFLAGS += -DUSE_IP_MALLOC_32BIT
+
+#PFLAGS += -fnesc-separator=__
+
+
+PFLAGS += -fnesc-target=env
+export NESC_MACHINE=big_endian=true pcc_bitfield_type_matters=true empty_field_boundary=8 structure_size_boundary=32 word_size=4 pointer=4,4 float=4,4 double=8,8 long_double=8,8 short=2,2 int=4,4 long=4,4 long_long=8,8 int1248_align=1,1,1,1 wchar_size_size=4,4 char_wchar_signed=true,true
+
+
+PFLAGS += -DCHIP_JN516
+
+TOSMAKE_TOS_NODE_ID_STR=_TOS_NODE_ID
+SET_ID=$(TINYOS_ROOT_DIR)/support/make/jn516/tos-set-symbols-ba-elf
+# debugging
+#CFLAGS += -fstack-usage # doesn't work with ba-elf-gcc
+
+
+# include the SDK makefiles
+$(call TOSMake_include,jn516/config_sdk.mk)
+
+
+# Set the compiler and libraries
+GCC     = ba-elf-gcc
+OBJCOPY = ba-elf-objcopy
+OBJDUMP = ba-elf-objdump
+SIZE    = ba-elf-size
+CC = ba-elf-gcc
+LD = ba-elf-ld
+NM = ba-elf-nm
+AR = ba-elf-ar
+AS = ba-elf-as
+STRIP = ba-elf-strip
+SIZE = ba-elf-size
+RANLIB = ba-elf-ranlib

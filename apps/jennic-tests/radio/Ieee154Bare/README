@@ -1,0 +1,11 @@
+Ieee154Bare
+
+Description:
+
+Test Ieee154Bare interface to radio. Install on two nodes, use the same TOS_NODE_ID for both.
+They will each send every second a packet via the Ieee154Bare interface containing some data. The destination is the short Ieee154 adress of the node itself.
+If the other node receives the packet, and all fields are identical to the ones sent out, it will flash Led0.
+
+Expected Result:
+
+Each node flashes its Led with 1hz.

@@ -1,0 +1,17 @@
+--- Components/Common/Include/jendefs.h	2015-12-03 22:24:10.260632592 +0100
++++ Components/Common/Include/jendefs.new.h	2015-12-17 15:53:51.414838074 +0100
+@@ -279,12 +279,13 @@
+ /****************************************************************************/
+ /***        Type Definitions                                              ***/
+ /****************************************************************************/
+-
++#ifndef TOS_BUILD
+     #ifndef __cplusplus /* microsoft specific */
+         #ifndef bool /* Seems to need this in for certain M$ builds*/
+             typedef int                     bool;     /* boolean type */
+         #endif
+     #endif
++#endif
+ 
+     typedef unsigned char           BOOL_T;     /* boolean type nothing to do with C++ */
+     typedef unsigned char           bool_t;     /* boolean type nothing to do with C++ */

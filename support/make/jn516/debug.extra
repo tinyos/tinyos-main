@@ -1,0 +1,8 @@
+#-*-Makefile-*- vim:syntax=make
+
+CFLAGS += -g
+CFLAGS += -Wcast-align
+CFLAGS += -fno-inline
+CFLAGS += -fnesc-no-inline
+
+BUILD_DEPS += lst

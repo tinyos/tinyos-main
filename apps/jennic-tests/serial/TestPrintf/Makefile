@@ -1,0 +1,13 @@
+COMPONENT=TestPrintfAppC
+
+PFLAGS += -DLONG_PRINT
+#PFLAGS += -DLONG_PRINT_MSG=\"custommessage\"
+
+#printf
+PFLAGS += -DPRINTFUART_ENABLED
+CFLAGS += -I$(TINYOS_OS_DIR)/lib/printf
+#CFLAGS += -DTOSH_DATA_LENGTH=127
+#CFLAGS += -DPRINTF_MSG_LENGTH=100
+
+TINYOS_ROOT_DIR?=../../../..
+include $(TINYOS_ROOT_DIR)/Makefile.include

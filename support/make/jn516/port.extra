@@ -1,0 +1,12 @@
+ifndef PORT
+PORT=/dev/ttyUSB0
+endif
+
+ifndef JENNIC_FLASH_TOOL
+JENNIC_FLASH_TOOL=$(TINYOS_ROOT_DIR)/packaging/jn516/JennicModuleProgrammer/Build/JennicModuleProgrammer
+endif
+JENNIC_PROG_OPTIONS=-V 10 -v -s $(PORT) -P 1000000 -f $(TOSMAKE_BINARY_OUT)
+
+program:
+	@echo -e "$(INFO_STRING) installing $(TOSMAKE_BINARY_OUT) on $(PORT) ..."
+	$(JENNIC_FLASH_TOOL) $(JENNIC_PROG_OPTIONS)

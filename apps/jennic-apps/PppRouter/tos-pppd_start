@@ -1,0 +1,4 @@
+case $1 in
+    ''|*[!0-9]*) echo "call with digit of ppprouter usb digit, e.g. tos-pppd_start 0 for ppprouter on /dev/ttyUSB0" ;;
+    *) sudo pppd debug passive noauth nodetach 115200 /dev/ttyUSB$1 nocrtscts nocdtrcts lcp-echo-interval 0 noccp noip ipv6 ::23,::24 ;;
+esac

@@ -1,0 +1,23 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/chips/jn516
+PFLAGS += -I%T/chips/jn516/pins
+PFLAGS += -I%T/chips/jn516/timer
+PFLAGS += -I%T/chips/jn516/serial
+PFLAGS += -I%T/chips/jn516/radio
+PFLAGS += -I%T/chips/jn516/radio/debug
+PFLAGS += -I%T/chips/jn516/radio/interfaces
+PFLAGS += -I%T/chips/jn516/radio/packet
+PFLAGS += -I%T/chips/jn516/radio/link
+PFLAGS += -I%T/chips/jn516/radio/unique
+PFLAGS += -I%T/chips/jn516/debug
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/platforms/nxp_jn516
+
+# Enable TKN-TSCH support
+ifdef $(NEED_TKNTSCH_PLATFORM_SUPPORT)
+  CFLAGS += -DHAS_TKNTSCH_PLATFORM_SUPPORT
+  PFLAGS := -I$(TINYOS_OS_DIR)/platforms/nxp_jn516/plain154 \
+    $(PFLAGS)
+endif
