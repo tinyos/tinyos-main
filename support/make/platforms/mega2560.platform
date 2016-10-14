@@ -1,0 +1,19 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/mega2560
+PFLAGS += -I%T/chips/atm2560
+PFLAGS += -I%T/chips/atm2560/pins
+PFLAGS += -I%T/chips/atm2560/timer
+PFLAGS += -I%T/chips/atm1281
+PFLAGS += -I%T/chips/atm128
+PFLAGS += -I%T/chips/atm128/pins
+PFLAGS += -I%T/chips/atm128/timer
+PFLAGS += -I%T/lib/timer
+//PFLAGS += -I%T/lib/serial
+
+PFLAGS += -mmcu=atmega2560
+PFLAGS += -DF_CPU=16000000UL
+PFLAGS += -D__OPTIMIZE__
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug
+
