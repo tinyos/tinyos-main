@@ -6,6 +6,7 @@ PFLAGS += -I%T/platforms/sam3u_ek/chips/cc2420
 PFLAGS += -I%T/platforms/sam3u_ek/chips/sd
 PFLAGS += -I%T/platforms/sam3u_ek/chips/nandflash
 PFLAGS += -I%T/platforms/shimmer/chips/sd/fatfs
+PFLAGS += -I%T/chips/cortex
 PFLAGS += -I%T/chips/cortex/m3
 PFLAGS += -I%T/chips/cortex/m3/sam3
 PFLAGS += -I%T/chips/cortex/m3/sam3/u

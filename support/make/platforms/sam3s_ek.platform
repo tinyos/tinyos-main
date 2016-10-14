@@ -1,6 +1,7 @@
 #-*-Makefile-*- vim:syntax=make
 
 PFLAGS += -I%T/platforms/sam3s_ek
+PFLAGS += -I%T/chips/cortex
 PFLAGS += -I%T/chips/cortex/m3
 PFLAGS += -I%T/chips/cortex/m3/sam3
 PFLAGS += -I%T/chips/cortex/m3/sam3/s
