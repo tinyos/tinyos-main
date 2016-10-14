@@ -40,17 +40,22 @@
 #ifndef CORTEXM3_HARDWARE_H
 #define CORTEXM3_HARDWARE_H
 
-#define ROUNDDOWN(a, n)                                         \
+// return aligned address, a, to lower multiple of n
+#define ALIGN_N(a, n)                                           \
 ({                                                              \
         uint32_t __a = (uint32_t) (a);                          \
         (typeof(a)) (__a - __a % (n));                          \
 })
+
+#ifdef notdef
+// Not used, remove
 // Round up to the nearest multiple of n
 #define ROUNDUP(a, n)                                           \
 ({                                                              \
         uint32_t __n = (uint32_t) (n);                          \
-        (typeof(a)) (ROUNDDOWN((uint32_t) (a) + __n - 1, __n)); \
+        (typeof(a)) (ALIGN_N((uint32_t) (a) + __n - 1, __n)); \
 })
+#endif
 
 typedef uint32_t __nesc_atomic_t;
 

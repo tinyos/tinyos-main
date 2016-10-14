@@ -43,7 +43,7 @@ generic configuration Alarm32khz32C()
 }
 implementation
 {
-  #error The existing implementation that is in here was broken and doesn't work. Check it with an Oscilloscope!
+#warning existing implementation is broken. Check it with an Oscilloscope!
   components HplSam3TC32khzC as HplSam3TCChannel;
   components new HilSam3TCAlarmC(T32khz, 32) as HilSam3TCAlarm;
 

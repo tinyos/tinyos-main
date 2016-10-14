@@ -38,7 +38,7 @@ module MoteP
 {
   uses {
     interface Boot;
-    interface HplSam3uEefc as IFlash;
+    interface HplSam3Eefc as IFlash;
     interface Leds;
   }
 }

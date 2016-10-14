@@ -39,9 +39,9 @@ module TestInterruptC
 	uses interface Leds;
 	uses interface Boot;
     uses interface GpioInterrupt as GpioInterruptLeft;
-    uses interface HplSam3uGeneralIOPin as ButtonLeft;
+    uses interface HplSam3GeneralIOPin as ButtonLeft;
     uses interface GpioInterrupt as GpioInterruptRight;
-    uses interface HplSam3uGeneralIOPin as ButtonRight;
+    uses interface HplSam3GeneralIOPin as ButtonRight;
 }
 implementation
 {

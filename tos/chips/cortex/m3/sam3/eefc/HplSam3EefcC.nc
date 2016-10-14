@@ -79,8 +79,8 @@ implementation {
 
   __attribute__((noinline)) error_t doIFlashWrite(void* saddr, void* buf, uint16_t size) {
     int i;
-    uint8_t *aligned_saddr = ROUNDDOWN(saddr, page_size);
-    uint8_t *aligned_eaddr = ROUNDDOWN(saddr+size-1, page_size);
+    uint8_t *aligned_saddr = ALIGN_N(saddr, page_size);
+    uint8_t *aligned_eaddr = ALIGN_N(saddr+size-1, page_size);
     uint16_t soffset = (uint32_t)saddr - (uint32_t)aligned_saddr;
     uint16_t next_page = ((uint32_t)aligned_saddr - base_addr)/page_size;
     uint16_t npages = ((uint32_t)(aligned_eaddr-aligned_saddr))/page_size + 1;

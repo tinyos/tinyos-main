@@ -50,7 +50,7 @@ implementation
 {
   components HplSam3TCC;
 
-  HplSam3TCChannel[0] = HplSam3TCC.TC0;
+  HplSam3TCChannel[0] = HplSam3TCC.TCH0;
   HplSam3TCCompare[0] = HplSam3TCC.TC0CompareC;
 }
 

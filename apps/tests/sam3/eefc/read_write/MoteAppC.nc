@@ -41,10 +41,10 @@ configuration MoteAppC {}
 implementation
 {
   components MainC;
-  components Sam3uEefcC;
+  components Sam3EefcC;
   components LedsC;
   components new MoteP((uint32_t)AT91C_IFLASH0);
-  MoteP.IFlash -> Sam3uEefcC.InternalFlash0;
+  MoteP.IFlash -> Sam3EefcC.InternalFlash0;
   
   MoteP.Boot -> MainC;
   MoteP.Leds -> LedsC;

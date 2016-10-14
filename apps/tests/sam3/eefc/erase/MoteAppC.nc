@@ -44,7 +44,7 @@ implementation
   components MoteP;
   components LedsC;
   
-  components new HplSam3uEefcC((uint32_t)AT91C_BASE_EFC1, AT91C_IFLASH1,
+  components new HplSam3EefcC((uint32_t)AT91C_BASE_EFC1, AT91C_IFLASH1,
                                AT91C_IFLASH1_PAGE_SIZE, AT91C_IFLASH1_SIZE) as IFlash;
 
   MainC.SoftwareInit -> IFlash;

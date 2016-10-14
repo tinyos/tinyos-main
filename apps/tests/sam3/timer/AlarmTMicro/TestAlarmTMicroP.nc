@@ -49,7 +49,7 @@ module TestAlarmTMicroP
 
         interface Alarm<TMicro,uint32_t>;
 
-        interface HplSam3uTCChannel as HilCounter;
+        interface HplSam3TCChannel as HilCounter;
     }
 }
 implementation
