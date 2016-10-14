@@ -11,8 +11,8 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of Toilers Research Group - Colorado School of 
- *   Mines  nor the names of its contributors may be used to endorse 
+ * - Neither the name of Toilers Research Group - Colorado School of
+ *   Mines  nor the names of its contributors may be used to endorse
  *   or promote products derived from this software without specific
  *   prior written permission.
  *
@@ -167,9 +167,9 @@ void sim_sf_dispatch_packet(const void *packet, int len)
     struct sim_sf_client_list **c;
 
     char* dispatchPacket = (char*) sim_sf_xmalloc(len+1);
-    
-    memset(dispatchPacket, 0, len+1);
-    memcpy(dispatchPacket+1, packet, len);
+
+    memset(dispatchPacket, 0, 1); // This is the dispatcher byte actually
+    memcpy(dispatchPacket+1, (char*)packet+4, len);
 
     for (c = &sim_sf_clients; *c; )
         if (sim_sf_write_packet((*c)->fd, dispatchPacket, len+1) >= 0)
@@ -212,11 +212,13 @@ void sim_sf_check_new_client(void)
 
 void sim_sf_forward_packet(const void *packet, int len)
 {
-    char* forwardPacket = (char*)packet + 1;
+    uint16_t addr = sim_serial_packet_source((struct sim_serial_packet*)packet);
+    //uint16_t addr = sim_serial_packet_destination((struct sim_serial_packet*)forwardPacket);
+    char* forwardPacket = (char*)packet+4;
 
-    uint16_t addr = sim_serial_packet_destination((struct sim_serial_packet*)forwardPacket);
+    printf("addr %04X\n", addr);
 
-    sim_serial_packet_deliver(addr, 
+    sim_serial_packet_deliver(addr,
                              (struct sim_serial_packet*)forwardPacket,
                              sim_time());
     sim_sf_packets_read++;
@@ -304,7 +306,7 @@ int sim_sf_open_source(const char *host, int port)
     {
       close(fd);
       return -1;
-    }      
+    }
 
   addr.sin_family = entry->h_addrtype;
   memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
@@ -325,7 +327,7 @@ int sim_sf_open_source(const char *host, int port)
 }
 
 int sim_sf_init_source(int fd)
-/* Effects: Checks that fd is following the TinyOS 2.0 serial forwarder 
+/* Effects: Checks that fd is following the TinyOS 2.0 serial forwarder
      protocol. Use this if you obtain your file descriptor from some other
      source than open_sf_source (e.g., you're a server)
    Returns: 0 if it is, -1 otherwise
@@ -362,23 +364,36 @@ void *sim_sf_read_packet(int fd, int *len)
      set to the packet length, or NULL for failure
 */
 {
+  int i;
   unsigned char l;
   void *packet;
 
   if (sim_sf_saferead(fd, &l, 1) != 1)
     return NULL;
 
-  packet = malloc(l);
+  packet = malloc(l+4);
   if (!packet)
     return NULL;
 
-  if (sim_sf_saferead(fd, packet, l) != l)
-    {
-      free(packet);
-      return NULL;
-    }
-  *len = l;
-  
+  if (sim_sf_saferead(fd, packet, 1) != 1)
+  {
+    free(packet);
+    return NULL;
+  }
+
+  if (sim_sf_saferead(fd, &((char*)packet)[4], l-1) != l-1)
+  {
+    free(packet);
+    return NULL;
+  }
+
+  //memcpy((char*)packet, (char*)packet+4, 4);
+
+  *len = l-1+4;
+  printf("packet l %d ", *len);
+  for(i = 0; i<*len; i++) printf("%02X ", ((unsigned char*)packet)[i]);
+  printf("\n");
+
   return packet;
 }
 

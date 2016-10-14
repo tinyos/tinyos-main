@@ -12,8 +12,8 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of Toilers Research Group - Colorado School of 
- *   Mines  nor the names of its contributors may be used to endorse 
+ * - Neither the name of Toilers Research Group - Colorado School of
+ *   Mines  nor the names of its contributors may be used to endorse
  *   or promote products derived from this software without specific
  *   prior written permission.
  *
@@ -64,7 +64,7 @@ implementation {
 
     message_t buffer;
     message_t* bufferPointer = &buffer;
-    
+
     message_t* sendMsgPtr = NULL;
 
     serial_header_t* getHeader(message_t* amsg) {
@@ -89,11 +89,11 @@ implementation {
                                             uint8_t len) {
         error_t err;
         serial_header_t* header = getHeader(amsg);
-        
+
         header->type = id;
         header->dest = addr;
         // For out going serial messages we'll use the real TOS_NODE_ID
-        header->src = TOS_NODE_ID;
+        // header->src = TOS_NODE_ID;
         header->length = len;
         err = call Model.send((int)addr, amsg, len + sizeof(serial_header_t));
         return err;
@@ -128,7 +128,7 @@ implementation {
         dbg("Serial", "Sending serial message (%p) of type %hhu and length %hhu @ %s.\n",
             msg, call AMPacket.type(msg), len, sim_time_string());
         sim_sf_dispatch_packet((void*)msg, len);
-        
+
         post modelSendDone ();
 
         return SUCCESS;
@@ -141,11 +141,11 @@ implementation {
         void* payload;
 
         memcpy(bufferPointer, msg, sizeof(message_t));
-	
-	if (msg != NULL) {
-	  free(msg);
-	}
-	
+
+        if (msg != NULL) {
+            free(msg);
+        }
+
         payload = call Packet.getPayload(bufferPointer, call Packet.maxPayloadLength());
         len = call Packet.payloadLength(bufferPointer);
 
@@ -276,10 +276,10 @@ implementation {
 
     sim_event_t* allocate_serial_deliver_event(int node, message_t* msg, sim_time_t t) {
         sim_event_t* evt = (sim_event_t*)malloc(sizeof(sim_event_t));
-	message_t* newMsg = (message_t*)malloc(sizeof(message_t));
+        message_t* newMsg = (message_t*)malloc(sizeof(message_t));
         uint8_t payloadLength = ((serial_header_t*)msg->header)->length;
         memcpy(getHeader(newMsg), msg, sizeof(serial_header_t) + payloadLength);
-	
+
         evt->mote = node;
         evt->time = t;
         evt->handle = serial_active_message_deliver_handle;
