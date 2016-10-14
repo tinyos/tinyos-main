@@ -806,21 +806,4 @@ void __set_CONTROL(uint32_t control)
   __ASM volatile ("MSR control, %0" : : "r" (control) );
 }
 
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif          /* #if __CC_ARM/__ICCARM__/__GNUC__ */
