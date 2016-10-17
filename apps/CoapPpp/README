@@ -2,7 +2,11 @@ A CoAP applicationbased on the TinyOS blip stack (without Radio) and libcoap.
 
 Prepare libcoap:
 
-$ cd $TOSROOT/support/sdk/c/coap
+Originally this was located in support/sdk/c/coap but has been moved to
+tools/tinyos/coap.
+
+# $ cd ../../support/sdk/c/coap
+$ cd ../../tools/tinyos/c/coap
 $ autoconf
 $ ./configure --with-tinyos
 $ make

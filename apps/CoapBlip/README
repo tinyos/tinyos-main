@@ -2,7 +2,11 @@ A CoAP application based on the TinyOS blip stack and libcoap.
 
 Prepare libcoap:
 
-$ cd ../../support/sdk/c/coap
+Originally this was located in support/sdk/c/coap but has been moved to
+tools/tinyos/coap.
+
+# $ cd ../../support/sdk/c/coap
+$ cd ../../tools/tinyos/c/coap
 $ autoconf
 $ ./configure
 $ make
