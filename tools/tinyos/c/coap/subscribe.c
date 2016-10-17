@@ -23,7 +23,7 @@
 
 #include "mem.h"
 #include "encode.h"
-#include "debug.h"
+#include "coap_debug.h"
 #include "subscribe.h"
 
 void

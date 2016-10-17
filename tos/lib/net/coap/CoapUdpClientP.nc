@@ -33,7 +33,7 @@
 #include <net.h>
 #include <pdu.h>
 #include <mem.h>
-#include <debug.h>
+#include <coap_debug.h>
 
 module CoapUdpClientP {
     provides interface CoAPClient;

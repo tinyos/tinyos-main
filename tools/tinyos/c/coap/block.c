@@ -17,7 +17,7 @@
 #  define assert(x)
 #endif
 
-#include "debug.h"
+#include "coap_debug.h"
 #include "block.h"
 
 #define min(a,b) ((a) < (b) ? (a) : (b))

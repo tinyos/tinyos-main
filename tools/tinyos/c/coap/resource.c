@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "net.h"
-#include "debug.h"
+#include "coap_debug.h"
 #include "resource.h"
 #include "subscribe.h"
 

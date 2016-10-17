@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include "debug.h"
+#include "coap_debug.h"
 #include "mem.h"
 #include "str.h"
 

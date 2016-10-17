@@ -37,11 +37,10 @@
 #include <async.h>
 #include <resource.h>
 #include <uri.h>
-#include <debug.h>
+#include <coap_debug.h>
 #include <pdu.h>
 #include <subscribe.h>  // for resource_t
 #include <encode.h>
-#include <debug.h>
 #include <mem.h>
 #include <block.h>
 

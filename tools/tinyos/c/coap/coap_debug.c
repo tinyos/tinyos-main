@@ -1,4 +1,4 @@
-/* debug.c -- debug utilities
+/* coap_debug.c -- debug utilities
  *
  * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
  *
@@ -28,7 +28,7 @@
 #include <time.h>
 #endif
 
-#include "debug.h"
+#include "coap_debug.h"
 #include "net.h"
 
 #ifdef WITH_CONTIKI

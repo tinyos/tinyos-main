@@ -10,7 +10,7 @@
 #define _COAP_H_
 
 #include "config.h"
-#include "debug.h"
+#include "coap_debug.h"
 #include "mem.h"
 #include "coap_list.h"
 #include "pdu.h"

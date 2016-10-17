@@ -18,7 +18,7 @@
 #include "utlist.h"
 
 #include "mem.h"
-#include "debug.h"
+#include "coap_debug.h"
 #include "async.h"
 
 coap_async_state_t *

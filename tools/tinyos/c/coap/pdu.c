@@ -29,7 +29,7 @@
 #include <lib6lowpan/nwbyte.h> // for ntohs()
 #endif
 
-#include "debug.h"
+#include "coap_debug.h"
 #include "pdu.h"
 #include "option.h"
 #include "encode.h"
