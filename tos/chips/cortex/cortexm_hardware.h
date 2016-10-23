@@ -30,15 +30,16 @@
  */
 
 /**
- * Definitions specific to the Cortex-M3 MCU.
+ * These definitions should work for both M3 and M4 ARM Cortex processors.
+ *
  * Includes interrupt enable/disable routines for nesC.
  *
  * @author Wanja Hofer <wanja@cs.fau.de>
  * @author Thomas Schmid
  */
 
-#ifndef CORTEXM3_HARDWARE_H
-#define CORTEXM3_HARDWARE_H
+#ifndef __CORTEXM_HARDWARE_H__
+#define __CORTEXM_HARDWARE_H__
 
 // return aligned address, a, to lower multiple of n
 #define ALIGN_N(a, n)                                           \
@@ -59,55 +60,51 @@
 
 typedef uint32_t __nesc_atomic_t;
 
-inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((always_inline))
-{
-	__nesc_atomic_t oldState = 0;
-	__nesc_atomic_t newState = 1;
-	asm volatile(
-		"mrs %[old], primask\n"
-		"msr primask, %[new]\n"
-		: [old] "=&r" (oldState) // output, assure write only!
-		: [new] "r"  (newState)  // input
-        : "cc", "memory"         // clobber condition code flag and memory
-	);
-	return oldState;
+inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((always_inline)) {
+  __nesc_atomic_t oldState = 0, newState = 1;
+
+  asm volatile(
+    "mrs %[old], primask\n"
+    "msr primask, %[new]\n"
+    : [old] "=&r" (oldState) // output, assure write only!
+    : [new] "r"  (newState)  // input
+    : "cc", "memory"         // clobber condition code flag and memory
+               );
+  return oldState;
 }
  
-inline void __nesc_atomic_end(__nesc_atomic_t oldState) @spontaneous() __attribute__((always_inline))
-{
-	asm volatile("" : : : "memory"); // memory barrier
- 
-	asm volatile(
-		"msr primask, %[old]"
-		:                      // no output
-		: [old] "r" (oldState) // input
-	);
+inline void __nesc_atomic_end(__nesc_atomic_t oldState) @spontaneous() __attribute__((always_inline)) {
+  asm volatile("" : : : "memory"); // memory barrier      
+  asm volatile(
+    "msr primask, %[old]"
+    :                      // no output
+    : [old] "r" (oldState) // input
+               );
 }
 
 // See definitive guide to Cortex-M3, p. 141, 142
 // Enables all exceptions except hard fault and NMI
-inline void __nesc_enable_interrupt() __attribute__((always_inline))
-{
-	__nesc_atomic_t newState = 0;
+inline void __nesc_enable_interrupt() __attribute__((always_inline)) {
+  __nesc_atomic_t newState = 0;
 
-	asm volatile(
-		"msr primask, %0"
-		: // output
-		: "r" (newState) // input
-	);
+  asm volatile(
+    "msr primask, %0"
+    : // output
+    : "r" (newState) // input
+               );
 }
+
 
 // See definitive guide to Cortex-M3, p. 141, 142
 // Disables all exceptions except hard fault and NMI
-inline void __nesc_disable_interrupt() __attribute__((always_inline))
-{
-	__nesc_atomic_t newState = 1;
+inline void __nesc_disable_interrupt() __attribute__((always_inline)) {
+  __nesc_atomic_t newState = 1;
 
-	asm volatile(
-		"msr primask, %0"
-		: // output
-		: "r" (newState) // input
-	);
+  asm volatile(
+    "msr primask, %0"
+    : // output
+    : "r" (newState) // input
+               );
 }
 
-#endif // CORTEXM3_HARDWARE_H
+#endif          /* __CORTEXM_HARDWARE_H__ */
