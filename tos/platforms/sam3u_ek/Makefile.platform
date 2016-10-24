@@ -1,0 +1,9 @@
+
+#
+# This file is used to include some source files needed to build on
+# the sam3 platforms.
+#
+# See $(TOS_ROOT)/support/make/targets/sam3u_ek.target
+#
+
+TOSMAKE_ADDITIONAL_INPUTS += $(PLATFORM_DIR)/vectors.c

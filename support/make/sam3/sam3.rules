@@ -25,8 +25,6 @@ CFLAGS += -mthumb -fno-strict-aliasing
 PFLAGS += -Wall -Wshadow
 PFLAGS += -finline-limit=100000
 
-TOSMAKE_ADDITIONAL_INPUTS += $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/vectors.c
-
 # can be overridden by MP-enabled linker file (see mpu.extra)
 LINKERFILE_PREFIX ?= sam3u-ek-flash
 LINKERFILE ?= $(LINKERFILE_PREFIX).x
