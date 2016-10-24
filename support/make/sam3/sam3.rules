@@ -31,6 +31,7 @@ TOSMAKE_ADDITIONAL_INPUTS += $(TINYOS_OS_DIR)/platforms/$(PLATFORM)/vectors.c
 LINKERFILE_PREFIX ?= sam3u-ek-flash
 LINKERFILE ?= $(LINKERFILE_PREFIX).x
 LDFLAGS += -L$(TINYOS_OS_DIR)/platforms/$(PLATFORM) -T $(LINKERFILE)
+LDFLAGS += -Wl,-Map=$(MAIN_MAP) -Wl,--gc-sections
 
 ifndef TOSMAKE_PROGRAMMER_TYPE
   $(call TOSMake_include,sam3/sam-ba.extra)

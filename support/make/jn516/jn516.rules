@@ -30,9 +30,6 @@ TOSMAKE_BINARY_FORMAT = bin
 TOSMAKE_BINARY_IN     = $(MAIN_BIN)
 TOSMAKE_BINARY_OUT    = $(INSTALL_BIN)
 
-# location and name of the link map
-MAIN_MAP = $(TOSMAKE_BUILD_DIR)/main.map
-
 # Set some compiler/microcontroller specific pflags
 PFLAGS += -Wall -Wshadow
 #PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
