@@ -58,7 +58,7 @@ implementation
   PwmP.ClockConfig -> HplSam3sClockC;
 
   components McuSleepC;
-  PwmP.PwmInterruptWrapper -> McuSleepC;
+  PwmP.McuSleep -> McuSleepC;
 
   components HplSam3sPdcC;
   PwmP.HplPdc -> HplSam3sPdcC.PwmPdcControl;

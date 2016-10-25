@@ -61,7 +61,7 @@ module HplSam3uHsmciP {
     interface HplSam3GeneralIOPin as HSMCIPinMCDA5;
     interface HplSam3GeneralIOPin as HSMCIPinMCDA6;
     interface HplSam3GeneralIOPin as HSMCIPinMCDA7;
-    interface FunctionWrapper as HsmciInterruptWrapper;
+    interface McuSleep;
   }
 }
 implementation {
@@ -837,9 +837,9 @@ implementation {
   }
 
   __attribute__((interrupt)) void HsmciIrqHandler() @C() @spontaneous() {
-    call HsmciInterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     handler();
-    call HsmciInterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 }
 

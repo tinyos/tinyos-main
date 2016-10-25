@@ -42,37 +42,32 @@ module HplSam3GeneralIOP
         interface HplSam3GeneralIOPort as HplPortB;
         interface HplSam3GeneralIOPort as HplPortC;
     }
-    uses 
-    {
-        interface FunctionWrapper as PioAInterruptWrapper;
-        interface FunctionWrapper as PioBInterruptWrapper;
-        interface FunctionWrapper as PioCInterruptWrapper;
-    }
+    uses interface McuSleep;
 }
 implementation
 {
     __attribute__((interrupt)) void PioAIrqHandler() @C() @spontaneous()
     {
         uint32_t time = 0;
-        call PioAInterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal HplPortA.fired(time);
-        call PioAInterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     __attribute__((interrupt)) void PioBIrqHandler() @C() @spontaneous()
     {
         uint32_t time = 0;
-        call PioBInterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal HplPortB.fired(time);
-        call PioBInterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     __attribute__((interrupt)) void PioCIrqHandler() @C() @spontaneous()
     {
         uint32_t time = 0;
-        call PioCInterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal HplPortC.fired(time);
-        call PioCInterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     /**

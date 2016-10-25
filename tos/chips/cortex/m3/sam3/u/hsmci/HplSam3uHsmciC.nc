@@ -67,7 +67,7 @@ implementation {
   HplSam3uHsmciP.HSMCIClockControl -> HplSam3uClockC.MCI0PPCntl;
 
   components McuSleepC;
-  HplSam3uHsmciP.HsmciInterruptWrapper -> McuSleepC;
+  HplSam3uHsmciP.McuSleep -> McuSleepC;
 
   components PlatformHsmciConfigC;
   HplSam3uHsmciP.PlatformHsmciConfig -> PlatformHsmciConfigC;

@@ -53,7 +53,7 @@ implementation {
   HplSam3RttP.NVICRTTInterrupt -> HplNVICC.RTTInterrupt;
 
   components McuSleepC;
-  HplSam3RttP.RttInterruptWrapper -> McuSleepC;
+  HplSam3RttP.McuSleep -> McuSleepC;
 
   components LedsC;
   HplSam3RttP.Leds -> LedsC;

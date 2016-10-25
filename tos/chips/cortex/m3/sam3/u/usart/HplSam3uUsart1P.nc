@@ -43,7 +43,7 @@ module HplSam3uUsart1P{
     interface HplSam3GeneralIOPin as USART_TXD1;
     interface HplSam3PeripheralClockCntl as USARTClockControl1;
     interface HplSam3Clock as ClockConfig;
-    interface FunctionWrapper as Usart1InterruptWrapper;
+    interface McuSleep;
     interface Leds;
   }
 }
@@ -333,26 +333,25 @@ implementation{
   __attribute__((interrupt)) void Usart1IrqHandler() @C() @spontaneous(){
 
     atomic {
-      call Usart1InterruptWrapper.preamble();
+      call McuSleep.irq_preamble();
       disableInterrupt();
     }
 
     if(CSR->bits.rxrdy){
       atomic recv_data = RHR->bits.rxchr;
       signal Usart.readDone((uint8_t)recv_data);
-    }else if(STATE == S_WRITE && CSR->bits.txrdy){
+    } else if(STATE == S_WRITE && CSR->bits.txrdy) {
       signal Usart.writeDone(); // tx done
     }
 
     atomic {
       STATE = S_IDLE;
       enableInterruptRead();
-      call Usart1InterruptWrapper.postamble();
+      call McuSleep.irq_postamble();
     }
   }
 
   async event void ClockConfig.mainClockChanged() {};
- default event void Usart.writeDone(){}
- default event void Usart.readDone(uint8_t data){}
-
+  default event void Usart.writeDone(){}
+  default event void Usart.readDone(uint8_t data){}
 }

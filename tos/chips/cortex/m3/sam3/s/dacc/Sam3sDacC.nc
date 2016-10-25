@@ -60,7 +60,7 @@ implementation
   DacP.ClockConfig -> HplSam3sClockC;
 
   components McuSleepC;
-  DacP.DacInterruptWrapper -> McuSleepC;
+  DacP.McuSleep -> McuSleepC;
 
   components HplSam3sPdcC;
   DacP.HplPdc -> HplSam3sPdcC.DacPdcControl;

@@ -51,12 +51,12 @@ module Sam3sDacP
     interface HplSam3GeneralIOPin as DacPin1;
     interface HplSam3PeripheralClockCntl as DacClockControl;
     interface HplSam3Clock as ClockConfig;
-    interface FunctionWrapper as DacInterruptWrapper;
     interface HplSam3Pdc as HplPdc;
     interface Leds;
 
     interface StdControl as PwmControl;
     interface Sam3sPwm as Pwm;
+    interface McuSleep;
   }
 }
 implementation
@@ -304,10 +304,9 @@ implementation
 
   void DaccIrqHandler() @C() @spontaneous() 
   {
-    call DacInterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     handler();
-    call DacInterruptWrapper.postamble();
-
+    call McuSleep.irq_postamble();
   }
 
   default async event void Sam3sDac.bufferDone(error_t error, uint32_t *buffer, uint16_t length) { }

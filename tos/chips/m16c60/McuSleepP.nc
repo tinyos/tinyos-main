@@ -55,12 +55,11 @@ implementation
     call M16c60Control.sleep();
   }
 
-  async command void McuPowerState.update()
-  {
-  }
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+  async command void McuPowerState.update()   { }
 
-  default async command mcu_power_t McuPowerOverride.lowestState()
-  {
+  default async command mcu_power_t McuPowerOverride.lowestState() {
     return M16C60_POWER_STOP;
   }
 }

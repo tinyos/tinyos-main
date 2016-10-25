@@ -676,7 +676,6 @@ void RealUdphsIrqHandler(void) @spontaneous()
     unsigned int  status;
     unsigned char numIT;
 
-    call UdphsInterruptWrapper.preamble();
     if (deviceState >= USBD_STATE_POWERED) {
 
         //LED_Set(USBD_LEDUSB);
@@ -878,13 +877,13 @@ void RealUdphsIrqHandler(void) @spontaneous()
         //LED_Clear(USBD_LEDUSB);
         //TOSH_CLR_GREEN_LED_PIN();
     }
-    call UdphsInterruptWrapper.postamble();
 }
+
 void UdphsIrqHandler(void) @C() @spontaneous()
 {
-    call UdphsInterruptWrapper.preamble();
+    __mcusleep_irq_preamble();
     RealUdphsIrqHandler();
-    call UdphsInterruptWrapper.postamble();
+    __mcusleep_irq_postamble();
 }
 
 //------------------------------------------------------------------------------

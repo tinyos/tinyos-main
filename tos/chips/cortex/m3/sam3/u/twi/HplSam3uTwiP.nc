@@ -63,6 +63,5 @@ implementation {
   HplTwiP.Leds -> NoLedsC;  
 
   components McuSleepC;
-  HplTwiP.Twi0InterruptWrapper -> McuSleepC;
-  HplTwiP.Twi1InterruptWrapper -> McuSleepC;
+  HplTwiP.McuSleep -> McuSleepC;
 }

@@ -47,58 +47,51 @@ module HplSam3TCEventP @safe()
         interface HplSam3TCEvent as TC4Event;
         interface HplSam3TCEvent as TC5Event;
     }
-    uses {
-      interface FunctionWrapper as TC0InterruptWrapper;
-      interface FunctionWrapper as TC1InterruptWrapper;
-      interface FunctionWrapper as TC2InterruptWrapper;
-      interface FunctionWrapper as TC3InterruptWrapper;
-      interface FunctionWrapper as TC4InterruptWrapper;
-      interface FunctionWrapper as TC5InterruptWrapper;
-    }
+    uses interface McuSleep;
 }
 implementation
 {
 
     void TC0IrqHandler() @C() @spontaneous() 
     {
-        call TC0InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC0Event.fired();
-        call TC0InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC1IrqHandler() @C() @spontaneous() 
     {
-        call TC1InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC1Event.fired();
-        call TC1InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC2IrqHandler() @C() @spontaneous() 
     {
-        call TC2InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC2Event.fired();
-        call TC2InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC3IrqHandler() @C() @spontaneous() 
     {
-        call TC3InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC3Event.fired();
-        call TC3InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC4IrqHandler() @C() @spontaneous() 
     {
-        call TC4InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC4Event.fired();
-        call TC4InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC5IrqHandler() @C() @spontaneous() 
     {
-        call TC5InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC5Event.fired();
-        call TC5InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     default async event void TC0Event.fired() {}

@@ -49,6 +49,6 @@ implementation
 	HplSam3uMpuP.HplNVICCntl -> HplNVICC;
 
 	components McuSleepC;
-	HplSam3uMpuP.MpuInterruptWrapper -> McuSleepC;
+	HplSam3uMpuP.McuSleep -> McuSleepC;
 }
 

@@ -77,6 +77,5 @@ implementation
     HplSam3SpiP.ClockConfig -> HplSam3sClockC;
 
     components McuSleepC;
-    HplSam3SpiP.SpiInterruptWrapper -> McuSleepC;
+    HplSam3SpiP.McuSleep -> McuSleepC;
 }
-

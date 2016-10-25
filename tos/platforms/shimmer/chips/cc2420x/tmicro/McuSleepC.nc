@@ -132,12 +132,14 @@ implementation {
     __nesc_disable_interrupt();
   }
 
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+
   async command void McuPowerState.update() {
     atomic dirty = 1;
   }
 
- default async command mcu_power_t McuPowerOverride.lowestState() {
-   return MSP430_POWER_LPM4;
- }
-
+  default async command mcu_power_t McuPowerOverride.lowestState() {
+    return MSP430_POWER_LPM4;
+  }
 }

@@ -455,9 +455,7 @@ implementation
     PioC.HplPort -> HplSam3GeneralIOP.HplPortC;
 
     components McuSleepC;
-    HplSam3GeneralIOP.PioAInterruptWrapper -> McuSleepC;
-    HplSam3GeneralIOP.PioBInterruptWrapper -> McuSleepC;
-    HplSam3GeneralIOP.PioCInterruptWrapper -> McuSleepC;
+    HplSam3GeneralIOP.McuSleep -> McuSleepC;
 
     components HplNVICC, HplSam3sClockC;
     PioA.PIOIrqControl -> HplNVICC.PIOAInterrupt;

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2016 Eric B. Decker
  * Copyright (c) 2011 University of Utah
  * All rights reserved.
  *
@@ -31,6 +32,8 @@
 
 /**
  * @author Thomas schmid
+ * @author Eric B. Decker <cire831@gmail.com>
+ * @date Oct 25, 2016
  */
 
 #include "hardware.h"
@@ -46,7 +49,6 @@ module McuSleepC
     interface McuSleep;
     interface McuPowerState;
     interface Sam3LowPower;
-    interface FunctionWrapper as InterruptWrapper;
   }
   uses {
     interface HplSam3Clock;
@@ -248,10 +250,10 @@ implementation{
 #endif
 
     // Normally, at this point we can only be woken up by an interrupt, so execution continues
-    // in the body of the InterruptWrapper.preamble() command before returning to here
+    // in the body of McuSleep.irq_preamble() before returning to here
     // However, if we never actually went to sleep, we need to force this command to run.
     if(ps == S_AWAKE)
-      call InterruptWrapper.preamble();
+      call McuSleep.irq_preamble();
   
     // all of memory may change at this point, because an IRQ handler
     // may have posted a task!
@@ -260,7 +262,11 @@ implementation{
     __nesc_disable_interrupt();
   }
 
-  async command void InterruptWrapper.preamble() {
+  void __mcusleep_irq_preamble() @C() @spontaneous() {
+    call McuSleep.irq_preamble();
+  }
+
+  async command void McuSleep.irq_preamble() {
     atomic {
       switch(ps) {
         case S_AWAKE:
@@ -287,10 +293,14 @@ implementation{
       ps = S_AWAKE;
     }
   }
-  async command void InterruptWrapper.postamble() { /* Do nothing */ }
-  async command void McuPowerState.update(){}
-  async event void HplSam3Clock.mainClockChanged(){}
 
-  default async event void Sam3LowPower.customizePio() {}
+  void __mcusleep_irq_postamble() @C() @spontaneous() {
+    call McuSleep.irq_postamble();
+  }
+  async command void McuSleep.irq_postamble() { }
+
+  async command void McuPowerState.update()   { }
+  async event void HplSam3Clock.mainClockChanged() { }
+  default async event void Sam3LowPower.customizePio() { }
 }
 

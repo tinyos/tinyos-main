@@ -46,7 +46,7 @@ module Sam3uAdc12bImplP
     interface HplSam3GeneralIOPin as Adc12bPin;
     interface HplSam3PeripheralClockCntl as Adc12bClockControl;
     interface HplSam3Clock as ClockConfig;
-    interface FunctionWrapper as Adc12bInterruptWrapper;
+    interface McuSleep;
 #ifdef SAM3U_ADC12B_PDC
     interface HplSam3Pdc as HplPdc;
 #endif
@@ -260,10 +260,10 @@ implementation
 #endif
   }
   void Adc12BIrqHandler() @C() @spontaneous() {
-    call Adc12bInterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     call ADC12BInterrupt.disable();
     handler();
-    call Adc12bInterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 
 

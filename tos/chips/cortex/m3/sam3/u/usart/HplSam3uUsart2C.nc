@@ -51,7 +51,7 @@ implementation{
   UsartP.ClockConfig -> HplSam3uClockC;
 
   components McuSleepC;
-  UsartP.Usart2InterruptWrapper -> McuSleepC;
+  UsartP.McuSleep -> McuSleepC;
 
   components LedsC;
   UsartP.Leds -> LedsC;

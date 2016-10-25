@@ -77,9 +77,7 @@ implementation
                new HplSam3TCChannelP( TC_CH2_BASE ) as TCCH2;
 
     components McuSleepC;
-    HplSam3TCEventP.TC0InterruptWrapper -> McuSleepC;
-    HplSam3TCEventP.TC1InterruptWrapper -> McuSleepC;
-    HplSam3TCEventP.TC2InterruptWrapper -> McuSleepC;
+    HplSam3TCEventP.McuSleep -> McuSleepC;
 
     TCH0 = TCCH0;
     TCH1 = TCCH1;

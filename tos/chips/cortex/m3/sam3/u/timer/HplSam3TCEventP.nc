@@ -44,34 +44,30 @@ module HplSam3TCEventP @safe()
         interface HplSam3TCEvent as TC1Event;
         interface HplSam3TCEvent as TC2Event;
     }
-    uses {
-      interface FunctionWrapper as TC0InterruptWrapper;
-      interface FunctionWrapper as TC1InterruptWrapper;
-      interface FunctionWrapper as TC2InterruptWrapper;
-    }
+    uses interface McuSleep;
 }
 implementation
 {
 
     void TC0IrqHandler() @C() @spontaneous() 
     {
-        call TC0InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC0Event.fired();
-        call TC0InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC1IrqHandler() @C() @spontaneous() 
     {
-        call TC1InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC1Event.fired();
-        call TC1InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     void TC2IrqHandler() @C() @spontaneous() 
     {
-        call TC2InterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         signal TC2Event.fired();
-        call TC2InterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     default async event void TC0Event.fired() {}

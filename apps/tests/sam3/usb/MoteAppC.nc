@@ -54,7 +54,4 @@ implementation
   MoteP.StdControl -> Sam3uUsbSerialP;
   MoteP.UartStream -> Sam3uUsbSerialP;
   MoteP.Leds -> LedsC;
-
-  components McuSleepC;
-  Sam3uUsbSerialP.UdphsInterruptWrapper -> McuSleepC;
 }

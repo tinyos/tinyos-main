@@ -41,7 +41,7 @@ module HplSam3uMpuP
 	provides interface HplSam3uMpuStatus;
 	provides interface Init;
 	uses interface HplNVICCntl;
-	uses interface FunctionWrapper as MpuInterruptWrapper;
+        uses interface McuSleep;
 }
 implementation
 {
@@ -90,9 +90,9 @@ implementation
 
 	__attribute__((interrupt)) void MpuFaultHandler() @C() @spontaneous()
 	{
-		call MpuInterruptWrapper.preamble();
+		call McuSleep.irq_preamble();
 		signal HplSam3uMpu.mpuFault();
-		call MpuInterruptWrapper.postamble();
+		call McuSleep.irq_postamble();
 	}
 
 	async command bool HplSam3uMpuStatus.isStackingFault()

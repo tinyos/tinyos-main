@@ -48,8 +48,8 @@ module Sam3sPwmP
     interface HplNVICInterruptCntl as PwmInterrupt;
     interface HplSam3PeripheralClockCntl as PwmClockControl;
     interface HplSam3Clock as ClockConfig;
-    interface FunctionWrapper as PwmInterruptWrapper;
     interface HplSam3Pdc as HplPdc;
+    interface McuSleep;
     interface Leds;
   }
 }
