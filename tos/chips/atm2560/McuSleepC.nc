@@ -1,5 +1,3 @@
-/// $Id: McuSleepC.nc,v 1.6 2010-06-29 22:07:43 scipio Exp $
-
 /*
  * Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -162,8 +160,9 @@ implementation {
 		CLR_BIT(SMCR, SE);
 	}
 
-	async command void McuPowerState.update() {
-	}
+        async command void McuSleep.irq_preamble()  { }
+        async command void McuSleep.irq_postamble() { }
+	async command void McuPowerState.update()   { }
 
 	default async command mcu_power_t McuPowerOverride.lowestState() {
 		return ATM128_POWER_DOWN;

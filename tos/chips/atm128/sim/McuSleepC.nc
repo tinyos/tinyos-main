@@ -123,6 +123,9 @@ implementation {
     cli();
   }
 
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+
   async command void McuPowerState.update() {
     atomic dirty = 1;
   }

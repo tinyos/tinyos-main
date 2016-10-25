@@ -92,6 +92,9 @@ implementation
 #endif
   }
 
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+
   async command void McuPowerState.update()
   {
    	powerState = -1;

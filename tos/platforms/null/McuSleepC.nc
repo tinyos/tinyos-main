@@ -19,9 +19,8 @@ module McuSleepC {
   }
 }
 implementation {
-  async command void McuSleep.sleep() {
-  }
-
-  async command void McuPowerState.update() {
-  }
+  async command void McuSleep.sleep()         { }
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+  async command void McuPowerState.update()   { }
 }

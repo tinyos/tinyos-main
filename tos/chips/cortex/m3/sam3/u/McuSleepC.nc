@@ -359,11 +359,10 @@ implementation{
   void __mcusleep_irq_postamble() @C() @spontaneous() {
     call McuSleep.irq_postamble();
   }
+  async command void McuSleep.irq_postamble() { }
 
-  async command void McuSleep.irq_postamble() { /* Do nothing */ }
-
-  async command void McuPowerState.update(){}
-  async event void HplSam3Clock.mainClockChanged(){}
+  async command void McuPowerState.update()   { }
+  async event void HplSam3Clock.mainClockChanged() { }
 
   default async event void Sam3LowPower.customizePio() {}
 }

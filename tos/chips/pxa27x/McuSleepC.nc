@@ -64,13 +64,11 @@ implementation {
     return;
   }
 
-  async command void McuPowerState.update() {
+  async command void McuSleep.irq_preamble()  { }
+  async command void McuSleep.irq_postamble() { }
+  async command void McuPowerState.update()   { }
 
-    return;
+  default async command mcu_power_t McuPowerOverride.lowestState() {
+    return 0;
   }
-
- default async command mcu_power_t McuPowerOverride.lowestState() {
-   return 0;
- }
-
 }
