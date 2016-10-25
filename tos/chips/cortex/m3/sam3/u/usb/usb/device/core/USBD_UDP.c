@@ -789,9 +789,9 @@ void RealUdphsIrqHandler() @spontaneous()
 }
 void UdphsIrqHandler(void) @C() @spontaneous()
 {
-    call UdphsInterruptWrapper.preamble();
+    __mcusleep_irq_preamble();
     RealUdphsIrqHandler();
-    call UdphsInterruptWrapper.postamble();
+    __mcusleep_irq_postamble();
 }
 
 //------------------------------------------------------------------------------

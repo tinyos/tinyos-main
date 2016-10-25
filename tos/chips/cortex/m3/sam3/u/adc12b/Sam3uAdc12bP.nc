@@ -62,7 +62,7 @@ implementation {
   Adc12bImpl.Leds -> NoLedsC;
 
   components McuSleepC;
-  Adc12bImpl.Adc12bInterruptWrapper -> McuSleepC;
+  Adc12bImpl.McuSleep -> McuSleepC;
 
 #ifdef SAM3U_ADC12B_PDC
   components HplSam3uPdcC;

@@ -48,7 +48,7 @@ module HplSam3RttP @safe()
     uses {
         interface HplNVICCntl;
         interface HplNVICInterruptCntl as NVICRTTInterrupt;
-        interface FunctionWrapper as RttInterruptWrapper;
+        interface McuSleep;
 	interface Leds;
     }
 }
@@ -140,7 +140,7 @@ implementation
     {
         rtt_sr_t status;
 
-        call RttInterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         atomic {
             //PMC->pc.pcer.bits.tc2 = 1; // FIXME: what is this????
             // clear pending interrupt
@@ -159,7 +159,7 @@ implementation
                 signal HplSam3Rtt.alarmFired();
             }
         }
-        call RttInterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     default async event void HplSam3Rtt.incrementFired() {}

@@ -64,7 +64,4 @@ implementation {
   MainC.SoftwareInit -> Sam3uUsbSerialP;
   Sam3uUsbSerialP.UDPHSInterrupt -> HplNVICC.MCI0Interrupt;
   Sam3uUsbSerialP.UDPHSClockControl -> HplSam3uClockC.UDPHSPPCntl;
-
-  components McuSleepC;
-  Sam3uUsbSerialP.UdphsInterruptWrapper -> McuSleepC;
 }

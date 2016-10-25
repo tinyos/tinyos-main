@@ -47,7 +47,7 @@ module HplSam3UartP
 		interface HplSam3UartStatus;
 	}
         uses {
-		interface FunctionWrapper as UartInterruptWrapper;
+                interface McuSleep;
 #ifdef THREADS
 		interface PlatformInterrupt;
 #endif

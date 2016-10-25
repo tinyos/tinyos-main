@@ -60,5 +60,5 @@ implementation
 #endif
 
   components McuSleepC;
-  HplSam3UartP.UartInterruptWrapper -> McuSleepC;
+  HplSam3UartP.McuSleep -> McuSleepC;
 }

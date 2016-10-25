@@ -52,23 +52,22 @@ module HplSam3uTwiImplP {
     interface HplSam3PeripheralClockCntl as Twi1ClockControl;
     interface HplSam3Clock as Twi0ClockConfig;
     interface HplSam3Clock as Twi1ClockConfig;
-    interface FunctionWrapper as Twi0InterruptWrapper;
-    interface FunctionWrapper as Twi1InterruptWrapper;
+    interface McuSleep;
     interface Leds;
   }
 }
 implementation{
 
   void Twi0IrqHandler() @C() @spontaneous() {
-    call Twi0InterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     signal Interrupt0.fired();
-    call Twi0InterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 
   void Twi1IrqHandler() @C() @spontaneous() {
-    call Twi1InterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     signal Interrupt1.fired();
-    call Twi1InterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 
   async command void HplSam3uTwi0.disableAllInterrupts() {

@@ -49,7 +49,7 @@ module HplSam3SpiP
     }
     uses
     {
-        interface FunctionWrapper as SpiInterruptWrapper;
+        interface McuSleep;
         interface HplSam3PeripheralClockCntl as SpiClockControl;
         interface HplSam3Clock as ClockConfig;
     }
@@ -292,14 +292,14 @@ implementation
 
     __attribute__((interrupt)) void SpiIrqHandler() @C() @spontaneous()
     {
-        call SpiInterruptWrapper.preamble();
+        call McuSleep.irq_preamble();
         if((call HplSam3SpiInterrupts.isEnabledRxFullIrq() == TRUE) &&
                 (call HplSam3SpiStatus.isRxFull() == TRUE))
         {
             uint16_t data = call HplSam3SpiStatus.getReceivedData();
             signal HplSam3SpiInterrupts.receivedData(data);
         }
-        call SpiInterruptWrapper.postamble();
+        call McuSleep.irq_postamble();
     }
 
     async command void HplSam3SpiInterrupts.disableAllSpiIrqs()
@@ -528,5 +528,3 @@ implementation
     }
     async event void ClockConfig.mainClockChanged() {};
 }
-
-

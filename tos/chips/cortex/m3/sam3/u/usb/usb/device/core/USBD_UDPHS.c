@@ -870,11 +870,12 @@ void RealUdphsIrqHandler(void) @spontaneous()
         //TOSH_CLR_GREEN_LED_PIN();
     }
 }
+
 void UdphsIrqHandler(void) @C() @spontaneous()
 {
-    call UdphsInterruptWrapper.preamble();
+    __mcusleep_irq_preamble();
     RealUdphsIrqHandler();
-    call UdphsInterruptWrapper.postamble();
+    __mcusleep_irq_postamble();
 }
 
 //------------------------------------------------------------------------------

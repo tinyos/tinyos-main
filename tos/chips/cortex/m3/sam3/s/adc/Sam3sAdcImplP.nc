@@ -47,7 +47,7 @@ module Sam3sAdcImplP
     interface HplSam3GeneralIOPin as AdcPin;
     interface HplSam3PeripheralClockCntl as AdcClockControl;
     interface HplSam3Clock as ClockConfig;
-    interface FunctionWrapper as AdcInterruptWrapper;
+    interface McuSleep;
 #ifdef SAM3S_ADC_PDC
     interface HplSam3Pdc as HplPdc;
 #endif
@@ -246,9 +246,9 @@ implementation
   }
 
   void AdcIrqHandler() @C() @spontaneous() {
-    call AdcInterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     handler();
-    call AdcInterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 
 

@@ -1,23 +1,27 @@
 /*
- * Copyright (c) 2009 Stanford University.
+ * Copyright (c) 2016 Eric B. Decker
  * Copyright (c) 2010 CSIRO Australia
+ * Copyright (c) 2009 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
+ *
  * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
  * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -34,6 +38,8 @@
  * @author Wanja Hofer <wanja@cs.fau.de>
  * @author Kevin Klues <Kevin.Klues@csiro.au>
  * @author JeongGil Ko <jgko@cs.jhu.edu>
+ * @author Eric B. Decker <cire831@gmail.com>
+ * @date Oct 25, 2016
  */
 
 #include "AT91SAM3U4.h"
@@ -51,7 +57,6 @@ module McuSleepC
     interface McuSleep;
     interface McuPowerState;
     interface Sam3LowPower;
-    interface FunctionWrapper as InterruptWrapper;
   }
   uses {
     interface HplSam3Clock;
@@ -307,10 +312,10 @@ implementation{
       __asm volatile ("wfe");
 
     // Normally, at this point we can only be woken up by an interrupt, so execution continues
-    // in the body of the InterruptWrapper.preamble() command before returning to here
+    // in the body of McuSleep.irq_preamble() before returning to here
     // However, if we never actually went to sleep, we need to force this command to run.
     if(ps == S_AWAKE)
-      call InterruptWrapper.preamble();
+      call McuSleep.irq_preamble();
   
     // all of memory may change at this point, because an IRQ handler
     // may have posted a task!
@@ -319,7 +324,11 @@ implementation{
     __nesc_disable_interrupt();
   }
 
-  async command void InterruptWrapper.preamble() {
+  void __mcusleep_irq_preamble() @C() @spontaneous() {
+    call McuSleep.irq_preamble();
+  }
+
+  async command void McuSleep.irq_preamble() {
     atomic {
       switch(ps) {
         case S_AWAKE:
@@ -346,10 +355,15 @@ implementation{
       ps = S_AWAKE;
     }
   }
-  async command void InterruptWrapper.postamble() { /* Do nothing */ }
+
+  void __mcusleep_irq_postamble() @C() @spontaneous() {
+    call McuSleep.irq_postamble();
+  }
+
+  async command void McuSleep.irq_postamble() { /* Do nothing */ }
+
   async command void McuPowerState.update(){}
   async event void HplSam3Clock.mainClockChanged(){}
 
   default async event void Sam3LowPower.customizePio() {}
 }
-

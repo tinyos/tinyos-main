@@ -63,7 +63,7 @@ implementation {
   AdcImpl.Leds -> LedsC;
 
   components McuSleepC;
-  AdcImpl.AdcInterruptWrapper -> McuSleepC;
+  AdcImpl.McuSleep -> McuSleepC;
 
 #ifdef SAM3S_ADC_PDC
   components HplSam3sPdcC;

@@ -74,6 +74,6 @@ implementation {
   HplSam3uDmaP.Leds -> LedsC;
 
   components McuSleepC;
-  HplSam3uDmaP.DmacInterruptWrapper -> McuSleepC;
+  HplSam3uDmaP.McuSleep -> McuSleepC;
 }
 

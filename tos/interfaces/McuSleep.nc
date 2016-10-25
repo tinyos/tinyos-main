@@ -1,7 +1,7 @@
-/// $Id: McuSleep.nc,v 1.5 2010-06-29 22:07:46 scipio Exp $
-
 /**
- * Copyright (c) 2005 Stanford University. All rights reserved.
+ * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2005 Stanford University.
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -9,10 +9,12 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
+ *
  * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
@@ -67,11 +69,19 @@
  * 
  * @author Philip Levis
  * @author Martin Turon <mturon@xbow.com>
- * @date   Oct 26, 2005
+ * @author Eric B. Decker <cire831@gmail.com>
+ * @date   Oct 25, 2016
  *
  */
 
 interface McuSleep {
-    /** Called by the scheduler to put the MCU to sleep. */
-    async command void    sleep();
+  /** Called by the scheduler to put the MCU to sleep. */
+  async command void sleep();
+
+  /*
+   * irq_{pre,post}amble are called by the initial sections of interrupt
+   * handlers to handle power state manipulation.
+   */
+  async command void irq_preamble();
+  async command void irq_postamble();
 }
