@@ -38,8 +38,8 @@
  * @author Thomas Schmid
  */
 
-#ifndef __CORTEXM_HARDWARE_H__
-#define __CORTEXM_HARDWARE_H__
+#ifndef __CORTEXM_NESC_H__
+#define __CORTEXM_NESC_H__
 
 // return aligned address, a, to lower multiple of n
 #define ALIGN_N(a, n)                                           \
@@ -107,4 +107,4 @@ inline void __nesc_disable_interrupt() __attribute__((always_inline)) {
                );
 }
 
-#endif          /* __CORTEXM_HARDWARE_H__ */
+#endif          /* __CORTEXM_NESC_H__ */

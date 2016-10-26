@@ -39,7 +39,7 @@
 #ifndef SAM3U_HARDWARE_H
 #define SAM3U_HARDWARE_H
 
-#include <cortexm_hardware.h>
+#include <cortexm_nesc.h>
 
 // Peripheral ID definitions for the SAM3U
 //  Defined in AT91 ARM Cortex-M3 based Microcontrollers, SAM3U Series, Preliminary, p. 41

@@ -38,7 +38,7 @@
 #ifndef SAM3S_HARDWARE_H
 #define SAM3S_HARDWARE_H
 
-#include <cortexm_hardware.h>
+#include <cortexm_nesc.h>
 
 // The Sam3s has more I/O Muxing than the Sam3u.
 #define CHIP_SAM3_HAS_PERIPHERAL_CD 1
