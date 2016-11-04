@@ -1,0 +1,4 @@
+This directory includes the top level includes from TI for the msp432
+family of chips.
+
+We don't put extra includes in this directory to keep the TI files segregated.
