@@ -145,7 +145,8 @@
 
 #elif defined ( __GNUC__ ) /* GCC Compiler */
 #undef __wfi
-#define __wfi()                         __asm("  wfi")
+#define __wfi()                         __asm volatile ("  wfi")
+#define __wfe()                         __asm volatile ("  wfe")
 #define __sleep()                       __wfi()
 #define __deep_sleep()                  { (*((volatile uint32_t *)(0xE000ED10))) |= 0x00000004; __wfi(); (*((volatile uint32_t *)(0xE000ED10))) &= ~0x00000004; }
 #define __low_power_mode_off_on_exit()  { (*((volatile uint32_t *)(0xE000ED10))) &= ~0x00000002; }
@@ -153,11 +154,12 @@
 #define __set_SP_register(x)            __set_MSP(x)
 #define __get_interrupt_state()         __get_PRIMASK()
 #define __set_interrupt_state(x)        __set_PRIMASK(x)
-#define __enable_interrupt()            __asm("  cpsie i")
-#define __enable_interrupts()           __asm("  cpsie i")
-#define __disable_interrupt()           __asm("  cpsid i")
-#define __disable_interrupts()          __asm("  cpsid i")
-#define __no_operation()                __asm("  nop")
+#define __enable_interrupt()            __asm volatile ("  cpsie i")
+#define __enable_interrupts()           __asm volatile ("  cpsie i")
+#define __disable_interrupt()           __asm volatile ("  cpsid i")
+#define __disable_interrupts()          __asm volatile ("  cpsid i")
+#define __no_operation()                __asm volatile ("  nop")
+#define nop()                           __asm volatile ("  nop")
 
 // Intrinsics without ARM equivalents
 #define __bcd_add_short(x,y)            { while(1); /* Using not-supported MSP430 intrinsic. No replacement available. */ }
