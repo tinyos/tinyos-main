@@ -325,9 +325,11 @@ typedef enum IRQn
 #define BITBAND_PERI_BASE                     ((uint32_t)(0x42000000))
 
 /* SRAM allows 32 bit bit band access */
-#define BITBAND_SRAM(x, b)  (*((__IO uint32_t *) (BITBAND_SRAM_BASE +  (((uint32_t)(uint32_t *)&x) - SRAM_BASE  )*32 + b*4)))
+#define BITBAND_SRAM(x, b)  (*((__IO uint32_t *) (BITBAND_SRAM_BASE +  (((uint32_t)(uint32_t *)&(x)) - SRAM_BASE  )*32 + (b)*4)))
+
 /* peripherals with 8 bit or 16 bit register access allow only 8 bit or 16 bit bit band access, so cast to 8 bit always */
-#define BITBAND_PERI(x, b)  (*((__IO  uint8_t *) (BITBAND_PERI_BASE +  (((uint32_t)(uint32_t *)&x) - PERIPH_BASE)*32 + b*4)))
+#define BITBAND_PERI(x, b)  (*((__IO  uint8_t *) (BITBAND_PERI_BASE +  (((uint32_t)(uint32_t *)&(x)) - PERIPH_BASE)*32 + (b)*4)))
+
 
 /******************************************************************************
 * Peripheral register definitions                                             *
