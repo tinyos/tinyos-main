@@ -1,14 +1,9 @@
 ==============================================
 Directory Description:     tos/chips 
 ==============================================
-:$Id: README,v 1.4 2006-12-12 18:23:02 vlahan Exp $
 
-:TinyOS-Version: 2.0
-:Author: Martin Turon
-
-:Created: 14-Feb-2005
-:Version: $Revision: 1.4 $
-:Modified: $Date: 2006-12-12 18:23:02 $
+:TinyOS-Version: 2.1+
+:Author: Eric B. Decker
 
 1. Introduction
 ====================================================================
@@ -27,44 +22,84 @@ placing chip-specific code here in a designated chips directory,
 and enforcing a policy of making this code specific to the chip
 but not the platform, code reuse will be promoted.
 
-2. Microcontrollers
+2. HIL interfaces
+
+Hardware independent abstractions are defined in tos/chips/hil.  Where
+commonalities emerge these will be captured in various hardware
+abstractions.
+
+
+3. Microcontrollers
 ====================================================================
 
 ATmega128	
 ---------
-    Part of the AVR 8-bit series by Atmel corporation.  Atmel's AVR® microcontrollers have a RISC core running single cycle instructions and a well-defined I/O structure that limits the need for external components. Internal oscillators, timers, UART, SPI, pull-up resistors, pulse width modulation, ADC, analog comparator and watch-dog timers are some of the features you will find in AVR devices.
+
+    Part of the AVR 8-bit series by Atmel corporation.  Atmel's AVR® 
+microcontrollers have a RISC core running single cycle instructions and a
+well-defined I/O structure that limits the need for external
+components. Internal oscillators, timers, UART, SPI, pull-up resistors,
+pulse width modulation, ADC, analog comparator and watch-dog timers are
+some of the features you will find in AVR devices.
 
     	128-Kbyte self-programming Flash Program Memory, 
-	4-Kbyte SRAM, 4-Kbyte EEPROM, 8 Channel 10-bit A/D-converter. 
-	JTAG interface for on-chip-debug. Up to 16 MIPS throughput at 16 MHz. 
+	4-Kbyte SRAM,
+        4-Kbyte EEPROM,
+        8 Channel 10-bit A/D-converter. 
+	JTAG interface for on-chip-debug.
+        Up to 16 MIPS throughput at 16 MHz. 
 	2.7 - 5.5 Volt operation.
 
     http://atmel.com/dyn/products/product_card.asp?part_id=2018
 
 msp430
 ------
-    The MSP430 family of ultra-low-power 16-bit RISC mixed-signal processors from Texas Instruments provides the ultimate solution for battery-powered measurement applications.
 
-    http://focus.ti.com/mcu/docs/overview.tsp?familyId=342&templateId=5246&navigationId=11466&path=templatedata/cm/mcuovw/data/msp430_ovw
+    The MSP430 family of ultra-low-power 16-bit RISC mixed-signal processors
+from Texas Instruments provides the ultimate solution for battery-powered
+measurement applications.
+
+    http://www.ti.com/lsds/ti/microcontrollers_16-bit_32-bit/msp/overview.page?DCMP=MCU_other&HQS=msp430
 
 
-3. Radio Chips
+msp432
+------
+
+    The MSP432 family is similar to the msp430 chips from TI.  It is a 
+ARM Cortex-M4F core coupled to various msp430 peripherals on the same die.
+It combines both high performance (32 bit arm core) with low power
+consumption.
+
+    http://www.ti.com/lsds/ti/microcontrollers_16-bit_32-bit/MSP432/overview.page
+
+
+4. Radio Chips
 ====================================================================
 
 cc2420
 ------
-    The CC2420 is a low-cost transceiver designed specifically
-for low-power, low-voltage RF applications in the 2.4 GHz unlicensed ISM band. It is the first commercially available RF Transceiver compliant with the IEEE 802.15.4 standard and the first RF-IC that can be qualified for use in 2.4 GHz ZigBeetm products.
+    The CC2420 is a low-cost transceiver designed specifically for low-power,
+low-voltage RF applications in the 2.4 GHz unlicensed ISM band. It is the
+first commercially available RF Transceiver compliant with the IEEE
+802.15.4 standard and the first RF-IC that can be qualified for use in 2.4
+GHz ZigBeetm products.
 
     http://www.chipcon.com/index.cfm?kat_id=2&subkat_id=12&dok_id=115
 
+
 cc1000
 ------
-    The CC1000 is a true ultra-low-power single-chip RF transceiver for e.g. the 315, 433, 868, 915 MHz bands. It has been specifically designed to comply with the most stringent demands of the low power radio market.  Based on a pure CMOS technology this is the first product in the market that offers a unique combination of low cost and high integration, performance and flexibility, thus setting a new standard for short-range wireless communication.
+    The CC1000 is a true ultra-low-power single-chip RF transceiver for e.g.
+the 315, 433, 868, 915 MHz bands. It has been specifically designed to
+comply with the most stringent demands of the low power radio market.
+Based on a pure CMOS technology this is the first product in the market
+that offers a unique combination of low cost and high integration,
+performance and flexibility, thus setting a new standard for short-range
+wireless communication.
 
     http://www.chipcon.com/index.cfm?kat_id=2&subkat_id=12&dok_id=14
 
 
-4. Volatile Flash Chips
+5. Volatile Flash Chips
 ====================================================================
 
