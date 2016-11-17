@@ -60,6 +60,12 @@
 
 typedef uint32_t __nesc_atomic_t;
 
+/*
+ * this is what "atomic" entry uses to disable interrupts
+ *
+ * FIXME.  evaluate the need for Barrier on entry/exit
+ * look at driverlib/cpu.h
+ */
 inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((always_inline)) {
   __nesc_atomic_t oldState = 0, newState = 1;
 
@@ -70,16 +76,18 @@ inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((alway
     : [new] "r"  (newState)  // input
     : "cc", "memory"         // clobber condition code flag and memory
                );
+  __ISB();
   return oldState;
 }
  
 inline void __nesc_atomic_end(__nesc_atomic_t oldState) @spontaneous() __attribute__((always_inline)) {
-  asm volatile("" : : : "memory"); // memory barrier      
+  asm volatile("" : : : "memory"); // memory barrier
   asm volatile(
     "msr primask, %[old]"
     :                      // no output
     : [old] "r" (oldState) // input
                );
+  __ISB();
 }
 
 // See definitive guide to Cortex-M3, p. 141, 142
