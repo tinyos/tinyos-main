@@ -235,9 +235,6 @@ typedef enum IRQn
 #include "cmsis/core_cm4.h"
 #endif
 
-/* System Header */
-#include "system_msp432p401r.h"
-
 /******************************************************************************
 * Definition of standard bits                                                 *
 ******************************************************************************/
