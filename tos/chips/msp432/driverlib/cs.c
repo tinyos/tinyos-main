@@ -715,7 +715,7 @@ void CS_setDCOFrequency(uint32_t dcoFrequency)
     {
         nomFreq = CS_6MHZ;
         CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_6);
-    } else if (dcoFrequency < 16000000)
+    } else if (dcoFrequency < 16000001)
     {
         nomFreq = CS_12MHZ;
         CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
