@@ -44,12 +44,12 @@ MEMORY
     SRAM_DATA  (RW) : ORIGIN = 0x20000000, LENGTH = 0x00010000
 }
 
-REGION_ALIAS("REGION_TEXT", MAIN_FLASH);
-REGION_ALIAS("REGION_INFO", INFO_FLASH);
-REGION_ALIAS("REGION_BSS", SRAM_DATA);
-REGION_ALIAS("REGION_DATA", SRAM_DATA);
-REGION_ALIAS("REGION_STACK", SRAM_DATA);
-REGION_ALIAS("REGION_HEAP", SRAM_DATA);
+REGION_ALIAS("REGION_TEXT",      MAIN_FLASH);
+REGION_ALIAS("REGION_INFO",      INFO_FLASH);
+REGION_ALIAS("REGION_BSS",       SRAM_DATA);
+REGION_ALIAS("REGION_DATA",      SRAM_DATA);
+REGION_ALIAS("REGION_STACK",     SRAM_DATA);
+REGION_ALIAS("REGION_HEAP",      SRAM_DATA);
 REGION_ALIAS("REGION_ARM_EXIDX", MAIN_FLASH);
 REGION_ALIAS("REGION_ARM_EXTAB", MAIN_FLASH);
 
@@ -61,6 +61,9 @@ SECTIONS {
 
     .intvecs (_intvecs_base_address) : AT (_intvecs_base_address) {
         KEEP (*(.intvecs))
+        __vectors_start__ = .;
+        KEEP (*(.vectors))
+        __vectors_end__ = .;
     } > REGION_TEXT
 
     /* The following three sections show the usage of the INFO flash memory  */
@@ -95,19 +98,22 @@ SECTIONS {
     } > REGION_DATA
 
     .text : {
+        . = ALIGN(0x4);
+/*        _stext = .; */
         CREATE_OBJECT_SYMBOLS
         KEEP (*(.text))
         *(.text.*)
-        . = ALIGN(0x4);
         KEEP (*(.ctors))
         . = ALIGN(0x4);
         KEEP (*(.dtors))
         . = ALIGN(0x4);
-        __init_array_start = .;
+/*        __init_array_start = .; */
         KEEP (*(.init_array*))
-        __init_array_end = .;
+/*        __init_array_end = .; */
         *(.init)
         *(.fini*)
+        . = ALIGN(0x4);
+/*        _etext = .; */
     } > REGION_TEXT AT> REGION_TEXT
 
     .rodata : {
@@ -128,7 +134,8 @@ SECTIONS {
     __etext = .;
 
     .data : {
-        __data_load__ = LOADADDR (.data);
+        . = ALIGN (4);
+        __data_load__  = LOADADDR (.data);
         __data_start__ = .;
         KEEP (*(.data))
         KEEP (*(.data*))
@@ -136,7 +143,8 @@ SECTIONS {
         __data_end__ = .;
     } > REGION_DATA AT> REGION_TEXT
 
-    .bss : {
+    .bss (NOLOAD): {
+        . = ALIGN (4);
         __bss_start__ = .;
         *(.shbss)
         KEEP (*(.bss))
@@ -147,20 +155,20 @@ SECTIONS {
     } > REGION_BSS AT> REGION_BSS
 
     .heap : {
-        __heap_start__ = .;
-        end = __heap_start__;
-        _end = end;
-        __end = end;
+/*        __heap_start__ = .; */
+/*        end = __heap_start__; */
+/*        _end = end; */
+/*        __end = end; */
         KEEP (*(.heap))
-        __heap_end__ = .;
-        __HeapLimit = __heap_end__;
+/*        __heap_end__ = .; */
+/*        __HeapLimit = __heap_end__; */
     } > REGION_HEAP AT> REGION_HEAP
 
-    .stack (NOLOAD) : ALIGN(0x8) {
-        _stack = .;
-        __stack = .;
+    __stack_start__ = .;
+
+    .stack (NOLOAD) : ALIGN(8) {
         KEEP(*(.stack))
     } > REGION_STACK AT> REGION_STACK
 	
-	__StackTop = ORIGIN(REGION_STACK) + LENGTH(REGION_STACK);
+    __StackTop__ = ORIGIN(REGION_STACK) + LENGTH(REGION_STACK);
 }
