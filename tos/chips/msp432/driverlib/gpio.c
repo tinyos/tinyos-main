@@ -39,7 +39,7 @@
 
 /* DriverLib Includes */
 #include <gpio.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 #include <hw_memmap.h>
 

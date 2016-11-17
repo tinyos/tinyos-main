@@ -39,7 +39,7 @@
 
 /* DriverLib Includes */
 #include <wdt_a.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 
 void WDT_A_holdTimer(void)

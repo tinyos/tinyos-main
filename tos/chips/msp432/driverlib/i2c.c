@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <i2c.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <hw_memmap.h>
 
 void I2C_initMaster(uint32_t moduleInstance, const eUSCI_I2C_MasterConfig *config)

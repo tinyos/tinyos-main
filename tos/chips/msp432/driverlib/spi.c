@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <spi.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <eusci.h>
 
 static bool is_A_Module(uint32_t module)

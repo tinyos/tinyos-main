@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include "crc32.h"
 #include <msp.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <hw_memmap.h>
 
 void CRC32_setSeed(uint32_t seed, uint_fast8_t crcType)

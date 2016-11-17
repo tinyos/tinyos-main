@@ -35,7 +35,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 #include <reset.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 void ResetCtl_initiateSoftReset(void)
 {

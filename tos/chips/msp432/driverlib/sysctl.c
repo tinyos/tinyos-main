@@ -40,7 +40,7 @@
 
 /* DriverLib Includes */
 #include <sysctl.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 #ifdef DEBUG
 

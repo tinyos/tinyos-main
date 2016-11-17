@@ -39,7 +39,7 @@
 
 /* DriverLib Includes */
 #include <pcm.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 #include <wdt_a.h>
 #include <rtc_c.h>

@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <comp_e.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 static uint16_t __getRegisterSettingForInput(uint32_t input)
 {

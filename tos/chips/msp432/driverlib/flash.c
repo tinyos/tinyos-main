@@ -39,7 +39,7 @@
 
 /* DriverLib Includes */
 #include <flash.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 #include <msp.h>
 #include <cpu.h>

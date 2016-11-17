@@ -40,7 +40,7 @@
 /* DriverLib Includes */
 #include <pss.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <cpu.h>
 
 static void __PSSUnlock()

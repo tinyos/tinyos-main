@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <aes256.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 bool AES256_setCipherKey(uint32_t moduleInstance, const uint8_t * cipherKey,
         uint_fast16_t keyLength)

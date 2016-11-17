@@ -39,7 +39,7 @@
 
 /* DriverLib Includes */
 #include <cs.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <sysctl.h>
 #include <interrupt.h>
 

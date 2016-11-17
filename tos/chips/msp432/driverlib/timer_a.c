@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <timer_a.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 static void privateTimer_AProcessClockSourceDivider(uint32_t timer,
         uint16_t clockSourceDivider)

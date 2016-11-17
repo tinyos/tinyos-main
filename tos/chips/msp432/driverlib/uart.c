@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <uart.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <eusci.h>
 
 bool UART_initModule(uint32_t moduleInstance, const eUSCI_UART_Config *config)

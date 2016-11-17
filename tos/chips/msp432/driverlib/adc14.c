@@ -40,7 +40,7 @@
 
 /* DriverLib Includes */
 #include <adc14.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 
 /* Statics */

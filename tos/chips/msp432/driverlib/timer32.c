@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <timer32.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 
 void Timer32_initModule(uint32_t timer, uint32_t preScaler, uint32_t resolution,
         uint32_t mode)

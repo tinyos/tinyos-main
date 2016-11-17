@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <stdint.h>
 
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <interrupt.h>
 #include <dma.h>
 

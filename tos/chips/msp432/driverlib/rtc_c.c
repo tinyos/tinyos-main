@@ -36,7 +36,7 @@
  * --/COPYRIGHT--*/
 #include <rtc_c.h>
 #include <interrupt.h>
-#include <debug.h>
+#include <msp432_dl_debug.h>
 #include <hw_memmap.h>
 
 void RTC_C_startClock(void)
