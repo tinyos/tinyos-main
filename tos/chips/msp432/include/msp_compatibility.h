@@ -159,7 +159,6 @@
 #define __disable_interrupt()           __asm volatile ("  cpsid i")
 #define __disable_interrupts()          __asm volatile ("  cpsid i")
 #define __no_operation()                __asm volatile ("  nop")
-#define nop()                           __asm volatile ("  nop")
 
 // Intrinsics without ARM equivalents
 #define __bcd_add_short(x,y)            { while(1); /* Using not-supported MSP430 intrinsic. No replacement available. */ }
