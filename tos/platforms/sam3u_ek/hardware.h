@@ -39,6 +39,9 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
+#define __NEED_BKPT__
+#define __NEED_NOP__
+
 #include "sam3uhardware.h"
 
 // #define this so we don't doubly define time_t with conflicting types

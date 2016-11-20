@@ -45,6 +45,28 @@
 #ifndef __CORTEXM_NESC_H__
 #define __CORTEXM_NESC_H__
 
+/*
+ * The Sam3 uses a Cortex-M3 nad the CMSIS installed for it is really old.
+ * Further the Sam3 has a real problem with an include nightmare.  It
+ * should be updated to CMSIS 4 or greater but is only worth it if
+ * someone will actively use it.  Otherwise not worth the effort.  In
+ * the meantime, the following cludge takes care of the immediate need.
+ *
+ * Only define __NEED_BKPT__ or __NEED_NOP__ if you really need to
+ * use them because you are using the old CMSIS 1 stuff.  Any new
+ * Cortex processors should be using modern CMSIS and won't need
+ * to define them.
+ *
+ * If this ever gets cleaned up, these should get removed.  Dependent on
+ * the old Sam3 code.
+ */
+#ifdef __NEED_BKPT__
+#define __BKPT(value) __asm volatile ("bkpt "#value)
+#endif
+#ifdef __NEED_NOP__
+#define __NOP()       __asm volatile ("nop")
+#endif
+
 // return aligned address, a, to lower multiple of n
 #define ALIGN_N(a, n)                                           \
 ({                                                              \

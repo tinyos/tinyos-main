@@ -796,8 +796,11 @@ extern uint32_t __STREXW(uint32_t value, uint32_t *addr);
 #elif (defined (__GNUC__)) /*------------------ GNU Compiler ---------------------*/
 /* GNU gcc specific functions */
 
-#define __BKPT(value)                       __ASM volatile ("bkpt "#value)
-static __INLINE void __NOP()                      { __ASM volatile ("nop"); }
+/* in include file hell with the Sam3.  Pull these out and put defines in
+ * hardware.h.  sucks but works.
+ */
+//#define __BKPT(value)                       __ASM volatile ("bkpt "#value)
+//static __INLINE void __NOP()                      { __ASM volatile ("nop"); }
 static __INLINE void __enable_irq()               { __ASM volatile ("cpsie i"); }
 static __INLINE void __disable_irq()              { __ASM volatile ("cpsid i"); }
 
