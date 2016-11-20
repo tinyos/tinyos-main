@@ -796,6 +796,7 @@ extern uint32_t __STREXW(uint32_t value, uint32_t *addr);
 #elif (defined (__GNUC__)) /*------------------ GNU Compiler ---------------------*/
 /* GNU gcc specific functions */
 
+#define __BKPT(value)                       __ASM volatile ("bkpt "#value)
 static __INLINE void __NOP()                      { __ASM volatile ("nop"); }
 static __INLINE void __enable_irq()               { __ASM volatile ("cpsie i"); }
 static __INLINE void __disable_irq()              { __ASM volatile ("cpsid i"); }
@@ -806,9 +807,9 @@ static __INLINE void __disable_fault_irq()        { __ASM volatile ("cpsid f"); 
 static __INLINE void __WFI()                      { __ASM volatile ("wfi");   }
 static __INLINE void __WFE()                      { __ASM volatile ("wfe");   }
 static __INLINE void __SEV()                      { __ASM volatile ("sev");   }
-static __INLINE void __ISB(void *arg)                   { __ASM volatile ("isb");   }
-static __INLINE void __DSB(void *arg)                   { __ASM volatile ("dsb");   }
-static __INLINE void __DMB(void *arg)                   { __ASM volatile ("dmb");   }
+static __INLINE void __ISB(void *arg)             { __ASM volatile ("isb");   }
+static __INLINE void __DSB(void *arg)             { __ASM volatile ("dsb");   }
+static __INLINE void __DMB(void *arg)             { __ASM volatile ("dmb");   }
 static __INLINE void __CLREX()                    { __ASM volatile ("clrex"); }
 
 
