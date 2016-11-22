@@ -370,6 +370,9 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_FPSCR(uint32_t fps
   \brief   No Operation
   \details No Operation does nothing. This instruction can be used for code alignment purposes.
  */
+
+#define __nop()         __NOP()
+
 __attribute__((always_inline)) __STATIC_INLINE void __NOP(void)
 {
   __ASM volatile ("nop");
@@ -515,6 +518,7 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __ROR(uint32_t op1, uint
                  If required, a debugger can use it to store additional information about the breakpoint.
  */
 #define __BKPT(value)                       __ASM volatile ("bkpt "#value)
+#define __bkpt(value)                       __ASM volatile ("bkpt "#value)
 
 
 /**
