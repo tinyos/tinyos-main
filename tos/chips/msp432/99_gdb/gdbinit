@@ -1,0 +1,45 @@
+
+set remoteaddresssize 32
+set remotetimeout 999999
+
+set mem inaccessible-by-default off
+
+target extended-remote :2331
+source ../../.gdb_msp432
+set disassemble-next-line on
+
+x/i $pc
+set pri ele 0
+
+define npc
+disassem/r $pc,+0d32
+end
+document npc
+display next (n) instructions from $pc
+end
+
+define new
+load
+mon reset
+end
+document new
+load new image, same executable
+then reset
+end
+
+define pc
+set $pc=$pc+$arg0
+end
+document pc
+adjust current PC by the passed in argument.
+ie. pc 2   yields new pc of pc=2
+end
+
+#b RealMainP.nc:75
+#b RealMainP.nc:82
+#b SchedulerBasicP.nc:151
+#b SchedulerBasicP.nc:148
+#b VirtualizeTimerC.nc:81
+#dis
+
+b main

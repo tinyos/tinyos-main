@@ -1,0 +1,493 @@
+#
+# Define various gdb user commands that let you look at pieces of the CPU.
+#
+# msp432p401r
+#
+# author: Eric B. Decker <cire831@gmail.com>
+#
+
+set $periph  = 0x40000000
+set $periph2 = 0xE0000000
+set $scs     = 0xE000E000
+
+# ARM
+set $itm     = (ITM_Type       *)($periph2+0x00000)
+set $dwt     = (DWT_Type       *)($periph2+0x01000)
+set $tpi     = (TPI_Type       *)($periph2+0x40000)
+set $scb     = (SCB_Type       *)($scs+0x0D00)
+  set $scb_icsr_isrpreempt = 0x00800000
+set $scnscb  = (SCnSCB_Type    *)($scs+0x0000)
+set $systick = (SysTick_Type   *)($scs+0x0010)
+set $nvic    = (NVIC_Type      *)($scs+0x0100)
+set $cd      = (CoreDebug_Type *)(0xE000EDF0)
+  set $cd_dhcsr_s_halt = 0x20000
+  set $cd_dhcsr_c_maskints = 8
+set $mpu     = (MPU_Type       *)($scs+0x0d90)
+set $fpu     = (FPU_Type       *)($scs+0x0f30)
+
+# RSTCTL (reset controller)
+set $rstctl=(RSTCTL_Type*)($periph2+0x42000)
+
+# SYSCTL (system controller)
+set $sysctl=(SYSCTL_Type*)($periph2+0x00043000)
+set $sysboot=(SYSCTL_Boot_Type *)(((uint32_t)$sysctl)+0x1000)
+
+# CS  (clock system)
+set $cs=(CS_Type*)($periph +0x10400)
+
+# PSS (power supply system)
+set $pss=(PSS_Type*)($periph +0x10800)
+
+# PCM (power control manager)
+set $pcm=(PCM_Type*)($periph +0x10000)
+
+# FLCTL (flash controller)
+set $flctl=(FLCTL_Type*)($periph+0x11000)
+
+# dma
+set $dmachn=(DMA_Channel_Type*)($periph +0x0000E000)
+set $dmactl=(DMA_Control_Type *) ((uint32_t)$dmachn+0x1000)
+
+# DIO (ports)
+set $diob=0x40004c00
+set $p1b=$diob+0x00
+set $p3b=$diob+0x20
+set $p5b=$diob+0x40
+set $p7b=$diob+0x60
+set $p9b=$diob+0x80
+set $pjb=$diob+0x120
+
+# PMAP
+mem 0x40005000 0x40005040 rw 16 nocache
+set $pmap=(PMAP_COMMON_Type*)($periph +0x00005000)
+set $p1map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0008))
+set $p2map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0010))
+set $p3map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0018))
+set $p4map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0020))
+set $p5map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0028))
+set $p6map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0030))
+set $p7map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0038))
+
+# CRC32
+set $crc32=(CRC32_Type*)($periph +0x00004000)
+
+# AES256
+set $aes256=(AES256_Type*)($periph +0x00003C00)
+
+# WDT
+set $wdt=(WDT_A_Type *) ($periph+0x4800)
+
+#
+# there are two Timer32 modules implemented
+# we don't like the name so call them TX and TY
+#
+set $tx=(Timer32_Type*)($periph +0x0000C000)
+set $ty=(Timer32_Type*)((uint32_t)$tx +0x20)
+
+# TA0-3
+set $ta0=(Timer_A_Type *)($periph +0x00000000)
+set $ta1=(Timer_A_Type *)((uint32_t)$ta0+0x400)
+set $ta2=(Timer_A_Type *)((uint32_t)$ta1+0x400)
+set $ta3=(Timer_A_Type *)((uint32_t)$ta2+0x400)
+
+# RTC
+set $rtc=(RTC_C_Type*)($periph +0x00004400)
+
+# REF
+set $ref=(REF_A_Type*)($periph +0x00003000)
+
+# ADC14
+set $adc14=(ADC14_Type*)($periph +0x00012000)
+
+# UCA0-3
+set $uca0=(EUSCI_A_Type*)($periph +0x00001000)
+set $uca1=(EUSCI_A_Type*)($periph +0x00001400)
+set $uca2=(EUSCI_A_Type*)($periph +0x00001800)
+set $uca3=(EUSCI_A_Type*)($periph +0x00001C00)
+
+# UCB0-3
+set $ucb0=(EUSCI_B_Type*)($periph +0x00002000)
+set $ucb1=(EUSCI_B_Type*)($periph +0x00002400)
+set $ucb2=(EUSCI_B_Type*)($periph +0x00002800)
+set $ucb3=(EUSCI_B_Type*)($periph +0x00002C00)
+
+# Flash Boot Override  (Boot-Override MailBox, bomb)
+set $bomb=((FL_BOOTOVER_MAILBOX_Type *) 0x00200000)
+
+# TI TLV
+set $tlv=((TLV_Type *) 0x00201000)
+
+
+# print helpers
+
+define __p_pribasefault
+if $primask
+  printf "i"
+else
+  printf "I"
+end
+if $faultmask
+  printf "f"
+else
+  printf "F"
+end
+printf " %d  ", $basepri
+end
+
+define __p_control
+printf "control: "
+if ($control & 4)
+  printf "fpa  "
+else
+  printf "---  "
+end
+if ($control & 2)
+  printf "psp  "
+else
+  printf "msp  "
+end
+if ($control & 1)
+  printf "up"
+else
+  printf "p "
+end
+end
+
+define __p_xpsr
+printf "   xPSR: "
+if ($xpsr & 0x80000000)
+  printf "N"
+else
+  printf "n"
+end
+if ($xpsr & 0x40000000)
+  printf "Z"
+else
+  printf "z"
+end
+if ($xpsr & 0x20000000)
+  printf "C"
+else
+  printf "c"
+end
+if ($xpsr & 0x10000000)
+  printf "V"
+else
+  printf "v"
+end
+if ($xpsr & 0x08000000)
+  printf "N"
+else
+  printf "n"
+end
+if ($xpsr & 0x1000000)
+  printf " T "
+else
+  printf " t "
+end
+printf " ge: %0x   ", ($xpsr >> 0d16) & 0xf
+
+# bit 9 of xPSR indicates extra double-word alignment (aapcs)
+if ($xpsr & 0x200)
+  printf "X  "
+else
+  printf "x  "
+end
+printf "exc: %d(d)", $xpsr & 0x1ff
+end
+
+#shcsr System Handler Control and State
+#                  pending                active
+#shcsr: (xxxxxxxx) p: svc bus mem usage   a: tick psvc mon svc usage bus mem
+define __p_shcsr
+printf "shcsr: (%08x) p: ", $scb->SHCSR
+if $scb->SHCSR & 0x8000
+  printf "svc"
+end
+if $scb->SHCSR & 0x4000
+  printf "bus"
+end
+if $scb->SHCSR & 0x2000
+  printf "mem"
+end
+if $scb->SHCSR & 0x1000
+  printf "usage"
+end
+printf "   a: "
+if $scb->SHCSR & 0x0800
+  printf "tick"
+end
+if $scb->SHCSR & 0x0400
+  printf "psvc"
+end
+if $scb->SHCSR & 0x0100
+  printf "mon"
+end
+if $scb->SHCSR & 0x0080
+  printf "svc"
+end
+if $scb->SHCSR & 0x0008
+  printf "usage"
+end
+if $scb->SHCSR & 0x0002
+  printf "bus"
+end
+if $scb->SHCSR & 0x0001
+  printf "mem"
+end
+printf "    syshandler\n"
+end
+
+define __p_hfsr_cfsr
+# (h/c)fsr: dbg forced vect ooo div unaligned nocp invpc invstate undef 
+# bfar:  V: xxxxxxxx    lsp stk unstk imprecise precise ibus
+# mmar:  V: xxxxxxxx    mlsp mstk munstk dacc iacc
+printf "(h/c)fsr: "
+if $scb->HFSR & 0x80000000
+  printf "dbg"
+end
+if $scb->HFSR & 0x40000000
+  printf "forced"
+end
+if $scb->HFSR & 0x00000002
+  printf "vect"
+end
+printf " ooo "
+if $scb->CFSR & 0x02000000
+  printf "div"
+end
+if $scb->CFSR & 0x01000000
+  printf "unaligned"
+end
+if $scb->CFSR & 0x00080000
+  printf "nocp"
+end
+if $scb->CFSR & 0x00040000
+  printf "invpc"
+end
+if $scb->CFSR & 0x00020000
+  printf "invstate"
+end
+if $scb->CFSR & 0x00010000
+  printf "undef"
+end
+printf "\nbfar:  %c: %08x    ", (($scb->CFSR & 0x8000) ? 'V' : 'v'), $scb->BFAR
+if $scb->CFSR & 0x2000
+  printf "lsp"
+end
+if $scb->CFSR & 0x1000
+  printf "stk"
+end
+if $scb->CFSR & 0x0800
+  printf "unstk"
+end
+if $scb->CFSR & 0x0400
+  printf "imprecise"
+end
+if $scb->CFSR & 0x0200
+  printf "precise"
+end
+if $scb->CFSR & 0x0100
+  printf "ibus"
+end
+printf "\nmmfar: %c: %08x    ", (($scb->CFSR & 0x80) ? 'V' : 'v'), $scb->MMFAR
+if $scb->CFSR & 0x20
+  printf "mlsb"
+end
+if $scb->CFSR & 0x10
+  printf "mstk"
+end
+if $scb->CFSR & 0x08
+  printf "munstk"
+end
+if $scb->CFSR & 0x02
+  printf "dacc"
+end
+if $scb->CFSR & 0x01
+  printf "iacc"
+end
+printf "\n"
+end
+
+define __p_nvic
+printf "nvic: enable:   %04x %04x   %04x %04x\n", \
+  ($nvic->ISER[0] >> 0d16) & 0xffff, ($nvic->ISER[0]) & 0xffff, \
+  ($nvic->ISER[1] >> 0d16) & 0xffff, ($nvic->ISER[1]) & 0xffff
+printf "      pending:  %04x %04x   %04x %04x\n", \
+  ($nvic->ISPR[0] >> 0d16) & 0xffff, ($nvic->ISPR[0]) & 0xffff, \
+  ($nvic->ISPR[1] >> 0d16) & 0xffff, ($nvic->ISPR[1]) & 0xffff
+printf "      active:   %04x %04x   %04x %04x\n", \
+  ($nvic->IABR[0] >> 0d16) & 0xffff, ($nvic->IABR[0]) & 0xffff, \
+  ($nvic->IABR[1] >> 0d16) & 0xffff, ($nvic->IABR[1]) & 0xffff
+end
+
+define exceptions
+printf "exception state\n"
+__p_pribasefault
+__p_control
+__p_xpsr
+printf "\n"
+__p_shcsr
+__p_hfsr_cfsr
+#                        pending    active 
+#icsr: (0042b82a) (irqn.. P: vect  R  vect)
+printf "icsr:  (%08x) (irqn.. %c: %d(d)  %c  %d(d) )\n", \
+    $scb->ICSR, (($scb->ICSR >> 0d22) & 1) ? 'P' : 'p', \
+    ($scb->ICSR >> 0d12) & 0x3f, \
+    (($scb->ICSR >> 0d11) & 1) ? 'R' : 'r', $scb->ICSR & 0x1ff
+__p_nvic
+end
+document exceptions
+dump exception state
+end
+
+define __p_port
+set $_base=$arg0
+set $_type=$arg1
+set $_pnum=$arg2
+
+# type 0 even
+#      1 odd
+#      2 PortJ
+#
+# Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv
+# P10  in   out  dir  ren  ds    s10  ies  ie  ifg  iv
+#      1    3    5    7    9    d+b   19   1b  1d   1e(16)  even (high) (type 0)
+#      0    2    4    6    8    c+a   18   1a  1c   e(16)   odd  (low)  (type 1)
+#      0    2    4    6    8    c+a   --   --  --   --      J           (type 2)
+#
+if $_type == 2
+  printf "PJ   %02x   %02x   %02x   %02x   %02x  %02x/%02x\n",  \
+    (*(uint8_t *)($_base+0x00)), (*(uint8_t *)($_base+0x02)), \
+    (*(uint8_t *)($_base+0x04)), (*(uint8_t *)($_base+0x06)), \
+    (*(uint8_t *)($_base+0x08)), (*(uint8_t *)($_base+0x0c)), \
+    (*(uint8_t *)($_base+0x0a))
+end
+if $_type == 1
+  printf "P%-2d  %02x   %02x   %02x   %02x   %02x  %02x/%02x  %02x   %02x  %02x   %02x\n", $_pnum, \
+    (*(uint8_t *)($_base+0x00)), (*(uint8_t *)($_base+0x02)), \
+    (*(uint8_t *)($_base+0x04)), (*(uint8_t *)($_base+0x06)), \
+    (*(uint8_t *)($_base+0x08)), (*(uint8_t *)($_base+0x0c)), \
+    (*(uint8_t *)($_base+0x0a)), (*(uint8_t *)($_base+0x18)), \
+    (*(uint8_t *)($_base+0x1a)), (*(uint8_t *)($_base+0x1c)), \
+    (*(uint8_t *)($_base+0x0e))
+end
+if $_type == 0
+  printf "P%-2d  %02x   %02x   %02x   %02x   %02x  %02x/%02x  %02x   %02x  %02x   %02x\n", $_pnum, \
+    (*(uint8_t *)($_base+0x01)), (*(uint8_t *)($_base+0x03)), \
+    (*(uint8_t *)($_base+0x05)), (*(uint8_t *)($_base+0x07)), \
+    (*(uint8_t *)($_base+0x09)), (*(uint8_t *)($_base+0x0d)), \
+    (*(uint8_t *)($_base+0x0b)), (*(uint8_t *)($_base+0x19)), \
+    (*(uint8_t *)($_base+0x1b)), (*(uint8_t *)($_base+0x1d)), \
+    (*(uint8_t *)($_base+0x1e))
+end
+end
+
+define p1
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p1b 1 1
+end
+document p1
+port 1 - dump
+end
+
+define p2
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p1b 0 2
+end
+document p2
+port 2 - dump
+end
+
+define p3
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p3b 1 3
+end
+document p3
+port 3 - dump
+end
+
+define p4
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p3b 0 4
+end
+document p4
+port 4 - dump
+end
+
+define p5
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p5b 1 5
+end
+document p5
+port 5 - dump
+end
+
+define p6
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p5b 0 6
+end
+document p6
+port 6 - dump
+end
+
+define p7
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p7b 1 7
+end
+document p7
+port 7 - dump
+end
+
+define p8
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p7b 0 8
+end
+document p8
+port 8 - dump
+end
+
+define p9
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p9b 1 9
+end
+document p9
+port 9 - dump
+end
+
+define p10
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p9b 0 10
+end
+document p10
+port 10 - dump
+end
+
+define pj
+printf "Name in   out  dir  ren  ds    sel\n"
+__p_port $pjb 2 0
+end
+document pj
+port j - dump
+end
+
+define ports
+printf "Name in   out  dir  ren  ds    sel  ies  ie  ifg  iv\n"
+__p_port $p1b 1 1
+__p_port $p1b 0 2
+__p_port $p3b 1 3
+__p_port $p3b 0 4
+__p_port $p5b 1 5
+__p_port $p5b 0 6
+__p_port $p7b 1 7
+__p_port $p7b 0 8
+__p_port $p9b 1 9
+__p_port $p9b 0 0d10
+end
+document ports
+display h/w ports
+end
+
+define preempt
+set $scb->ICSR=$scb_icsr_isrpreempt
+end
