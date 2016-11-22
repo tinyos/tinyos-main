@@ -1,0 +1,65 @@
+#-*-Makefile-*- vim:syntax=make
+
+# BSL arguments:
+#
+#   bsl,<port>
+#     install onto the given port name
+#
+#   bsl,auto
+#     uses motelist to install onto the first listed mote
+#
+#   bsl,ref,<reference>
+#      uses motelist to install onto the mote with the given reference number
+
+TOSMAKE_PROGRAMMER_TYPE = bsl
+
+MSP432_BSL ?= tos-bsl
+# BSL is the comm port, can be specified as "bsl,2" when making
+BSL ?= auto
+MSP432_BSL_FLAGS ?= --telos
+MOTELIST ?= motelist
+
+ifeq ($(BSL),auto)
+  BSLTEST := $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
+  BSLTEST_COMMENT = "using bsl,auto"
+  BSL = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
+else
+  ifeq ($(BSL:ref,%=ref),ref)
+    BSLREF := $(BSL:ref,%=%)
+    BSLTEST_COMMENT = "using bsl,ref,$(BSLREF)"
+    BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
+    BSL = $(BSLTEST)
+  else
+    BSLTEST_COMMENT = "using bsl,$(BSL)"
+    BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^([^,]+),$$r,([^,]+)/) { print $$r; exit; } }' $(BSL))
+  endif
+endif
+
+# bsltest is a separate rule so that make doesn't resolve BSL along with
+# BSLTEST, which saves an invocation of motelist.  It also avoids the test
+# all together if bsl,auto was not specified (whew).
+bsltest: FORCE
+ifeq ($(BSLTEST),)
+	@echo -e '$(ERROR_STRING) found no motes ($(BSLTEST_COMMENT))'
+	@exit 1
+else
+	@echo -e '$(INFO_STRING) found mote on $(BSLTEST) ($(BSLTEST_COMMENT))'
+endif
+
+program: setid bsltest FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using bsl'
+	$(MSP432_BSL) $(MSP432_BSL_FLAGS) -c $(BSL) -r -e -I -p $(INSTALL_IHEX)
+	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX)
+
+# Install the bootloader first, and then install the application without erasing
+# the bootloader.
+program_with_bl: program_no_e
+
+program_no_e: program_bl FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) binary using bsl (without mass erase)'
+	$(MSP432_BSL) $(MSP432_BSL_FLAGS) -c $(BSL) -r -I -p $(INSTALL_IHEX)
+	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX)
+
+program_bl: setid bsltest check_tosboot FORCE
+	@echo -e '$(INFO_STRING) installing $(TARGET) bootloader using bsl'
+	$(MSP432_BSL) $(MSP432_BSL_FLAGS) -c $(BSL) -r -e -I -p $(BOOTLOADER_IMG)

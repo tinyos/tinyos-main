@@ -1,0 +1,25 @@
+#-*-Makefile-*- vim:syntax=make
+#
+# The exp_msp432 platform is based on the TI MSP-EXP432P401R
+# evaluation board.
+#
+
+TARGET = exp_msp432
+PLATFORM_DIR = $(TINYOS_ROOT_DIR)/tos/platforms/$(TARGET)
+
+BUILD_NUM_FILE = $(PLATFORM_DIR)/_Build
+BUILD_NUM := $(shell if [ -f $(BUILD_NUM_FILE) ]; then echo $$(($$(cat $(BUILD_NUM_FILE)) + 1)); else echo 0; fi)
+
+PFLAGS += -D_BUILD=$(BUILD_NUM)
+
+include $(PLATFORM_DIR)/Makefile.platform
+$(call TOSMake_include_platform,exp_msp432)
+$(call TOSMake_include_make_platform,msp432)
+
+build_num: FORCE
+	@if [ ! -f $(BUILD_NUM_FILE) ] ; then echo -1 > $(BUILD_NUM_FILE); fi
+	@echo $$(($$(cat $(BUILD_NUM_FILE)) + 1)) > $(BUILD_NUM_FILE)
+	@echo BUILD: $(BUILD_NUM)
+
+exp_msp432: build_num $(BUILD_DEPS)
+        @:

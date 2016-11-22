@@ -1,0 +1,7 @@
+# The id.extra will simply output the binary with altered node id's and
+# will not install the application to the node. You can install it manually.
+#   Usage:  make telosb id.3
+#                 ==> Outputs main.ihex.out-3
+
+NODEID ?= $(ID)
+BUILD_DEPS = setid
