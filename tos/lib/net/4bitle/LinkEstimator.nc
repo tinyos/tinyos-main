@@ -54,7 +54,7 @@ interface LinkEstimator {
   /* pin a neighbor so that it does not get evicted */
   command error_t pinNeighbor(am_addr_t neighbor);
 
-  /* pin a neighbor so that it does not get evicted */
+  /* unpin a neighbor so that it could get evicted */
   command error_t unpinNeighbor(am_addr_t neighbor);
 
   /* called when an acknowledgement is received; sign of a successful
