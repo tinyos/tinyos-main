@@ -59,9 +59,6 @@
 #warning Expected Processor __MSP432P401R__, not found
 #endif
 
-#define PLATFORM_HANDLERS_OWN_FUNCTION
-
-
 /*
  * Hardware Notes:
  *
