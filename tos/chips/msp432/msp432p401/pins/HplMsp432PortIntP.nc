@@ -81,19 +81,19 @@ implementation {
     (uint32_t) P6,
   };
 
-  void port_handler(uint8_t portmod, uint8_t n) {
+  void port_handler(uint8_t port_id, uint8_t n) {
     // call McuSleep.irq_preamble();
     switch(n) {
       default:
       case 0:   { break; }
-      case 2:   { signal Int.fired[0+portmod](); break; }
-      case 4:   { signal Int.fired[1+portmod](); break; }
-      case 6:   { signal Int.fired[2+portmod](); break; }
-      case 8:   { signal Int.fired[3+portmod](); break; }
-      case 10:  { signal Int.fired[4+portmod](); break; }
-      case 12:  { signal Int.fired[5+portmod](); break; }
-      case 14:  { signal Int.fired[6+portmod](); break; }
-      case 16:  { signal Int.fired[7+portmod](); break; }
+      case 2:   { signal Int.fired[0+port_id](); break; }
+      case 4:   { signal Int.fired[1+port_id](); break; }
+      case 6:   { signal Int.fired[2+port_id](); break; }
+      case 8:   { signal Int.fired[3+port_id](); break; }
+      case 10:  { signal Int.fired[4+port_id](); break; }
+      case 12:  { signal Int.fired[5+port_id](); break; }
+      case 14:  { signal Int.fired[6+port_id](); break; }
+      case 16:  { signal Int.fired[7+port_id](); break; }
     }
     // call McuSleep.irq_postamble();
   }
