@@ -1,0 +1,35 @@
+
+o Timers
+
+  - eval Tmilli being based on 32KiHz - Can we go decimal ticks?
+    or do we need to be 1024?
+
+  - Sync between DCO an T32K.
+
+  - Sync between RTC
+
+o RTC
+
+  - RTC calibration
+
+o Capture
+
+o Flash
+
+  - power of flash in sleep
+
+
+o MCUSleep
+
+  - power off/on state machine
+  - sleep from RAM?
+  - power off flash (see above)
+
+
+o Clock sync
+
+  - DCOCLK & RTC.J32/Tmicro sync on reboot/startup
+
+
+o what is the Wake on Interrupt Controller?
+
