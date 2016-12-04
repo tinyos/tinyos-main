@@ -8,11 +8,11 @@ o Timers
 
   - Sync between RTC
 
+o Capture
+
 o RTC
 
   - RTC calibration
-
-o Capture
 
 o Flash
 
@@ -33,3 +33,11 @@ o Clock sync
 
 o what is the Wake on Interrupt Controller?
 
+o Verify clocks on exp-msp432p401r
+  - 32KiHz - ACLK
+  - 16MHz  - DCOCLK
+  - RTCCLK - RTC Calibration
+
+o ADC - clock rate?
+  - clocked by HSMCLK, eh?
+  - table 5-27, upto 25MHz
