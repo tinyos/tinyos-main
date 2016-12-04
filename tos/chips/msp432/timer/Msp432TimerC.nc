@@ -183,7 +183,7 @@ configuration Msp432TimerC {
   }
 }
 implementation {
-  components Msp432TimerIntP as TimerInts;
+  components HplMsp432TimerIntP as TimerInts;
 
   components new Msp432TimerP((uint32_t) TIMER_A0, 
                               PLATFORM_TA0_ASYNC) as TA0;

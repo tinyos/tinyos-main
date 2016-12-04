@@ -79,8 +79,8 @@ generic module Msp432TimerP(uint32_t timer_ptr, bool isAsync) {
   }
   uses {
     interface Msp432TimerEvent as Overflow;
-    interface Msp432TimerInt   as TimerVec_0;
-    interface Msp432TimerInt   as TimerVec_N;
+    interface HplMsp432TimerInt   as TimerVec_0;
+    interface HplMsp432TimerInt   as TimerVec_N;
   }
 }
 implementation {

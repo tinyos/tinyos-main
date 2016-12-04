@@ -64,10 +64,10 @@
 
 #include <hardware.h>
 
-module Msp432TimerIntP {
+module HplMsp432TimerIntP {
   provides {
-    interface Msp432TimerInt as TimerAInt_0[uint8_t instance];
-    interface Msp432TimerInt as TimerAInt_N[uint8_t instance];
+    interface HplMsp432TimerInt as TimerAInt_0[uint8_t instance];
+    interface HplMsp432TimerInt as TimerAInt_N[uint8_t instance];
   }
 }
 implementation {

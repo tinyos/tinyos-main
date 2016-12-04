@@ -33,7 +33,7 @@
  * @author Eric B. Decker
  */
 
-interface Msp432TimerInt {
+interface HplMsp432TimerInt {
   /* 
    * signal interrupt fired, v is which vector popped
    * v is IV >> 1 to account for TI's representation
