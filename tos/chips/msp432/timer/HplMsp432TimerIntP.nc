@@ -73,44 +73,44 @@ module HplMsp432TimerIntP {
 implementation {
   void TA0_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A0->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
-    signal TimerAInt_0.fired[0](0);
+    signal TimerAInt_0.interrupt[0](0);
   }
 
   void TA0_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A0->IV) >> 1;
-    signal TimerAInt_N.fired[0](v);
+    signal TimerAInt_N.interrupt[0](v);
   }
 
   void TA1_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A1->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
-    signal TimerAInt_0.fired[1](0);
+    signal TimerAInt_0.interrupt[1](0);
   }
 
   void TA1_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A1->IV) >> 1;
-    signal TimerAInt_N.fired[1](v);
+    signal TimerAInt_N.interrupt[1](v);
   }
 
   void TA2_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A2->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
-    signal TimerAInt_0.fired[2](0);
+    signal TimerAInt_0.interrupt[2](0);
   }
 
   void TA2_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A2->IV) >> 1;
-    signal TimerAInt_N.fired[2](v);
+    signal TimerAInt_N.interrupt[2](v);
   }
 
   void TA3_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A3->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
-    signal TimerAInt_0.fired[3](0);
+    signal TimerAInt_0.interrupt[3](0);
   }
 
   void TA3_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A3->IV) >> 1;
-    signal TimerAInt_N.fired[3](v);
+    signal TimerAInt_N.interrupt[3](v);
   }
 
-  default async event void TimerAInt_0.fired[uint8_t instance](uint8_t v) {__bkpt(1);}
-  default async event void TimerAInt_N.fired[uint8_t instance](uint8_t v) {__bkpt(1);}
+  default async event void TimerAInt_0.interrupt[uint8_t instance](uint8_t v) {__bkpt(1);}
+  default async event void TimerAInt_N.interrupt[uint8_t instance](uint8_t v) {__bkpt(1);}
 }

@@ -35,8 +35,9 @@
 
 interface HplMsp432TimerInt {
   /* 
-   * signal interrupt fired, v is which vector popped
-   * v is IV >> 1 to account for TI's representation
+   * signal interrupt:
+   *   v is which vector popped (IV >> 1, to account for TI's
+   *   representation
    */
-  async event void fired(uint8_t v);
+  async event void interrupt(uint8_t v);
 }

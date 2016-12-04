@@ -178,7 +178,7 @@ implementation {
    * TimerVec_0 handles TAx->CCTL0.CCIFG (CCR0) interrupts.  It needs to be
    * wired to the handler TAx_0_Handler.
    */
-  async event void TimerVec_0.fired(uint8_t v) {
+  async event void TimerVec_0.interrupt(uint8_t v) {
     signal Event.fired[0]();
   }
 
@@ -192,7 +192,7 @@ implementation {
    * clearing the associated IFG.  That is handled by the 1st stage interrupt
    * handler.
    */
-  async event void TimerVec_N.fired(uint8_t v) {
+  async event void TimerVec_N.interrupt(uint8_t v) {
     signal Event.fired[v]();
   }
 
