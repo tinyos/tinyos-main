@@ -35,7 +35,16 @@
 /*
  * Platform: low level platform interface.
  *
- * Write up purpose and the minimal set.
+ * The Platform interface is intended to present certain core h/w resources
+ * in an easy to use fashion.
+ *
+ * Examples include:
+ *
+ *   o a low level us ticker that can be used for timeouts and instrumentation
+ *     BusyWait doesn't work because you typically want to check for some
+ *     terminating condition in the timing loop.
+ *   o a low level jiffy ticker that is tied to an underlying long term
+ *     ticker.  Typically this is a 32KiHz crystal based low power ticker.
  */
 
 interface Platform {
@@ -44,8 +53,12 @@ interface Platform {
    * usecsRaw returns a raw value for this timing element.
    * This is used in low level time outs that are time based.
    *
-   * Underlying h/w could be smaller than 32 bits.  "Size" returns
-   * number of bits implemented if you care.
+   * Underlying h/w could be smaller than 32 bits.  Typically
+   * if the recepient is smaller the return value will be truncated
+   * to the size of the recepient, which is typically what you
+   * want.
+   *
+   * "Size" returns number of bits implemented if you care.
    */
   async command uint32_t usecsRaw();
   async command uint32_t usecsRawSize();
