@@ -1,6 +1,5 @@
-// $Id: SpiPacket.nc,v 1.8 2010-06-29 22:07:46 scipio Exp $
-
 /*                                                                      
+ * Copyright (c) 2016 Eric B. Decker
  * Copyright (c) 2000-2005 The Regents of the University  of California.
  * All rights reserved.
  *
@@ -35,11 +34,18 @@
 /**
  * SPI Packet/buffer interface for sending data over an SPI bus.  This
  * interface provides a split-phase send command which can be used for
- * sending, receiving or both. It is a "send" command because reading
- * from the SPI requires writing bytes. The send call allows NULL
+ * sending, receiving or both.
+ *
+ * The SPI bus both sends and receives at the same time.  So this interface
+ * can be used to send, receive, or both.  The send call allows NULL
  * parameters for receive or send only operations. This interface is
  * for buffer based transfers where the microcontroller is the master
  * (clocking) device.
+ *
+ * This is split phase and typically is implemented using interrupts.  However
+ * as the SPI clock is increased the interrupt overhead become more onerous
+ * wrt each byte time being transfered.  See SpiBLock for a single phase
+ * transfer mechanism that doesn't have interrupt overhead issues.
  *
  * Often, an SPI bus must first be acquired using a Resource interface
  * before sending commands with SPIPacket. In the case of multiple
@@ -49,7 +55,7 @@
  * @author Philip Levis
  * @author Jonathan Hui
  * @author Joe Polastre
- * Revision:  $Revision: 1.8 $
+ * @author Eric B. Decker
  */
 interface SpiPacket {
 
