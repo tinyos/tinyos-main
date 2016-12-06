@@ -1,0 +1,48 @@
+Spi Interfaces.
+
+There are three supplied interfaces to underlying SPI hardware:
+
+SpiByte: Single byte tx/rx interface.
+
+SpiBlock: tx buffer is sent, rx buffer received, single phase,
+  Intended to be a more efficient version of SpiPacket.
+
+SpiPacket: tx buffer sent, rx buffer received.  Split phase.
+  Intended for interrupt driven or DMA driven transfers.
+
+Which approach is appropriate depends on a number of factors, including
+SPI clock speed, transfer size, additional system activity, and desired
+behaviour.   Having the three different interface mechanisms allows tayloring
+the system behaviour depending on various tradeoffs.
+
+The SPI bus is a bi-directional, simultaneous tx/rx, synchonously clocked
+bus.   As tranmitted bits are clocked out, received bits are clocked in
+so simultaneous tx/rx occurs.
+
+Interfacing to the spi h/w can be done directly, using interrupts, or DMA.
+Direct uses busy waits and accesses the h/w directly to achieve data transfer.
+The busy waiting can be expensive but if the SPI clock speed is high
+the waiting will be minimum and will avoid the overhead of other mechanisms.
+SpiByte (single) and SpiBlock (multiple) implement busy wait mechanisms.
+Both SpiByte and SpiBlock are single phase and provide very simple access
+mechanisms.
+
+SpiPacket is split phase and can be used for the interface to an interrupt
+based or DMA based implementaion.
+
+
+Basically, the slower the SPI is clocked the more interrupt vs. direct
+makes sense.   The converse is also true, the faster the clock the more
+direct access makes sense.
+
+For large data transfer sizes, DMA starts making more sense.  This is
+especially true when low power operation requires sleeping the CPU
+as much as possible.
+
+
+Consider an arbitrated, interrupt driven, SpiPacket, being clocked at 4MHz.
+Each byte transfered will take 2uS and one interrupt will be generated for
+each of the transmitted bytes and received bytes.  2 interrupts/2uS.  This
+presents a very high interrupt processing load.   Whereas direct access
+sees the byte available and processes it directly with out any of the
+interrupt overhead.
