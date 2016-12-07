@@ -49,7 +49,7 @@
  * @date   January 19 2005
  */
 
-#include "hardware.h"
+#include <hardware.h>
 
 module SchedulerBasicP @safe() {
   provides interface Scheduler;

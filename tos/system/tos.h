@@ -45,6 +45,10 @@ struct @exactlyonce { };
 #define platform_bootstrap() {}
 #endif
 
+#define UQ_PANIC_SUBSYS "Panic.Subsys"
+
+#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
+
 #ifndef TOSSIM
 #define dbg(s, ...) 
 #define dbgerror(s, ...) 
