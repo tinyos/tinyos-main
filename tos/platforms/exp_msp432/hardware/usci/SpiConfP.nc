@@ -30,36 +30,53 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
+ *
  * @author Eric B. Decker <cire831@gmail.com>
  */
 
-#include "hardware.h"
+#include <msp432usci.h>
 
-configuration PlatformC {
+module SpiConfP {
   provides {
-    interface Init as PlatformInit;
-    interface Platform;
+    interface Msp432UsciConfigure as MasterConf;
+    interface Msp432UsciConfigure as SlaveConf;
   }
-  uses interface Init as PeripheralInit;
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
 
-  PlatformP.Stack -> StackC;
+  /*
+   * PH, data captured on first UCLK edge, changed on falling
+   * pl, inactive low
+   * uclk <- smclk/2 (4Mhz), master, 8 bit, 3 wire spi (mode 0),
+   */
+  const msp432_usci_config_t master_config = {
+    ctlw0 : (EUSCI_B_CTLW0_CKPH        | EUSCI_B_CTLW0_MSB  |
+             EUSCI_B_CTLW0_MST         | EUSCI_B_CTLW0_SYNC |
+             EUSCI_B_CTLW0_SSEL__SMCLK),
+    brw   : 2,                  /* 8MHz/2 -> 4 MHz */
+    mctlw : 0,                  /* Always 0 in SPI mode */
+    i2coa : 0
+  };
 
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
+  /*
+   * PH, data captured on first UCLK edge, changed on falling
+   * pl, inactive low, SSEL doesn't matter (leave 0, reserved)
+   * slave, 8 bit, 3 wire spi (mode 0).
+   */
+  const msp432_usci_config_t slave_config = {
+    ctlw0 : (EUSCI_B_CTLW0_CKPH        | EUSCI_B_CTLW0_MSB  |
+             EUSCI_B_CTLW0_SYNC),
+    brw   : 2,
+    mctlw : 0,
+    i2coa : 0
+  };
 
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
+  async command const msp432_usci_config_t *MasterConf.getConfiguration() {
+    return &master_config;
+  }
 
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  async command const msp432_usci_config_t *SlaveConf.getConfiguration() {
+    return &slave_config;
+  }
+
 }

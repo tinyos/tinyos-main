@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * DO NOT MODIFY: This file cloned from HplMsp432UsciIntA0P.nc for B1
+*/
+/*
+ * Copyright (c) 2016, Eric B. Decker
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +17,7 @@
  *   documentation and/or other materials provided with the
  *   distribution.
  *
- * - Neither the name of the copyright holders nor the names of
+ * - Neither the name of the copyright holder nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -30,36 +33,17 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Eric B. Decker <cire831@gmail.com>
  */
 
-/**
- * @author Eric B. Decker <cire831@gmail.com>
- */
+#include <hardware.h>
 
-#include "hardware.h"
-
-configuration PlatformC {
-  provides {
-    interface Init as PlatformInit;
-    interface Platform;
-  }
-  uses interface Init as PeripheralInit;
+module HplMsp432UsciIntB1P {
+  provides interface HplMsp432UsciInt as UsciInt;
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  void EUSCIB1_Handler() @C() @spontaneous() __attribute__((interrupt)) {
+    signal UsciInt.interrupted(EUSCI_B1->IV);
+  }
 }

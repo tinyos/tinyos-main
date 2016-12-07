@@ -32,34 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
+#include "msp432usci.h"
+
+/*
+ *
+ * Connect the appropriate pins for USCI support on a msp432
+ *
  * @author Eric B. Decker <cire831@gmail.com>
  */
 
-#include "hardware.h"
+configuration PlatformUsciMapC {
+} implementation {
+  components HplMsp432GpioC as GIO;
+  components PanicC, PlatformC;
 
-configuration PlatformC {
-  provides {
-    interface Init as PlatformInit;
-    interface Platform;
-  }
-  uses interface Init as PeripheralInit;
-}
+#ifdef notdef
+  components Msp432UsciUartA0P as UartA0C;
+  UartA0C.URXD    -> GIO.UCA0RXD;
+  UartA0C.UTXD    -> GIO.UCA0TXD;
+#endif
 
-implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
+  /* master */
+  components Msp432UsciSpiB0C as Master;
+  components SpiConfP as Conf;
+  Master.SIMO                  -> GIO.UCB0SIMO;
+  Master.SOMI                  -> GIO.UCB0SOMI;
+  Master.CLK                   -> GIO.UCB0CLK;
+  Master.Panic                 -> PanicC;
+  Master.Platform              -> PlatformC;
+  PlatformC.PeripheralInit     -> Master;
+  Master                       -> Conf.MasterConf;
 
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  /* slave */
+  components Msp432UsciSpiB2C as Slave;
+  Slave.SIMO                   -> GIO.UCB2SIMOxPM;
+  Slave.SOMI                   -> GIO.UCB2SOMIxPM;
+  Slave.CLK                    -> GIO.UCB2CLKxPM;
+  Slave.Panic                  -> PanicC;
+  Slave.Platform               -> PlatformC;
+  PlatformC.PeripheralInit     -> Slave;
+  Slave                        -> Conf.SlaveConf;
 }

@@ -1,6 +1,13 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * DO NOT MODIFY: This file cloned from Msp432UsciSpiB0C.nc for B3
+*/
+/*
+ * Copyright (c) 2011-2013, 2016 Eric B. Decker
+ * Copyright (c) 2011 Joao Goncalves
+ * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
+ *
+ * This open source code was developed with funding from People Power Company
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,34 +39,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "msp432usci.h"
+
 /**
- * @author Eric B. Decker <cire831@gmail.com>
+ * Generic configuration for a dedicated USCI_B3 in SPI mode.
  */
 
-#include "hardware.h"
-
-configuration PlatformC {
+configuration Msp432UsciSpiB3C {
   provides {
-    interface Init as PlatformInit;
-    interface Platform;
+    interface Init;
+    interface SpiPacket;
+    interface SpiBlock;
+    interface SpiByte;
+    interface FastSpiByte;
+    interface Msp432UsciError;
   }
-  uses interface Init as PeripheralInit;
+  uses {
+    interface Msp432UsciConfigure;
+    interface Panic;
+    interface Platform;
+    interface HplMsp432Gpio as SIMO;
+    interface HplMsp432Gpio as SOMI;
+    interface HplMsp432Gpio as CLK;
+  }
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  components Msp432UsciSpiB3P as SpiP;
+  Init                = SpiP.Init;
+  SpiPacket           = SpiP.SpiPacket;
+  SpiBlock            = SpiP.SpiBlock;
+  SpiByte             = SpiP.SpiByte;
+  FastSpiByte         = SpiP.FastSpiByte;
+  Msp432UsciError     = SpiP.Msp432UsciError;
+  Msp432UsciConfigure = SpiP.Msp432UsciConfigure;
+  Panic               = SpiP;
+  Platform            = SpiP;
+  SIMO                = SpiP.SIMO;
+  SOMI                = SpiP.SOMI;
+  CLK                 = SpiP.CLK;
 }

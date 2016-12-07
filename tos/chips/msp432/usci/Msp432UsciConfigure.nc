@@ -1,6 +1,9 @@
 /*
  * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
+ *
+ * This open source code was developed with funding from People Power Company
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,33 +36,15 @@
  */
 
 /**
- * @author Eric B. Decker <cire831@gmail.com>
+ * Obtain access to a client-specific USCI configuration.
  */
 
-#include "hardware.h"
+#include "msp432usci.h"
 
-configuration PlatformC {
-  provides {
-    interface Init as PlatformInit;
-    interface Platform;
-  }
-  uses interface Init as PeripheralInit;
-}
-
-implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+interface Msp432UsciConfigure {
+  /**
+   * Return a pointer to the configuration that should be used to
+   * initialize a particular USCI block.
+   */
+  async command const msp432_usci_config_t* getConfiguration ();
 }

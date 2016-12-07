@@ -1,6 +1,11 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2012,2016 Eric B. Decker
+ * Copyright (c) 2011 John Hopkins University
+ * Copyright (c) 2011 Redslate Ltd.
+ * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
+ *
+ * This open source code was developed with funding from People Power Company
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,34 +37,38 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "msp432usci.h"
+
 /**
+ * Configuration Non-shared.
+ *
+ * @author Peter Bigot    <pabigot@peoplepowerco.com>
+ * @author Doug Carlson   <carlson@cs.jhu.edu>
+ * @author Derek Baker    <derek@red-slate.com>
  * @author Eric B. Decker <cire831@gmail.com>
+ * port to msp432, no arbitration
  */
 
-#include "hardware.h"
-
-configuration PlatformC {
+configuration Msp432UsciI2CB0C {
   provides {
-    interface Init as PlatformInit;
+    interface I2CPacket<TI2CBasicAddr>;
+    interface I2CReg;
+    interface I2CSlave;
+    interface Msp432UsciError;
+  }
+  uses {
+    interface Msp432UsciConfigure;
+    interface Panic;
     interface Platform;
   }
-  uses interface Init as PeripheralInit;
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  components Msp432UsciI2CB0P as I2CP;
+  I2CPacket             = I2CP.I2CPacket;
+  I2CReg                = I2CP.I2CReg;
+  I2CSlave              = I2CP.I2CSlave;
+  Msp432UsciConfigure   = I2CP.Msp432UsciConfigure;
+  Msp432UsciError       = I2CP.Msp432UsciError;
+  Panic                 = I2CP;
+  Platform              = I2CP;
 }

@@ -1,6 +1,9 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2012 Eric B. Decker
+ * Copyright (c) 2010 People Power Co.
  * All rights reserved.
+ *
+ * This open source code was developed with funding from People Power Company
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,33 +36,17 @@
  */
 
 /**
- * @author Eric B. Decker <cire831@gmail.com>
+ * Support notification of errors detected in MSP432 USCI modules.
  */
 
-#include "hardware.h"
-
-configuration PlatformC {
-  provides {
-    interface Init as PlatformInit;
-    interface Platform;
-  }
-  uses interface Init as PeripheralInit;
-}
-
-implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+interface Msp432UsciError {
+  /** Signalled when the USCI infrastructure detects a hardware error.
+   *
+   * The passed parameter is a bit set comprising values defined in
+   * msp432usci.h; these generally map to bits in the USCI UCxySTAT
+   * register.  Note that this event is usually signalled from within
+   * an interrupt handler.
+   */
+  async event void condition(unsigned int errors);
+  async event void timeout();
 }

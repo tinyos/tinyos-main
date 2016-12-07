@@ -33,33 +33,39 @@
  */
 
 /**
- * @author Eric B. Decker <cire831@gmail.com>
+ * Core configuration for any USCI module present on an MSP432 chip.
+ *
+ * There should be exactly one instance of this configuration for each
+ * USCI module; e.g., USCI_A0 or USCI_B3.  Each instance provides
+ * access to the USCI registers for its module, and maintains the
+ * resource management information required to determine which of the
+ * module's modes is currently active.
+ *
+ * @author: Eric B. Decker <cire831@gmail.com>
+ *
+ * Loosely based on msp430 x5xx USCI code by Eric B. Decker and Peter
+ * Bigot.
  */
 
-#include "hardware.h"
+#include "msp432usci.h"
 
-configuration PlatformC {
+generic configuration
+  HplMsp432UsciC(uint32_t up, uint8_t _t) {
+
   provides {
-    interface Init as PlatformInit;
-    interface Platform;
+    interface HplMsp432Usci       as Usci;
+    interface HplMsp432UsciInt    as UsciInt;
   }
-  uses interface Init as PeripheralInit;
+  uses interface HplMsp432UsciInt as RawInterrupt;
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
 
-  PlatformP.Stack -> StackC;
+  enum {
+    USCI_ID = unique(MSP432_USCI_RESOURCE),
+  };
 
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  components new HplMsp432UsciP(up, USCI_ID, _t) as HplUsciP;
+  Usci         = HplUsciP;
+  UsciInt      = HplUsciP.Interrupt;
+  RawInterrupt = HplUsciP.RawInterrupt;
 }

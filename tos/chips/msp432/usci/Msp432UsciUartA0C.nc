@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
+ *
+ * This open source code was developed with funding from People Power Company
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,34 +34,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "msp432usci.h"
+
 /**
- * @author Eric B. Decker <cire831@gmail.com>
+ * Generic configuration for a client that shares USCI_A0 in UART mode.
  */
-
-#include "hardware.h"
-
-configuration PlatformC {
+generic configuration Msp432UsciUartA0C() {
   provides {
-    interface Init as PlatformInit;
-    interface Platform;
+    interface Resource;
+    interface ResourceRequested;
+    interface UartStream;
+    interface UartByte;
+    interface Msp432UsciError;
   }
-  uses interface Init as PeripheralInit;
+  uses interface Msp432UsciConfigure;
 }
-
 implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
+  enum {
+    CLIENT_ID = unique(MSP432_USCI_A0_RESOURCE),
+  };
 
-  PlatformP.Stack -> StackC;
+  components Msp432UsciA0P as UsciC;
+  Resource = UsciC.Resource[CLIENT_ID];
+  ResourceRequested = UsciC.ResourceRequested[CLIENT_ID];
 
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
+  components Msp432UsciUartA0P as UartC;
+  UartStream = UartC.UartStream[CLIENT_ID];
+  UartByte = UartC.UartByte[CLIENT_ID];
+  Msp432UsciError = UartC.Msp432UsciError[CLIENT_ID];
+  Msp432UsciConfigure = UartC.Msp432UsciConfigure[CLIENT_ID];
 
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+  UsciC.ResourceConfigure[CLIENT_ID] -> UartC.ResourceConfigure[CLIENT_ID];
 }

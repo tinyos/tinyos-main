@@ -30,36 +30,14 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Eric B. Decker
  */
 
-/**
- * @author Eric B. Decker <cire831@gmail.com>
- */
-
-#include "hardware.h"
-
-configuration PlatformC {
-  provides {
-    interface Init as PlatformInit;
-    interface Platform;
-  }
-  uses interface Init as PeripheralInit;
-}
-
-implementation {
-  components PlatformP, StackC;
-  Platform = PlatformP;
-  PlatformInit = PlatformP;
-  PeripheralInit = PlatformP.PeripheralInit;
-
-  PlatformP.Stack -> StackC;
-
-  components PlatformLedsC;
-  PlatformP.PlatformLeds -> PlatformLedsC;
-
-  components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
-
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
+interface HplMsp432UsciInt {
+  /*
+   * signal interrupt fired, iv is which vector popped.  Raw IV from
+   * the h/w dependent on which mode the USCI is operating in.
+   */
+  async event void interrupted(uint8_t iv);
 }
