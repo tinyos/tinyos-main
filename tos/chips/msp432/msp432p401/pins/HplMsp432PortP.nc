@@ -110,7 +110,7 @@ implementation {
 
   async command error_t Pin.setFunction[uint8_t pin](uint8_t func) {
     switch(func) {
-      case MSP432_GPIO_BASIC:
+      case MSP432_GPIO_IO:
         if (_t) {
           BITBAND_PERI(ODD->SEL0, pin)  = 0;
           BITBAND_PERI(ODD->SEL1, pin)  = 0;

@@ -40,7 +40,7 @@
 #define __MSP432_GPIO_H__
 
 enum {
-  MSP432_GPIO_BASIC = 0,
+  MSP432_GPIO_IO    = 0,
   MSP432_GPIO_MOD   = 1,
   MSP432_GPIO_MOD2  = 2,
   MSP432_GPIO_MOD3  = 3,

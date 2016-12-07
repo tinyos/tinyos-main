@@ -52,7 +52,7 @@ implementation {
   uint8_t state;
 
   void wack_pin0() {
-    call Pin0.setFunction(MSP432_GPIO_BASIC);
+    call Pin0.setFunction(MSP432_GPIO_IO);
     state = call Pin0.getFunction();
 
     call Pin0.setResistorMode(MSP432_GPIO_RESISTOR_OFF);
@@ -74,7 +74,7 @@ implementation {
 
 
   void wack_pin1() {
-    call Pin1.setFunction(MSP432_GPIO_BASIC);
+    call Pin1.setFunction(MSP432_GPIO_IO);
     state = call Pin1.getFunction();
 
     call Pin1.setResistorMode(MSP432_GPIO_RESISTOR_OFF);
@@ -98,7 +98,7 @@ implementation {
   }
 
   void wack_pin2() {
-    call Pin2.setFunction(MSP432_GPIO_BASIC);
+    call Pin2.setFunction(MSP432_GPIO_IO);
     state = call Pin2.getFunction();
 
     call Pin2.setResistorMode(MSP432_GPIO_RESISTOR_OFF);
