@@ -52,7 +52,7 @@ and ``chips/atm128`` directories, as well as to use avr-gcc to compile a
 mote binary (Teloi platforms tell it to use msp430-gcc). 
 
 Hardware abstractions in TinyOS 2.0 generally follow a three-level
-abstaction heirarchy, called the HAA (Hardware Abstraction
+abstraction heirarchy, called the HAA (Hardware Abstraction
 Architecture).
 
 At the bottom of the HAA is the HPL (Hardware Presentation Layer). The

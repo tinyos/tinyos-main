@@ -3,9 +3,7 @@ Owners by directory
 [For stuff which cleanly fits in a directory]
 
 
-() means no long active...
-
-No longer active:
+() means no longer active...
 
 (David Gay)
 (Kevin Klues)
@@ -24,11 +22,12 @@ msp430 packaging (debian): Eric B. Decker
 tos/chips
 ---------
 ad5200: (Kevin Klues  [eyes?])
-at45db: (David Gay [mica family storage]
+at45db: (David Gay [mica family storage])
 atm128: Martin Turon (Xbow), David Gay [mica family microcontroller]
 cc1000: David Gay [mica2 radio]
 cc2420: Phil Levis, Jonathan Hui [802.15.4 radio]
 msp430: Eric B. Decker, Vlado H., TU Berlin [microcontroller]
+msp432: Eric B. Decker
 pxa27x: Phil Buonadonna [imote2 microcontroller]
 stm25p: Jonathan Hui [telosb storage]
 tda5250: TU Berlin (who?) [eyes radio]
@@ -37,6 +36,7 @@ tos/lib
 -------
 adc: Jan Hauer, David Gay [adc support components]
 gpio: Martin Turon [polling-based interrupt emulation]
+      Eric B. Decker
 oski: Phil Levis [a service distribution]
 serial: Ben Greenstein, Phil Levis [serial port protocol]
 timer: Cory Sharp [timer support components]
@@ -52,7 +52,8 @@ eyesIFX:    TU Berlin
 intelmote2: (Phil Buonadonna)
 mica{,2,z}: (Martin Turon, David Gay)
 telos{a,b}: (Arched Rock)
-mm5s:       Eric B. Decker (msp430f5438a eval, simple)
+exp5438:    Eric B. Decker (msp430f5438a eval, simple)
+exp_msp432: Eric B. Decker
 
 tos/sensorboards
 ----------------
@@ -60,7 +61,6 @@ mts300: Martin Turon [mica family sensor board]
 
 
 System Services:
-
 
 Network:
 
@@ -87,7 +87,7 @@ New:   needs work.   above needs to be culled.
  - Lead Developers
     - Janos Sallai (platforms/iris, chips/at45db, chips/atm1281, chips/cc2420x, chips/ds2401, lib/ftsp)
     - Antonio Linan (platforms/z1)
-    - Eric Decker (tos/chips/msp430, packaging)
+    - Eric Decker (tos/chips/msp43{0,2}, cortex, packaging)
     - Vlado Handziski (tos/chips/msp430, tos/platforms/telos*, support/make, support/sdk/python)
     - Markus Becker (tos/lib/net/coap)
     - Mike Healy (tos/platforms/span, tos/platforms/shimmer, tos/platforms/shimmer2, tos/platforms/shimmer2r)
@@ -97,4 +97,3 @@ New:   needs work.   above needs to be culled.
     - Philip Levis (tos/lib/tossim, tos/lib/net/drip, tos/lib/net/dip)
     - Thanh Dang (tos/lib/net/dip, tos/lib/net/dhv, tos/lib/net/drip)
     - Omprakash Gnawali (tos/lib/net/ctp, tos/lib/net/le, tos/lib/net/4bitle, tos/lib/net/lqi)
-
