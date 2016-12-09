@@ -51,25 +51,43 @@ configuration PlatformUsciMapC {
   UartA0C.URXD    -> GIO.UCA0RXD;
   UartA0C.UTXD    -> GIO.UCA0TXD;
 #endif
+  /* main uart port */
+
+  components UsciConfP as Conf;
+
+  components Msp432UsciUartA0C as Uart;
+  Uart.TXD                      -> GIO.UCA0TXD;
+  Uart.RXD                      -> GIO.UCA0RXD;
+  Uart.Panic                    -> PanicC;
+  Uart.Platform                 -> PlatformC;
+  PlatformC.PeripheralInit      -> Uart;
+  Uart                          -> Conf.UartConf;
+
+  components Msp432UsciI2CB1C as I2C;
+  I2C.SDA                       -> GIO.UCB1SDA;
+  I2C.SCL                       -> GIO.UCB1SCL;
+  I2C.Panic                     -> PanicC;
+  I2C.Platform                  -> PlatformC;
+  PlatformC.PeripheralInit      -> I2C;
+  I2C                           -> Conf.I2CConf;
 
   /* master */
   components Msp432UsciSpiB0C as Master;
-  components SpiConfP as Conf;
-  Master.SIMO                  -> GIO.UCB0SIMO;
-  Master.SOMI                  -> GIO.UCB0SOMI;
-  Master.CLK                   -> GIO.UCB0CLK;
-  Master.Panic                 -> PanicC;
-  Master.Platform              -> PlatformC;
-  PlatformC.PeripheralInit     -> Master;
-  Master                       -> Conf.MasterConf;
+  Master.SIMO                   -> GIO.UCB0SIMO;
+  Master.SOMI                   -> GIO.UCB0SOMI;
+  Master.CLK                    -> GIO.UCB0CLK;
+  Master.Panic                  -> PanicC;
+  Master.Platform               -> PlatformC;
+  PlatformC.PeripheralInit      -> Master;
+  Master                        -> Conf.MasterConf;
 
   /* slave */
   components Msp432UsciSpiB2C as Slave;
-  Slave.SIMO                   -> GIO.UCB2SIMOxPM;
-  Slave.SOMI                   -> GIO.UCB2SOMIxPM;
-  Slave.CLK                    -> GIO.UCB2CLKxPM;
-  Slave.Panic                  -> PanicC;
-  Slave.Platform               -> PlatformC;
-  PlatformC.PeripheralInit     -> Slave;
-  Slave                        -> Conf.SlaveConf;
+  Slave.SIMO                    -> GIO.UCB2SIMOxPM;
+  Slave.SOMI                    -> GIO.UCB2SOMIxPM;
+  Slave.CLK                     -> GIO.UCB2CLKxPM;
+  Slave.Panic                   -> PanicC;
+  Slave.Platform                -> PlatformC;
+  PlatformC.PeripheralInit      -> Slave;
+  Slave                         -> Conf.SlaveConf;
 }
