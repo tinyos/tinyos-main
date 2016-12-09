@@ -1,7 +1,82 @@
 The exp_msp432 platform is based on the MSP-EXP432P401R Launch Pad
 Evaluation Board.  This uses the 100 pin msp432p401r QZ package.
 
-The main processor is a ARM Cortex-M4F running at up to 48MHz.
+The main processor is a ARM Cortex-M4F running at up to 48MHz.  The Cortex-M4F has an integrated floating point processor
+
+
+Exceptions:
+-------------
+
+All exceptions go through the exception/interrupt table that starts by
+default at the beginning of Flash at 0x2000_0000.  This table can be moved
+by changing the contents of SCB->VTOR (Vector Table Offset Register).
+
+All handlers take the form <exception>_Handler and the initial set of these
+handlers are aliased to __default_handler.  All initial handlers are given
+the "weak" attribute so may be overridden by TinyOs code.
+
+For example, if TinyOS code wants to use a pin interrupt, say P1.4, it
+would define PORT1_Handler and would then be able to capture the P1.4
+interrupt when it fires.
+
+Once an Exception handler has been taken, the taking code is responsible
+for catching any unhandled exceptions coming through that vector.
+
+
+Startup:
+------------
+
+The processor can be reset in various ways and when it does it starts
+executing as follows:
+
+The very first entry in the vector table is InitialStack (0x2000_0000).
+The initial MSP (main stack pointer) is set from this address.
+
+The processor then starts to execute at the address in the Reset vector
+slot.  This will be the routine that handles Reset (__Reset).
+
+__Reset is also aliased to start().  The linker uses various mechanisms to
+set the initial entry point for the built object.  Setting start()
+establishes a default if none of the other mechanisms are used.  This won't
+effect actual program execution but does tell GDB where to put the initial
+view when starting up.
+
+__Reset() is responsible for bring up enough of the system for TinyOS to
+start.  In addition, we also initilize pieces of the h/w that is easier to
+do directly rather then letting TinyOS modules do it.  Your mileage may
+vary.
+
+When __Reset() first starts to execute, one should set any controlling
+I/Os to a start that won't cause problems for the h/w.  This should be
+done as soon as possible after resetting.  When reset the msp432 sets
+all of its I/Os to input.
+
+At a minimum, __Reset() must make sure that BSS has been zeroed and any
+pre-initilized data has been copies from flash down to where it actually
+lives in RAM.
+
+
+Initial Processor State:
+--------------------------
+
+When the cpu first comes up it will have the following state:
+
+o all Port I/O pins are set to input.
+o cpu core is in AM_LDO_VCORE0.
+
+
+Floating Point:
+-----------------
+
+The Cortex-M4F includes an IEEE 754 single precision floating point unit.
+We build with -mfloat-abi=hard -mfpu=fpv4-sp-d16 but leave the fpu off.
+When the fpu is turned on it increases the exception stack from 8 words to
+25 words.
+
+When floating point is needed, one must turn on the fpu, do what one needs,
+and then turn the fpu back off.  If an exception occurs while working with
+the fpu, the right thing will happen and state will be preserved.
+
 
 
 TLV from rev 2 EXP-MSP432P401R launch pad
