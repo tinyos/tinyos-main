@@ -2,6 +2,7 @@
  * DO NOT MODIFY: This file cloned from Msp432UsciUartA0C.nc for A1
 */
 /*
+ * Copyright (c) 2016 Eric B. Decker
  * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
  *
@@ -40,32 +41,32 @@
 #include "msp432usci.h"
 
 /**
- * Generic configuration for a client that shares USCI_A1 in UART mode.
+ * Generic configuration for a dedicated USCI_A1 in UART mode.
  */
-generic configuration Msp432UsciUartA1C() {
+configuration Msp432UsciUartA1C {
   provides {
-    interface Resource;
-    interface ResourceRequested;
+    interface Init;
     interface UartStream;
     interface UartByte;
     interface Msp432UsciError;
   }
-  uses interface Msp432UsciConfigure;
+  uses {
+    interface Msp432UsciConfigure;
+    interface Panic;
+    interface Platform;
+    interface HplMsp432Gpio as RXD;
+    interface HplMsp432Gpio as TXD;
+  }
 }
 implementation {
-  enum {
-    CLIENT_ID = unique(MSP432_USCI_A1_RESOURCE),
-  };
-
-  components Msp432UsciA1P as UsciC;
-  Resource = UsciC.Resource[CLIENT_ID];
-  ResourceRequested = UsciC.ResourceRequested[CLIENT_ID];
-
-  components Msp432UsciUartA1P as UartC;
-  UartStream = UartC.UartStream[CLIENT_ID];
-  UartByte = UartC.UartByte[CLIENT_ID];
-  Msp432UsciError = UartC.Msp432UsciError[CLIENT_ID];
-  Msp432UsciConfigure = UartC.Msp432UsciConfigure[CLIENT_ID];
-
-  UsciC.ResourceConfigure[CLIENT_ID] -> UartC.ResourceConfigure[CLIENT_ID];
+  components Msp432UsciUartA1P as UartP;
+  Init                  = UartP.Init;
+  UartStream            = UartP.UartStream;
+  UartByte              = UartP.UartByte;
+  Msp432UsciError       = UartP.Msp432UsciError;
+  Msp432UsciConfigure   = UartP.Msp432UsciConfigure;
+  Panic                 = UartP;
+  Platform              = UartP;
+  RXD                   = UartP.RXD;
+  TXD                   = UartP.TXD;
 }

@@ -3,33 +3,40 @@
 */
 configuration Msp432UsciUartA3P {
   provides {
-    interface UartStream[uint8_t client];
-    interface UartByte[uint8_t client];
-    interface Msp432UsciError[uint8_t client];
+    interface Init;
+    interface UartStream;
+    interface UartByte;
+    interface Msp432UsciError;
   }
   uses {
-    interface Msp432UsciConfigure[ uint8_t client ];
-    interface HplMsp432GeneralIO as URXD;
-    interface HplMsp432GeneralIO as UTXD;
+    interface Msp432UsciConfigure;
+    interface HplMsp432Gpio as RXD;
+    interface HplMsp432Gpio as TXD;
+    interface Panic;
+    interface Platform;
   }
 }
 implementation {
 
-  components Msp432UsciA3P as UsciC;
-  components new Msp432UsciUartP() as UartC;
+  components     Msp432UsciA3P     as UsciP;
+  components new Msp432UsciUartP() as UartP;
 
-  UartC.Usci -> UsciC;
-  UartC.Interrupts -> UsciC.Interrupts[MSP432_USCI_UART];
-  UartC.ArbiterInfo -> UsciC;
+  UartP.Usci            -> UsciP;
+  UartP.Interrupt       -> UsciP;
 
-  Msp432UsciConfigure = UartC;
-  ResourceConfigure = UartC;
-  UartStream = UartC;
-  UartByte = UartC;
-  Msp432UsciError = UartC;
-  URXD = UartC.URXD;
-  UTXD = UartC.UTXD;
+  RXD                   =  UartP.RXD;
+  TXD                   =  UartP.TXD;
+
+  Panic                 =  UartP;
+  Platform              =  UartP;
+
+  Init                  =  UartP;
+  Msp432UsciConfigure   =  UartP;
+
+  UartStream            =  UartP;
+  UartByte              =  UartP;
+  Msp432UsciError       =  UartP;
 
   components LocalTimeMilliC;
-  UartC.LocalTime_bms -> LocalTimeMilliC;
+  UartP.LocalTime_bms   -> LocalTimeMilliC;
 }

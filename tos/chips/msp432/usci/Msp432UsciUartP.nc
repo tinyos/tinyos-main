@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Eric B. Decker
+ * Copyright (c) 2013, 2016 Eric B. Decker
  * Copyright (c) 2009-2010 People Power Co.
  * All rights reserved.
  *
@@ -43,7 +43,7 @@
  * --------------------
  *
  * Upon grant of the USCI in UART mode to a client, interrupts are
- * turned off.
+ * turned off.  This compenent is dedicated so this needs to be rethought.
  *
  * On the MSP432, when the TX interrupt is raised the MCU
  * automatically clears the UCTXIFG bit that indicates that the TXBUF
@@ -78,25 +78,45 @@
  * @author Eric B. Decker <cire831@gmail.com>
  */
 
+#ifndef PANIC_USCI
+
+enum {
+  __panic_usci = unique(UQ_PANIC_SUBSYS)
+};
+
+#define PANIC_USCI __panic_usci
+#endif
+
 generic module Msp432UsciUartP () @safe() {
   provides {
-    interface UartStream[ uint8_t client ];
-    interface UartByte[ uint8_t client ];
-    interface ResourceConfigure[ uint8_t client ];
-    interface Msp432UsciError[ uint8_t client ];
+    interface Init;
+    interface UartStream;
+    interface UartByte;
+    interface Msp432UsciError;
   }
   uses {
-    interface HplMsp432Usci as Usci;
-    interface HplMsp432UsciInterrupts as Interrupts;
-    interface HplMsp432GeneralIO as URXD;
-    interface HplMsp432GeneralIO as UTXD;
+    interface HplMsp432Usci    as Usci;
+    interface HplMsp432Gpio    as RXD;
+    interface HplMsp432Gpio    as TXD;
+    interface HplMsp432UsciInt as Interrupt;
 
-    interface Msp432UsciConfigure[ uint8_t client ];
-    interface ArbiterInfo;
+    interface Msp432UsciConfigure;
+    interface Panic;
+    interface Platform;
     interface LocalTime<TMilli> as LocalTime_bms;
   }
 }
 implementation {
+
+  enum {
+    UART_MAX_BUSY_WAIT = 10000,                 /* 10ms max busy wait time */
+  };
+
+#define __PANIC_USCI(where, x, y, z) do { \
+	call Panic.panic(PANIC_USCI, where, call Usci.getModuleIdentifier(), \
+			 x, y, z); \
+	call Usci.enterResetMode_(); \
+  } while (0)
 
   norace uint16_t m_tx_len, m_rx_len;
   norace uint8_t * COUNT_NOK(m_tx_len) m_tx_buf, * COUNT_NOK(m_rx_len) m_rx_buf;
@@ -106,29 +126,21 @@ implementation {
    * The UART is busy if it's actively transmitting/receiving, or if
    * there is an active buffered I/O operation.
    */
-  bool isBusy () {
+  bool isBusy() {
+    uint32_t t0, t1;
+
+    t0 = call Platform.usecsRaw();
     while (call Usci.isBusy()) {
-      ;/* busy-wait */
+      /* busy-wait */
+      t1 = call Platform.usecsRaw();
+      if (t1 - t0 > UART_MAX_BUSY_WAIT) {
+	__PANIC_USCI(1, t1, t0, 0);
+	return TRUE;
+      }
     }
-    return (m_tx_buf || m_rx_buf);
+    return FALSE;
   }
 
-  /**
-   * The given client is the owner if the USCI is in UART mode and
-   * the client is the user stored in the UART arbiter.
-   */
-  error_t checkIsOwner (uint8_t client) {
-    /* Ensure the USCI is in UART mode and we're the owning client */
-    const uint8_t current_client = call ArbiterInfo.userId();
-
-    if (0xFF == current_client)
-      return EOFF;
-
-    if (current_client != client)
-      return EBUSY;
-
-    return SUCCESS;
-  }
 
   /**
    * Take the USCI out of UART mode.
@@ -142,18 +154,17 @@ implementation {
    * The USCI is left in reset mode to avoid power drain per UCS6.
    */
   void unconfigure_ () {
-    while (UCBUSY & (call Usci.getStat())) {
-      ;/* busy-wait, FIX-ME */
+    while (isBusy()) {
     }
     /*
      * formerly, first thing we turned off the interrupt enables
      * but kicking reset turns off the interrupt enables.
      */
     call Usci.enterResetMode_();
-    call URXD.makeInput();
-    call URXD.selectIOFunc();
-    call UTXD.makeOutput();
-    call UTXD.selectIOFunc();
+    call RXD.makeInput();
+    call RXD.setFunction(MSP432_GPIO_IO);
+    call TXD.makeOutput();
+    call TXD.setFunction(MSP432_GPIO_IO);
   }
 
   /**
@@ -166,8 +177,10 @@ implementation {
    * enabled, and TX is disabled..
    */
   error_t configure_ (const msp432_usci_config_t* config) {
-    if (! config)
+    if (! config) {
+      __PANIC_USCI(2, 0, 0, 0);
       return FAIL;
+    }
 
     /*
      * Do basic configuration, leaving USCI in reset mode.  Configure
@@ -175,10 +188,10 @@ implementation {
      */
     atomic {
       call Usci.configure(config, TRUE);
-      call URXD.makeInput();
-      call URXD.selectModuleFunc();
-      call UTXD.makeOutput();
-      call UTXD.selectModuleFunc();
+      call RXD.makeInput();
+      call TXD.setFunction(MSP432_GPIO_MOD);
+      call TXD.makeOutput();
+      call TXD.setFunction(MSP432_GPIO_MOD);
 
       /*
        * all configured.  before leaving reset and turning on interrupts
@@ -195,13 +208,8 @@ implementation {
 
   /**
    * Transmit the next character in the outgoing message.
-   *
-   * Assumes the USCI is in UART mode and the owning client has
-   * supplied a transmission buffer using UartStream.  This method is
-   * only invoked by the transmit interrupt handler when TXBUF is
-   * ready to receive a new character.
    */
-  void nextStreamTransmit (uint8_t client) {
+  void nextStreamTransmit() {
     uint8_t ch;
     bool    last_char;
 
@@ -229,16 +237,13 @@ implementation {
 	tx_buf = m_tx_buf;
 	tx_len = m_tx_len;
         m_tx_buf = 0;
-        signal UartStream.sendDone[client](tx_buf, tx_len, SUCCESS);
+        signal UartStream.sendDone(tx_buf, tx_len, SUCCESS);
       }
     }
   }
 
-  async command error_t UartStream.send[uint8_t client]( uint8_t* buf, uint16_t len ) {
+  async command error_t UartStream.send( uint8_t* buf, uint16_t len ) {
     error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero -> error */
-      return rv;
 
     if (isBusy())
       return EBUSY;
@@ -258,8 +263,7 @@ implementation {
   }
 
 
-  default async event void UartStream.sendDone[uint8_t client]
-    (uint8_t* buf, uint16_t len, error_t error ) { }
+  default async event void UartStream.sendDone(uint8_t* buf, uint16_t len, error_t error) { }
 
 
   /*
@@ -283,38 +287,24 @@ implementation {
    * loop will timeout as the interrupt will clear the flag
    * register.
    *
-   * When the UART client releases control (unconfigures the UART),
-   * the UART is left in reset which also disables all interrupt enables.
+   * When the UART is unconfigured, the UART is left in reset which also
+   * disables all interrupt enables.
    */
 
-  async command error_t UartStream.enableReceiveInterrupt[uint8_t client]() {
-    error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return rv;
-
+  async command error_t UartStream.enableReceiveInterrupt() {
     call Usci.enableRxIntr();
-    return rv;				/* SUCCESS */
+    return SUCCESS;
   }
 
-  async command error_t UartStream.disableReceiveInterrupt[uint8_t client]() {
-    error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return rv;
-
+  async command error_t UartStream.disableReceiveInterrupt() {
     call Usci.disableRxIntr();
-    return rv;				/* SUCCESS */
+    return SUCCESS;
   }
 
-  default async event void UartStream.receivedByte[uint8_t client]( uint8_t byte ) { }
 
-  async command error_t UartStream.receive[uint8_t client]( uint8_t* buf, uint16_t len ) {
-    error_t rv;
+  default async event void UartStream.receivedByte(uint8_t byte) { }
 
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return rv;
-
+  async command error_t UartStream.receive(uint8_t* buf, uint16_t len) {
     if (!len || !buf)
       return FAIL;
 
@@ -330,16 +320,9 @@ implementation {
   }
 
 
-  default async event void UartStream.receiveDone[uint8_t client]
-    (uint8_t* buf, uint16_t len, error_t error) { }
+  default async event void UartStream.receiveDone(uint8_t* buf, uint16_t len, error_t error) { }
 
-
-  async command error_t UartByte.send[uint8_t client]( uint8_t byte ) {
-    error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return rv;
-
+  async command error_t UartByte.send(uint8_t byte) {
     if (m_tx_buf)
       return EBUSY;
 
@@ -368,14 +351,9 @@ implementation {
    *
    * If something goes wrong, just return FALSE (no space is available).
    */
-  async command bool UartByte.sendAvail[uint8_t client]() {
-    error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return FALSE;
-
+  async command bool UartByte.sendAvail() {
     /* isTxIntrPending returns TRUE if space is available */
-    return (call Usci.isTxIntrPending());
+    return call Usci.isTxIntrPending();
   }
 
 
@@ -403,14 +381,10 @@ implementation {
     ByteTimeScaleFactor = 1,
   };
 
-  async command error_t UartByte.receive[uint8_t client]( uint8_t* byte, uint8_t timeout_bt ) {
-    error_t rv;
+  async command error_t UartByte.receive(uint8_t* bytePtr, uint8_t timeout_bt) {
     uint32_t startTime_bms, timeout_bms;
 
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return FALSE;
-
-    if (! byte)
+    if (! bytePtr)
       return FAIL;
 
     if (m_rx_buf)
@@ -424,7 +398,7 @@ implementation {
         return FAIL;
     }
 
-    *byte = call Usci.getRxbuf();
+    *bytePtr = call Usci.getRxbuf();
     return SUCCESS;
   }
 
@@ -433,69 +407,75 @@ implementation {
    *
    * If something goes wrong, just return FALSE (no byte is available).
    */
-  async command bool UartByte.receiveAvail[uint8_t client]() {
-    error_t rv;
-
-    if ((rv = checkIsOwner(client)))	/* non-zero, error bail out */
-      return FALSE;
-
+  async command bool UartByte.receiveAvail() {
     /* isRxIntrPending returns TRUE if another rx byte is available */
     return (call Usci.isRxIntrPending());
   }
 
 
-  async event void Interrupts.interrupted (uint8_t iv) {
-    uint8_t current_client;
+  async event void Interrupt.interrupted(uint8_t iv) {
+    uint8_t stat, data;
+    uint8_t *rx_buf;
+    uint16_t rx_len;
 
-    current_client = call ArbiterInfo.userId();
+    switch(iv) {
+      case MSP432U_IV_RXIFG:
+        stat = call Usci.getStat();
+        data = call Usci.getRxbuf();
 
-    if (0xFF == current_client)
-      return;
+        /*
+         * SLAU259 16.3.6: Errors are cleared by reading RXBUF.  Grab
+         * the old errors, read the incoming data, then read the errors
+         * again in case an overrun occurred between reading STATx and
+         * RXBUF.  Mask off the bits we don't care about, and if there are
+         * any left on notify somebody.
+         */
+        stat = (call Usci.getStat() | stat) & MSP432U_ERR_MASK;
+        if (stat)
+          signal Msp432UsciError.condition(stat);
 
-    if (USCI_UCRXIFG == iv) {
-      uint8_t stat = call Usci.getStat();
-      uint8_t data = call Usci.getRxbuf();
+        if (m_rx_buf) {
+          m_rx_buf[m_rx_pos++] = data;
+          if (m_rx_len == m_rx_pos) {
+            rx_buf = m_rx_buf;
+            rx_len = m_rx_len;
+            m_rx_buf = 0;
+            signal UartStream.receiveDone(rx_buf, rx_len, SUCCESS);
+          }
+        } else
+          signal UartStream.receivedByte(data);
+        return;
 
-      /*
-       * SLAU259 16.3.6: Errors are cleared by reading UCAxRXD.  Grab
-       * the old errors, read the incoming data, then read the errors
-       * again in case an overrun occurred between reading STATx and
-       * RXD.  Mask off the bits we don't care about, and if there are
-       * any left on notify somebody.
-       */
-      stat = MSP432_USCI_ERR_UCxySTAT & (stat | (call Usci.getStat()));
-      if (stat)
-        signal Msp432UsciError.condition[current_client](stat);
+      case MSP432U_IV_TXIFG:
+        nextStreamTransmit();
+        return;
 
-      if (m_rx_buf) {
-        m_rx_buf[m_rx_pos++] = data;
-        if (m_rx_len == m_rx_pos) {
-          uint8_t* rx_buf = m_rx_buf;
-          uint16_t rx_len = m_rx_len;
-          m_rx_buf = 0;
-          signal UartStream.receiveDone[current_client](rx_buf, rx_len, SUCCESS);
-        }
-      } else
-        signal UartStream.receivedByte[current_client](data);
-      return;
+      default:
+        break;
     }
-
-    if (USCI_UCTXIFG == iv)
-      nextStreamTransmit(current_client);
   }
 
-  default async command const msp432_usci_config_t*
-    Msp432UsciConfigure.getConfiguration[uint8_t client] () {
-      return &msp432_usci_uart_default_config;
+  /* interrupts should be off */
+  command error_t Init.init() {
+    configure_(call Msp432UsciConfigure.getConfiguration());
+    call Usci.enableModuleInterrupt();
+    return SUCCESS;
   }
 
-  async command void ResourceConfigure.configure[uint8_t client] () {
-    configure_(call Msp432UsciConfigure.getConfiguration[client]());
-  }
+  default async event void Msp432UsciError.condition(unsigned int errors) { }
+  default async event void Msp432UsciError.timeout() { }
 
-  async command void ResourceConfigure.unconfigure[uint8_t client] () {
-    unconfigure_();
-  }
+  async event void Panic.hook() { }
 
-  default async event void Msp432UsciError.condition[uint8_t client] (unsigned int errors) { }
+#ifndef REQUIRE_PLATFORM
+  default async command uint32_t Platform.usecsRaw()   { return 0; }
+  default async command uint32_t Platform.jiffiesRaw() { return 0; }
+#endif
+
+#ifndef REQUIRE_PANIC
+  default async command void Panic.panic(uint8_t pcode, uint8_t where, uint16_t arg0,
+					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
+  default async command void  Panic.warn(uint8_t pcode, uint8_t where, uint16_t arg0,
+					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
+#endif
 }
