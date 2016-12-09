@@ -4,6 +4,9 @@
  * (see TEP 107)
  */
 
+#define REQUIRE_PLATFORM
+#define REQUIRE_PANIC
+
 /*
  * define PLATFORM_TAn_ASYNC TRUE if the timer is being clocked
  * asyncronously with respect to the main system clock
