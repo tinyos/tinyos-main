@@ -8,7 +8,7 @@ configuration Msp432UsciA2P {
   }
 }
 implementation {
-  components new HplMsp432UsciC((uint32_t) EUSCI_A2, 0) as UsciC;
+  components new HplMsp432UsciC((uint32_t) EUSCI_A2, EUSCIA2_IRQn, 0) as UsciC;
   Usci      = UsciC;
 
   components HplMsp432UsciIntA2P as IsrP;

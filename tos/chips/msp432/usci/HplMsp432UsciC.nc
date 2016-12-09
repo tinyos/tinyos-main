@@ -50,7 +50,7 @@
 #include "msp432usci.h"
 
 generic configuration
-  HplMsp432UsciC(uint32_t up, uint8_t _t) {
+  HplMsp432UsciC(uint32_t up, uint32_t irqn, uint8_t _t) {
 
   provides {
     interface HplMsp432Usci       as Usci;
@@ -64,7 +64,7 @@ implementation {
     USCI_ID = unique(MSP432_USCI_RESOURCE),
   };
 
-  components new HplMsp432UsciP(up, USCI_ID, _t) as HplUsciP;
+  components new HplMsp432UsciP(up, irqn, USCI_ID, _t) as HplUsciP;
   Usci         = HplUsciP;
   UsciInt      = HplUsciP.Interrupt;
   RawInterrupt = HplUsciP.RawInterrupt;

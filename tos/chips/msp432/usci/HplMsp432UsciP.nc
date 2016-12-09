@@ -68,7 +68,7 @@
 /*
  * eUsci port address, unique id, and type (A: 0, B: 1)
  */
-generic module HplMsp432UsciP(uint32_t up, uint8_t USCI_ID, uint8_t _t) {
+generic module HplMsp432UsciP(uint32_t up, uint32_t irqn, uint8_t USCI_ID, uint8_t _t) {
   provides {
     interface HplMsp432Usci       as Usci;
     interface HplMsp432UsciInt    as Interrupt;
@@ -370,6 +370,16 @@ implementation {
       }
     }
     return MSP432_USCI_NONE;
+  }
+
+
+  async command void Usci.enableModuleInterrupt() {
+    NVIC_EnableIRQ(irqn);
+  }
+
+
+  async command void Usci.disableModuleInterrupt() {
+    NVIC_DisableIRQ(irqn);
   }
 
 

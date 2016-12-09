@@ -247,4 +247,7 @@ interface HplMsp432Usci {
    * mode.  Values are from the msp432_usci_mode_t enumeration.
    */
   async command msp432_usci_mode_t currentMode();
+
+  async command void enableModuleInterrupt();
+  async command void disableModuleInterrupt();
 }
