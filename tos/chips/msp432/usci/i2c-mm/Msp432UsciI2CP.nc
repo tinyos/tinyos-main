@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 Eric B. Decker
+ * Copyright (c) 2012-2014, 2016 Eric B. Decker
  * All rights reserved.
  *
  * Multi-Master driver.
@@ -79,6 +79,7 @@
  * @author Marcus Chang   <marcus.chang@gmail.com>
  * @author Peter A. Bigot <pab@peoplepowerco.com>
  * @author Derek Baker    <derek@red-slate.com>
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
 #include "msp432usci.h"
@@ -96,19 +97,19 @@ enum {
 
 generic module Msp432UsciI2CP () @safe() {
   provides {
-    interface I2CPacket<TI2CBasicAddr> as I2CBasicAddr[uint8_t client];
-    interface I2CReg[uint8_t client];
-    interface I2CSlave[uint8_t client];
-    interface ResourceConfigure[uint8_t client];
-    interface Msp432UsciError[uint8_t client];
+    interface Init;
+    interface I2CPacket<TI2CBasicAddr> as I2CBasicAddr;
+    interface I2CReg;
+    interface I2CSlave;
+    interface ResourceConfigure;
   }
   uses {
     interface HplMsp432Usci as Usci;
-    interface HplMsp432UsciInterrupts as Interrupts;
-    interface HplMsp432GeneralIO as SDA;
-    interface HplMsp432GeneralIO as SCL;
-    interface Msp432UsciConfigure[uint8_t client];
-    interface ArbiterInfo;
+    interface HplMsp432Gpio as SDA;
+    interface HplMsp432Gpio as SCL;
+    interface HplMsp432UsciInt as Interrupt;
+
+    interface Msp432UsciConfigure;
     interface Panic;
     interface Platform;
   }
@@ -135,7 +136,7 @@ implementation {
      * Timeout is in either uS or uiS depending on what the base clock
      * system is set for.  Just set it high enough so it doesn't matter.
      */
-    I2C_MAX_TIME = 400,			/* max allowed, 400 uS (uis) */
+    I2C_MAX_TIME = 400,			/* max allowed, 400 uS */
   };
 
 #define __PANIC_I2C(where, x, y, z) do { \
@@ -160,8 +161,8 @@ implementation {
 
     atomic {
       call Usci.configure(config, TRUE);	/* leave in reset */
-      call SCL.selectModuleFunc();
-      call SDA.selectModuleFunc();
+      call SCL.setFunction(MSP432_GPIO_MOD);
+      call SDA.setFunction(MSP432_GPIO_MOD);
       call Usci.setI2Coa(config->i2coa);
 
       /*
@@ -174,7 +175,7 @@ implementation {
        */
       m_action = SLAVE;
       call Usci.leaveResetMode_();
-      call Usci.setIe(UCSTTIE);
+      call Usci.setIe(EUSCI_B_IE_STTIE);
     }
     return SUCCESS;
   }
@@ -194,12 +195,12 @@ implementation {
      * default state is to be in Slave mode.
      */
     atomic {
-      if (call Usci.getCtl0() & UCMST) {
+      if (call Usci.getCtlw0() & EUSCI_B_CTLW0_MST) {
 	call Usci.enterResetMode_();
-	call Usci.andCtl0(~UCMST);
+	call Usci.andCtlw0(~EUSCI_B_CTLW0_MST);
 	call Usci.leaveResetMode_();
       }
-      call Usci.setIe(UCSTTIE);
+      call Usci.setIe(EUSCI_B_IE_STTIE);
       m_action = SLAVE;
     }
     return SUCCESS;
@@ -216,18 +217,10 @@ implementation {
   error_t unconfigure_() {
     atomic {
       call Usci.enterResetMode_();	/* leave in reset */
-      call SCL.selectIOFunc();
-      call SDA.selectIOFunc();
+      call SCL.setFunction(MSP432_GPIO_IO);
+      call SDA.setFunction(MSP432_GPIO_IO);
     }
     return SUCCESS;
-  }
-
-  async command void ResourceConfigure.configure[ uint8_t client ]() {
-    configure_(call Msp432UsciConfigure.getConfiguration[client]());
-  }
-
-  async command void ResourceConfigure.unconfigure[ uint8_t client ]() {
-    unconfigure_();
   }
 
 
@@ -247,7 +240,7 @@ implementation {
     uint16_t t0, t1;
 
     call Usci.enterResetMode_();			// blow any cruft away
-    call Usci.orCtl0(UCMST);				// force into master
+    call Usci.orCtlw0(EUSCI_B_CTLW0_MST);				// force into master
     call Usci.leaveResetMode_();			// trying to talk
 
     t0 = call Platform.usecsRaw();
@@ -264,16 +257,16 @@ implementation {
 
   /*
    * Wait for a CTRL1 signal to deassert.   These in particular
-   * are UCTXNACK (Nack), UCTXSTP (Stop), and UCTXSTT (Start).
+   * are TXNACK (Nack), TXSTP (Stop), and TXSTT (Start).
    * Typically only Stop and Start are actually looked at.
    */
-  error_t wait_deassert_ctl1(uint8_t code) {
+  error_t wait_deassert_ctlw0(uint8_t code) {
     uint16_t t0, t1;
 
     t0 = call Platform.usecsRaw();
 
     /* wait for code bits to go away */
-    while (call Usci.getCtl1() & code) {
+    while (call Usci.Ctlw0() & code) {
       t1 = call Platform.usecsRaw();
       if (t1 - t0 > I2C_MAX_TIME) {
 	__PANIC_I2C(2, t1, t0, 0);
@@ -288,9 +281,9 @@ implementation {
    * wait_ifg: wait for a particlar USCI_IFG bit to pop
    *
    * uses I2C_MAX_TIME to time out the access
-   * checks for UCNACKIFG, if it pops abort
+   * checks for NACKIFG, if it pops abort
    *
-   * UCNAKIFG simply panics which also yields a i2c h/w reset.
+   * NAKIFG simply panics which also yields a i2c h/w reset.
    * It doesn't send a STOP on the bus which may confuse some
    * devices.  It is assumed this is a single master system
    * and new transactions will start with a TXSTART which
@@ -308,7 +301,7 @@ implementation {
     t0 = call Platform.usecsRaw();
     while (1) {
       ifg = call Usci.getIfg();
-      if (ifg & UCNACKIFG) {				// didn't respond.
+      if (ifg & EUSCI_B_IFG_NACKIFG) {          // didn't respond.
 	__PANIC_I2C(3, ifg, 0, 0);
 	return EINVAL;
       }
@@ -348,7 +341,7 @@ implementation {
    * This implementation closely follows the I2CReg.reg_readBlock code
    * without the initial register address write.
    */
-  async command error_t I2CBasicAddr.read[uint8_t client](i2c_flags_t flags,
+  async command error_t I2CBasicAddr(i2c_flags_t flags,
 		uint16_t addr, uint8_t len, uint8_t* buf ) {
     error_t rtn;
 
@@ -398,12 +391,12 @@ implementation {
        * for the STOP condition to be signalled properly.
        */
       if ((m_left == 1) && (m_flags & I2C_STOP)) {
-	if ((rtn = wait_deassert_ctl1(UCTXSTT)))
+	if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTT)))
 	  return rtn;
 	call Usci.setTxStop();
       }
 
-      call Usci.setIe(UCNACKIE | UCALIE | UCRXIE);
+      call Usci.setIe(EUSCI_B_IE_NACKIE | EUSCI_B_IE_ALIE | EUSCI_B_IE_RXIE);
       return SUCCESS;
     }
 
@@ -448,7 +441,7 @@ implementation {
 
     if ((m_left == 1) && (m_flags & I2C_STOP))
       call Usci.setTxStop();
-    call Usci.setIe(UCNACKIE | UCALIE | UCRXIE);
+    call Usci.setIe(EUSCI_B_IE_NACKIE | EUSCI_B_IE_ALIE | EUSCI_B_IE_RXIE);
     return SUCCESS;
   }
 
@@ -463,7 +456,7 @@ implementation {
    *
    * Any error return (non-SUCCESS) then no signal will be generated.
    */
-  async command error_t I2CBasicAddr.write[uint8_t client](i2c_flags_t flags,
+  async command error_t I2CBasicAddr.write(i2c_flags_t flags,
 		uint16_t addr, uint8_t len, uint8_t* buf) {
     error_t rtn;
 
@@ -487,7 +480,7 @@ implementation {
 	  return rtn;
 
       call Usci.setI2Csa(addr);
-      call Usci.orCtl1(UCTR | UCTXSTT);		// writing, Start.
+      call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// writing, Start.
       m_started = 1;
     }
 
@@ -495,7 +488,7 @@ implementation {
       __PANIC_I2C(6, 0, 0, 0);
       return EINVAL;
     }
-    call Usci.setIe(UCNACKIE | UCALIE | UCTXIE);
+    call Usci.setIe(EUSCI_B_IE_NACKIE | EUSCI_B_IE_ALIE | EUSCI_B_IE_TXIE);
     return SUCCESS;
   }
 
@@ -505,15 +498,11 @@ implementation {
    * Defaults for I2CBasicAddr
    */
 
-  default async event void I2CBasicAddr.readDone[uint8_t client](error_t error, uint16_t addr,
+  default async event void I2CBasicAddr.readDone(error_t error, uint16_t addr,
 								 uint8_t length, uint8_t* data)  {}
 
-  default async event void I2CBasicAddr.writeDone[uint8_t client](error_t error, uint16_t addr,
+  default async event void I2CBasicAddr.writeDone(error_t error, uint16_t addr,
 								  uint8_t length, uint8_t* data) {}
-
-  default async command const msp432_usci_config_t* Msp432UsciConfigure.getConfiguration[uint8_t client]() {
-    return &msp432_usci_i2c_default_config;
-  }
 
 
   /***************************************************************************/
@@ -521,7 +510,7 @@ implementation {
    * Slave Interfaces
    */
 
-  async command void I2CSlave.slaveTransmit[uint8_t clientId](uint8_t data) {
+  async command void I2CSlave.slaveTransmit(uint8_t data) {
     //TODO: safety
     //write it, reenable interrupt (if it was disabled)
     call Usci.setTxbuf(data);
@@ -529,15 +518,15 @@ implementation {
   }
 
 
-  async command uint8_t I2CSlave.slaveReceive[uint8_t client]() {
+  async command uint8_t I2CSlave.slaveReceive() {
     //re-enable rx interrupt, read the byte
     call Usci.enableRxIntr();
     return call Usci.getRxbuf();
   }
 
 
-  command error_t I2CSlave.setOwnAddress[uint8_t client](uint16_t addr) {
-    //retain UCGCEN bit
+  command error_t I2CSlave.setOwnAddress(uint16_t addr) {
+    //retain GCEN bit
     call Usci.enterResetMode_();
     call Usci.setI2Coa(addr);
     call Usci.leaveResetMode_();
@@ -545,27 +534,27 @@ implementation {
   }
 
 
-  command error_t I2CSlave.enableGeneralCall[uint8_t client]() {
+  command error_t I2CSlave.enableGeneralCall() {
     call Usci.enterResetMode_();
-    call Usci.setI2Coa(UCGCEN | (call Usci.getI2Coa()));
+    call Usci.setI2Coa(EUSCI_B_I2COA0_GCEN | (call Usci.getI2Coa()));
     call Usci.leaveResetMode_();
     return SUCCESS;
   }
 
 
-  command error_t I2CSlave.disableGeneralCall[uint8_t client]() {
+  command error_t I2CSlave.disableGeneralCall() {
     call Usci.enterResetMode_();
-    call Usci.setI2Coa(~UCGCEN & (call Usci.getI2Coa()));
+    call Usci.setI2Coa(~EUSCI_B_I2COA0_GCEN & (call Usci.getI2Coa()));
     call Usci.leaveResetMode_();
     return SUCCESS;
   }
 
 
-  default async event bool I2CSlave.slaveReceiveRequested[uint8_t client]()  { return FALSE; }
-  default async event bool I2CSlave.slaveTransmitRequested[uint8_t client]() { return FALSE; }
+  default async event bool I2CSlave.slaveReceiveRequested()  { return FALSE; }
+  default async event bool I2CSlave.slaveTransmitRequested() { return FALSE; }
 
-  default async event void I2CSlave.slaveStart[uint8_t client](bool isGeneralCall) { ; }
-  default async event void I2CSlave.slaveStop[uint8_t client]() { ; }
+  default async event void I2CSlave.slaveStart(bool isGeneralCall) { ; }
+  default async event void I2CSlave.slaveStop() { ; }
 
 
   /***************************************************************************/
@@ -593,7 +582,7 @@ implementation {
     rtn = SUCCESS;
     if (m_flags & I2C_STOP) {
       call Usci.setTxStop();
-      rtn = wait_deassert_ctl1(UCTXSTP);
+      rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP);
       m_started = 0;
     }
 
@@ -604,7 +593,7 @@ implementation {
      * to be transmitted above.
      */
     call Usci.setIe(0);			/* turn off all interrupts */
-    signal I2CBasicAddr.writeDone[call ArbiterInfo.userId()](
+    signal I2CBasicAddr.writeDone(
 	rtn, call Usci.getI2Csa(), m_len, m_buf);
     return;
   }
@@ -635,11 +624,10 @@ implementation {
 
       /* if stopping wait for STOP to deassert */
       if (m_flags & I2C_STOP) {
-	rtn = wait_deassert_ctl1(UCTXSTP);
+	rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP);
 	m_started = 0;
       }
-      signal I2CBasicAddr.readDone[call ArbiterInfo.userId()](
-		rtn, call Usci.getI2Csa(), m_pos, m_buf);
+      signal I2CBasicAddr.readDone( rtn, call Usci.getI2Csa(), m_pos, m_buf);
     }
   }
 
@@ -659,7 +647,7 @@ implementation {
      * single master so who cares, but its the right thing to do.)
      */
     call Usci.setTxStop();
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       goto nack_abort;
 
     rtn = ENOACK;
@@ -678,20 +666,20 @@ implementation {
      */
 
     /*
-     * you can't use the h/w (UCTR bit) because it has been reset
+     * you can't use the h/w (TR bit) because it has been reset
      * which clears the bit.   You can't use m_action because Panic
      * forces m_action to MASTER_IDLE.
      */
 nack_abort:
     m_started = 0;
     if (reading) {
-      signal I2CBasicAddr.readDone[call ArbiterInfo.userId()](
+      signal I2CBasicAddr.readDone(
 		rtn, call Usci.getI2Csa(), m_len, m_buf);
       return;
     }
 
     /* we were writing.   Signal appropriately */
-    signal I2CBasicAddr.writeDone[call ArbiterInfo.userId()](
+    signal I2CBasicAddr.writeDone(
 		rtn, call Usci.getI2Csa(), m_len, m_buf);
     return;
   }
@@ -704,11 +692,11 @@ nack_abort:
 
     switch (lastAction) {
       case MASTER_WRITE:
-	signal I2CBasicAddr.writeDone[call ArbiterInfo.userId()](EBUSY, call Usci.getI2Csa(), m_len, m_buf );
+	signal I2CBasicAddr.writeDone(EBUSY, call Usci.getI2Csa(), m_len, m_buf );
 	break;
 
       case MASTER_READ:
-	signal I2CBasicAddr.readDone[call ArbiterInfo.userId()]( EBUSY, call Usci.getI2Csa(), m_len, m_buf);
+	signal I2CBasicAddr.readDone( EBUSY, call Usci.getI2Csa(), m_len, m_buf);
 	break;
 
       default:
@@ -724,7 +712,7 @@ nack_abort:
   void STP_interrupt() {
 
     /* disable STOP interrupt, enable START interrupt */
-    call Usci.setIe((call Usci.getIe() | UCSTTIE) & ~UCSTPIE);
+    call Usci.setIe((call Usci.getIe() | EUSCI_B_IE_STTIE) & ~EUSCI_B_IE_STPIE);
 
     //this is ugly: the stop interrupt has higher priority than RX.
     //It appears to be the case that since we get the RX interrupt as
@@ -735,10 +723,10 @@ nack_abort:
     //logic (it would see a stop, then another byte), so we reverse
     //the priority for this case in software.
 
-    if (call Usci.getIfg() & UCRXIFG & call Usci.getIe()) {
+    if (call Usci.getIfg() & EUSCI_B_IFG_RXIFG & call Usci.getIe()) {
       RXInterrupts_interrupted(call Usci.getIfg());
     }
-    signal I2CSlave.slaveStop[call ArbiterInfo.userId()]();
+    signal I2CSlave.slaveStop();
   }
 
 
@@ -747,32 +735,32 @@ nack_abort:
     //This is the same issue as noted in the STP_interrupt above, but
     //applied to repeated start conditions.
 
-    if (call Usci.getIfg() & UCRXIFG & call Usci.getIe() ) {
+    if (call Usci.getIfg() & EUSCI_B_IFG_RXIFG & call Usci.getIe() ) {
       RXInterrupts_interrupted(call Usci.getIfg());
     }
-    call Usci.setIe(call Usci.getIe() | UCSTPIE | UCRXIE | UCTXIE);
-    signal I2CSlave.slaveStart[call ArbiterInfo.userId()]( call Usci.getStat() & UCGC);
+    call Usci.setIe(call Usci.getIe() | EUSCI_B_IE_STPIE | EUSCI_B_IE_RXIE | EUSCI_B_IE_TXIE);
+    signal I2CSlave.slaveStart( call Usci.getStat() & EUSCI_B_STATW_GC);
   }
 
 
-  async event void Interrupts.interrupted(uint8_t iv) {
+  async event void Interrupt.interrupted(uint8_t iv) {
     switch(iv) {
-      case USCI_I2C_UCALIFG:
+      case MSP432U_IV_I2C_AL:
         AL_interrupt();
         break;
-      case USCI_I2C_UCNACKIFG:
+      case MSP432U_IV_I2C_NACK:
         NACK_interrupt();
         break;
-      case USCI_I2C_UCSTTIFG:
+      case MSP432U_IV_I2C_STT:
         STT_interrupt();
         break;
-      case USCI_I2C_UCSTPIFG:
+      case MSP432U_IV_I2C_STP:
         STP_interrupt();
         break;
-      case USCI_I2C_UCRXIFG:
+      case MSP432U_IV_I2C_RX0:
         RXInterrupts_interrupted(iv);
         break;
-      case USCI_I2C_UCTXIFG:
+      case MSP432U_IV_I2C_TX0:
         TXInterrupts_interrupted(iv);
         break;
       default:
@@ -802,16 +790,16 @@ nack_abort:
    * 0  if no one home
    * 1  well your guess here.
    */
-  async command bool I2CReg.slave_present[uint8_t client](uint16_t sa) {
+  async command bool I2CReg.slave_present(uint16_t sa) {
     error_t rtn;
 
     if ((rtn = start_check_busy()))
       return rtn;
 
     call Usci.setI2Csa(sa);
-    call Usci.orCtl1(UCTR | UCTXSTT | UCTXSTP);		// Write, Start, Stop
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT | EUSCI_B_CTLW0_TXSTP);		// Write, Start, Stop
 
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       return rtn;
 
     rtn = call Usci.isNackIntrPending();		// 1 says NACK'd
@@ -828,7 +816,7 @@ nack_abort:
    * read byte (reg contents)
    * finish
    */
-  async command error_t I2CReg.reg_read[uint8_t client_id](uint16_t sa, uint8_t reg, uint8_t *val) {
+  async command error_t I2CReg.reg_read(uint16_t sa, uint8_t reg, uint8_t *val) {
     uint16_t data;
     error_t rtn;
 
@@ -838,7 +826,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* We want to write the regAddr, send the SA and then write regAddr */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -851,12 +839,12 @@ nack_abort:
      * byte coming back.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxbuf(reg);			// write register address
 
     /* looking for 2nd TxIFG */
-    if ((rtn = wait_ifg(UCTXIFG)))		// says 1st byte got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says 1st byte got ack'd
       return rtn;
 
     /*
@@ -870,12 +858,12 @@ nack_abort:
     call Usci.setTxStart();
 
     /* wait for the TxStart to go away */
-    if ((rtn = wait_deassert_ctl1(UCTXSTT)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTT)))
       return rtn;
     call Usci.setTxStop();
 
     /* wait for inbound char to show up, first rx byte */
-    if ((rtn = wait_ifg(UCRXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_RXIFG)))
       return rtn;
 
     data = call Usci.getRxbuf();
@@ -892,7 +880,7 @@ nack_abort:
    * restart (assert TXStart) to turn bus around
    * read two bytes.
    */
-  async command error_t I2CReg.reg_read16[uint8_t client_id](uint16_t sa, uint8_t reg, uint16_t *val) {
+  async command error_t I2CReg.reg_read16(uint16_t sa, uint8_t reg, uint16_t *val) {
     uint16_t data;
     error_t rtn;
 
@@ -902,7 +890,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* We want to write the regAddr, send the SA and then write regAddr */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -917,12 +905,12 @@ nack_abort:
      * the outbound serial register) has been ACK'd.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxbuf(reg);			// write register address
 
     /* looking for 2nd TxIFG */
-    if ((rtn = wait_ifg(UCTXIFG)))		// says 1st byte got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says 1st byte got ack'd
       return rtn;
 
     /*
@@ -944,11 +932,11 @@ nack_abort:
     call Usci.setTxStart();
 
     /* wait for the TxStart to go away */
-    if ((rtn = wait_deassert_ctl1(UCTXSTT)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTT)))
       return rtn;
 
     /* wait for inbound char to show up, first rx byte */
-    if ((rtn = wait_ifg(UCRXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_RXIFG)))
       return rtn;
 
     /*
@@ -964,7 +952,7 @@ nack_abort:
 
     data = call Usci.getRxbuf();
     data = data << 8;
-    if ((rtn = wait_ifg(UCRXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_RXIFG)))
       return rtn;
     data |= call Usci.getRxbuf();
     *val = data;
@@ -972,7 +960,7 @@ nack_abort:
   }
 
 
-  async command error_t I2CReg.reg_readBlock[uint8_t client_id](
+  async command error_t I2CReg.reg_readBlock(
 	    uint16_t sa, uint8_t reg, uint8_t num_bytes, uint8_t *buf) {
 
     uint16_t left;
@@ -988,7 +976,7 @@ nack_abort:
      *
      */
     if (left == 1)
-      return call I2CReg.reg_read[client_id](sa, reg, &buf[0]);
+      return call I2CReg.reg_read(sa, reg, &buf[0]);
 
     if ((rtn = start_check_busy()))
       return rtn;
@@ -996,7 +984,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* We want to write the regAddr, send the SA and then write regAddr */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -1011,12 +999,12 @@ nack_abort:
      * the outbound serial register) has been ACK'd.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxbuf(reg);			// write register address
 
     /* looking for 2nd TxIFG */
-    if ((rtn = wait_ifg(UCTXIFG)))		// says 1st byte got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says 1st byte got ack'd
       return rtn;
 
     /*
@@ -1026,7 +1014,7 @@ nack_abort:
     call Usci.setTxStart();
 
     /* wait for the TxStart to go away */
-    if ((rtn = wait_deassert_ctl1(UCTXSTT)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTT)))
       return rtn;
 
     /*
@@ -1041,7 +1029,7 @@ nack_abort:
      * What happens if we assert TxStop when we are holding off the receiver?
      */
     while (left) {
-      if ((rtn = wait_ifg(UCRXIFG)))
+      if ((rtn = wait_ifg(EUSCI_B_IFG_RXIFG)))
 	return rtn;
       left--;
 
@@ -1061,7 +1049,7 @@ nack_abort:
 	call Usci.setTxStop();
       *buf++ = call Usci.getRxbuf();
     }
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       return rtn;
     return SUCCESS;
   }
@@ -1075,7 +1063,7 @@ nack_abort:
    * write byte (reg contents)
    * finish
    */
-  async command error_t I2CReg.reg_write[uint8_t client_id](uint16_t sa,
+  async command error_t I2CReg.reg_write(uint16_t sa,
 						    uint8_t reg, uint8_t val) {
     error_t rtn;
 
@@ -1084,7 +1072,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* We want to write the regAddr, send the SA and then write regAddr */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -1097,11 +1085,11 @@ nack_abort:
      * byte coming back.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))		// wait for txstart to finish
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// wait for txstart to finish
       return rtn;
 
     call Usci.setTxbuf(reg);			// write register address
-    if ((rtn = wait_ifg(UCTXIFG)))		// says reg addr got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says reg addr got ack'd
       return rtn;
 
     /*
@@ -1112,17 +1100,17 @@ nack_abort:
      * up when this happens).  Then set TxStop to finish.
      */
     call Usci.setTxbuf(val);
-    if ((rtn = wait_ifg(UCTXIFG)))		// says val got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says val got ack'd
       return rtn;
 
     call Usci.setTxStop();
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       return rtn;
     return SUCCESS;
   }
 
 
-  async command error_t I2CReg.reg_write16[uint8_t client_id](uint16_t sa,
+  async command error_t I2CReg.reg_write16(uint16_t sa,
 						      uint8_t reg, uint16_t val) {
     error_t rtn;
 
@@ -1131,7 +1119,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* We want to write the regAddr, send the SA and then write regAddr */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -1144,12 +1132,12 @@ nack_abort:
      * byte coming back.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxbuf(reg);			// write register address
 
     /* looking for 2nd TxIFG */
-    if ((rtn = wait_ifg(UCTXIFG)))		// says reg addr got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says reg addr got ack'd
       return rtn;
 
     /*
@@ -1157,7 +1145,7 @@ nack_abort:
      * We've got an existing TxIFG, so we have room.
      */
     call Usci.setTxbuf(val >> 8);		// msb part
-    if ((rtn = wait_ifg(UCTXIFG)))		// says 1st byte got ack'd
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says 1st byte got ack'd
       return rtn;
 
     /*
@@ -1165,17 +1153,17 @@ nack_abort:
      * before sending Stop
      */
     call Usci.setTxbuf(val & 0xff);		// lsb part
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
 
     call Usci.setTxStop();
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       return rtn;
     return SUCCESS;
   }
 
 
-  async command error_t I2CReg.reg_writeBlock[uint8_t client_id](uint16_t sa,
+  async command error_t I2CReg.reg_writeBlock(uint16_t sa,
 				uint8_t reg, uint8_t num_bytes, uint8_t *buf) {
     uint16_t left;
     error_t  rtn;
@@ -1190,7 +1178,7 @@ nack_abort:
     call Usci.setI2Csa(sa);
 
     /* writing (will write regAddr), send start */
-    call Usci.orCtl1(UCTR | UCTXSTT);		// TR (write) & STT
+    call Usci.orCtlw0(EUSCI_B_CTLW0_TR | EUSCI_B_CTLW0_TXSTT);		// TR (write) & STT
 
     /*
      * get 1st TxIFG
@@ -1205,12 +1193,12 @@ nack_abort:
      * the outbound serial register) has been ACK'd.
      */
 
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxbuf(reg);			// write register address
 
     while (left) {
-      if ((rtn = wait_ifg(UCTXIFG)))		// says previous byte got ack'd
+      if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))		// says previous byte got ack'd
 	return rtn;
 
       left--;
@@ -1220,11 +1208,25 @@ nack_abort:
      * we have to wait until the last byte written actually
      * makes it into the SR before setting Stop.
      */
-    if ((rtn = wait_ifg(UCTXIFG)))
+    if ((rtn = wait_ifg(EUSCI_B_IFG_TXIFG)))
       return rtn;
     call Usci.setTxStop();
-    if ((rtn = wait_deassert_ctl1(UCTXSTP)))
+    if ((rtn = wait_deassert_ctlw0(EUSCI_B_CTLW0_TXSTP)))
       return rtn;
+    return SUCCESS;
+  }
+
+
+  command error_t Init.init() {
+    configure_(call Msp432UsciConfigure.getConfiguration());
+    call Usci.enableModuleInterrupt();
+    return SUCCESS;
+  }
+
+
+  command error_t Init.init() {
+    configure_(call Msp432UsciConfigure.getConfiguration());
+    call Usci.enableModuleInterrupt();
     return SUCCESS;
   }
 

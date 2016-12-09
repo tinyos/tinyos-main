@@ -49,6 +49,7 @@
 
 configuration Msp432UsciI2CB3P {
   provides {
+    interface Init;
     interface I2CPacket<TI2CBasicAddr>;
     interface I2CReg;
     interface I2CSlave;
@@ -66,16 +67,18 @@ implementation {
   components Msp432UsciB3P as UsciP;
   components new Msp432UsciI2CP() as I2CP;
 
-  I2CP.Usci        -> UsciP;
-  I2CP.Interrupts  -> UsciP.Interrupt;
+  I2CP.Usci             -> UsciP;
+  I2CP.Interrupt        -> UsciP.Interrupt;
+  SCL                   =  I2CP.SCL;
+  SDA                   =  I2CP.SDA;
+  Panic                 =  I2CP;
+  Platform              =  I2CP;
 
-  Msp432UsciConfigure   = I2CP;
-  I2CPacket             = I2CP;
-  I2CReg                = I2CP;
-  I2CSlave              = I2CP;
-  Msp432UsciError       = I2CP;
-  Panic                 = I2CP;
-  Platform              = I2CP;
-  SCL                   = I2CP.SCL;
-  SDA                   = I2CP.SDA;
+  Init                  =  I2CP;
+  Msp432UsciConfigure   =  I2CP;
+
+  I2CPacket             =  I2CP;
+  I2CReg                =  I2CP;
+  I2CSlave              =  I2CP;
+  Msp432UsciError       =  I2CP;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2016 Eric B. Decker
+ * Copyright (c) 2012, 2016 Eric B. Decker
  * Copyright (c) 2011 John Hopkins University
  * Copyright (c) 2011 Redslate Ltd.
  * Copyright (c) 2009-2010 People Power Co.
@@ -40,7 +40,7 @@
 #include "msp432usci.h"
 
 /**
- * Configuration Non-shared.
+ * Generic configuration for a dedicated USCI_B0 in I2C mode.
  *
  * @author Peter Bigot    <pabigot@peoplepowerco.com>
  * @author Doug Carlson   <carlson@cs.jhu.edu>
@@ -51,6 +51,7 @@
 
 configuration Msp432UsciI2CB0C {
   provides {
+    interface Init;
     interface I2CPacket<TI2CBasicAddr>;
     interface I2CReg;
     interface I2CSlave;
@@ -60,10 +61,13 @@ configuration Msp432UsciI2CB0C {
     interface Msp432UsciConfigure;
     interface Panic;
     interface Platform;
+    interface HplMsp432Gpio as SCL;
+    interface HplMsp432Gpio as SDA;
   }
 }
 implementation {
   components Msp432UsciI2CB0P as I2CP;
+  Init                  = I2CP.Init;
   I2CPacket             = I2CP.I2CPacket;
   I2CReg                = I2CP.I2CReg;
   I2CSlave              = I2CP.I2CSlave;
@@ -71,4 +75,6 @@ implementation {
   Msp432UsciError       = I2CP.Msp432UsciError;
   Panic                 = I2CP;
   Platform              = I2CP;
+  SCL                   = I2CP.SCL;
+  SDA                   = I2CP.SDA;
 }

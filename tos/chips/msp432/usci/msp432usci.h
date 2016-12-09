@@ -135,6 +135,23 @@ typedef enum {
   MSP432_USCI_I2C,
 } msp432_usci_mode_t;
 
+#ifndef MSP432_I2C_MASTER_MODE
+/*
+ * default to Master.
+ *
+ * MM turns on multi-master mode, see i2c-mm/
+ *
+ * EUSCI_B_CTLW0_MM or EUSCI_B_CTLW0_MST
+ */
+#define MSP432_I2C_MASTER_MODE EUSCI_B_CTLW0_MST
+#endif
+
+
+#ifndef MSP432_I2C_DIVISOR
+#define MSP432_I2C_DIVISOR 10
+#endif
+
+
 /*
  * Errors that can be kicked out from the USCI h/w
  */
