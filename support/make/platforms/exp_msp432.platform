@@ -7,6 +7,7 @@ PFLAGS += -I%T/system/panic_simple
 PFLAGS += -I%T/platforms/exp_msp432/hardware/
 PFLAGS += -I%T/platforms/exp_msp432/hardware/leds
 PFLAGS += -I%T/platforms/exp_msp432/hardware/timer
+PFLAGS += -I%T/platforms/exp_msp432/hardware/startup
 PFLAGS += -I%T/platforms/exp_msp432/hardware/usci
 
 PFLAGS += -I%T/chips/cortex
@@ -16,6 +17,7 @@ PFLAGS += -I%T/chips/msp432/msp432p401/pins
 PFLAGS += -I%T/chips/msp432/driverlib
 PFLAGS += -I%T/chips/msp432/timer
 PFLAGS += -I%T/chips/msp432/usci
+PFLAGS += -I%T/chips/msp432/usci/i2c-sm
 
 PFLAGS += -I%T/lib/timer
 
