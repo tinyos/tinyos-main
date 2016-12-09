@@ -74,13 +74,13 @@
  * We redefine only those that we use and have verified.
  */
 enum {
-  MSP432U_STAT_BUSY = EUSCI_A_STATW_BUSY,
-  MSP432U_STAT_PE   = EUSCI_A_STATW_PE,
-  MSP432U_STAT_OE   = EUSCI_A_STATW_OE,
-  MSP432U_STAT_FE   = EUSCI_A_STATW_FE,
+  MSP432U_STAT_BUSY   = EUSCI_A_STATW_BUSY,
+  MSP432U_STAT_PE     = EUSCI_A_STATW_PE,
+  MSP432U_STAT_OE     = EUSCI_A_STATW_OE,
+  MSP432U_STAT_FE     = EUSCI_A_STATW_FE,
 
-  MSP432U_IFG_RX    = EUSCI_A_IFG_RXIFG,
-  MSP432U_IFG_TX    = EUSCI_A_IFG_TXIFG,
+  MSP432U_IFG_RX      = EUSCI_A_IFG_RXIFG,
+  MSP432U_IFG_TX      = EUSCI_A_IFG_TXIFG,
 };
 
 
@@ -92,6 +92,7 @@ enum {
  * MSP432U_IV_<what>: MSP432 Usci Vector ID
  */
 enum {
+  MSP432U_IV_NONE       = 0,    /* none */
   MSP432U_IV_RXIFG      = 2,    /* rxifg, rxbuf full  */
   MSP432U_IV_TXIFG      = 4,    /* txifg, txbuf empty */
   MSP432U_IV_STTIFG     = 6,    /* start bit          */
