@@ -139,10 +139,10 @@ implementation {
    * last byte that we pushed.
    */
   bool isBusy () {
-    uint16_t t0, t1;
+    uint32_t t0, t1;
 
     t0 = call Platform.usecsRaw();
-    while (call Usci.getStat() & MSP432U_STAT_BUSY) {
+    while (call Usci.isBusy()) {
       /* busy-wait */
       t1 = call Platform.usecsRaw();
       if (t1 - t0 > SPI_MAX_BUSY_WAIT) {
@@ -150,7 +150,7 @@ implementation {
 	return TRUE;
       }
     }
-    return 0;
+    return FALSE;
   }
 
 
