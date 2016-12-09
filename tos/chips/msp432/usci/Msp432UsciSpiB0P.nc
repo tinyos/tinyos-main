@@ -20,21 +20,22 @@ implementation {
   components     Msp432UsciB0P    as UsciP;
   components new Msp432UsciSpiP() as SpiP;
 
-  SpiP.Usci           -> UsciP;
-  SpiP.Interrupt      -> UsciP;
-  SIMO                = SpiP.SIMO;
-  SOMI                = SpiP.SOMI;
-  CLK                 = SpiP.CLK;
-  Panic               = SpiP;
-  Platform            = SpiP;
+  SpiP.Usci             -> UsciP;
+  SpiP.Interrupt        -> UsciP;
 
-  Init                = SpiP;
-  Msp432UsciConfigure = SpiP;
+  SIMO                  =  SpiP.SIMO;
+  SOMI                  =  SpiP.SOMI;
+  CLK                   =  SpiP.CLK;
 
-  SpiPacket           = SpiP;
-  SpiBlock            = SpiP;
-  SpiByte             = SpiP;
-  FastSpiByte         = SpiP;
-  Msp432UsciError     = SpiP;
+  Panic                 =  SpiP;
+  Platform              =  SpiP;
 
+  Init                  =  SpiP;
+  Msp432UsciConfigure   =  SpiP;
+
+  SpiPacket             =  SpiP;
+  SpiBlock              =  SpiP;
+  SpiByte               =  SpiP;
+  FastSpiByte           =  SpiP;
+  Msp432UsciError       =  SpiP;
 }
