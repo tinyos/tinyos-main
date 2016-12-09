@@ -40,15 +40,12 @@
  
 configuration TestGPIOAppC {}
 implementation {
-  components MainC, TestGPIOC as App, LedsC;
-  App.Leds -> LedsC;
+  components MainC, TestGPIOC as App;
   App.Boot -> MainC.Boot;
 
   components HplMsp432GpioC as Pins;
-  App.Pin0 -> Pins.Port10;
-  App.Pin1 -> Pins.Port17;
-  App.Pin2 -> Pins.Port104;
+  App.Pin -> Pins.Port10;
 
   components HplMsp432PortIntP as _Ports;
-  App.Pin0Int -> _Ports.Int[0x11];
+  App.PinInt -> _Ports.Int[0x11];
 }
