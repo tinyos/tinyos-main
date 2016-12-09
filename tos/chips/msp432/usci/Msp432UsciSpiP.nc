@@ -389,6 +389,7 @@ implementation {
   /* interrupts should be off */
   command error_t Init.init() {
     configure_(call Msp432UsciConfigure.getConfiguration());
+    call Usci.enableModuleInterrupt();
     return SUCCESS;
   }
 
