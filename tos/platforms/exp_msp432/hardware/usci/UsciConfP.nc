@@ -36,13 +36,37 @@
 
 #include <msp432usci.h>
 
-module SpiConfP {
+module UsciConfP {
   provides {
+    interface Msp432UsciConfigure as UartConf;
+    interface Msp432UsciConfigure as I2CConf;
     interface Msp432UsciConfigure as MasterConf;
     interface Msp432UsciConfigure as SlaveConf;
   }
 }
 implementation {
+
+  const msp432_usci_config_t uart_config = {
+    ctlw0 : EUSCI_A_CTLW0_SSEL__SMCLK,
+    brw   : 109,
+    mctlw : (0 << EUSCI_A_MCTLW_BRF_OFS) |
+            (2 << EUSCI_A_MCTLW_BRS_OFS),
+    i2coa : 0
+  };
+
+#ifndef MSP430_I2C_DIVISOR
+#define MSP430_I2C_DIVISOR 80
+#endif
+
+  const msp432_usci_config_t i2c_config = {
+    ctlw0 : EUSCI_B_CTLW0_SYNC     | EUSCI_B_CTLW0_MODE_3 |
+            MSP432_I2C_MASTER_MODE | EUSCI_B_CTLW0_SSEL__SMCLK,
+    brw   : MSP430_I2C_DIVISOR,		/* SMCLK/div */
+              				/* 8*10^6/div -> 100,000 Hz */
+    mctlw : 0,
+    i2coa : 0x41,
+  };
+
 
   /*
    * PH, data captured on first UCLK edge, changed on falling
@@ -70,6 +94,14 @@ implementation {
     mctlw : 0,
     i2coa : 0
   };
+
+  async command const msp432_usci_config_t *UartConf.getConfiguration() {
+    return &uart_config;
+  }
+
+  async command const msp432_usci_config_t *I2CConf.getConfiguration() {
+    return &i2c_config;
+  }
 
   async command const msp432_usci_config_t *MasterConf.getConfiguration() {
     return &master_config;
