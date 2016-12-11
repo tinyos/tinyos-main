@@ -330,8 +330,8 @@ printf "\n"
 __p_shcsr
 __p_hfsr_cfsr
 #                        pending    active 
-#icsr: (0042b82a) (irqn.. P: vect  R  vect)
-printf "icsr:  (%08x) (irqn.. %c: %d(d)  %c  %d(d) )\n", \
+#icsr: (0042b82a) (vectn.. P: vect  R  vect)
+printf "icsr:  (%08x) (vectn.. %c: %d(d)  %c  %d(d) )\n", \
     $scb->ICSR, (($scb->ICSR >> 0d22) & 1) ? 'P' : 'p', \
     ($scb->ICSR >> 0d12) & 0x3f, \
     (($scb->ICSR >> 0d11) & 1) ? 'R' : 'r', $scb->ICSR & 0x1ff
