@@ -34,7 +34,7 @@
  * Author: Eric B. Decker <cire831@gmail.com>
  *
  * The msp432 defines interrupt vectors in tos/platforms/<platform>/startup.c
- * Names are of the form TA[0-3]_{0,N}_Handler.  The start versions are
+ * Names are of the form TA[0-3]_{0,N}_Handler.  The startup versions are
  * defined as weak and are overridden here.
  *
  * The chip header defines all 4 TA timers.  Whether a chip has all 4 or
@@ -47,7 +47,7 @@
  * All timer modules are the same, each has 5 capture registers and
  * the main Register (TAn->R).  The TAn_0 interrupt fires from the
  * CCR0 interrupt, and TAn_N interrupts for all other CCR registers
- * as well as the wrap interrupt (TAn->CTL.TAIFG).
+ * as well as the wrap (TAn->R wrap) interrupt (TAn->CTL.TAIFG).
  *
  * Interrupts on TAn_N are presented via the TAn->IV interrupt
  * vector register.  They are prioritized and when IV is read the
@@ -57,6 +57,9 @@
  * Interrupts on TAn_0 come from TAn->CCTL0.CCIFG (CCIE must be set)
  * and are NOT automatically cleared.  This must be done manually in
  * the interrupt handler.
+ *
+ * To enable a given TAn module's interrupts, the corresponding
+ * NVIC enable must be set.  This happens else where.
  * 
  * This module is the connector from the interrupt to the actual
  * driver.

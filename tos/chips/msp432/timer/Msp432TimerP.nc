@@ -35,41 +35,38 @@
  */
 
 /*
- * FIXME: we didn't actually to the encoded nx implementation.  Didn't
- * really buy anything and requires that we figure out which Timer
- * we are messing with.  The core code is the same so consolidating
- * didn't buy that much.  Further, the potential complication of asyncrony 
- * requires either indepenent instatation or every timer has to eat
- * the atomic surrounding TAx->R references.
+ * low level interface to actual timer hardware on the msp432.  This
+ * is a single instance of a TA block with n CCRs.  The msp432 provides
+ * up to 4 TAs each with 5 CCRs, denoted 5,5,5,5.
  *
- * Clean up the chat about nx.
+ * This module instantiates one such TA, timer_ptr is the memory mapped
+ * base address for the timer.
  *
- * n:  timer being referenced.  0-3
- * nx: combined timer and event.  ie.  x can be 0-f, n can be 0-3
- *     nx = (n << 4) | x
- * 
- * events are values from the IV register shifted to the right one bit.
- * as follows:
+ * For interrupts to actually happen, a handler must be instantiated in the
+ * vector table and the appropriate NVIC enable must be turned on.  This
+ * happens else where.
  *
- *     0x00:    (0) TA0->CCTL0.CCIFG (from TA0_0_Handler)
- *     0x01:    (2) TA0->CCTL1.CCIFG (from TA0_N_Handler)
- *     0x02:    (4) TA0->CCTL2.CCIFG
- *     0x03:    (6) TA0->CCTL3.CCIFG
- *     0x04:    (8) TA0->CCTL4.CCIFG
- *     0x05:    (a) TA0->CCTL5.CCIFG
- *     0x06:    (c) TA0->CCTL6.CCIFG
- *     0x07:    (e) TA0->CTL.IFG
- *     0x10:    TA1->CCTL0.CCIFG
+ * Two different vectors can occur for this TA block, TAx_0_Handler (for
+ * TAx->CCTL[0].CCIFG (CCR0 ifg) and TAx_N_Handler for the reset.  See
+ * below in the interrupt catchers.
  *
- * NOTE: the msp432 currently only support up to 4 TA modules each
- * with 5 CCRs, this is denoted in the TI literature as TA: 5,5,5,5.
- * So in practice n will be 0-3 and x can be 0-4 and 7 (wrap).
+ * First, interrupts for each of the constituent parts of the timer block
+ * are controlled by individual enables (IEs in each of the appropriate
+ * control words (TAx->CTL, TAx->CCTL[n]).
  *
- * TAx_0_Handler handles the interrupt from TAx->CCTL0.CCIFG.  This
- * gets signalled as Event[nx] where nx = n << 4 | x, x = [0:4,7]
+ * For interrupts to occur, the appropriate enable in the NVIC must also
+ * be set.  This occurs after the module has been instantiated and Init
+ * wired into the Platform's PeripheralInit.  When the platform runs
+ * PlatformInit, PeripheralInit will be invoked and any timer module
+ * that is wired in will have its Init block executed.  This will turn
+ * on the appropriate NVIC enable.
  *
- * TAx_N_Handler handles all other timer interrupts and the TAx->IV
- * indicates which one popped.  Reading IV clears the interrupt.
+ * We rely exclusively on the IEs to control interrupts on a h/w block
+ * basis.
+ *
+ * We assume that the IRQn passed in when the module is instantiated is the
+ * IRQn ofr the TAn_0_IRQn.  We have to enable both the TAn_0 and TAn_N
+ * Vectors.  We assume that TAn_N_IRQn is TAn_0_IRQn + 1.
  */
 
 generic module Msp432TimerP(uint32_t timer_ptr, bool isAsync) {
