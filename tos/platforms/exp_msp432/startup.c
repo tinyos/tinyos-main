@@ -109,6 +109,8 @@ void HardFault_Handler() {
   }
 }
 
+#ifdef notdef
+
 typedef struct {
   uint32_t rtc_val;
   uint32_t usec_val;
@@ -146,6 +148,9 @@ void T32_INT2_Handler() {
     rtc_idx = 0;
   BITBAND_PERI(P1->OUT, 0) ^= 1;
 }
+
+#endif
+
 
 void __default_handler()  __attribute__((interrupt));
 void __default_handler() {
@@ -203,7 +208,7 @@ void EUSCIB2_Handler()    __attribute__((weak, alias("__default_handler")));
 void EUSCIB3_Handler()    __attribute__((weak, alias("__default_handler")));
 void ADC14_Handler()      __attribute__((weak, alias("__default_handler")));
 void T32_INT1_Handler()   __attribute__((weak, alias("__default_handler")));
-//void T32_INT2_Handler()   __attribute__((weak, alias("__default_handler")));
+void T32_INT2_Handler()   __attribute__((weak, alias("__default_handler")));
 void T32_INTC_Handler()   __attribute__((weak, alias("__default_handler")));
 void AES_Handler()        __attribute__((weak, alias("__default_handler")));
 void RTC_Handler()        __attribute__((weak, alias("__default_handler")));
@@ -331,6 +336,7 @@ void __exception_init() {
 void __watchdog_init() {
   WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;         // Halt the WDT
 }
+
 
 void __pins_init() {
 
@@ -468,18 +474,14 @@ void __t32_init() {
 
   /* MCLK/16 (1MHz, 1us), enable, freerunning, no int, 32 bits, wrap */
   tp->LOAD = 0xffffffff;
-  tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS | TIMER32_CONTROL_IE;
+  tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS;
 
   /*
    * Using Ty as a 1 second ticker.
    */
   tp = TIMER32_2;
   tp->LOAD = 1000000;           /* 1 MHz */
-  tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS | TIMER32_CONTROL_IE |
-    T32_PERIODIC;
-
-  NVIC_SetPriority(T32_INT2_IRQn, 5);
-  NVIC_EnableIRQ(T32_INT2_IRQn);
+  tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS | T32_PERIODIC;
 }
 
 
@@ -528,6 +530,7 @@ void __core_clk_init() {
    * time the turn on of the remainder of the system.
    */
   __t32_init();                   /* rawUsecs */
+
   /*
    * turn on the 32Ki LFXT system by enabling the LFXIN LFXOUT pins
    * Do not tweak the SELs on PJ.4/PJ.5, they are reset to the proper
@@ -595,8 +598,7 @@ void __start_timers() {
 /**
  * Initialize the system
  *
- * After Reset we have observed the following state (also documented in the
- * TRM).
+ * Comment about initial CPU state
  *
  * Desired configuration:
  *
@@ -625,7 +627,6 @@ void __system_init(void) {
   __ram_init();
   __flash_init();
   __core_clk_init();
-//  __bkpt(0);
 
   __ta_init(TIMER_A0, TA_SMCLK8); /* Tmicro */
   __ta_init(TIMER_A1, TA_ACLK1);  /* Tmilli */
@@ -676,6 +677,6 @@ void __Reset() {
   __system_init();
   main();
   while (1) {
-    __nop();
+    __BKPT(0);
   }
 }
