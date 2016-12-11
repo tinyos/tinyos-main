@@ -5,10 +5,7 @@ PFLAGS += -I%T/platforms/exp_msp432
 PFLAGS += -I%T/system/panic_simple
 
 PFLAGS += -I%T/platforms/exp_msp432/hardware/
-PFLAGS += -I%T/platforms/exp_msp432/hardware/leds
-PFLAGS += -I%T/platforms/exp_msp432/hardware/timer
 PFLAGS += -I%T/platforms/exp_msp432/hardware/startup
-PFLAGS += -I%T/platforms/exp_msp432/hardware/usci
 
 PFLAGS += -I%T/chips/cortex
 PFLAGS += -I%T/chips/msp432
