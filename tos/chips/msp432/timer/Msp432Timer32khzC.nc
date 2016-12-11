@@ -32,6 +32,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Eric B. Decker <cire831@gmail.com>
+ *
+ * When instantiated, Msp432Timer32khzC maps an underlying hardware
+ * timer to the 3 interfaces exported.
+ *
+ * For example, the first invokation will expose Timer32khzMap[0]
+ * the next, [1], and so on.  When you run out of timers from the
+ * map the wiring will fail.
+ *
+ * The default wiring has TA1 clocking at 32KiHz and it has 5 CCRs.
+ * All Msp432Timer[x] expose the base timer.  Msp432TimerCCTL[n] exposes
+ * the CCR control for CCRn, and Msp432TimerCompare[n] exposes basic
+ * compare (timing events) for CCRn.
+ *
+ * Msp432Timer32khzMapC defines which timer block is allocated (default is
+ * TA1) and how many CCRs are exposed.  The msp432p401r for example has
+ * 5,5,5,5, 4 TAs, TA0-TA3 each with 5 CCRs.  Note that a different packaging
+ * of the chip only has 5,5,5 TA0-TA2.  This is not reflected in the chip
+ * header.  The platform has to reflect this in the map.
  */
 
 generic configuration Msp432Timer32khzC() {
