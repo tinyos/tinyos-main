@@ -353,6 +353,7 @@ void __pins_init() {
 
   P2->OUT = 0;
   P2->DIR = 7;
+  BITBAND_PERI(P1->OUT, 0) = 1;
 
   /*
    * We bring the clocks out so we can watch them.
@@ -372,20 +373,6 @@ void __pins_init() {
   P7->DIR  = 0x01;
   P7->SEL0 = 0x01;
   P7->SEL1 = 0x00;
-
-  /* clear any pendings */
-  P1->IFG = 0;
-  P2->IFG = 0;
-  P3->IFG = 0;
-  P4->IFG = 0;
-  P5->IFG = 0;
-  P6->IFG = 0;
-  NVIC_EnableIRQ(PORT1_IRQn);
-  NVIC_EnableIRQ(PORT2_IRQn);
-  NVIC_EnableIRQ(PORT3_IRQn);
-  NVIC_EnableIRQ(PORT4_IRQn);
-  NVIC_EnableIRQ(PORT5_IRQn);
-  NVIC_EnableIRQ(PORT6_IRQn);
 }
 
 
