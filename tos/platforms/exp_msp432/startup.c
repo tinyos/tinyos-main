@@ -497,15 +497,41 @@ void __t32_init() {
  * Research CS->DCOERCAL{0,1}
  */
 
-/* CLK_DCOTUNE was determined by running CS_setDCOFrequency(TARGET_FREQ)
+/*
+ * CLK_DCOTUNE was determined by running CS_setDCOFrequency(TARGET_FREQ)
  * and seeing what it produced.  We then a) understand and b) make
- * use of the result.
+ * use of the result.  This was from driverlib.  We have observed with a
+ * scope clocking at 16MHz.  No idea of the tolerance or variation.
+ *
+ * DCO tuning is discussed in AppReport SLAA658A, Multi-Frequency Range
+ * and Tunable DCO on MSP432P4xx Microcontrollers.
+ * (http://www.ti.com/lit/an/slaa658a/slaa658a.pdf).
+ *
+ * According to https://e2e.ti.com/support/microcontrollers/msp430/f/166/t/411030
+ * and page 52 of datasheet (SLAS826E) the DCO with external resistor has a
+ * tolerance of worst case +/- 0.6%.  Which gives us a frequency range of
+ * 15904000 to 16096000 Hz.
+ *
+ * We have observed LFXT (crystal) taking ~1.5s to stabilize.  This was
+ * timed using TX (Timer32_1) clocking DCOCLK/16 to get 1us ticks.  This
+ * assumes the DCOCLK comes right up and is stable.  According to the
+ * datasheet (SLAS826E, msp432p401), DCO settling time changing DCORSEL
+ * is 10us and t_start is 5 us so we should be good.
  */
+
 #define CLK_DCOTUNE 134
+
+uint32_t lfxt_startup_time;
 
 void __core_clk_init() {
   uint32_t timeout;
 
+  /*
+   * only change from internal res to external when dco in dcorsel_1.
+   * When first out of POR, DCORSEL will be 1, once we've set DCORES
+   * it stays set and we no longer care about changing it (because
+   * it always stays 1).
+   */
   CS->KEY = CS_KEY_VAL;
   CS->CTL0 = CS_CTL0_DCORSEL_3 | CS_CTL0_DCORES | CLK_DCOTUNE;
   CS->CTL1 = CS_CTL1_SELS__DCOCLK  | CS_CTL1_DIVS__2 | CS_CTL1_DIVHS__1 |
@@ -536,11 +562,12 @@ void __core_clk_init() {
     if (--timeout == 0) {
       CS->IFG;
       CS->STAT;
-      __bkpt(0);
+      __bkpt(0);                /* panic?  what to do, what to do */
     }
     BITBAND_PERI(CS->CLRIFG,CS_CLRIFG_CLR_LFXTIFG_OFS) = 1;
   }
   CS->KEY = 0;
+  lfxt_startup_time = -TIMER32_1->VALUE;
 }
 
 
@@ -572,6 +599,7 @@ void __rtc_init() {
 
 
 void __start_timers() {
+  /* let the RTC go */
   RTC_C->CTL0 = RTC_C_KEY;
   BITBAND_PERI(RTC_C->CTL13, RTC_C_CTL13_HOLD_OFS) = 0;
   RTC_C->CTL0 = 0;                /* close the lock */
