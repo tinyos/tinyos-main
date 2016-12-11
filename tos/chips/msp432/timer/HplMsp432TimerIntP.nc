@@ -114,6 +114,6 @@ implementation {
     signal TimerAInt_N.interrupt[3](v);
   }
 
-  default async event void TimerAInt_0.interrupt[uint8_t instance](uint8_t v) {__bkpt(1);}
-  default async event void TimerAInt_N.interrupt[uint8_t instance](uint8_t v) {__bkpt(1);}
+  default async event void TimerAInt_0.interrupt[uint8_t instance](uint8_t v) { bkpt(1); }
+  default async event void TimerAInt_N.interrupt[uint8_t instance](uint8_t v) { bkpt(1); }
 }

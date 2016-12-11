@@ -58,7 +58,6 @@ implementation {
   PlatformP.PlatformLeds -> PlatformLedsC;
 
   components PlatformUsciMapC;
-  // No code initialization required; just connect the pins
   components PlatformPinsC;
 
   components T32BlinkC;         /* initial blinky light */
@@ -66,6 +65,4 @@ implementation {
 
   /* clocks are initilized by startup */
 
-//  components PlatformClockC;
-//  PlatformP.PlatformClock -> PlatformClockC;
 }
