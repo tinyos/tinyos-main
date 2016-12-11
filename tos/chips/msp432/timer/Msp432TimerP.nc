@@ -69,20 +69,49 @@
  * Vectors.  We assume that TAn_N_IRQn is TAn_0_IRQn + 1.
  */
 
-generic module Msp432TimerP(uint32_t timer_ptr, bool isAsync) {
+generic module Msp432TimerP(uint32_t timer_ptr, uint32_t irqn, bool isAsync) {
   provides {
     interface Msp432Timer      as Timer;
     interface Msp432TimerEvent as Event[uint8_t n];
+    interface Init;
   }
   uses {
-    interface Msp432TimerEvent as Overflow;
-    interface HplMsp432TimerInt   as TimerVec_0;
-    interface HplMsp432TimerInt   as TimerVec_N;
+    interface Msp432TimerEvent  as Overflow;
+    interface HplMsp432TimerInt as TimerVec_0;
+    interface HplMsp432TimerInt as TimerVec_N;
   }
 }
 implementation {
 
 #define TAx ((Timer_A_Type *) timer_ptr)
+
+  /*
+   * now you may be wondering why the only thing initilized here is the
+   * NVIC enable.  I'm glad you asked.  It would make sense, in some sense,
+   * to fully initilize the timer module.  This is after all where the
+   * instantiation of a physical timer module occurs.
+   *
+   * However, most of initilizing the timer involves setting up its
+   * clocking, dividers and such.  This is inherently a platform thing and
+   * depends on how those clocks are set up.  If we put such initilization
+   * in here, this module would become inherently platform dependent (bad).
+   *
+   * The simplest thing to do is initilize the platform dependent pieces of
+   * any timer used doing startup, in inherently platform code.  So the
+   * timers are started up when the main clocks are initialized.  And we
+   * turn on the interrupt here which is inherently a cpu dependent thing.
+   *
+   * That way this module stays platform independent and clocks and such are
+   * initialized early on like they need to be.
+   *
+   * See system_init -> __core_clk_init -> __ta_init (startup.c)
+   */
+  command error_t Init.init() {
+    NVIC_EnableIRQ(irqn);
+    NVIC_EnableIRQ(irqn + 1);
+    return SUCCESS;
+  }
+
 
   async command uint16_t Timer.get() {
     uint16_t t0, t1;
@@ -90,12 +119,12 @@ implementation {
     /*
      * WARNING: It is possible that the timer being referenced is being clocked
      * by something other than a clock syncronized to the main CPU clock.  Define
-     * isAsync as TRUE to enable a major vote when reading TAx->R to avoid 
+     * isAsync as TRUE to enable a majority vote when reading TAx->R to avoid
      * propagation effects and inconsistent reads.
      *
      * (See section 17.2.1.1 (pg 605) of the msp432 family TRM (SLAU356D)).
      *
-     * This is a platform thing, and only needs to be done if the clock for 
+     * This is a platform thing, and only needs to be done if the clock for
      * this timer is something other than a main cpu clock derived. ie.ACLK
      * when run from a 32KiHz watch crystal.
      */
@@ -115,7 +144,7 @@ implementation {
   /*
    * NOTE: on msp432 processors, the Overflow is actually TAx->CTL.IFG
    * which trips when TAx->R wraps.  If enabled, the cpu will interrupt
-   * through vector TAx_N_Handler with a TAx->IV of 0xE (which becomes 7 
+   * through vector TAx_N_Handler with a TAx->IV of 0xE (which becomes 7
    * (>> 1)).  If the interrupt is acknowledged, reading of TAx->IV will
    * clear the interrupt which will clear TAx->CTL.IFG.
    *
@@ -162,32 +191,36 @@ implementation {
   }
 
   async command void Timer.setInputDivider(uint16_t inputDivider) {
-    TAx->CTL = (TAx->CTL & ~(TIMER_A_CTL_ID_MASK)) | 
+    TAx->CTL = (TAx->CTL & ~(TIMER_A_CTL_ID_MASK)) |
         ((inputDivider << TIMER_A_CTL_ID_OFS) & (TIMER_A_CTL_ID_MASK));
   }
 
   /*
-   * The MSP432 provides two interrupt vectors for each timer module.  The first is
-   * dedicated  to CCR0.   The TACCR0 IFG (interrupt flag) is NOT automatically
-   * cleared by the h/w.  The TAx_0_Handler (1st level interrupt handler) takes
-   * care of that.
+   * The MSP432 provides two interrupt vectors for each timer module.  The
+   * first is dedicated to CCR0.  The TAx->CCTL[0] CCR0.IFG (interrupt flag)
+   * is NOT automatically cleared by the h/w.  The TAx_0_Handler (1st level
+   * interrupt handler) takes care of that.
    *
-   * TimerVec_0 handles TAx->CCTL0.CCIFG (CCR0) interrupts.  It needs to be
+   * TimerVec_0 handles TAx->CCTL[0].CCIFG (CCR0) interrupts.  It needs to be
    * wired to the handler TAx_0_Handler.
    */
-  async event void TimerVec_0.interrupt(uint8_t v) {
+  async event void TimerVec_0.interrupt(uint8_t iv) {
     signal Event.fired[0]();
   }
 
   /*
-   * TimerVec_N handles interrupts for other TAx interrupts, TAx->CTL.IFG 
-   * (timer overflow), and TAx->CCTLn (CCRn) for  n > 0.  An interrupt vector
-   * register (TAx->IV) indicates which interrupt has occured (with priority,
-   * highest is presented first).
+   * TimerVec_N handles interrupts for other TAx interrupts, TAx->CTL.IFG
+   * (timer overflow, TAx->R wrap), and TAx->CCTL[n] (CCRn) for n > 0.  An
+   * interrupt vector register (TAx->IV) indicates which interrupt has
+   * occured (with priority, highest is presented first).
    *
-   * When TAx->IV is read the highest priority interrupt is cleared also 
-   * clearing the associated IFG.  That is handled by the 1st stage interrupt
-   * handler.
+   * When TAx->IV is read the highest priority interrupt is cleared also
+   * clearing the associated IFG.  That is handled by the 1st stage
+   * interrupt handler.  (See HplMsp432TimerIntP.nc).  The IV is shifted
+   * right 1 bit to account for how TI represents the vector.  We need it
+   * to be shifted so the Event numbers have no gaps.
+   *
+   * note: iv is an unshifted interrupt vector number, v is shifted.
    */
   async event void TimerVec_N.interrupt(uint8_t v) {
     signal Event.fired[v]();

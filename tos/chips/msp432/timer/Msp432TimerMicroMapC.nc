@@ -47,8 +47,9 @@ configuration Msp432TimerMicroMapC {
   provides interface Msp432TimerCompare[uint8_t id];
 }
 implementation {
-  components Msp432TimerC;
+  components Msp432TimerC, PlatformC;
 
+  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A0_Init;
   Msp432Timer[0] = Msp432TimerC.xTimer_A0;
   Msp432TimerCCTL[0] = Msp432TimerC.CCTLA0_0;
   Msp432TimerCompare[0] = Msp432TimerC.COMPA0_0;

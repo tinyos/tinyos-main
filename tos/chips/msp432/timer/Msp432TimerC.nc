@@ -49,10 +49,23 @@
  *
  * Interfaces implemented:
  *
+ * Init                     module use initilization
  * Msp432Timer              controls core Timer (TAx->CTL)
  * Msp432TimerCCTL          controls Capture/Compare Register (CCR) [n]
  * Msp432TimerCompare       controls one CCR module for compare func
  * Msp432TimerCaptureV2     controls one CCR module for capture func
+ *
+ * We export Init to allow initilization functions to happen if a module
+ * is actually used.  The reference should wire in PlatformC.PeripheralInit
+ * to cause this initilization to be invoked
+ *
+ * Most h/w timer initilization happens during startup (startup.c) when
+ * the clocks are initilized.  This is because how the timers are clocked
+ * is inherently platform dependent and tied to how the clocks are set up.
+ *
+ * However, we don't want ot say enable NVIC interrupts unless the actual
+ * timer has been wired in.  Init allows this to happen on a per invokation
+ * basis.
  *
  * @author Eric B. Decker <cire831@gmail.com>
  *
@@ -65,6 +78,9 @@
  * By default Timers are assumed to be clocked synchronously wrt the
  * main system clock.  Define PLATFORM_TAn_ASYNC in platform.h for the
  * platform if the Timer is being clocked by something different.
+ *
+ * ie. by default TA1 is mapped to the 32KiHz Tmilli background timer
+ * and as such the platform should define PLATFORM_TA1_ASYNC.
  */
 #ifndef PLATFORM_TA0_ASYNC
 #define PLATFORM_TA0_ASYNC FALSE
@@ -94,6 +110,7 @@ configuration Msp432TimerC {
      * Timer_CAPTA1_4   Capture interface for TA1 CCR4
      */
 
+    interface Init                 as Timer_A0_Init;
     interface Msp432Timer          as xTimer_A0;
     interface Msp432TimerCCTL      as Timer_CCTLA0_0; /* CCR0 */
     interface Msp432TimerCompare   as Timer_COMPA0_0;
@@ -116,6 +133,7 @@ configuration Msp432TimerC {
     interface Msp432TimerCaptureV2 as Timer_CAPTA0_4;
 
 
+    interface Init                 as Timer_A1_Init;
     interface Msp432Timer          as xTimer_A1;
     interface Msp432TimerCCTL      as Timer_CCTLA1_0; /* CCR0 */
     interface Msp432TimerCompare   as Timer_COMPA1_0;
@@ -138,6 +156,7 @@ configuration Msp432TimerC {
     interface Msp432TimerCaptureV2 as Timer_CAPTA1_4;
 
 
+    interface Init                 as Timer_A2_Init;
     interface Msp432Timer          as xTimer_A2;
     interface Msp432TimerCCTL      as Timer_CCTLA2_0; /* CCR0 */
     interface Msp432TimerCompare   as Timer_COMPA2_0;
@@ -160,6 +179,7 @@ configuration Msp432TimerC {
     interface Msp432TimerCaptureV2 as Timer_CAPTA2_4;
 
 
+    interface Init                 as Timer_A3_Init;
     interface Msp432Timer          as xTimer_A3;
     interface Msp432TimerCCTL      as Timer_CCTLA3_0; /* CCR0 */
     interface Msp432TimerCompare   as Timer_COMPA3_0;
@@ -185,10 +205,11 @@ configuration Msp432TimerC {
 implementation {
   components HplMsp432TimerIntP as TimerInts;
 
-  components new Msp432TimerP((uint32_t) TIMER_A0, 
+  components new Msp432TimerP((uint32_t) TIMER_A0, TA0_0_IRQn,
                               PLATFORM_TA0_ASYNC) as TA0;
 
   xTimer_A0 = TA0.Timer;
+  Timer_A0_Init = TA0.Init;
   TA0.TimerVec_0 -> TimerInts.TimerAInt_0[0];
   TA0.TimerVec_N -> TimerInts.TimerAInt_N[0];
   TA0.Overflow   -> TA0.Event[7];
@@ -229,10 +250,11 @@ implementation {
   TA0_4.Event -> TA0.Event[4];
 
 
-  components new Msp432TimerP((uint32_t) TIMER_A1,
+  components new Msp432TimerP((uint32_t) TIMER_A1, TA1_0_IRQn,
                               PLATFORM_TA1_ASYNC) as TA1;
 
   xTimer_A1 = TA1.Timer;
+  Timer_A1_Init = TA1.Init;
   TA1.TimerVec_0 -> TimerInts.TimerAInt_0[1];
   TA1.TimerVec_N -> TimerInts.TimerAInt_N[1];
   TA1.Overflow   -> TA1.Event[7];
@@ -273,10 +295,11 @@ implementation {
   TA1_4.Event -> TA1.Event[4];
 
 
-  components new Msp432TimerP((uint32_t) TIMER_A2,
+  components new Msp432TimerP((uint32_t) TIMER_A2, TA2_0_IRQn,
                               PLATFORM_TA2_ASYNC) as TA2;
 
   xTimer_A2 = TA2.Timer;
+  Timer_A2_Init = TA2.Init;
   TA2.TimerVec_0 -> TimerInts.TimerAInt_0[2];
   TA2.TimerVec_N -> TimerInts.TimerAInt_N[2];
   TA2.Overflow   -> TA2.Event[7];
@@ -317,10 +340,11 @@ implementation {
   TA2_4.Event -> TA2.Event[4];
 
 
-  components new Msp432TimerP((uint32_t) TIMER_A3,
+  components new Msp432TimerP((uint32_t) TIMER_A3, TA3_0_IRQn,
                               PLATFORM_TA3_ASYNC) as TA3;
 
   xTimer_A3 = TA3.Timer;
+  Timer_A3_Init = TA3.Init;
   TA3.TimerVec_0 -> TimerInts.TimerAInt_0[3];
   TA3.TimerVec_N -> TimerInts.TimerAInt_N[3];
   TA3.Overflow   -> TA3.Event[7];

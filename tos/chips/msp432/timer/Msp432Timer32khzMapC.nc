@@ -52,8 +52,9 @@ configuration Msp432Timer32khzMapC {
   }
 }
 implementation {
-  components Msp432TimerC;
+  components Msp432TimerC, PlatformC;
 
+  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A1_Init;
   Msp432Timer[0]        = Msp432TimerC.xTimer_A1;
   Msp432TimerCCTL[0]    = Msp432TimerC.Timer_CCTLA1_0;
   Msp432TimerCompare[0] = Msp432TimerC.Timer_COMPA1_0;

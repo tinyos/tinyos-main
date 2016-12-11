@@ -40,9 +40,11 @@ configuration Msp432CounterMicroC {
   provides interface Counter<TMicro, uint16_t> as Msp432CounterMicro;
 }
 implementation {
-  components Msp432TimerC, 
-    new Msp432CounterC(TMicro) as Counter;
+  components     PlatformC;
+  components     Msp432TimerC;
+  components new Msp432CounterC(TMicro) as Counter;
 
   Msp432CounterMicro = Counter;
   Counter.Msp432Timer -> Msp432TimerC.xTimer_A0;
+  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A0_Init;
 }

@@ -33,6 +33,8 @@
  *
  * Msp432Counter32khC provides the standard 32khz counter for the MSP432.
  *
+ * The default configuration has Tmicro on TA0 and Tmilli on TA1.
+ *
  * @author Eric B. Decker <cire831@gmail.com>
  */
 
@@ -40,9 +42,11 @@ configuration Msp432Counter32khzC {
   provides interface Counter<T32khz, uint16_t> as Msp432Counter32khz;
 }
 implementation {
-  components Msp432TimerC;
+  components     PlatformC;
+  components     Msp432TimerC;
   components new Msp432CounterC(T32khz) as Counter;
 
   Msp432Counter32khz = Counter;
-  Counter.Msp432Timer -> Msp432TimerC.xTimer_A0;
+  Counter.Msp432Timer -> Msp432TimerC.xTimer_A1;
+  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A1_Init;
 }
