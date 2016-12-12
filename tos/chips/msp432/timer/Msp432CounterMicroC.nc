@@ -34,17 +34,29 @@
  * Msp432CounterMicroC provides the standard 1 MiHz counter for the MSP432.
  *
  * @author Eric B. Decker <cire831@gmail.com>
+ *
+ * Originally, this component reached directly into the h/w timer export
+ * component and hard coded which timer was being used.  The problem with
+ * that is how timers are configured and clocked is inherently a platfrom
+ * dependent configuration issue.
+ *
+ * Instead what should be done, is link to a Mapping component.  Mapping
+ * components are a Platform's way of exporting well named h/w resoruces.
+ *
+ * A default set of maps is provided in tos/chips/msp432/timer.
+ * Msp432TimerMicroMapC (TA0 by default) and Msp432TimerMilliMapC (TA1
+ * by default).
+ *
+ * Block 0 is always the main timing block for the TA hardware.
  */
 
 configuration Msp432CounterMicroC {
   provides interface Counter<TMicro, uint16_t> as Msp432CounterMicro;
 }
 implementation {
-  components     PlatformC;
-  components     Msp432TimerC;
+  components     Msp432TimerMicroMapC as MicroMap;
   components new Msp432CounterC(TMicro) as Counter;
 
   Msp432CounterMicro = Counter;
-  Counter.Msp432Timer -> Msp432TimerC.xTimer_A0;
-  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A0_Init;
+  Counter.Msp432Timer -> MicroMap.Msp432Timer[0];
 }

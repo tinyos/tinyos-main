@@ -31,9 +31,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Msp432Counter32khC provides the standard 32khz counter for the MSP432.
+ * Msp432Counter32khC provides a 32khz counter for the MSP432.
  *
- * The default configuration has Tmicro on TA0 and Tmilli on TA1.
+ * Originally, this component reached directly into the h/w timer export
+ * component and hard coded which timer was being used.  The problem with
+ * that is how timers are configured and clocked is inherently a platfrom
+ * dependent configuration issue
+ *
+ * Instead what should be done, is link to a Mapping component.  Mapping
+ * components are a Platform's way of exporting well named h/w resoruces.
+ *
+ * A default set of maps is provided in tos/chips/msp432/timer.
+ * Msp432TimerMicroMapC (TA0 by default) and Msp432TimerMilliMapC (TA1
+ * by default).
+ *
+ * Block 0 is always the main timing block for the TA hardware.
  *
  * @author Eric B. Decker <cire831@gmail.com>
  */
@@ -42,11 +54,9 @@ configuration Msp432Counter32khzC {
   provides interface Counter<T32khz, uint16_t> as Msp432Counter32khz;
 }
 implementation {
-  components     PlatformC;
-  components     Msp432TimerC;
+  components     Msp432Timer32khzMapC as Map32khz;
   components new Msp432CounterC(T32khz) as Counter;
 
   Msp432Counter32khz = Counter;
-  Counter.Msp432Timer -> Msp432TimerC.xTimer_A1;
-  PlatformC.PeripheralInit -> Msp432TimerC.Timer_A1_Init;
+  Counter.Msp432Timer -> Map32khz.Msp432Timer[0];
 }

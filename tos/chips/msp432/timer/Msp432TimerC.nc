@@ -63,8 +63,8 @@
  * the clocks are initilized.  This is because how the timers are clocked
  * is inherently platform dependent and tied to how the clocks are set up.
  *
- * However, we don't want ot say enable NVIC interrupts unless the actual
- * timer has been wired in.  Init allows this to happen on a per invokation
+ * However, we don't want to enable the NVIC interrupt unless the actual
+ * timer has been wired in.  Init allows this to happen on a per invocation
  * basis.
  *
  * @author Eric B. Decker <cire831@gmail.com>
