@@ -4,7 +4,10 @@ set remotetimeout 999999
 
 set mem inaccessible-by-default off
 
+# 2331 is Jlink
+# 55000 is TI's gdb-agent-console, gag
 target extended-remote :2331
+#target extended-remote :55000
 source ../../.gdb_msp432
 set disassemble-next-line on
 
@@ -28,18 +31,48 @@ then reset
 end
 
 define pc
+# arg0 increment to increase PC by
 set $pc=$pc+$arg0
 end
 document pc
 adjust current PC by the passed in argument.
-ie. pc 2   yields new pc of pc=2
+ie. pc 2   yields new pc of pc+2
 end
 
-#b RealMainP.nc:75
-#b RealMainP.nc:82
-#b SchedulerBasicP.nc:151
-#b SchedulerBasicP.nc:148
-#b VirtualizeTimerC.nc:81
+define tq
+printf "taskq: head: %d  tail %d\n", SchedulerBasicP__m_head, SchedulerBasicP__m_tail
+output/d SchedulerBasicP__m_next
+printf "\n"
+end
+document tq
+display task queue
+end
+
+define __p_timers
+# arg0: num_timers, arg1: pointer to first timer
+set $_num_timers = $arg0
+set $_tptr = $arg1
+set $_idx = 0
+printf "\n    t   state       t0           dt\n"
+while $_idx < $_num_timers
+  printf "    %2d    %c%c  %8x(x)  %8x(x)\n", $_idx, \
+    ($_tptr[$_idx]->isoneshot ? 'O' : 'o'), \
+    ($_tptr[$_idx]->isrunning ? 'R' : 'r'), \
+    $_tptr[$_idx]->t0, $_tptr[$_idx]->dt
+  set $_idx++
+end
+printf "\n"
+end
+
+define timers
+__p_timers VirtualizeTimerC__0__NUM_TIMERS  &VirtualizeTimerC__0__m_timers[0]
+end
+
+#b RealMainP.nc:86
+#b RealMainP.nc:92
+#b SchedulerBasicP.nc:159
+#b SchedulerBasicP.nc:163
+#b VirtualizeTimerC.nc:92
 #dis
 
 b main
