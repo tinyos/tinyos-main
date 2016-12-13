@@ -353,7 +353,6 @@ void __pins_init() {
 
   P2->OUT = 0;
   P2->DIR = 7;
-  BITBAND_PERI(P1->OUT, 0) = 1;
 
   /*
    * We bring the clocks out so we can watch them.
@@ -641,7 +640,9 @@ void __system_init(void) {
   __debug_init();
   __ram_init();
   __flash_init();
+  BITBAND_PERI(P1->OUT, 0) = 1;
   __core_clk_init();
+  BITBAND_PERI(P1->OUT, 0) = 0;
 
   __ta_init(TIMER_A0, TA_SMCLK8); /* Tmicro */
   __ta_init(TIMER_A1, TA_ACLK1);  /* Tmilli */
