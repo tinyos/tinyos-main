@@ -270,7 +270,7 @@ void (* const __vectors[])(void) __attribute__ ((section (".vectors"))) = {
   EUSCIB3_Handler,                      // 23           39
   ADC14_Handler,                        // 24           40
   T32_INT1_Handler,                     // 25           41
-  T32_INT2_Handler,                     // 26           42
+  T32_INT2_Handler,                     // 26           42          5 (a0)
   T32_INTC_Handler,                     // 27           43
   AES_Handler,                          // 28           44
   RTC_Handler,                          // 29           45
