@@ -53,7 +53,7 @@ define __p_timers
 set $_num_timers = $arg0
 set $_tptr = $arg1
 set $_idx = 0
-printf "\n    t   state       t0           dt\n"
+printf "    t   state       t0           dt\n"
 while $_idx < $_num_timers
   printf "    %2d    %c%c  %8x(x)  %8x(x)\n", $_idx, \
     ($_tptr[$_idx]->isoneshot ? 'O' : 'o'), \
@@ -61,7 +61,6 @@ while $_idx < $_num_timers
     $_tptr[$_idx]->t0, $_tptr[$_idx]->dt
   set $_idx++
 end
-printf "\n"
 end
 
 define timers
