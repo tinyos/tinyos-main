@@ -118,6 +118,14 @@ set $bomb=((FL_BOOTOVER_MAILBOX_Type *) 0x00200000)
 set $tlv=((TLV_Type *) 0x00201000)
 
 
+# nvic accessors
+define _set_nvic_index
+# arg0 IRQn
+# sets _nvic_index, _nvic_bit
+set $_nvic_index= $arg0 >> 5
+set $_nvic_bit  = $arg0 & 0x1f
+end
+
 # print helpers
 
 define __p_pribasefault
@@ -490,4 +498,83 @@ end
 
 define preempt
 set $scb->ICSR=$scb_icsr_isrpreempt
+end
+
+define __p_ta
+# arg0: _tax (base)  arg1: which  arg2: irqn
+set $_tax=$arg0
+set $_which=$arg1
+set $_irqn=$arg2
+printf "TA%d:    r: %04x  ctl: %04x  ex: %04x  iv: %04x\n", $_which, \
+    $_tax->R, $_tax->CTL, $_tax->EX0, $_tax->IV
+printf "    cctl0: %04x    1: %04x   2: %04x   3: %04x  4: %04x\n", \
+    $_tax->CCTL[0], $_tax->CCTL[1], $_tax->CCTL[2], $_tax->CCTL[3], $_tax->CCTL[4]
+printf "     ccr0: %04x    1: %04x   2: %04x   3: %04x  4: %04x\n", \
+    $_tax->CCR[0], $_tax->CCR[1], $_tax->CCR[2], $_tax->CCR[3], $_tax->CCR[4]
+_set_nvic_index $_irqn
+printf "    n[%02d]:  %c%c%c          n[%02d]:  ", $_irqn, \
+       ($nvic->ISER[$_nvic_index]&(1 << $_nvic_bit)) ? 'E' : 'e', \
+       ($nvic->ISPR[$_nvic_index]&(1 << $_nvic_bit)) ? 'P' : 'p', \
+       ($nvic->IABR[$_nvic_index]&(1 << $_nvic_bit)) ? 'A' : 'a', \
+       $_irqn+1
+_set_nvic_index $_irqn+1
+printf "%c%c%c\n", \
+       ($nvic->ISER[$_nvic_index]&(1 << $_nvic_bit)) ? 'E' : 'e', \
+       ($nvic->ISPR[$_nvic_index]&(1 << $_nvic_bit)) ? 'P' : 'p', \
+       ($nvic->IABR[$_nvic_index]&(1 << $_nvic_bit)) ? 'A' : 'a'
+printf "\n"
+end
+
+#display timers
+define dt
+__p_ta $ta0 0 0d08
+__p_ta $ta1 1 0d10
+__p_ta $ta2 2 0d12
+__p_ta $ta3 3 0d14
+end
+document dt
+Display msp432 timer hardware
+end
+
+define __p_usci
+# arg0: _usx (base)  arg1: which  arg2: type  arg3: irqn
+set $_usx=$arg0
+set $_which=$arg1
+set $_type=$arg2
+set $_irqn=$arg3
+if $_type == 0
+  printf "A%d:   ie:   %02x   ifg:   %02x    iv: %04x  rx:   %02x     tx:  %02x  stat: %02x\n", \
+    $_which, $_usx->IE, $_usx->IFG, $_usx->IV, $_usx->RXBUF, $_usx->TXBUF, $_usx->STATW
+  printf "   ctlw0: %04x    br: %04x  mctl: %04x          ",\
+    $_usx->CTLW0, $_usx->BRW, $_usx->MCTLW
+end
+if $_type == 1
+  printf "B%d:   ie:   %02x   ifg:   %02x    iv: %04x  rx:   %02x     tx:  %02x  stat: %02x\n", \
+    $_which, $_usx->IE, $_usx->IFG, $_usx->IV, $_usx->RXBUF, $_usx->TXBUF, $_usx->STATW
+  printf "   ctlw0: %04x    br: %04x    oa: %04x  sa: %04x\n",\
+    $_usx->CTLW0, $_usx->BRW, $_usx->I2COA0, $_usx->I2CSA
+  printf "   ctlw1: %04x  bcnt: %04x  addr: %04x   m: %04x", \
+    $_usx->CTLW1, $_usx->TBCNT, $_usx->ADDRX, $_usx->ADDMASK
+end
+_set_nvic_index $_irqn
+printf "  n[%02d]: %c%c%c\n", $_irqn, \
+       ($nvic->ISER[$_nvic_index]&(1 << $_nvic_bit)) ? 'E' : 'e', \
+       ($nvic->ISPR[$_nvic_index]&(1 << $_nvic_bit)) ? 'P' : 'p', \
+       ($nvic->IABR[$_nvic_index]&(1 << $_nvic_bit)) ? 'A' : 'a'
+printf "\n"
+end
+
+#display usci
+define us
+__p_usci $uca0 0 0 0d16
+__p_usci $uca1 1 0 0d17
+__p_usci $uca2 2 0 0d18
+__p_usci $uca3 3 0 0d19
+__p_usci $ucb0 0 1 0d20
+__p_usci $ucb1 1 1 0d21
+__p_usci $ucb2 2 1 0d22
+__p_usci $ucb3 3 1 0d23
+end
+document us
+display msp432 usci hardware
 end
