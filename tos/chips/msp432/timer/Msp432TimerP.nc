@@ -171,7 +171,8 @@ implementation {
 
   /*
    * WARNING: using clear causes not only TAx->R to clear but
-   * it also clears the clock divider and count direction (MC)
+   * it also clears the clock divider and count direction (MC).
+   * that's just stupid.
    */
   async command void Timer.clear() {
     BITBAND_PERI(TAx->CTL, TIMER_A_CTL_CLR_OFS) = 1;
@@ -185,6 +186,7 @@ implementation {
     BITBAND_PERI(TAx->CTL, TIMER_A_CTL_IE_OFS) = 0;
   }
 
+  /* use this with caution, usually done by Platform initilization */
   async command void Timer.setClockSource(uint16_t clockSource) {
     TAx->CTL = (TAx->CTL & ~(TIMER_A_CTL_SSEL_MASK)) |
         ((clockSource << TIMER_A_CTL_SSEL_OFS) & (TIMER_A_CTL_SSEL_MASK));

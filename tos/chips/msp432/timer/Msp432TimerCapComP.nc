@@ -87,9 +87,8 @@ implementation {
 
 
   async command void CCTL.setCCRforCompare() {
-    /* defaults to rising edge and CCIS channel A */
-    TAx->CCTL[CCRn] = capComControl(MSP432TIMER_CM_RISING, 
-                                    MSP432TIMER_CCI_A, 0);
+    /* defaults to no capture and CCIS channel A */
+    TAx->CCTL[CCRn] = capComControl(0, MSP432TIMER_CCI_A, 0);
   }
 
 
