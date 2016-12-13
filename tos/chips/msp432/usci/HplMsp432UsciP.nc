@@ -193,10 +193,10 @@ implementation {
     else    APTR(up)->IFG = v;
   }
 
-  /* EUSCI_{A,B}_IFG_RXIFG_OFS, EUSCI_B_IFG_RXIFG0_OFS (i2c) */
+  /* EUSCI_{A,B}_IFG_RXIFG, EUSCI_B_IFG_RXIFG0 (i2c) */
   async command bool	 Usci.isRxIntrPending() {
-    if (_t) return BPTR(up)->IFG & EUSCI_B_IFG_RXIFG_OFS;
-    else    return APTR(up)->IFG & EUSCI_A_IFG_RXIFG_OFS;
+    if (_t) return BPTR(up)->IFG & EUSCI_B_IFG_RXIFG;
+    else    return APTR(up)->IFG & EUSCI_A_IFG_RXIFG;
   }
 
   async command void	 Usci.clrRxIntr() {
@@ -215,10 +215,10 @@ implementation {
     else    BITBAND_PERI(APTR(up)->IE, EUSCI_A_IE_RXIE_OFS) = 1;
   }
 
-  /* EUSCI_ {A,B}_IE_TXIFG_OFS, EUSCI_B_IE_TXIFG0_OFS (i2c) */
+  /* EUSCI_ {A,B}_IE_TXIFG, EUSCI_B_IE_TXIFG0 (i2c) */
   async command bool	 Usci.isTxIntrPending() {
-    if (_t) return BPTR(up)->IFG & EUSCI_B_IFG_TXIFG_OFS;
-    else    return APTR(up)->IFG & EUSCI_A_IFG_TXIFG_OFS;
+    if (_t) return BPTR(up)->IFG & EUSCI_B_IFG_TXIFG;
+    else    return APTR(up)->IFG & EUSCI_A_IFG_TXIFG;
   }
 
   async command void	 Usci.clrTxIntr() {
@@ -239,8 +239,8 @@ implementation {
 
 
   async command bool	 Usci.isBusy() {
-    if (_t) return (BPTR(up)->STATW & EUSCI_B_STATW_BUSY_OFS);
-    else    return (APTR(up)->STATW & EUSCI_A_STATW_BUSY_OFS);
+    if (_t) return (BPTR(up)->STATW & EUSCI_B_STATW_BUSY);
+    else    return (APTR(up)->STATW & EUSCI_A_STATW_BUSY);
   }
 
 
@@ -324,11 +324,11 @@ implementation {
       return;				/* panic? */
     }
     if (_t) {
-      BPTR(up)->CTLW0 = config->ctlw0 | EUSCI_B_CTLW0_SWRST_OFS;
+      BPTR(up)->CTLW0 = config->ctlw0 | EUSCI_B_CTLW0_SWRST;
       BPTR(up)->BRW   = config->brw;
       BPTR(up)->I2COA0 = config->i2coa;
     } else {
-      APTR(up)->CTLW0 = config->ctlw0 | EUSCI_A_CTLW0_SWRST_OFS;
+      APTR(up)->CTLW0 = config->ctlw0 | EUSCI_A_CTLW0_SWRST;
       APTR(up)->BRW   = config->brw;
       APTR(up)->MCTLW = config->mctlw;
     }
@@ -351,20 +351,20 @@ implementation {
   async command msp432_usci_mode_t Usci.currentMode () {
     atomic {
       if (_t) {
-        if ((BPTR(up)->CTLW0 & EUSCI_B_CTLW0_SYNC_OFS) == 0) {
+        if ((BPTR(up)->CTLW0 & EUSCI_B_CTLW0_SYNC) == 0) {
           return MSP432_USCI_UART;
         }
         if ((BPTR(up)->CTLW0 & EUSCI_B_CTLW0_MODE_MASK) == EUSCI_B_CTLW0_MODE_3) {
           return MSP432_USCI_I2C;
         }
-        if (BPTR(up)->CTLW0 & EUSCI_B_CTLW0_MST_OFS)
+        if (BPTR(up)->CTLW0 & EUSCI_B_CTLW0_MST)
           return MSP432_USCI_SPI;
         return MSP432_USCI_SPI_SLAVE;
       } else {
-        if ((APTR(up)->CTLW0 & EUSCI_A_CTLW0_SYNC_OFS) == 0) {
+        if ((APTR(up)->CTLW0 & EUSCI_A_CTLW0_SYNC) == 0) {
           return MSP432_USCI_UART;
         }
-        if (APTR(up)->CTLW0 & EUSCI_A_CTLW0_MST_OFS)
+        if (APTR(up)->CTLW0 & EUSCI_A_CTLW0_MST)
           return MSP432_USCI_SPI;
         return MSP432_USCI_SPI_SLAVE;
       }
