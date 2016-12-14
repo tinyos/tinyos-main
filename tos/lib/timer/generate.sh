@@ -1,13 +1,10 @@
 #!/bin/sh
 #
-# Given implementations for USCI_A0 and USCI_B0, generate equivalent
-# configurations for the higher-numbered module instances.
+# MuxAlarm has a variant matrix that include Precision and Size
+# Precision := [Second | Milli | 32khz] and Size := [16 | 32].
 #
-# Much of the USCI implementation is identical except for varying
-# based on the instance number of the module to which a component
-# belongs.  To avoid implementation divergence, we maintain and evolve
-# only one of each type of component, and generate the remainder from
-# that template.
+# Starting with a master, MuxAlarmMilli32C, generate all the
+# variants using simple string substitution.
 #
 # @author Peter A. Bigot <pab@peoplepowerco.com>
 
@@ -50,4 +47,3 @@ for p in ${PREC_TAGS} ; do
     clone_module MuxAlarm${BASIS_PREC}${BASIS_SIZE}C_.nc ${p} ${s}
   done
 done
-
