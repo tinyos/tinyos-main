@@ -58,6 +58,11 @@ interface Msp430Capture
   /**
    * Determine if a capture overflow is pending.
    *
+   * TI calls this overflow but it is actually an overrun.
+   * If COV is set it says that another capture has occurred
+   * prior to reading a previous capture.  The previous value
+   * of a capture has been lost.
+   *
    * @return TRUE if the capture register has overflowed
    */
   async command bool isOverflowPending();
