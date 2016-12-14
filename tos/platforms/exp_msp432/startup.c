@@ -40,6 +40,7 @@
 
 #include <stdint.h>
 #include <msp432.h>
+#include <cs.h>
 
 /*
  * msp432.h find the right chip header (msp432p401r.h) which also pulls in
@@ -518,12 +519,16 @@ void __t32_init() {
  * is 10us and t_start is 5 us so we should be good.
  */
 
-#define CLK_DCOTUNE 134
+#define CLK_DCOTUNE 152
 
 uint32_t lfxt_startup_time;
+uint32_t dco_freq, aclk_freq, bclk_freq, hsmclk_freq, smclk_freq, mclk_freq;
 
 void __core_clk_init() {
   uint32_t timeout;
+
+  CS_enableDCOExternalResistor();
+  CS_setDCOFrequency(16777216);
 
   /*
    * only change from internal res to external when dco in dcorsel_1.
@@ -636,6 +641,7 @@ void __start_timers() {
  */
 
 void __system_init(void) {
+  __fpu_on();
   __exception_init();
   __debug_init();
   __ram_init();
@@ -648,6 +654,13 @@ void __system_init(void) {
   __ta_init(TIMER_A1, TA_ACLK1);  /* Tmilli */
   __rtc_init();
   __start_timers();
+  dco_freq    = CS_getDCOFrequency();
+  aclk_freq   = CS_getACLK();
+  bclk_freq   = CS_getBCLK();
+  hsmclk_freq = CS_getHSMCLK();
+  smclk_freq  = CS_getSMCLK();
+  mclk_freq   = CS_getMCLK();
+  __fpu_off();
 }
 
 
