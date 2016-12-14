@@ -443,7 +443,7 @@ void __ram_init() {
 void __flash_init() {
   /*
    * For now turn off buffering, (FIXME) check to see if buffering makes
-   * a difference when running at 16MHz
+   * a difference when running at 16MiHz
    */
   FLCTL->BANK0_RDCTL &= ~(FLCTL_BANK0_RDCTL_BUFD | FLCTL_BANK0_RDCTL_BUFI);
   FLCTL->BANK1_RDCTL &= ~(FLCTL_BANK1_RDCTL_BUFD | FLCTL_BANK1_RDCTL_BUFI);
@@ -458,7 +458,7 @@ void __flash_init() {
 void __t32_init() {
   Timer32_Type *tp = TIMER32_1;
 
-  /* MCLK/16 (1MHz, 1us), enable, freerunning, no int, 32 bits, wrap */
+  /* MCLK/16 (1MiHz, 1uis), enable, freerunning, no int, 32 bits, wrap */
   tp->LOAD = 0xffffffff;
   tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS;
 
@@ -466,22 +466,20 @@ void __t32_init() {
    * Using Ty as a 1 second ticker.
    */
   tp = TIMER32_2;
-  tp->LOAD = 1000000;           /* 1 MHz */
+  tp->LOAD = 1048576;           /* 1 MiHz, 1/sec */
   tp->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS | T32_PERIODIC;
 }
 
 
-#define CLK_DCOTUNE 134
-
 /*
  * DCOSEL_3:    center 12MHz (~8 < 12 < 16, but is actually larger)
  * DCORES:      external resistor
- * DCOTUNE:     +134 (0x86), moves us up to 16MHz.
+ * DCOTUNE:     +152 (0x98), moves us up to 16MiHz.
  * ACLK:        LFXTCLK/1       32768
  * BCLK:        LFXTCLK/1       32768
- * SMCLK:       DCO/2           8MHz
- * HSMCLK:      DCO/1           16MHz
- * MCLK:        DCO/1           16MHz
+ * SMCLK:       DCO/2           8MiHz
+ * HSMCLK:      DCO/1           16MiHz
+ * MCLK:        DCO/1           16MiHz
  *
  * LFXTDRIVE:   3 max (default).
  *
@@ -498,9 +496,8 @@ void __t32_init() {
 
 /*
  * CLK_DCOTUNE was determined by running CS_setDCOFrequency(TARGET_FREQ)
- * and seeing what it produced.  We then a) understand and b) make
- * use of the result.  This was from driverlib.  We have observed with a
- * scope clocking at 16MHz.  No idea of the tolerance or variation.
+ * and seeing what it produced.  This was from driverlib.  We have observed
+ * with a scope clocking at 16MiHz.  No idea of the tolerance or variation.
  *
  * DCO tuning is discussed in AppReport SLAA658A, Multi-Frequency Range
  * and Tunable DCO on MSP432P4xx Microcontrollers.
@@ -509,16 +506,16 @@ void __t32_init() {
  * According to https://e2e.ti.com/support/microcontrollers/msp430/f/166/t/411030
  * and page 52 of datasheet (SLAS826E) the DCO with external resistor has a
  * tolerance of worst case +/- 0.6%.  Which gives us a frequency range of
- * 15904000 to 16096000 Hz.
+ * 16676553 to 16877879 Hz.  Desired frequency is 16777216Hz.  16MiHz.
  *
  * We have observed LFXT (crystal) taking ~1.5s to stabilize.  This was
- * timed using TX (Timer32_1) clocking DCOCLK/16 to get 1us ticks.  This
+ * timed using TX (Timer32_1) clocking DCOCLK/16 to get 1uis ticks.  This
  * assumes the DCOCLK comes right up and is stable.  According to the
- * datasheet (SLAS826E, msp432p401), DCO settling time changing DCORSEL
- * is 10us and t_start is 5 us so we should be good.
+ * datasheet (SLAS826E, msp432p401), DCO settling time when changing
+ * DCORSEL is 10us and t_start is 5 us so we should be good.
  */
 
-#define CLK_DCOTUNE 134
+#define CLK_DCOTUNE 152
 
 uint32_t lfxt_startup_time;
 
@@ -536,9 +533,8 @@ void __core_clk_init() {
   CS->CTL1 = CS_CTL1_SELS__DCOCLK  | CS_CTL1_DIVS__2 | CS_CTL1_DIVHS__1 |
              CS_CTL1_SELA__LFXTCLK | CS_CTL1_DIVA__1 |
              CS_CTL1_SELM__DCOCLK  | CS_CTL1_DIVM__1;
-
   /*
-   * turn on the t32s running off MCLK (16Mhz/16 -> 1MHz) so we can
+   * turn on the t32s running off MCLK (16Mihz/16 -> 1MiHz) so we can
    * time the turn on of the remainder of the system.
    */
   __t32_init();                   /* rawUsecs */
@@ -565,7 +561,7 @@ void __core_clk_init() {
     }
     BITBAND_PERI(CS->CLRIFG,CS_CLRIFG_CLR_LFXTIFG_OFS) = 1;
   }
-  CS->KEY = 0;
+  CS->KEY = 0;                  /* lock module */
   lfxt_startup_time = -TIMER32_1->VALUE;
 }
 
@@ -603,7 +599,7 @@ void __start_timers() {
   BITBAND_PERI(RTC_C->CTL13, RTC_C_CTL13_HOLD_OFS) = 0;
   RTC_C->CTL0 = 0;                /* close the lock */
 
-  /* restart the 32 bit 1MHz tickers */
+  /* restart the 32 bit 1MiHz tickers */
   TIMER32_1->LOAD = 0xffffffff;
   TIMER32_2->LOAD = 1000000;
 }
@@ -618,10 +614,10 @@ void __start_timers() {
  *
  * LFXTCLK -> ACLK, BCLK
  * HFXTCLK off
- * MCLK (Main Clock) - 16MHz, <- DCOCLK/1
- * HSMCLK (high speed submain) <- DCOCLK/1 16MHz (can be faster than 12 MHz)
+ * MCLK (Main Clock) - 16MiHz, <- DCOCLK/1
+ * HSMCLK (high speed submain) <- DCOCLK/1 16MiHz (can be faster than 12 MHz)
  *     only can drive ADC14.
- * SMCLK (low speed submain)   DCOCLK/2, 8MHz (dont exceed 12MHz)
+ * SMCLK (low speed submain)   DCOCLK/2, 8MiHz (dont exceed 12MHz)
  * SMCLK/8 -> TA0 (1us) -> TMicro
  * ACLK/1 (32KiHz) -> TA1 (1/32768) -> TMilli
  * BCLK/1 (32KiHz) -> RTC
@@ -629,7 +625,7 @@ void __start_timers() {
  * Timers:
  *
  * RTCCLK <- BCLK/1 (32Ki)
- * TMicro <-  TA0 <- SMCLK/8 <- DCO/2 (1MHz)
+ * TMicro <-  TA0 <- SMCLK/8 <- DCO/2 (1MiHz)
  * TMilli <-  TA1 <- ACLK/1 (32KiHz)
  * rawUsecs<- T32_1 <- MCLK/16 <- DCO/1 32 bit raw usecs
  * rawJiffies<- TA0 <- ACLK/1 (32KiHz) 16 bits wide

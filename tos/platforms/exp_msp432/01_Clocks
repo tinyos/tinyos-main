@@ -1,18 +1,18 @@
 
 In AM_LDO_VCORE0, Active Mode, LDO power, VCore0, the cpu max frequency is
 24MHz.  But all the dividers for the timers and other subsystems are all
-power of 2.  So we set the main DCOCLK to 16MHz.
+power of 2.  So we set the main DCOCLK to 16MiHz.
 
 The clocks on the msp432 for the exp_msp432 eval board are set up as follows:
 
  * DCOSEL_3:    center 12MHz (~8 < 12 < 16, but is actually larger)
  * DCORES:      external resistor
- * DCOTUNE:     +134 (0x86), moves us up to 16MHz.
+ * DCOTUNE:     +152 (0x98), moves us up to 16MiHz.
  * ACLK:        LFXTCLK/1       32768
  * BCLK:        LFXTCLK/1       32768
- * SMCLK:       DCO/2           8MHz
- * HSMCLK:      DCO/1           16MHz
- * MCLK:        DCO/1           16MHz
+ * SMCLK:       DCO/2           8MiHz
+ * HSMCLK:      DCO/1           16MiHz
+ * MCLK:        DCO/1           16MiHz
 
  * CLK_DCOTUNE was determined by running CS_setDCOFrequency(TARGET_FREQ)
  * and seeing what it produced.
@@ -20,17 +20,17 @@ The clocks on the msp432 for the exp_msp432 eval board are set up as follows:
  * Timers:
  *
  * RTCCLK <- BCLK/1 (32Ki)
- * TMicro <-  TA0 <- SMCLK/8 <- DCO/2 (1MHz)
+ * TMicro <-  TA0 <- SMCLK/8 <- DCO/2 (1MiHz)
  * TMilli <-  TA1 <- ACLK/1 (32KiHz)
  * rawUsecs<- T32_1 <- MCLK/16 <- DCO/1 32 bit raw usecs
  * rawJiffies<- TA0 <- ACLK/1 (32KiHz) 16 bits wide
 
  * LFXTCLK -> ACLK, BCLK
  * HFXTCLK off
- * MCLK (Main Clock) - 16MHz, <- DCOCLK/1
- * HSMCLK (high speed submain) <- DCOCLK/1 16MHz (can be faster than 12 MHz)
+ * MCLK (Main Clock) - 16MiHz, <- DCOCLK/1
+ * HSMCLK (high speed submain) <- DCOCLK/1 16MiHz (can be faster than 12 MHz)
  *     only can drive ADC14.
- * SMCLK (low speed submain)   DCOCLK/2, 8MHz (dont exceed 12MHz)
+ * SMCLK (low speed submain)   DCOCLK/2, 8MiHz (dont exceed 12MHz)
  * SMCLK/8 -> TA0 (1us) -> TMicro
  * ACLK/1 (32KiHz) -> TA1 (1/32768) -> TMilli
  * BCLK/1 (32KiHz) -> RTC
@@ -46,11 +46,15 @@ DCOER_CONSTK_RSEL04, DCOER_CONSTK_RSEL5
 
 After clock system initialzation:
 
-CTL0 = 0x430086,
-CTL1 = 0x30000033,
+CTL0 = 0x430098,
+CTL1 = 0x10000033,
 CTL2 = 0x10103,
 CTL3 = 0xbb,
 CLKEN = 0xf,
 STAT = 0x1f0f0043,
 DCOERCAL0 = 0x1b70001,
 DCOERCAL1 = 0x1b8
+
+Calculated frequencies (using driverlib/cs.c code):
+
+dco_freq: 16744603

@@ -26,7 +26,7 @@ implementation {
     NVIC_ClearPendingIRQ(T32_INT2_IRQn);
     NVIC_ClearPendingIRQ(T32_INTC_IRQn);
 
-    ty->LOAD = 1000000;         /* 1 MHz */
+    ty->LOAD = 1048576;         /* 1 MiHz -> 1/sec */
     ty->CONTROL = T32_DIV_16 | T32_ENABLE | T32_32BITS | T32_PERIODIC |
                   TIMER32_CONTROL_IE;
     NVIC_SetPriority(T32_INT2_IRQn, 5);
