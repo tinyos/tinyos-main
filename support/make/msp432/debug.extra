@@ -1,0 +1,4 @@
+#-*-Makefile-*- vim:syntax=make
+
+OPTFLAGS += -ggdb -fnesc-no-inline
+CFLAGS += -DDEBUG_CORE

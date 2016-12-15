@@ -1,0 +1,25 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -I%T/platforms/exp_msp432
+
+PFLAGS += -I%T/system/panic_simple
+
+PFLAGS += -I%T/platforms/exp_msp432/hardware/
+PFLAGS += -I%T/platforms/exp_msp432/hardware/startup
+
+PFLAGS += -I%T/chips/cortex
+PFLAGS += -I%T/chips/msp432
+PFLAGS += -I%T/chips/msp432/include
+PFLAGS += -I%T/chips/msp432/msp432p401/pins
+PFLAGS += -I%T/chips/msp432/driverlib
+PFLAGS += -I%T/chips/msp432/timer
+PFLAGS += -I%T/chips/msp432/usci
+PFLAGS += -I%T/chips/msp432/usci/i2c-sm
+
+PFLAGS += -I%T/lib/timer
+
+PFLAGS += -fnesc-target=env
+PFLAGS += -nostartfiles
+PFLAGS += -fnesc-no-debug
+
+export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true

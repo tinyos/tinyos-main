@@ -1,0 +1,48 @@
+Msp432Timer:  (controls core timer block)
+  uint16_t get();
+  bool     isOverflowPending();
+  void     clearOverflow();
+  void     overflow();
+
+  void     setMode(uint8_t mode);
+  uint8_t  getMode();
+  void     clear();
+  void     enableEvents();
+  void     disableEvents();
+  void     setClockSource(uint16_t clockSource);
+  void     setInputDivider(uint16_t inputDivider);
+
+Msp432TimerControl -> Msp432TimerCCTL  per CCR block
+  controls a CCR block
+
+  bool     isInterruptPending();
+  void     clearPendingInterrupt();
+
+  void     setControl(uint16_t control);
+  uint16_t getControl();
+
+  void setCCRForCompare();
+  void setCCRforCapture(uint8_t cm, uint8_t ccis);
+
+  void enableEvents();
+  void disableEvents();
+  bool areEventsEnabled();
+
+Msp432TimerCompare      (Compare interface) per CCR block
+  uint16_t getEvent();
+  void     setEvent( uint16_t time );
+  void     setEventFromPrev( uint16_t delta );
+  void     setEventFromNow( uint16_t delta );
+
+  void     fired();     <event>
+
+
+Msp432TimerCaptureV2    (capture interface) per CCR block
+  uint16_t getEvent();
+  void     setEdge(uint8_t cm);
+  bool     isOverflowPending();
+  void     clearOverflow();
+  void     setSynchronous(bool synchronous);
+
+  void     captured(uint16_t time, bool overflowed); <event>
+

@@ -1,0 +1,153 @@
+
+Msp432 processors contain an ARM Cortex-M4F cores embedded with TI msp430
+peripherals on the same chip.
+
+The msp432 provides a flat 32 bit (4GiB) address space.  Some is I/O (memory
+mapped), some Flash, some SRAM, etc.  Interrupt vectors may be moved around
+via changes to the VTOR (Vector Table Offset Register).  On system reset,
+VTOR is set to 0 which places the interrupt vector in Flash.
+
+Each entry is a 32 bit word that typically contains the address of the
+corresponding vector handler.  The 1st entry (address 0000_0000) contains
+the initial stack pointer (MSP).  The 2nd entry (address 0000_0004)
+contains the address of the Reset vector and determines where execution
+starts after system reset.  Vector numbers are defined in the chip header,
+msp432p401r.h (tos/chips/msp432/include/msp432p401r.h).
+
+<exception number> <IRQ number> <vector address> <description>
+
+ 0  -16  0000_0000  Stack pointer
+ 1  -15  0000_0004  Reset
+
+ 2  -14  0000_0008  NonMaskableInt
+ 3  -13  0000_000C  HardFault
+ 4  -12  0000_0010  MemoryManagement
+ 5  -11  0000_0014  BusFault
+ 6  -10  0000_0018  UsageFault
+         ooo
+11   -5  0000_002C  SVCall
+12   -4  0000_0030  DebugMonitor
+         ooo
+14   -2  0000_0038  PendSV
+15   -1  0000_003C  SysTick
+
+16    0  0000_0040  PSS
+17    1  0000_0044  CS
+18    2  0000_0048  PCM
+19    3  0000_004C  WDT_A
+20    4  0000_0050  FPU
+21    5  0000_0054  FLCTL
+22    6  0000_0058  COMP_E0
+23    7  0000_005C  COMP_E1
+24    8  0000_0060  TA0_0
+25    9  0000_0064  TA0_N
+26   10  0000_0068  TA1_0
+27   11  0000_006C  TA1_N
+28   12  0000_0070  TA2_0
+29   13  0000_0074  TA2_N
+30   14  0000_0078  TA3_0
+31   15  0000_007C  TA3_N
+32   16  0000_0080  EUSCIA0
+33   17  0000_0084  EUSCIA1
+34   18  0000_0088  EUSCIA2
+35   19  0000_008C  EUSCIA3
+36   20  0000_0090  EUSCIB0
+37   21  0000_0094  EUSCIB1
+38   22  0000_0098  EUSCIB2
+39   23  0000_009C  EUSCIB3
+40   24  0000_00A0  ADC14
+41   25  0000_00A4  T32_INT1
+42   26  0000_00A8  T32_INT2
+43   27  0000_00AC  T32_INTC
+44   28  0000_00B0  AES256
+45   29  0000_00B4  RTC_C
+46   30  0000_00B8  DMA_ERR
+47   31  0000_00BC  DMA_INT3
+48   32  0000_00C0  DMA_INT2
+49   33  0000_00C4  DMA_INT1
+50   34  0000_00C8  DMA_INT0
+51   35  0000_00CC  PORT1
+52   36  0000_00D0  PORT2
+53   37  0000_00D4  PORT3
+54   38  0000_00D8  PORT4
+55   39  0000_00DC  PORT5
+56   40  0000_00E0  PORT6
+
+57   41  0000_00E4  reserved
+         ooo
+     63  0000_013C  
+
+
+
+
+Port Interrupt wiring:
+
+The complication with Port wiring is we define individual bits and basic
+manipulation is done essentially inline.  A Port (the first 6 ports can
+interrupt) interrupt vector handles any interrupt from any of its 8 bits.
+The vector is for the entire port and needs to wire outward individually.
+
+Other drivers are singleton.  That is a given vector feeds one driver and
+is wired to one place.  The handler can be part of the code that handles
+the interrupt.
+
+This means the Port driver only handles the interrupt part of a Port
+function.  This is done via HplMsp432Port<n>IntP.nc.  It has to be
+implemented in individual files because the PORT<n>_Handler routine has
+to be in the C name space (@C() @spontaneous()) so that it replaces the
+weak alias defined in the vector table.  These routines can not be
+in generic modules and the simplest solution was to simply duplicate
+the PORT<n>_Handler file yielding the 6 HplMsp432Port<n>IntP.nc modules.
+
+Other parts of manipulating Port bits happens inline via HplMsp432GpioC and
+HplMsp432PortP.  PortP is generic and is used to replicate access to a
+given port.  The entry points are parameterized to give access to each of
+the bits in the port.
+
+HplMsp432GpioC is an example template that defines most of the pins on the
+msp432p401r(pz) 100 pin part.  Typically a platform designer will determine
+what pins are important and will define a platform specific HplMsp432GpioC
+(tos/platforms/<platform>/hardware/pins/HplMsp432GpioC.nc) that will only
+define the pins needed by the platform.  An example is provided in
+tos/platforms/exp_msp432/hardware/pins/HplMsp432GpioC.nc for the TI
+MSP-EXP432P401R development board.
+
+
+HIL Components:
+
+Core MSP432 code provides a template for a port and then Platform code,
+usually tos/platform/<platform>/hardware/pins will then invoke and wire
+the ports that are used by the platform.  A given interrupt structure
+is platform dependent.
+
+Platform code makes use of HplMsp432Port<n>IntP to wire in any Port that
+needs to provide a bit interrupt.  It is only used by Platform code.
+
+
+HplMsp432Port<n>P       per bit
+    provides interface HplMsp432PortInt
+
+Low level components:
+
+
+A given port interrupt implementation is instantiated via a platform
+specific file that pulls in just the components needed with the appropriate
+wiring.
+
+
+
+
+Port Interrupt processing:
+
+Each interruptable Port on the msp432 cpu provides an interrupt vector
+register (Pn->IV) that presents the highest priority interrupt (from the
+Port) at any given moment in time.  Bit 0 is highest priority and bit 7
+lowest.
+
+Note, only enabled bits in the Port are eligible for inclusion in the IV
+calculation.  If a corresponding bit in IE is 0, the bit is not included
+and will not cause an interrupt.
+
+Any access (read or write) to the Pn->IV register will cause the highest
+presenting interrupt to be cleared.  Reading Pn->IV to determine which bit
+is causing the interrupt will clear this highest priority interrupt.

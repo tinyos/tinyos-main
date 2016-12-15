@@ -1,0 +1,24 @@
+
+Okay, so why the extra level of hierarchy?  Originally, the msp430
+implementation for tinyos included one file that implemented all possible
+pin exports for any msp430 cpu that tinyos supports.  This is very ugly.
+
+The way the actual configuration was invoked was by a boat load of header
+files, one for each cpu in the msp430 families.  The platform would invoke
+the proper include file by specifing -mcpu=<cpu_name>.  This would find and
+include the appropriate include file.
+
+A simpler approach is to have a export for a given cpu that matches what
+that cpu actual implements.  Straight forward and easy to understand
+without having to wade through a multitude of #ifdefs.
+
+Now, the msp432 currently only has one chip, the msp432p401{4,m}.  There
+are several different packaging options which will determine what is
+atually implemented and how stuff comes out.  However there is currently
+only one chip header, msp432p401r.h (msp432p401m is essentially the same).
+
+So an organization is being established prior to things getting messy.  We
+have <chip>/pins which then exports the actual pins defined by the cpu in
+question.  If TI starts to publish other chip headers, we can easily adapt
+and keep thing clean without resorting to a single monolithic, harder to
+maintain single file.

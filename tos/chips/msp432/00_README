@@ -1,0 +1,161 @@
+
+MSP432 cpus.
+
+The TI MSP432 cpus are an ARM Cortex-M4F core married to modified msp430
+peripheral blocks.  It is orientated to low power, high performance
+applications.
+
+We support the msp432p401{r,m} in various configurations.  We provide for
+the superset and if a chip doesn't provide some functionality the platform
+simply doesn't use that functionality.
+
+The msp432p401r has 256KB/64KB (flash/sram).  The M part has (128KB/32KB).
+
+The 100 pin part (100 PZ, quad) provides ADC14 (24 ext, 2 int), 16 COMP_En
+channels, 4 TimerA, 4 USCI_A (UART, IrDA, SPI), 4 USCI_B (SPI, I2C), 84 IOs.
+
+The 80 pin part (80 ZXH, BGA) provides ADC14 (16 ext, 2 int), 14 COMP_En
+channels, 3 TimerA, 3 USCI_A (UART, IrDA, SPI), 4 USCI_B (SPI, I2C), 64 IOs.
+
+The 64 pin part (64 RGC, quad) provides  ADC14 (12 ext, 2 int), 6 COMP_En
+channels, 3 TimerA, 3 USCI_A (UART, IrDA, SPI), 3 USCI_B (SPI, I2C), 48 IOs.
+
+Currently, there is only one header file describing the msp432 chips,
+tos/chips/msp432/msp432p401r.h   There is also a msp432p401m.h but it
+really has no differences to the msp432p401r.h defines.  Comments
+and calling out m vs r files.
+
+One issue is the differences between the different packaging options.  This
+results in reduction in number of peripheral blocks and pins available.
+The problem is none of this is reflected in any of chip descriptor header.
+One can read this information from the Device Descriptors that these chips
+have but that only allows for configuration verifcation after the image has
+been built and loaded onto the chip's flash.  It doesn't help with building
+a static image based on a chip configuration descriptor.
+
+We could define this information by hand in some fashion but doesn't seem
+to be worth the trouble.  Instead, we build for the superset and assume
+that the platform designer knows what they are doing, ie. don't use what
+isn't there.  A reasonable assumption.
+
+
+CPUs supported:
+
+    msp432: msp432p401r, msp432p401m
+
+
+Interrupts: See 01_Interrupts for a description of the exception system on
+the msp432.
+
+Addressing:
+
+The msp432 is a full 32 bit ARM Cortex-M4F core with a 32 bit (4MB) address
+space.  The following address regions are provided (msp432p401r):
+
+    Flash:      0x0000_0000     0003_FFFF       256K
+    Info Flash: 0x0020_0000     0020_3FFF        16K
+    RAM (code): 0x0100_0000     0100_FFFF        64K (ram alias)
+
+    ROM:        0x0200_0000     0200_07FF         2K (boot rom)
+    ROM:        0x0200_0800     0200_7FFF        30K (driverlib)
+
+    RAM:        0x2000_0000     2000_FFFF        64K
+      bitband:  0x2200_0000     220F_FFFF
+
+    I/O:        0x4000_0000     400F_FFFF        (mem mapped i/o)
+      bitband:  0x4200_0000     43FF_FFFF
+    ARM I/O:    0xE000_0000     E004_43FF
+
+    ROM TABLE:  0xE00F_F000     E00F_FFFF
+
+
+Bit Banding:
+
+The Cortex processors (and other ARMs?) have an addressing mechanism called
+bit-banding.  This lets one atomically access a single bit inside a byte,
+half-word, or word as long as the original datum is in one of the aliased
+bit-band regions.
+
+SRAM:           0x2000_0000 - 0x2000_FFFF
+SRAM, bitband:  0x2200_0000 - 0x220F_FFFF
+
+Periph:         0x4000_0000 - 0x400F_FFFF
+Periph, bitband:0x4200_0000 - 0x43FF_FFFF
+
+bitband_word_offset = (byte_offset * 32) + (bit number * 4)
+bitband_word_addr   = bit_band_base + bit_word_offset
+
+If one accesses the bitband_word_addr (actually the low order bit), one is
+actually accessing the bit in the area being aliased but it is essentially
+an atomic access to that particular bit.
+
+ie. BITBAND_PERI(RTC_C->CTL13, RTC_C_CTL13_HOLD_OFS) = 0;
+
+RTC_C is 0x4000_0000 + 0x4400 = 0x4000_4400
+CTL13 has an offset of 2 and RTC_C_CTL13_HOLD_OFS is 6
+
+The address 0x4208_8058 (bit 0) will access bit 6 RTC_C->CTL13 (HOLD).
+It is only the lsb (b0) of the bit-band word that affects anything.
+
+BITBAND_PERI(RTC_C->CTL13, RTC_C_CTL13_HOLD_OFS) = 1;
+BITBAND_PERI(RTC_C->CTL13, RTC_C_CTL13_HOLD_OFS) = 0xff;
+
+will both set bit 6 of CTL13.
+
+
+Note: Given any address in the alias region, that will determine where one
+starts to count bits and the bitband calculation works.  So if one wants
+the 23rd bit in the unaligned word that starts at 0x4000_4c16 one would
+still use
+
+(((0x4000_4c16 - 0x4000_0000) *32) + 23 * 4) + 0x4200_0000 to get 0x4209_831C.
+Accessing 0x4209_831C (lsb, bit 0) will actually be manipulating bit 7 of 4c18.
+
+
+ADC14:
+
+
+DMA:
+
+1) Addressing.
+
+2) Trigger selection.
+
+3) Trigger values.
+
+4) Trigger location.
+
+5) Interrupt vector:
+
+
+Clocks:
+
+   The msp432 clock system (CS) is completely different than the UCS that was used on the x5
+   msp430 cpus.  Initilization is straight forward.
+
+
+Timers:
+
+   The Msp432 processors have various flavors of timers, the two main categories are T32 and TA.
+   T32 timers are 32 bit high resolution (clocked off MCLK) count down timers.  TA timers are 16
+   bit timers that are very similar to the TA timers on the msp430 x5 cpus.
+
+   The current TinyOS msp432 interface implements 32KiHz and a 1MHz timers.  The mapping between
+   a cpu h/w timer and appropriate s/w timer is cpu/family/platform dependent.
+
+
+I0 Port naming:
+
+   TI defines 8 bit numbered ports (P1 ... P<n>).  TI also thought it would
+   be a good idea to access IO ports as 16 bit quantities.  On the MSP432,
+   P2|P1 can be accessed either individually or as PortA (16 bits).
+
+   To make this work requires odd ports to be interleaved with even ports.
+   ie. Port1 is interleaved with Port2.  ie. P1IN is interleaved with P2IN
+   to provide PAIN.  This forces different register offsets for Port1 vs
+   Port2 (odd vs. even).  This results in needing different structures when
+   accessing these ports,  DIO_PORT_Odd_Interruptable_Type vs. DIO_PORT_Even_
+   Interruptable_Type.
+
+   This is accounted for  (the knife penetrated his heart.   poor bugger,
+   they killed kenny)

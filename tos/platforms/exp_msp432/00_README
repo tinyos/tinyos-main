@@ -1,0 +1,168 @@
+The exp_msp432 platform is based on the MSP-EXP432P401R Launch Pad
+Evaluation Board.  This uses the 100 pin msp432p401r QZ package.
+
+The main processor is a ARM Cortex-M4F running at up to 48MHz.  The Cortex-M4F has an integrated floating point processor
+
+
+Exceptions:
+-------------
+
+All exceptions go through the exception/interrupt table that starts by
+default at the beginning of Flash at 0x2000_0000.  This table can be moved
+by changing the contents of SCB->VTOR (Vector Table Offset Register).
+
+All handlers take the form <exception>_Handler and the initial set of these
+handlers are aliased to __default_handler.  All initial handlers are given
+the "weak" attribute so may be overridden by TinyOs code.
+
+For example, if TinyOS code wants to use a pin interrupt, say P1.4, it
+would define PORT1_Handler and would then be able to capture the P1.4
+interrupt when it fires.
+
+Once an Exception handler has been taken, the taking code is responsible
+for catching any unhandled exceptions coming through that vector.
+
+
+Startup:
+------------
+
+The processor can be reset in various ways and when it does it starts
+executing as follows:
+
+The very first entry in the vector table is InitialStack (0x2000_0000).
+The initial MSP (main stack pointer) is set from this address.
+
+The processor then starts to execute at the address in the Reset vector
+slot.  This will be the routine that handles Reset (__Reset).
+
+__Reset is also aliased to start().  The linker uses various mechanisms to
+set the initial entry point for the built object.  Setting start()
+establishes a default if none of the other mechanisms are used.  This won't
+effect actual program execution but does tell GDB where to put the initial
+view when starting up.
+
+__Reset() is responsible for bring up enough of the system for TinyOS to
+start.  In addition, we also initilize pieces of the h/w that is easier to
+do directly rather then letting TinyOS modules do it.  Your mileage may
+vary.
+
+When __Reset() first starts to execute, one should set any controlling
+I/Os to a start that won't cause problems for the h/w.  This should be
+done as soon as possible after resetting.  When reset the msp432 sets
+all of its I/Os to input.
+
+At a minimum, __Reset() must make sure that BSS has been zeroed and any
+pre-initilized data has been copies from flash down to where it actually
+lives in RAM.
+
+
+Initial Processor State:
+--------------------------
+
+When the cpu first comes up it will have the following state:
+
+o all Port I/O pins are set to input.
+o cpu core is in AM_LDO_VCORE0.
+
+
+Floating Point:
+-----------------
+
+The Cortex-M4F includes an IEEE 754 single precision floating point unit.
+We build with -mfloat-abi=hard -mfpu=fpv4-sp-d16 but leave the fpu off.
+When the fpu is turned on it increases the exception stack from 8 words to
+25 words.
+
+When floating point is needed, one must turn on the fpu, do what one needs,
+and then turn the fpu back off.  If an exception occurs while working with
+the fpu, the right thing will happen and state will be preserved.
+
+
+
+TLV from rev 2 EXP-MSP432P401R launch pad
+XMS432P401R Rev C.
+
+
+TLV_CHECKSUM = 0xa8b1de6c,
+DEVICE_INFO_TAG = 0xb,
+DEVICE_INFO_LEN = 0x4,
+DEVICE_ID = 0xa000,
+HWREV = 0x43,
+BCREV = 0x420043,
+ROM_DRVLIB_REV = 0x3000010,
+DIE_REC_TAG = 0xc,
+DIE_REC_LEN = 0x8,
+DIE_XPOS = 0x3e,
+DIE_YPOS = 0xb,
+WAFER_ID = 0x9,
+LOT_ID = 0x3de15,
+RESERVED0 = 0xfffffc32,
+RESERVED1 = 0x56c75741,
+RESERVED2 = 0xffffffff,
+TEST_RESULTS = 0x474345,
+CS_CAL_TAG = 0x3,
+CS_CAL_LEN = 0x10,
+DCOIR_FCAL_RSEL04 = 0x1d2,
+DCOIR_FCAL_RSEL5 = 0x1d1,
+RESERVED3 = 0xa6,
+RESERVED4 = 0xfffffef7,
+RESERVED5 = 0x26,
+RESERVED6 = 0xfffffef8,
+DCOIR_CONSTK_RSEL04 = 0x3ba73d55,
+DCOIR_CONSTK_RSEL5 = 0x3ba6b478,
+DCOER_FCAL_RSEL04 = 0x1b7,
+DCOER_FCAL_RSEL5 = 0x1b8,
+RESERVED7 = 0xb4,
+RESERVED8 = 0xfffffee4,
+RESERVED9 = 0x29,
+RESERVED10 = 0xfffffee2,
+DCOER_CONSTK_RSEL04 = 0x3b9df755,
+DCOER_CONSTK_RSEL5 = 0x3b9b5ea4,
+ADC14_CAL_TAG = 0x5,
+ADC14_CAL_LEN = 0x18,
+ADC_GAIN_FACTOR = 0xffffffff,
+ADC_OFFSET = 0xffffffff,
+RESERVED11 = 0xffffffff,
+RESERVED12 = 0xffffffff,
+RESERVED13 = 0xffffffff,
+RESERVED14 = 0xffffffff,
+RESERVED15 = 0xffffffff,
+RESERVED16 = 0xffffffff,
+RESERVED17 = 0xffffffff,
+RESERVED18 = 0xffffffff,
+RESERVED19 = 0xffffffff,
+RESERVED20 = 0xffffffff,
+RESERVED21 = 0xffffffff,
+RESERVED22 = 0xffffffff,
+RESERVED23 = 0xffffffff,
+RESERVED24 = 0xffffffff,
+RESERVED25 = 0xffffffff,
+RESERVED26 = 0xffffffff,
+ADC14_REF1P2V_TS30C = 0x2858,
+ADC14_REF1P2V_TS85C = 0x2e10,
+ADC14_REF1P45V_TS30C = 0x216f,
+ADC14_REF1P45V_TS85C = 0x2627,
+ADC14_REF2P5V_TS30C = 0x1369,
+ADC14_REF2P5V_TS85C = 0x1628,
+REF_CAL_TAG = 0x8,
+REF_CAL_LEN = 0x3,
+REF_1P2V = 0xffffffff,
+REF_1P45V = 0xffffffff,
+REF_2P5V = 0xffffffff,
+FLASH_INFO_TAG = 0x4,
+FLASH_INFO_LEN = 0x2,
+FLASH_MAX_PROG_PULSES = 0x5,
+FLASH_MAX_ERASE_PULSES = 0x37,
+RANDOM_NUM_TAG = 0xd,
+RANDOM_NUM_LEN = 0x4,
+RANDOM_NUM_1 = 0xbd21117b,
+RANDOM_NUM_2 = 0x525e88e9,
+RANDOM_NUM_3 = 0x20755630,
+RANDOM_NUM_4 = 0x5f1c9b9c,
+BSL_CFG_TAG = 0xf,
+BSL_CFG_LEN = 0x4,
+BSL_PERIPHIF_SEL = 0xffc2d0c0,
+BSL_PORTIF_CFG_UART = 0xfcfffda0,
+BSL_PORTIF_CFG_SPI = 0xf0ff9770,
+BSL_PORTIF_CFG_I2C = 0xfcffff72,
+TLV_END = 0xbd0e11d

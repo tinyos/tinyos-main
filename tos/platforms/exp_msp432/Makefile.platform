@@ -1,0 +1,17 @@
+
+#
+# This file is used to include some source files needed to build on
+# the msp432 platforms.
+#
+# See $(TINYOS_ROOT_DIR)/support/make/targets/exp_msp432.target
+#     $(TINYOS_ROOT_DIR)/support/make/platforms/exp_msp432.platform
+#     $(TINYOS_ROOT_DIR)/support/make/msp432/msp432.rules
+#
+
+DVRLIB_DIR=$(TINYOS_OS_DIR)/chips/msp432/driverlib
+$(info Makefile.platform)
+TOSMAKE_ADDITIONAL_INPUTS += $(PLATFORM_DIR)/startup.c
+# TOSMAKE_ADDITIONAL_INPUTS += $(DVRLIB_DIR)/cs.c
+# TOSMAKE_ADDITIONAL_INPUTS += $(DVRLIB_DIR)/interrupt.c
+# TOSMAKE_ADDITIONAL_INPUTS += $(DVRLIB_DIR)/sysctl.c
+# TOSMAKE_ADDITIONAL_INPUTS += $(DVRLIB_DIR)/cpu.c

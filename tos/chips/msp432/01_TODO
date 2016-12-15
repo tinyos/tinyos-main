@@ -1,0 +1,43 @@
+
+o Timers
+
+  - eval Tmilli being based on 32KiHz - Can we go decimal ticks?
+    or do we need to be 1024?
+
+  - Sync between DCO an T32K.
+
+  - Sync between RTC
+
+o Capture
+
+o RTC
+
+  - RTC calibration
+
+o Flash
+
+  - power of flash in sleep
+
+
+o MCUSleep
+
+  - power off/on state machine
+  - sleep from RAM?
+  - power off flash (see above)
+
+
+o Clock sync
+
+  - DCOCLK & RTC.J32/Tmicro sync on reboot/startup
+
+
+o what is the Wake on Interrupt Controller?
+
+o Verify clocks on exp-msp432p401r
+  - 32KiHz - ACLK
+  - 16MHz  - DCOCLK
+  - RTCCLK - RTC Calibration
+
+o ADC - clock rate?
+  - clocked by HSMCLK, eh?
+  - table 5-27, upto 25MHz

@@ -45,7 +45,7 @@ implementation {
 
   void debug_break(uint16_t arg)  __attribute__ ((noinline)) {
     _arg = arg;
-    __NOP();
+    __BKPT();
   }
 
 
@@ -82,7 +82,6 @@ implementation {
       signal Panic.hook();
     } else
       m_in_panic |= 0x80;               /* flag a double */
-    __NOP();
     debug_break(2);
   }
 

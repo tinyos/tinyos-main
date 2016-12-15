@@ -40,13 +40,25 @@
  *
  * @author Wanja Hofer <wanja@cs.fau.de>
  * @author Thomas Schmid
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
 #ifndef __CORTEXM_NESC_H__
 #define __CORTEXM_NESC_H__
 
 /*
- * The Sam3 uses a Cortex-M3 nad the CMSIS installed for it is really old.
+ * The msp432 uses CMSIS 4 (core_cm4.h) which defines __NOP as static inline
+ * function, which is great, but it confuses gdb into thinking that the
+ * nop is a function and its source is in the cmsis_gcc.h file.
+ *
+ * But we want to be able to insert nops into optimized code so we can set
+ * breaks on them.  The way to do this is make the __nop a define.
+ */
+#define nop()     __asm volatile ("nop")
+#define bkpt(val) __asm volatile ("bkpt "#val)
+
+/*
+ * The Sam3 uses a Cortex-M3 and the CMSIS installed for it is really old.
  * Further the Sam3 has a real problem with an include nightmare.  It
  * should be updated to CMSIS 4 or greater but is only worth it if
  * someone will actively use it.  Otherwise not worth the effort.  In

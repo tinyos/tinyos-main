@@ -1,0 +1,60 @@
+#-*-Makefile-*- vim:syntax=make
+#
+
+ifndef PLATFORM_DIR
+  $(error PLATFORM_DIR required and not defined)
+endif
+
+define MSP432_HELP
+
+ MSP432 extras:
+
+   debug    : -ggdb -fnesc-no-inline
+   debugopt : -ggdb
+endef
+
+HELP += $(MSP432_HELP)
+
+GCC     = arm-none-eabi-gcc
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+SIZE    = arm-none-eabi-size
+NM      = arm-none-eabi-nm
+#LIBS    = -lm
+#LIBS       += -lc -lgcc -lnosys -lm
+
+INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
+INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
+
+# default.  currently only msp432p401r and msp432p401m exist
+# the exp_msp432p401r uses the msp432p401r.
+DEVICE ?= MSP432P401R
+
+ARCH        = -mcpu=cortex-m4  -march=armv7e-m -mthumb
+FLOAT       = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+#CFLAGS += --specs=nano.specs $(ARCH) $(FLOAT) -fno-strict-aliasing -fshort-enums
+CFLAGS += --specs=nosys.specs $(ARCH) $(FLOAT) -fno-strict-aliasing -fshort-enums
+PFLAGS += -Wall -Wshadow
+
+# defining __MSP432_DVRLIB_ROM__ accesses driverlib in ROM.
+# usually this is done in hardware.h or by individual files
+# that use driverlib calls.
+#
+# PFLAGS += -D__MSP432_DVRLIB_ROM__
+PFLAGS += -D__$(DEVICE)__
+
+LINKERFILE ?= $(TINYOS_OS_DIR)/chips/msp432/other/msp432p401r.lds
+#LDFLAGS += -L$(PLATFORM_DIR) -T $(LINKERFILE)
+LDFLAGS += -T $(LINKERFILE)
+LDFLAGS += -Wl,-Map=$(MAIN_MAP) -Wl,--gc-sections
+
+# Check if the user specified a programmer type with a .extra file.
+# If not, use bsl by default.
+ifndef TOSMAKE_PROGRAMMER_TYPE
+  $(call TOSMake_include,msp432/bsl.extra)
+endif
+
+TOSMAKE_BINARY_FORMAT = bin
+TOSMAKE_BINARY_IN = $(MAIN_BIN)
+TOSMAKE_BINARY_OUT = $(INSTALL_BIN)

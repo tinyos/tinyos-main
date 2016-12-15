@@ -1,0 +1,69 @@
+This directory has files that makes using gdb easier with the msp4302
+
+So one is debugging the <blah> application located in apps/<blah>.
+
+For the purpose of this tutorial, let's build for the exp_432 platform.
+The exp_432 uses a msp432p401r processor.
+
+First one must build the application with debugging information.  This can
+be done using either "make debug exp_msp432" or "make debugopt exp_msp432".
+
+Debugging is done via a jtag port connected to a gdb server that implements
+the remote gdb protocol.  The recommended jtag pod is the Segger J-Link
+debug probe.  There are many models with different features.  The two we
+like are the J-Link Edu (~$60 USD) and the J-Link Base (~378 USD).
+
+GDB can execute gdb initialization commands from the execution directory
+and your home directory.  These files are named .gdbinit.  The init file in
+the execution directory is build/exp_msp432/.gdbinit.  But keep in mind
+that if one does a "make clean" it wipes out build and everything below it,
+including the .gdbinit file.  To avoid this, we place the .gdbinit file at
+the same level as the application (apps/<blah>).  See below.
+
+A CPU dependent gdb command files is available for the msp432 cpu.  This
+file defines various commands for looking at different subsystems on the
+main cpu and associated peripherals.  It can be found at
+tos/chips/msp432/99_gdb/gdb_msp432.  It should be copied to the apps
+directory, apps/<blah> and sourced from apps/<blah>/.gdbinit.
+
+To set up the application directory, apps/<blah> do the following:
+	(assuming in the top level of the tinyos root)
+
+    cd apps/<blah>
+    cp ../../tos/chips/msp432/99_gdb/gdbinit ./.gdbinit
+    cp ../../tos/chips/msp432/99_gdb/gdb_msp432  ./.gdb_msp432
+    make debugopt exp_msp432
+
+another way to get debugging symbols into the object is to specify the
+following you the applications Makefile:
+
+    OPTFLAGS = -ggdb -Os -fnesc-no-inline
+
+now that the build directory exists, we can finish preping the gdb files.
+
+    pushd build/exp_msp432
+    ln -s ../../gdbinit
+    popd
+
+WARNING: If you forget to do the symbolic link above msp430-gdb won't
+connect to the gdb server and you will just get a (gdb) prompt.  Leaving
+you scratching your head.  Always check for the symbolic link to the
+.gdbinit file at the base level of the application.  ie. ../../.gdbinit.
+
+
+Fire up the gdb server.   Probably from another terminal window.
+
+    JLinkGDBServer -if SWD -device MSP432P401R
+
+And connect to the beasty using gdb.   From the apps/<blah> directory:
+
+    arm-none-eabi-gdb build/exp_msp432/main.exe 
+
+Emacs also provides a very nice interface for source level debugging.
+From within emacs use M-x gdb and then
+
+    Run gdb (like this): arm-none-eabi-gdb -i=mi build/exp_msp432/main.exe 
+
+
+To load program code from gdb use the "load" command.  After loading you
+should reset the target using "mon reset".

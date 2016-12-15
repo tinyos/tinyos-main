@@ -1,0 +1,248 @@
+/*
+ * The msp432 defines interrupt vectors in tos/platforms/<platform>/startup.c
+ * Names are of the form EUSCI{A,B}[0-3]_Handler.  The start versions are
+ * defined as weak and are overridden here.
+ *
+ * The chip header defines all 8 eUSCI modules.  Whether a chip has all 8 or
+ * not is determined by how the chip is packaged.  There is no way to
+ * determine from the chip header what is actually there.  Essentially
+ * it is a platform thing.
+ *
+ * There are 4 eUsci A's and 4 B's.  To make differentiating easy at
+ * the interrupt level, we give the A's instance numbers 0-3 and the
+ * B's 0x10 - 0x13.
+ *
+ * msp432usci.h defines constants for how many A and B USCI'S there are.
+ * these constants are used for determining how to find the port pointers.
+ *
+ * The value of the IV register depends on what mode the eUSCI is in.
+ * We let the connected driver deal with this.  Reading the IV register
+ * also removes the offending interrupt flag.  (h/w acknowledge)
+ *
+ * This module is the connector from the interrupt to the actual
+ * driver.
+ */
+
+
+USCI As and Bs behave mostly the same but do have some differences.
+As support UART and SPI.  Bs support SPI and I2C.  Bit positions in the
+various control registers are different too.
+
+Differences:
+
+Registers:
+(All offsets from base address.  All registers 16 bits wide. Hex)
+
+offset          A               A-SPI           B
+ 0              ctlw0           ctlw0           ctlw0
+ 2              ctlw1           r               ctlw1
+ 4              r               r               r
+ 6              brw             brw             brw
+ 8              mctlw           r               statw
+ a              statw           statw           tbcnt
+ c              rxbuf           rxbuf           rxbuf
+ e              txbuf           txbuf           txbuf
+10              abctl           r               r
+12              irctl           r               r
+14              r               r               i2coa0
+16              r               r               i2coa1
+18              r               r               i2coa2
+1a              ie              ie              i2coa3
+1c              ifg             ifg             addrx
+1e              iv              iv              addrmask
+20                                              i2csa
+22-28                                           r
+2a                                              ie
+2c                                              ifg
+2e                                              iv
+
+
+u - uart  s_a - spi  s_b - spi  i - i2c
+
+CTLW0:
+EUSCI_A_CTLW0_SWRST_OFS                  ( 0)           u s_a
+    EUSCI_B_CTLW0_SWRST_OFS                  ( 0)               s_b     i
+EUSCI_A_CTLW0_TXBRK_OFS                  ( 1)           u
+EUSCI_A_CTLW0_STEM_OFS                   ( 1)             s_a
+    EUSCI_B_CTLW0_STEM_OFS                   ( 1)               s_b
+    EUSCI_B_CTLW0_TXSTT_OFS                  ( 1)                       i
+EUSCI_A_CTLW0_TXADDR_OFS                 ( 2)           u
+    EUSCI_B_CTLW0_TXSTP_OFS                  ( 2)                       i
+EUSCI_A_CTLW0_DORM_OFS                   ( 3)           u
+    EUSCI_B_CTLW0_TXNACK_OFS                 ( 3)                       i
+EUSCI_A_CTLW0_BRKIE_OFS                  ( 4)           u
+    EUSCI_B_CTLW0_TR_OFS                     ( 4)                       i
+EUSCI_A_CTLW0_RXEIE_OFS                  ( 5)           u
+    EUSCI_B_CTLW0_TXACK_OFS                  ( 5)                       i
+EUSCI_A_CTLW0_SSEL_OFS                   ( 6)           u   s_a
+    EUSCI_B_CTLW0_SSEL_OFS                   ( 6)                 s_b   i
+EUSCI_A_CTLW0_SYNC_OFS                   ( 8)           u   s_a
+    EUSCI_B_CTLW0_SYNC_OFS                   ( 8)                 s_b   i
+EUSCI_A_CTLW0_MODE_OFS                   ( 9)           u   s_a
+    EUSCI_B_CTLW0_MODE_OFS                   ( 9)                 s_b   i
+EUSCI_A_CTLW0_SPB_OFS                    (11)           u
+EUSCI_A_CTLW0_MST_OFS                    (11)               s_a
+    EUSCI_B_CTLW0_MST_OFS                    (11)                 s_b   i
+EUSCI_A_CTLW0_SEVENBIT_OFS               (12)           u   s_a
+    EUSCI_B_CTLW0_SEVENBIT_OFS               (12)                 s_b
+EUSCI_A_CTLW0_MSB_OFS                    (13)           u   s_a
+    EUSCI_B_CTLW0_MSB_OFS                    (13)                 s_b
+    EUSCI_B_CTLW0_MM_OFS                     (13)                       i
+EUSCI_A_CTLW0_PAR_OFS                    (14)           u
+EUSCI_A_CTLW0_CKPL_OFS                   (14)               s_a
+    EUSCI_B_CTLW0_CKPL_OFS                   (14)                 s_b
+    EUSCI_B_CTLW0_SLA10_OFS                  (14)                       i
+EUSCI_A_CTLW0_PEN_OFS                    (15)           u
+EUSCI_A_CTLW0_CKPH_OFS                   (15)               s_a
+    EUSCI_B_CTLW0_CKPH_OFS                   (15)                 s_b
+    EUSCI_B_CTLW0_A10_OFS                    (15)                       i
+
+
+CTLW1:
+EUSCI_A_CTLW1_GLIT_OFS                   ( 0)           u
+    EUSCI_B_CTLW1_GLIT_OFS                   ( 0)                       i
+    EUSCI_B_CTLW1_ASTP_OFS                   ( 2)                       i
+    EUSCI_B_CTLW1_SWACK_OFS                  ( 4)                       i
+    EUSCI_B_CTLW1_STPNACK_OFS                ( 5)                       i
+    EUSCI_B_CTLW1_CLTO_OFS                   ( 6)                       i
+    EUSCI_B_CTLW1_ETXINT_OFS                 ( 8)                       i
+
+BRW:                                                    u   s_a     s_b     i
+
+MCTLW:
+EUSCI_A_MCTLW_OS16_OFS                   ( 0)           u
+EUSCI_A_MCTLW_BRF_OFS                    ( 4)           u
+EUSCI_A_MCTLW_BRS_OFS                    ( 8)           u
+
+
+STATW:
+EUSCI_A_STATW_BUSY_OFS                   ( 0)           u   s_a
+    EUSCI_B_STATW_BUSY_OFS                   ( 0)                   s_b
+EUSCI_A_STATW_ADDR_IDLE_OFS              ( 1)           u
+EUSCI_A_STATW_RXERR_OFS                  ( 2)           u
+EUSCI_A_STATW_BRK_OFS                    ( 3)           u
+EUSCI_A_STATW_PE_OFS                     ( 4)           u
+    EUSCI_B_STATW_BBUSY_OFS                  ( 4)                           i
+EUSCI_A_STATW_OE_OFS                     ( 5)           u   s_a
+    EUSCI_B_STATW_OE_OFS                     ( 5)                   s_b
+    EUSCI_B_STATW_GC_OFS                     ( 5)                           i
+EUSCI_A_STATW_FE_OFS                     ( 6)           u   s_a
+    EUSCI_B_STATW_FE_OFS                     ( 6)                   s_b
+    EUSCI_B_STATW_SCLLOW_OFS                 ( 6)                           i
+EUSCI_A_STATW_LISTEN_OFS                 ( 7)           u   s_a
+    EUSCI_B_STATW_LISTEN_OFS                 ( 7)                   s_b
+    EUSCI_B_STATW_BCNT_OFS                   ( 8)                           i
+
+TBCNT:
+    EUSCI_B_TBCNT_TBCNT_OFS                  ( 0)                           i
+
+RXBUF:
+EUSCI_A_RXBUF_RXBUF_OFS                  ( 0)           u   s_a
+    EUSCI_B_RXBUF_RXBUF_OFS                  ( 0)                   s_b     i
+
+TXBUF:
+EUSCI_A_TXBUF_TXBUF_OFS                  ( 0)           u   s_a
+    EUSCI_B_TXBUF_TXBUF_OFS                  ( 0)                   s_b     i
+
+ABCTL:
+EUSCI_A_ABCTL_ABDEN_OFS                  ( 0)           u
+EUSCI_A_ABCTL_BTOE_OFS                   ( 2)           u
+EUSCI_A_ABCTL_STOE_OFS                   ( 3)           u
+EUSCI_A_ABCTL_DELIM_OFS                  ( 4)           u
+
+IRCTL:
+EUSCI_A_IRCTL_IREN_OFS                   ( 0)           irda
+EUSCI_A_IRCTL_IRTXCLK_OFS                ( 1)           irda
+EUSCI_A_IRCTL_IRTXPL_OFS                 ( 2)           irda
+EUSCI_A_IRCTL_IRRXFE_OFS                 ( 8)           irda
+EUSCI_A_IRCTL_IRRXPL_OFS                 ( 9)           irda
+EUSCI_A_IRCTL_IRRXFL_OFS                 (10)           irda
+
+I2COA0:
+    EUSCI_B_I2COA0_I2COA0_OFS                ( 0)                   i
+    EUSCI_B_I2COA0_OAEN_OFS                  (10)                   i
+    EUSCI_B_I2COA0_GCEN_OFS                  (15)                   i
+I2COA1:
+    EUSCI_B_I2COA1_I2COA1_OFS                ( 0)                   i
+    EUSCI_B_I2COA1_OAEN_OFS                  (10)                   i
+I2COA2:
+    EUSCI_B_I2COA2_I2COA2_OFS                ( 0)                   i
+    EUSCI_B_I2COA2_OAEN_OFS                  (10)                   i
+I2COA3:
+    EUSCI_B_I2COA3_I2COA3_OFS                ( 0)                   i
+    EUSCI_B_I2COA3_OAEN_OFS                  (10)                   i
+
+IE:
+EUSCI_A_IE_RXIE_OFS                      ( 0)           u   s_a
+    EUSCI_B_IE_RXIE_OFS                      ( 0)                   s_b
+    EUSCI_B_IE_RXIE0_OFS                     ( 0)                           i
+EUSCI_A_IE_TXIE_OFS                      ( 1)           u   s_a
+    EUSCI_B_IE_TXIE_OFS                      ( 1)                   s_b
+    EUSCI_B_IE_TXIE0_OFS                     ( 1)                           i
+EUSCI_A_IE_STTIE_OFS                     ( 2)           u
+    EUSCI_B_IE_STTIE_OFS                     ( 2)                           i
+EUSCI_A_IE_TXCPTIE_OFS                   ( 3)           u
+    EUSCI_B_IE_STPIE_OFS                     ( 3)                           i
+    EUSCI_B_IE_ALIE_OFS                      ( 4)                           i
+    EUSCI_B_IE_NACKIE_OFS                    ( 5)                           i
+    EUSCI_B_IE_BCNTIE_OFS                    ( 6)                           i
+    EUSCI_B_IE_CLTOIE_OFS                    ( 7)                           i
+    EUSCI_B_IE_RXIE1_OFS                     ( 8)                           i
+    EUSCI_B_IE_TXIE1_OFS                     ( 9)                           i
+    EUSCI_B_IE_RXIE2_OFS                     (10)                           i
+    EUSCI_B_IE_TXIE2_OFS                     (11)                           i
+    EUSCI_B_IE_RXIE3_OFS                     (12)                           i
+    EUSCI_B_IE_TXIE3_OFS                     (13)                           i
+    EUSCI_B_IE_BIT9IE_OFS                    (14)                           i
+
+IFG:
+EUSCI_A_IFG_RXIFG_OFS                    ( 0)           u   s_a
+    EUSCI_B_IFG_RXIFG_OFS                    ( 0)                   s_b
+    EUSCI_B_IFG_RXIFG0_OFS                   ( 0)                           i
+EUSCI_A_IFG_TXIFG_OFS                    ( 1)           u   s_a
+    EUSCI_B_IFG_TXIFG_OFS                    ( 1)                   s_b
+    EUSCI_B_IFG_TXIFG0_OFS                   ( 1)                           i
+EUSCI_A_IFG_STTIFG_OFS                   ( 2)           u
+    EUSCI_B_IFG_STTIFG_OFS                   ( 2)                           i
+EUSCI_A_IFG_TXCPTIFG_OFS                 ( 3)           u
+    EUSCI_B_IFG_STPIFG_OFS                   ( 3)                           i
+    EUSCI_B_IFG_ALIFG_OFS                    ( 4)                           i
+    EUSCI_B_IFG_NACKIFG_OFS                  ( 5)                           i
+    EUSCI_B_IFG_BCNTIFG_OFS                  ( 6)                           i
+    EUSCI_B_IFG_CLTOIFG_OFS                  ( 7)                           i
+    EUSCI_B_IFG_RXIFG1_OFS                   ( 8)                           i
+    EUSCI_B_IFG_TXIFG1_OFS                   ( 9)                           i
+    EUSCI_B_IFG_RXIFG2_OFS                   (10)                           i
+    EUSCI_B_IFG_TXIFG2_OFS                   (11)                           i
+    EUSCI_B_IFG_RXIFG3_OFS                   (12)                           i
+    EUSCI_B_IFG_TXIFG3_OFS                   (13)                           i
+    EUSCI_B_IFG_BIT9IFG_OFS                  (14)                           i
+
+IV:
+
+ADDRX:
+    EUSCI_B_ADDRX_ADDRX_OFS                  ( 0)                           i
+ADDRMASK:
+    EUSCI_B_ADDMASK_ADDMASK_OFS              ( 0)                           i
+
+I2CSA:
+    EUSCI_B_I2CSA_I2CSA_OFS                  ( 0)                           i
+
+
+IV: u               s_a         s_b         i
+    0   none        none        none        none
+    2   rxifg       rxifg       rxifg       al
+    4   txifg       txifg       txifg       nack
+    6   sttifg                              stt
+    8   txcpt                               stp
+    a                                       rxifg3
+    c                                       txifg3
+    e                                       rxifg2
+   10                                       txifg2
+   12                                       rxifg1
+   14                                       txifg1
+   16                                       rxifg0
+   18                                       txifg0
+   1a                                       bcnt
+   1c                                       clto
+   1e                                       bit9
