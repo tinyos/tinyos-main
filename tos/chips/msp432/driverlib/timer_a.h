@@ -213,12 +213,12 @@ typedef struct _Timer_A_PWMConfig
 //*****************************************************************************
 #define TIMER_A_CLOCKSOURCE_DIVIDER_1                                      0x01
 #define TIMER_A_CLOCKSOURCE_DIVIDER_2                                      0x02
-#define TIMER_A_CLOCKSOURCE_DIVIDER_4                                      0x04
-#define TIMER_A_CLOCKSOURCE_DIVIDER_8                                      0x08
 #define TIMER_A_CLOCKSOURCE_DIVIDER_3                                      0x03
+#define TIMER_A_CLOCKSOURCE_DIVIDER_4                                      0x04
 #define TIMER_A_CLOCKSOURCE_DIVIDER_5                                      0x05
 #define TIMER_A_CLOCKSOURCE_DIVIDER_6                                      0x06
 #define TIMER_A_CLOCKSOURCE_DIVIDER_7                                      0x07
+#define TIMER_A_CLOCKSOURCE_DIVIDER_8                                      0x08
 #define TIMER_A_CLOCKSOURCE_DIVIDER_10                                     0x0A
 #define TIMER_A_CLOCKSOURCE_DIVIDER_12                                     0x0C
 #define TIMER_A_CLOCKSOURCE_DIVIDER_14                                     0x0E
