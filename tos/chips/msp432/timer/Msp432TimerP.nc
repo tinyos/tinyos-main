@@ -59,7 +59,11 @@
  * wired into the Platform's PeripheralInit.  When the platform runs
  * PlatformInit, PeripheralInit will be invoked and any timer module
  * that is wired in will have its Init block executed.  This will turn
- * on the appropriate NVIC enable.
+ * on the appropriate NVIC enable.  The wrap IE (TAx->CTL.TAIE) is turned
+ * on at the same time.  The assumption is that someone wants the wrap
+ * interrupt.  Not a great assumption but it is what has been done
+ * before on the msp430 platforms.  This will change when Msp432Timing
+ * is implemented.
  *
  * We rely exclusively on the IEs to control interrupts on a h/w block
  * basis.
@@ -115,6 +119,11 @@ implementation {
    * any timer used doing startup, in inherently platform code.  So the
    * timers are started up when the main clocks are initialized.  And we
    * turn on the interrupt here which is inherently a cpu dependent thing.
+   * We enable the NVIC for both Timer vectors and turn on the wrap
+   * interrupt.  The assumption is something reasonable will happen when the
+   * interrupt occurs.  This is poor practice (its an assumption) and will
+   * change when Msp432Timing is written.  The unified Timing module that
+   * handles timers and working with timing helpers (like the RTC subsystem).
    *
    * That way this module stays platform independent and clocks and such are
    * initialized early on like they need to be.
@@ -124,6 +133,7 @@ implementation {
   command error_t Init.init() {
     NVIC_EnableIRQ(irqn);
     NVIC_EnableIRQ(irqn + 1);
+    call Timer.enableEvents();
     return SUCCESS;
   }
 

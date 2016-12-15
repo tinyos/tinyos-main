@@ -58,11 +58,12 @@
  * and are NOT automatically cleared.  This must be done manually in
  * the interrupt handler.
  *
- * To enable a given TAn module's interrupts, the corresponding
- * NVIC enable must be set.  This happens else where.
+ * To enable a given TAn module's interrupts, the corresponding NVIC enable
+ * must be set.  This happens else where.  Also when a module is enabled
+ * its TAx->CTL.IE (TAIE) should be enabled.  This turns on wrap interrupts.
+ * The NVIC enable and TAIE enable happen together.
  * 
- * This module is the connector from the interrupt to the actual
- * driver.
+ * This module is the connector from the interrupt to the actual driver.
  */
 
 #include <hardware.h>

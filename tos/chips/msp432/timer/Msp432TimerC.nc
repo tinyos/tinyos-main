@@ -65,7 +65,8 @@
  *
  * However, we don't want to enable the NVIC interrupt unless the actual
  * timer has been wired in.  Init allows this to happen on a per invocation
- * basis.
+ * basis.  When a module is instantiated, we also turn on the core wrap
+ * interrupt.
  *
  * @author Eric B. Decker <cire831@gmail.com>
  *
