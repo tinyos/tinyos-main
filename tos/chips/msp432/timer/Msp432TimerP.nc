@@ -130,6 +130,7 @@ implementation {
 
   async command uint16_t Timer.get() {
     uint16_t t0, t1;
+    uint32_t cnt;
 
     /*
      * WARNING: It is possible that the timer being referenced is being clocked
@@ -142,14 +143,25 @@ implementation {
      * This is a platform thing, and only needs to be done if the clock for
      * this timer is something other than a main cpu clock derived. ie.ACLK
      * when run from a 32KiHz watch crystal.
+     *
+     * how long does it take for an ACLK clock to propagate across the timer?
+     * Shouldn't take long.  But we've seen some strange behaviour.  Debugger?
      */
     if (isAsync) {
+      cnt = 0;
       atomic {
         t0 = TAx->R;
         t1 = TAx->R;
         if (t0 == t1)
           return t0;
-        do { t0 = t1; t1 = TAx->R; } while( t0 != t1 );
+        do {
+          t0 = t1;
+          t1 = TAx->R;
+          cnt++;
+          if (cnt > 10) {
+            __PANIC_TIMING(1, cnt, t0, t1, 0);
+          }
+        } while( t0 != t1 );
         return t1;
       }
     } else
