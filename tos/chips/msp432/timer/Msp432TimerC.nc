@@ -203,6 +203,7 @@ configuration Msp432TimerC {
   }
 }
 implementation {
+  components PanicC;
   components HplMsp432TimerIntP as TimerInts;
 
   components new Msp432TimerP((uint32_t) TIMER_A0, TA0_0_IRQn,
@@ -213,6 +214,7 @@ implementation {
   TA0.TimerVec_0 -> TimerInts.TimerAInt_0[0];
   TA0.TimerVec_N -> TimerInts.TimerAInt_N[0];
   TA0.Overflow   -> TA0.Event[7];
+  TA0.Panic      -> PanicC;
 
   components new Msp432TimerCapComP((uint32_t) TIMER_A0, 0) as TA0_0;
   Timer_CCTLA0_0 = TA0_0.CCTL;
@@ -258,6 +260,7 @@ implementation {
   TA1.TimerVec_0 -> TimerInts.TimerAInt_0[1];
   TA1.TimerVec_N -> TimerInts.TimerAInt_N[1];
   TA1.Overflow   -> TA1.Event[7];
+  TA1.Panic      -> PanicC;
 
   components new Msp432TimerCapComP((uint32_t) TIMER_A1, 0) as TA1_0;
   Timer_CCTLA1_0 = TA1_0.CCTL;
@@ -303,6 +306,7 @@ implementation {
   TA2.TimerVec_0 -> TimerInts.TimerAInt_0[2];
   TA2.TimerVec_N -> TimerInts.TimerAInt_N[2];
   TA2.Overflow   -> TA2.Event[7];
+  TA2.Panic      -> PanicC;
 
   components new Msp432TimerCapComP((uint32_t) TIMER_A2, 0) as TA2_0;
   Timer_CCTLA2_0 = TA2_0.CCTL;
@@ -348,6 +352,7 @@ implementation {
   TA3.TimerVec_0 -> TimerInts.TimerAInt_0[3];
   TA3.TimerVec_N -> TimerInts.TimerAInt_N[3];
   TA3.Overflow   -> TA3.Event[7];
+  TA3.Panic      -> PanicC;
 
   components new Msp432TimerCapComP((uint32_t) TIMER_A3, 0) as TA3_0;
   Timer_CCTLA3_0 = TA3_0.CCTL;

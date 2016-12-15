@@ -10,6 +10,7 @@
 
 /*
  * KERN:	core kernal  (in panic.h)
+ * TIMING:      timing system panic
  * ADC:		Analog Digital Conversion subsystem (AdcP.nc)
  * MISC:
  * COMM:	communications subsystem
@@ -17,7 +18,8 @@
 
 #ifdef notdef
 enum {
-  PANIC_ADC = PANIC_HC_START,		/* 0x10, see panic.h */
+  PANIC_TIMING = PANIC_HC_START,		/* 0x10, see panic.h */
+  PANIC_ADC,
   PANIC_MISC,
   PANIC_COMM,
 };

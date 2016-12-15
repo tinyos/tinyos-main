@@ -69,6 +69,17 @@
  * Vectors.  We assume that TAn_N_IRQn is TAn_0_IRQn + 1.
  */
 
+#include <panic.h>
+
+#ifndef PANIC_TIMING
+
+enum {
+  __panic_timing = unique(UQ_PANIC_SUBSYS)
+};
+
+#define PANIC_TIMING __panic_timing
+#endif
+
 generic module Msp432TimerP(uint32_t timer_ptr, uint32_t irqn, bool isAsync) {
   provides {
     interface Msp432Timer      as Timer;
@@ -79,11 +90,15 @@ generic module Msp432TimerP(uint32_t timer_ptr, uint32_t irqn, bool isAsync) {
     interface Msp432TimerEvent  as Overflow;
     interface HplMsp432TimerInt as TimerVec_0;
     interface HplMsp432TimerInt as TimerVec_N;
+    interface Panic;
   }
 }
 implementation {
 
 #define TAx ((Timer_A_Type *) timer_ptr)
+#define __PANIC_TIMING(where, w, x, y, z) do {                          \
+    call Panic.panic(PANIC_TIMING, where, w, x, y, z);                  \
+  } while (0)
 
   /*
    * now you may be wondering why the only thing initilized here is the
@@ -234,4 +249,13 @@ implementation {
 
   default async event void Timer.overflow() { }
   default async event void Event.fired[uint8_t n]() { }
+
+  async event void Panic.hook() { }
+
+#ifndef REQUIRE_PANIC
+  default async command void Panic.panic(uint8_t pcode, uint8_t where, uint16_t arg0,
+					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
+  default async command void  Panic.warn(uint8_t pcode, uint8_t where, uint16_t arg0,
+					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
+#endif
 }
