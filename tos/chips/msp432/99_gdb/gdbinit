@@ -64,6 +64,12 @@ end
 end
 
 define timers
+set $_upper=TransformCounterC__0__m_upper << 11
+set $_lower = $ta1->R >> 5
+printf "\n       TA1->R: %04x  CCR[0]: %04x    (%04x)    t_milli: %08x\n", \
+  $ta1->R, $ta1->CCR[0], ($ta1->CCR[0])>>5, $_upper | $_lower
+printf "Alarm[0]:  t0: %04x      dt: %04x    Counter[0]: upper: %04x\n\n", \
+  TransformAlarmC__0__m_t0, TransformAlarmC__0__m_dt, TransformCounterC__0__m_upper
 __p_timers VirtualizeTimerC__0__NUM_TIMERS  &VirtualizeTimerC__0__m_timers[0]
 end
 
