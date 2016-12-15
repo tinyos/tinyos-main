@@ -70,6 +70,9 @@ implementation {
 
   async command void Alarm.startAt(uint16_t t0, uint16_t dt) {
     atomic {
+      /*
+       * probably should stop the underlying h/w first
+       */
       uint16_t now = call Msp432Timer.get();
       uint16_t elapsed = now - t0;
 
@@ -82,6 +85,12 @@ implementation {
         else
           call Msp432TimerCompare.setEvent(now + remaining );
       }
+      /*
+       * Normally, TAx->CCTL[n].CCIFG autoclears (reading IV).  However
+       * we may have been dormant for awhile and if the CCR matched
+       * R IFG will be up.  Starting a new Alarm interval so need to
+       * clear the IFG out.
+       */
       call Msp432TimerCCTL.clearPendingInterrupt();
       call Msp432TimerCCTL.enableEvents();
     }
