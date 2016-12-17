@@ -1,3 +1,6 @@
+
+
+
 Msp432Timer:  (controls core timer block)
   uint16_t get();
   bool     isOverflowPending();
@@ -40,7 +43,7 @@ Msp432TimerCompare      (Compare interface) per CCR block
 Msp432TimerCaptureV2    (capture interface) per CCR block
   uint16_t getEvent();
   void     setEdge(uint8_t cm);
-  bool     isOverflowPending();
+  bool     isOverflowPending();         overflow is actually overrun
   void     clearOverflow();
   void     setSynchronous(bool synchronous);
 
