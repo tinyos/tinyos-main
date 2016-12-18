@@ -141,7 +141,7 @@ void* DMA_getControlAlternateBase(void)
     // Read the current value of the control base register and return it to
     // the caller.
     //
-    return ((void *) DMA_Control->ATLBASE);
+    return ((void *) DMA_Control->ALTBASE);
 }
 
 void DMA_requestChannel(uint32_t channelNum)

@@ -709,7 +709,7 @@ typedef struct {
   __I  uint32_t STAT;                                                            /*!< Status Register */
   __O  uint32_t CFG;                                                             /*!< Configuration Register */
   __IO uint32_t CTLBASE;                                                         /*!< Channel Control Data Base Pointer Register */
-  __I  uint32_t ATLBASE;                                                         /*!< Channel Alternate Control Data Base Pointer Register */
+  __I  uint32_t ALTBASE;                                                         /*!< Channel Alternate Control Data Base Pointer Register */
   __I  uint32_t WAITSTAT;                                                        /*!< Channel Wait on Request Status Register */
   __O  uint32_t SWREQ;                                                           /*!< Channel Software Request Register */
   __IO uint32_t USEBURSTSET;                                                     /*!< Channel Useburst Set Register */
