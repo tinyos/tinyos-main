@@ -42,11 +42,16 @@
 #include <msp432.h>
 
 /*
- * msp432.h find the right chip header (msp432p401r.h) which also pulls in
- * the correct cmsis header (core_cm4.h).
+ * msp432.h finds the right chip header (msp432p401r.h) which also pulls in
+ * the correct cmsis header (core_cm4.h).  The variables DEVICE and
+ * __MSP432P401R__ result in pulling in the appropriate files.
+.* See <TINYOS_ROOT_DIR>/support/make/msp432/msp432.rules.
  *
  * If __MSP432_DVRLIB_ROM__ is defined driverlib calls will be made to
  * the ROM copy on board the msp432 chip.
+ *
+ * use "add-symbol-file symbols_hw 0" in GDB to add various h/w register
+ * structure definitions.
  */
 
 extern uint32_t __data_load__;
@@ -55,42 +60,6 @@ extern uint32_t __data_end__;
 extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 extern uint32_t __StackTop__;
-
-/* pull in the type definitions.  won't allocate any space */
-SCB_Type                    *__scb;
-SCnSCB_Type                 *__scnscb;
-SysTick_Type                *__systick;
-NVIC_Type                   *__nvic;
-ITM_Type                    *__itm;
-DWT_Type                    *__dwt;
-TPI_Type                    *__tpi;
-CoreDebug_Type              *__cd;
-MPU_Type                    *__mpu;
-FPU_Type                    *__fpu;
-
-RSTCTL_Type                 *__rstctl;
-SYSCTL_Type                 *__sysctl;
-SYSCTL_Boot_Type            *__sysboot;
-CS_Type                     *__cs;
-PSS_Type                    *__pss;
-PCM_Type                    *__pcm;
-FLCTL_Type                  *__flctl;
-DMA_Channel_Type            *__dmachn;
-DMA_Control_Type            *__dmactl;
-PMAP_COMMON_Type            *__pmap;
-PMAP_REGISTER_Type          *__p1map;
-CRC32_Type                  *__crc32;
-AES256_Type                 *__aes256;
-WDT_A_Type                  *__wdt;
-Timer32_Type                *__t32;
-Timer_A_Type                *__ta0;
-RTC_C_Type                  *__rtc;
-REF_A_Type                  *__ref;
-ADC14_Type                  *__adc14;
-EUSCI_A_Type                *_uca0;
-EUSCI_B_Type                *_ucb0;
-FL_BOOTOVER_MAILBOX_Type    *__bomb;
-TLV_Type                    *__tlv;
 
 
 int  main();                    /* main() symbol defined in RealMainP */
