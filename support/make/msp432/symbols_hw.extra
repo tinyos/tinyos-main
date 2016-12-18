@@ -1,0 +1,22 @@
+#-*-Makefile-*- vim:syntax=make
+#
+# this file needs to be invoked after the rest of the build system has built
+# all the variables needed.  This is so we can use various things like the
+# build directory as well as needed flags and options.
+#
+# Typically it can be added at the end of a main rules file like
+# support/make/msp432/msp432.rules.
+#
+# Invoking via the make command line directly doesn't work because it invokes
+# the symbol_hw rule too early and lots of variables haven't been defined yet.
+#
+# The symbols_hw.c file is used to define various types for use in gdb.  It only
+# is used to bring the symbols in and doesn't add any code to the actual image
+# being built.  This is done via the gdb command "add-symbol-file symbols_hw 0".
+#
+
+BUILD_DEPS += $(TOSMAKE_BUILD_DIR)/symbols_hw
+
+$(TOSMAKE_BUILD_DIR)/symbols_hw: $(PLATFORM_DIR)/symbols_hw.c
+	@echo
+	$(NESC) -c -o $@ -ggdb3 $(OPTFLAGS) $(NESC_PFLAGS) $(CFLAGS) $(PLATFORM_DIR)/symbols_hw.c

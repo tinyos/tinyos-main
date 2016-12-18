@@ -8,7 +8,10 @@ set mem inaccessible-by-default off
 # 55000 is TI's gdb-agent-console, gag
 target extended-remote :2331
 #target extended-remote :55000
+
 source ../../.gdb_msp432
+add-symbol-file symbols_hw 0
+
 set disassemble-next-line on
 
 x/i $pc

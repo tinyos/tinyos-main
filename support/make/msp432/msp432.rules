@@ -58,3 +58,5 @@ endif
 TOSMAKE_BINARY_FORMAT = bin
 TOSMAKE_BINARY_IN = $(MAIN_BIN)
 TOSMAKE_BINARY_OUT = $(INSTALL_BIN)
+
+$(call TOSMake_include,msp432/symbols_hw.extra)
