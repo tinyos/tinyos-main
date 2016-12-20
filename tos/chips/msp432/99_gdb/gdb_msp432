@@ -329,6 +329,15 @@ printf "      active:   %04x %04x   %04x %04x\n", \
   ($nvic->IABR[1] >> 0d16) & 0xffff, ($nvic->IABR[1]) & 0xffff
 end
 
+define __p_nvic_irqn
+set $_irqn = $arg0
+_set_nvic_index $_irqn
+printf "n[%02d]: %c%c%c", $_irqn, \
+       ($nvic->ISER[$_nvic_index]&(1 << $_nvic_bit)) ? 'E' : 'e', \
+       ($nvic->ISPR[$_nvic_index]&(1 << $_nvic_bit)) ? 'P' : 'p', \
+       ($nvic->IABR[$_nvic_index]&(1 << $_nvic_bit)) ? 'A' : 'a'
+end
+
 define exceptions
 printf "exception state\n"
 __p_pribasefault
@@ -347,6 +356,140 @@ __p_nvic
 end
 document exceptions
 dump exception state
+end
+
+#
+# DMA
+#
+
+define __dma_inc
+if $arg0 == 0
+  set $_inc = 1
+end
+if $arg0 == 1
+  set $_inc = 2
+end
+if $arg0 == 2
+  set $_inc = 4
+end
+if $arg0 == 3
+  set $_inc = 0
+end
+end
+
+define __dma_size
+if $arg0 == 0
+  set $_size = 'B'
+end
+if $arg0 == 1
+  set $_size = 'H'
+end
+if $arg0 == 2
+  set $_size = 'W'
+end
+if $arg0 == 3
+  set $_size = 'R'
+end
+end
+
+define __dma_cb
+# arg0 dma_cb control block pointer.
+# arg1 which channel
+
+set $_a_cb = (dma_cb_t *) $arg0
+set $_chn = $arg1
+
+set $_dinc  = ($_a_cb->control >> 0d30) & 0x3
+set $_dsize = ($_a_cb->control >> 0d28) & 0x3
+set $_sinc  = ($_a_cb->control >> 0d26) & 0x3
+set $_ssize = ($_a_cb->control >> 0d24) & 0x3
+set $_r     = ($_a_cb->control >> 0d14) & 0xf
+set $_nm1   = ($_a_cb->control >> 0d04) & 0x3ff
+set $_useb  = ($_a_cb->control >> 0d03) & 0x1
+set $_cyc   =  $_a_cb->control          & 0x7
+
+set $_src_end  = (uint32_t) $_a_cb->src_end
+set $_dest_end = (uint32_t) $_a_cb->dest_end
+
+__dma_inc $_dinc
+set $_dinc = $_inc
+__dma_size $_dsize
+set $_dsize = $_size
+
+__dma_inc $_sinc
+set $_sinc = $_inc
+__dma_size $_ssize
+set $_ssize = $_size
+
+if $_useb == 0
+  set $_useb = 'b'
+else
+  set $_useb = 'B'
+end
+
+printf "  %d: %x   %08x  %08x  %08x  (%d%c  %d%c  %x  %04x  %c   %x)\n", \
+  $_chn, $dmachn->CH_SRCCFG[$_chn], $_a_cb->control,               \
+  $_dest_end, $_src_end, \
+  $_dinc, $_dsize, $_sinc, $_ssize, $_r, $_nm1, $_useb, $_cyc
+end
+
+define dma
+if $dmactl->STAT & 1
+  printf "   on    state: "
+else
+  printf "  off    state: "
+end
+if $dmactl->ERRCLR & 1
+  printf "%d  err     0         1      2      3\n", \
+    ($dmactl->STAT >> 4) & 0xf
+else
+  printf "%d          0     1      2      3\n", \
+    ($dmactl->STAT >> 4) & 0xf
+end
+
+printf " ints:                     %x   %c %02d   %c %02d   %c %02d\n",  \
+  $dmachn->INT0_SRCFLG, \
+  ($dmachn->INT1_SRCCFG & 0x20) ? 'E' : 'd', $dmachn->INT1_SRCCFG & 0x1f, \
+  ($dmachn->INT2_SRCCFG & 0x20) ? 'E' : 'd', $dmachn->INT2_SRCCFG & 0x1f, \
+  ($dmachn->INT3_SRCCFG & 0x20) ? 'E' : 'd', $dmachn->INT3_SRCCFG & 0x1f
+
+printf " wait_stat: %x  use_burst: %2x\n", $dmactl->WAITSTAT,   $dmactl->USEBURSTSET
+printf " req_mask:  %x  enable:    %2x\n", $dmactl->REQMASKSET, $dmactl->ENASET
+printf " alt:       %x  priority:  %2x\n", $dmactl->ALTSET,     $dmactl->PRIOSET
+printf " nvic     err              0           1           2           3\n"
+printf "   "
+__p_nvic_irqn 0d30
+printf "     "
+__p_nvic_irqn 0d34
+printf "  "
+__p_nvic_irqn 0d33
+printf "  "
+__p_nvic_irqn 0d32
+printf "  "
+__p_nvic_irqn 0d31
+printf "\n"
+
+set $_cb = (dma_cb_t *) $dmactl->CTLBASE
+printf "\n   pri:  %08x       dst       src    d   s  r   n-1  B  cyc\n", $_cb,
+__dma_cb &$_cb[0] 0
+__dma_cb &$_cb[1] 1
+__dma_cb &$_cb[2] 2
+__dma_cb &$_cb[3] 3
+__dma_cb &$_cb[4] 4
+__dma_cb &$_cb[5] 5
+__dma_cb &$_cb[6] 6
+__dma_cb &$_cb[7] 7
+
+set $_cb = (dma_cb_t *) $dmactl->ALTBASE
+printf "\n   alt:  %08x       dst       src    d   s  r   n-1  B  cyc\n", $_cb,
+__dma_cb &$_cb[0] 0
+__dma_cb &$_cb[1] 1
+__dma_cb &$_cb[2] 2
+__dma_cb &$_cb[3] 3
+__dma_cb &$_cb[4] 4
+__dma_cb &$_cb[5] 5
+__dma_cb &$_cb[6] 6
+__dma_cb &$_cb[7] 7
 end
 
 define __p_port
