@@ -381,8 +381,12 @@ void __debug_init() {
     CoreDebug_DEMCR_VC_MMERR_Msk        |
     CoreDebug_DEMCR_VC_CORERESET_Msk);
 
-  /* disable default write buffering.  change all busfaults into precise */
-  SCnSCB->ACTLR |= SCnSCB_ACTLR_DISDEFWBUF_Msk;
+  /*
+   * disable out of order floating point, no intermixing with integer instructions
+   * disable default write buffering.  change all busfaults into precise
+   */
+  SCnSCB->ACTLR |= SCnSCB_ACTLR_DISOOFP_Pos |
+    SCnSCB_ACTLR_DISDEFWBUF_Msk;
 
   SYSCTL->PERIHALT_CTL =
     SYSCTL_PERIHALT_CTL_HALT_T16_0      |       /* TA0 TMicro */
