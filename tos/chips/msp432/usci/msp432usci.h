@@ -167,6 +167,10 @@ enum {
  * Aggregates basic configuration registers for an MSP432 USCI.
  * These are specifically the registers common to all configurations.
  * Mode-specific configuration data should be provided elsewise.
+ *
+ * According to the TRM (slau356E), pg 760, sec 23.3.6, A SPIs should
+ * 0 MCTLW.  I don't think it matters, but screw it, zero the bugger.
+ * This needs to happen when the structure is defined by the user!
  */
 typedef struct msp432_usci_config_t {
   uint16_t ctlw0;			/* various control bits, msb */
