@@ -54,8 +54,12 @@
  * But we want to be able to insert nops into optimized code so we can set
  * breaks on them.  The way to do this is make the __nop a define.
  */
+#ifndef nop
 #define nop()     __asm volatile ("nop")
+#endif
+#ifndef bkpt
 #define bkpt(val) __asm volatile ("bkpt "#val)
+#endif
 
 /*
  * The Sam3 uses a Cortex-M3 and the CMSIS installed for it is really old.
