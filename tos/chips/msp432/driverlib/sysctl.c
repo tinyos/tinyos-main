@@ -275,6 +275,6 @@ void SysCtl_disableGlitchFilter(void)
 
 uint_fast16_t SysCtl_getTempCalibrationConstant(uint32_t refVoltage,
         uint32_t temperature)
-{
+{                               /* should this return 32 bits? */
     return HWREG16(TLV_BASE + refVoltage + temperature);
 }

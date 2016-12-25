@@ -199,7 +199,8 @@ void Interrupt_registerInterrupt(uint32_t interruptNumber,
         }
 
         //
-        // Point the NVIC at the RAM vector table.
+        // Point the NVIC at the RAM vector table.  Doesn't point
+        // the NVIC.  In the core processor, not the NVIC.
         //
         SCB->VTOR = (uint32_t) g_pfnRAMVectors;
     }
