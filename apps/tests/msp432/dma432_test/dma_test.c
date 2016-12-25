@@ -128,10 +128,11 @@ int main(void) {
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
             GPIO_PIN7, GPIO_PRIMARY_MODULE_FUNCTION);
 
-    /* Configure SLAVE CLK, MOSI and SPMI (EUSCI_B2) */
+    /* Configure SLAVE CLK, MOSI and SOMI (EUSCI_B2) */
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,
-            GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7,
-            GPIO_PRIMARY_MODULE_FUNCTION);
+            GPIO_PIN5 | GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
+    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
+            GPIO_PIN7, GPIO_PRIMARY_MODULE_FUNCTION);
 
     /* Configuring SPI module */
     MAP_SPI_initSlave(EUSCI_B2_BASE, &spiSlaveConfig);
