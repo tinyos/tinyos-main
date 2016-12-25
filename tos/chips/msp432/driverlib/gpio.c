@@ -85,9 +85,9 @@ void GPIO_setAsOutputPin(uint_fast8_t selectedPort, uint_fast16_t selectedPins)
 {
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PADIR) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) |= selectedPins;
 }
 
 
@@ -95,10 +95,10 @@ void GPIO_setAsInputPin(uint_fast8_t selectedPort, uint_fast16_t selectedPins)
 {
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PAREN) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAREN) &= ~selectedPins;
 }
 
 
@@ -108,20 +108,20 @@ void GPIO_setAsPeripheralModuleFunctionOutputPin(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PADIR) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) |= selectedPins;
     switch (mode)
     {
     case GPIO_PRIMARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
         break;
     case GPIO_SECONDARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
         break;
     case GPIO_TERTIARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
         break;
     }
 }
@@ -132,20 +132,20 @@ void GPIO_setAsPeripheralModuleFunctionInputPin(uint_fast8_t selectedPort,
 {
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
     switch (mode)
     {
     case GPIO_PRIMARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
         break;
     case GPIO_SECONDARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
         break;
     case GPIO_TERTIARY_MODULE_FUNCTION:
-        HWREG16(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
-        HWREG16(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL0) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PASEL1) |= selectedPins;
         break;
     }
 }
@@ -157,7 +157,7 @@ void GPIO_setOutputHighOnPin(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PAOUT) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAOUT) |= selectedPins;
 }
 
 
@@ -167,7 +167,7 @@ void GPIO_setOutputLowOnPin(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PAOUT) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAOUT) &= ~selectedPins;
 }
 
 
@@ -177,7 +177,7 @@ void GPIO_toggleOutputOnPin(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PAOUT) ^= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAOUT) ^= selectedPins;
 }
 
 
@@ -187,12 +187,12 @@ void GPIO_setAsInputPinWithPullDownResistor(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
 
-    HWREG16(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PAREN) |= selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PAOUT) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAREN) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAOUT) &= ~selectedPins;
 }
 
 
@@ -202,11 +202,11 @@ void GPIO_setAsInputPinWithPullUpResistor(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PAREN) |= selectedPins;
-    HWREG16(baseAddress + OFS_LIB_PAOUT) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL0) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PASEL1) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PADIR) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAREN) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAOUT) |= selectedPins;
 }
 
 
@@ -216,7 +216,7 @@ uint8_t GPIO_getInputPinValue(uint_fast8_t selectedPort,
     uint_fast16_t inputPinValue;
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    inputPinValue = HWREG16(baseAddress + OFS_LIB_PAIN) & (selectedPins);
+    inputPinValue = HWREG8(baseAddress + OFS_LIB_PAIN) & (selectedPins);
 
     if (inputPinValue > 0)
         return GPIO_INPUT_PIN_HIGH;
@@ -229,7 +229,7 @@ void GPIO_enableInterrupt(uint_fast8_t selectedPort, uint_fast16_t selectedPins)
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PAIE) |= selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAIE) |= selectedPins;
 }
 
 
@@ -239,7 +239,7 @@ void GPIO_disableInterrupt(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    HWREG16(baseAddress + OFS_LIB_PAIE) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAIE) &= ~selectedPins;
 }
 
 
@@ -249,7 +249,7 @@ uint_fast16_t GPIO_getInterruptStatus(uint_fast8_t selectedPort,
 
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
-    return HWREG16(baseAddress + OFS_LIB_PAIFG) & selectedPins;
+    return HWREG8(baseAddress + OFS_LIB_PAIFG) & selectedPins;
 }
 
 
@@ -260,7 +260,7 @@ void GPIO_clearInterruptFlag(uint_fast8_t selectedPort,
     uint32_t baseAddress = GPIO_PORT_TO_BASE[selectedPort];
 
 
-    HWREG16(baseAddress + OFS_LIB_PAIFG) &= ~selectedPins;
+    HWREG8(baseAddress + OFS_LIB_PAIFG) &= ~selectedPins;
 }
 
 
@@ -272,9 +272,9 @@ void GPIO_interruptEdgeSelect(uint_fast8_t selectedPort,
 
 
     if (GPIO_LOW_TO_HIGH_TRANSITION == edgeSelect)
-        HWREG16(baseAddress + OFS_LIB_PAIES) &= ~selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PAIES) &= ~selectedPins;
     else
-        HWREG16(baseAddress + OFS_LIB_PAIES) |= selectedPins;
+        HWREG8(baseAddress + OFS_LIB_PAIES) |= selectedPins;
 }
 
 uint_fast16_t GPIO_getEnabledInterruptStatus(uint_fast8_t selectedPort)
@@ -302,7 +302,7 @@ uint_fast16_t GPIO_getEnabledInterruptStatus(uint_fast8_t selectedPort)
     case GPIO_PORT_P10:
         return (HWREG8(baseAddr + OFS_LIB_P2IE) & pendingInts);
     case GPIO_PORT_PJ:
-        return (HWREG16(baseAddr + OFS_LIB_PAIE) & pendingInts);
+        return (HWREG8(baseAddr + OFS_LIB_PAIE) & pendingInts);
     default:
         return 0;
     }
