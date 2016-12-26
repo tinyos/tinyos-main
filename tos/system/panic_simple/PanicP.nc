@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, Eric B. Decker
+ * Copyright (c) 2012-2013, 2016 Eric B. Decker
  * All rights reserved.
  *
  * This module provides a simple Panic interface.   It currently
@@ -11,6 +11,11 @@
  */
 
 #include "panic.h"
+
+#ifndef bkpt
+#warning bkpt not defined, using default nothingness
+#define bkpt() do {} while (0)
+#endif
 
 #ifdef notdef
 #ifdef PANIC_DINT
@@ -45,7 +50,7 @@ implementation {
 
   void debug_break(uint16_t arg)  __attribute__ ((noinline)) {
     _arg = arg;
-    __BKPT();
+    bkpt();
   }
 
 
