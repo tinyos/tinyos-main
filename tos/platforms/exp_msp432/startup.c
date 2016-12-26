@@ -63,8 +63,18 @@
 #define MSP432_T32_DIV     3
 #define MSP432_T32_ONE_SEC 3000000UL
 #define MSP432_TA_IDEX_DIV 3
+
+#ifdef notdef
+/* not quite right, can't get the divisors right */
+#define MSP432_DCOCLK      24000000UL
+#define MSP432_VCORE       1
+#define MSP432_FLASH_WAIT  0
+#define MSP432_T32_DIV     1
+#define MSP432_T32_ONE_SEC 1500000UL
+#define MSP432_TA_IDEX_DIV 1
 #endif
 
+/* default 16MiHz */
 #define MSP432_DCOCLK      16777216UL
 #define MSP432_VCORE       1
 #define MSP432_FLASH_WAIT  0
