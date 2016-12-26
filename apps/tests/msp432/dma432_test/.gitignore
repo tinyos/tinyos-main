@@ -1,0 +1,6 @@
+.bytes
+dma_test
+*.lst
+*.map
+*.sym
+symbols_hw
