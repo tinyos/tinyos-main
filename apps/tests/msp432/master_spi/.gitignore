@@ -1,0 +1,7 @@
+.bytes
+master
+slave
+*.lst
+*.map
+*.sym
+symbols_hw
