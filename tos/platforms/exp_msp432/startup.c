@@ -48,12 +48,12 @@
 /*
  * The following defines control low level hw init.
  *
- * MSP432_DCOCLK       16777216 | 24000000 | 48000000   dcoclk
+ * MSP432_DCOCLK       16777216 | 33554432 | 48000000   dcoclk
  * MSP432_VCORE:       0 or 1                           core voltage
  * MSP432_FLASH_WAIT:  number of wait states, [0-3]     needed wait states
- * MSP432_T32_DIV      (1 or 3)                         correction for t32
- * MSP432_T32_ONE_SEC  1048576 | 3000000                ticks from t32
- * MSP432_TA_IDEX_DIV  1 | 3                            extra ta divisor
+ * MSP432_T32_DIV      (1 | 2 | 3)                      correction for t32
+ * MSP432_T32_ONE_SEC  1048576 | 2097152 | 3000000      ticks for one sec (t32)
+ * MSP432_TA_IDEX_DIV  1 | 2 | 3                        extra ta divisor
  */
 
 #ifdef notdef
@@ -63,6 +63,15 @@
 #define MSP432_T32_DIV     3
 #define MSP432_T32_ONE_SEC 3000000UL
 #define MSP432_TA_IDEX_DIV 3
+#endif
+
+#ifdef notdef
+#define MSP432_DCOCLK      33554432UL
+#define MSP432_VCORE       1
+#define MSP432_FLASH_WAIT  1
+#define MSP432_T32_DIV     2
+#define MSP432_T32_ONE_SEC 2097152
+#define MSP432_TA_IDEX_DIV 2
 #endif
 
 #ifdef notdef
@@ -597,6 +606,9 @@ void __t32_init() {
 #elif MSP432_DCOCLK == 24000000
 #define CLK_DCORSEL CS_CTL0_DCORSEL_4
 #define CLK_DCOTUNE 0
+#elif MSP432_DCOCLK == 33554432
+#define CLK_DCORSEL CS_CTL0_DCORSEL_4
+#define CLK_DCOTUNE 155
 #elif MSP432_DCOCLK == 48000000
 #define CLK_DCORSEL CS_CTL0_DCORSEL_5
 #define CLK_DCOTUNE 0
@@ -660,9 +672,11 @@ void __core_clk_init() {
 #define TA_CLR          TIMER_A_CTL_CLR
 #define TA_ACLK1        (TIMER_A_CTL_SSEL__ACLK  | TIMER_A_CTL_ID__1)
 #define TA_SMCLK8       (TIMER_A_CTL_SSEL__SMCLK | TIMER_A_CTL_ID__8)
-#define TA_IDEX_DIV1    (TIMER_A_EX0_IDEX__1)
+
 #if MSP432_TA_IDEX_DIV == 1
 #define MSP432_TA_EX (TIMER_A_EX0_IDEX__1)
+#elif MSP432_TA_IDEX_DIV == 2
+#define MSP432_TA_EX (TIMER_A_EX0_IDEX__2)
 #elif MSP432_TA_IDEX_DIV == 3
 #define MSP432_TA_EX (TIMER_A_EX0_IDEX__3)
 #else
@@ -700,7 +714,7 @@ void __start_timers() {
 
   /* restart the 32 bit 1MiHz tickers */
   TIMER32_1->LOAD = 0xffffffff;
-  TIMER32_2->LOAD = 1000000;
+  TIMER32_2->LOAD = MSP432_T32_ONE_SEC;
 }
 
 
@@ -727,7 +741,7 @@ void __start_timers() {
  * TMicro <-  TA0 <- SMCLK/8 <- DCO/2 (1MiHz)
  * TMilli <-  TA1 <- ACLK/1 (32KiHz)
  * rawUsecs<- T32_1 <- MCLK/16 <- DCO/1 32 bit raw usecs
- * rawJiffies<- TA0 <- ACLK/1 (32KiHz) 16 bits wide
+ * rawJiffies<- TA1 <- ACLK/1 (32KiHz) 16 bits wide
  */
 
 void __system_init(void) {
@@ -741,7 +755,7 @@ void __system_init(void) {
   BITBAND_PERI(P1->OUT, 0) = 0;
 
   __ta_init(TIMER_A0, TA_SMCLK8, MSP432_TA_EX);         /* Tmicro */
-  __ta_init(TIMER_A1, TA_ACLK1,  TA_IDEX_DIV1);         /* Tmilli */
+  __ta_init(TIMER_A1, TA_ACLK1,  TIMER_A_EX0_IDEX__1);  /* Tmilli */
   __rtc_init();
   __start_timers();
 }
