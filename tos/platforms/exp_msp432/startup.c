@@ -63,6 +63,7 @@
 #define MSP432_T32_DIV     3
 #define MSP432_T32_ONE_SEC 3000000UL
 #define MSP432_TA_IDEX_DIV 3
+#endif
 
 #ifdef notdef
 /* not quite right, can't get the divisors right */
@@ -76,8 +77,8 @@
 
 /* default 16MiHz */
 #define MSP432_DCOCLK      16777216UL
-#define MSP432_VCORE       1
-#define MSP432_FLASH_WAIT  0
+#define MSP432_VCORE       0
+#define MSP432_FLASH_WAIT  1
 #define MSP432_T32_DIV     1
 #define MSP432_T32_ONE_SEC 1048576UL
 #define MSP432_TA_IDEX_DIV 1
@@ -538,14 +539,18 @@ void __t32_init() {
  * ACLK:        LFXTCLK/1       32768
  * BCLK:        LFXTCLK/1       32768
  * SMCLK:       DCO/2           8MiHz
- * HSMCLK:      DCO/1           16MiHz
+ * HSMCLK:      DCO/2           8MiHz
  * MCLK:        DCO/1           16MiHz
  *
  * technically, Vcore0 is only good up to 16MHz with 0 flash wait
  * states.  We have seen it work but it is ~5% overclocked and it
  * isn't a good idea.  If you want 16MiHz you need 1 flash wait
- * state or run with Vcore1.  We do Vcore1.  This happens before
- * core_clk_init
+ * state or run with Vcore1.  We do Vcore0 and the 1 flash wait
+ * state.  That is 1 memory bus clock extra.  The main cpu does
+ * instruction fetchs in lines of 16 bytes and the extra wait state
+ * probably overlaps in the pipeline.
+ *
+ * Flash wait states and power manipulation happens before core_clk_init.
  *
  * LFXTDRIVE:   3 max (default).
  *
