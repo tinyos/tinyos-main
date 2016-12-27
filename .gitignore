@@ -10,6 +10,7 @@ TAGS
 # Ignore application built output
 build
 pp
+_Build
 
 # Ignore application based documentation
 doc
