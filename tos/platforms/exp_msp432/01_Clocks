@@ -1,7 +1,8 @@
 
 In AM_LDO_VCORE0, Active Mode, LDO power, VCore0, the cpu max frequency is
 24MHz.  But all the dividers for the timers and other subsystems are all
-power of 2.  So we set the main DCOCLK to 16MiHz.
+power of 2.  So we set the main DCOCLK to 16MiHz.  The flash on the other
+hand needs 1 wait state above 16MHz when Vcore0.  So we use Vcore1.
 
 The clocks on the msp432 for the exp_msp432 eval board are set up as follows:
 

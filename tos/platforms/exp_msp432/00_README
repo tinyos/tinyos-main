@@ -1,7 +1,8 @@
 The exp_msp432 platform is based on the MSP-EXP432P401R Launch Pad
 Evaluation Board.  This uses the 100 pin msp432p401r QZ package.
 
-The main processor is a ARM Cortex-M4F running at up to 48MHz.  The Cortex-M4F has an integrated floating point processor
+The main processor is a ARM Cortex-M4F running at up to 48MHz.  The
+Cortex-M4F has an integrated floating point processor
 
 
 Exceptions:
@@ -29,7 +30,7 @@ Startup:
 The processor can be reset in various ways and when it does it starts
 executing as follows:
 
-The very first entry in the vector table is InitialStack (0x2000_0000).
+The very first entry in the vector table is __StackTop__ (0x2001_0000).
 The initial MSP (main stack pointer) is set from this address.
 
 The processor then starts to execute at the address in the Reset vector
@@ -47,7 +48,7 @@ do directly rather then letting TinyOS modules do it.  Your mileage may
 vary.
 
 When __Reset() first starts to execute, one should set any controlling
-I/Os to a start that won't cause problems for the h/w.  This should be
+I/Os to a state that won't cause problems for the h/w.  This should be
 done as soon as possible after resetting.  When reset the msp432 sets
 all of its I/Os to input.
 
