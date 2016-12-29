@@ -135,24 +135,35 @@
 #define TYPE_DAC12_0DAT uint16_t
 #define TYPE_DAC12_1CTL uint16_t
 #define TYPE_DAC12_1DAT uint16_t
+
+#if defined(__MSP430_HAS_DMAX_3__)
+#define TYPE_DMA0DA uint32_t
+#define TYPE_DMA0SA uint32_t
+#define TYPE_DMA1DA uint32_t
+#define TYPE_DMA1SA uint32_t
+#define TYPE_DMA2DA uint32_t
+#define TYPE_DMA2SA uint32_t
+#else
+#define TYPE_DMA0DA uint16_t
+#define TYPE_DMA0SA uint16_t
+#define TYPE_DMA1DA uint16_t
+#define TYPE_DMA1SA uint16_t
+#define TYPE_DMA2DA uint16_t
+#define TYPE_DMA2SA uint16_t
+#endif
+
 #define TYPE_DCOCTL uint8_t
 #define TYPE_DMA0CTL uint16_t
 #define TYPE_DMA0DAL uint16_t
-#define TYPE_DMA0DA uint16_t
 #define TYPE_DMA0SAL uint16_t
-#define TYPE_DMA0SA uint16_t
 #define TYPE_DMA0SZ uint16_t
 #define TYPE_DMA1CTL uint16_t
 #define TYPE_DMA1DAL uint16_t
-#define TYPE_DMA1DA uint16_t
 #define TYPE_DMA1SAL uint16_t
-#define TYPE_DMA1SA uint16_t
 #define TYPE_DMA1SZ uint16_t
 #define TYPE_DMA2CTL uint16_t
 #define TYPE_DMA2DAL uint16_t
-#define TYPE_DMA2DA uint16_t
 #define TYPE_DMA2SAL uint16_t
-#define TYPE_DMA2SA uint16_t
 #define TYPE_DMA2SZ uint16_t
 #define TYPE_DMACTL0 uint16_t
 #define TYPE_DMACTL1 uint16_t
