@@ -409,7 +409,7 @@ set $_useb  = ($_a_cb->control >> 0d03) & 0x1
 set $_cyc   =  $_a_cb->control          & 0x7
 
 set $_src_end  = (uint32_t) $_a_cb->src_end
-set $_dest_end = (uint32_t) $_a_cb->dest_end
+set $_dst_end = (uint32_t) $_a_cb->dst_end
 
 __dma_inc $_dinc
 set $_dinc = $_inc
@@ -422,14 +422,14 @@ __dma_size $_ssize
 set $_ssize = $_size
 
 if $_useb == 0
-  set $_useb = 'b'
+  set $_useb = '-'
 else
   set $_useb = 'B'
 end
 
 printf "  %d: %x   %08x  %08x  %08x  (%d%c  %d%c  %x  %04x  %c   %x)\n", \
   $_chn, $dmachn->CH_SRCCFG[$_chn], $_a_cb->control,               \
-  $_dest_end, $_src_end, \
+  $_dst_end, $_src_end, \
   $_dinc, $_dsize, $_sinc, $_ssize, $_r, $_nm1, $_useb, $_cyc
 end
 
