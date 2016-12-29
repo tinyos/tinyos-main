@@ -44,6 +44,14 @@
 
 #include <msp432.h>
 
+typedef struct {
+  volatile uint32_t src_end;
+  volatile uint32_t dst_end;
+  volatile uint32_t control;
+  volatile uint32_t pad;
+} dma_cb_t;
+
+
 /*
  * The DMA can be triggered by the following src triggers.  These are the
  * only h/w peripheral bits that can trigger dma activity.
@@ -114,8 +122,17 @@ typedef enum {
   MSP432_DMA_CH7_ADC14   = 7,
 } msp432_dma_trigger_t;
 
-#define MSP432_UDMA_SIZE_8             0x00000000
-#define MSP432_UDMA_SIZE_16            0x11000000
-#define MSP432_UDMA_SIZE_32            0x22000000
+#define MSP432_DMA_SIZE_8       0x00000000
+#define MSP432_DMA_SIZE_16      0x11000000
+#define MSP432_DMA_SIZE_32      0x22000000
+
+#define MSP432_DMA_MODE_NONE            0
+#define MSP432_DMA_MODE_BASIC           1
+#define MSP432_DMA_MODE_AUTO            2
+#define MSP432_DMA_MODE_PINGPONG        3
+#define MSP432_DMA_MODE_MEM_SG          4
+#define MSP432_DMA_MODE_MEM_SG_ALT      5
+#define MSP432_DMA_MODE_PER_SG          6
+#define MSP432_DMA_MODE_PER_SG_ALT      7
 
 #endif          /* __MSP432DMA_H__ */
