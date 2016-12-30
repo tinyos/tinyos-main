@@ -53,5 +53,5 @@ interface Msp432Dma {
   async command void dma_enable_int();
   async command void dma_disable_int();
 
-  async event void dma_interrupt();
+  async event void dma_interrupted();
 }
