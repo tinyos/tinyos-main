@@ -154,7 +154,7 @@ implementation {
         /* got one */
         DMA_Channel->INT0_CLRFLG = 1 << which;
         if (m_dma_IE && 1 << which)
-          signal Dma.dma_interrupt[which]();
+          signal Dma.dma_interrupted[which]();
       }
       which++;
       working_flags >>= 1;
