@@ -197,7 +197,6 @@ implementation {
        * all configured.  before leaving reset and turning on interrupts
        * reset the state variables about where we are in the buffer.
        */
-      m_tx_buf = m_rx_buf = 0;		/* really?  do we want to do this? */
       call Usci.leaveResetMode_();
 
       /* any IE bits are cleared on reset, turn on RX interrupt */
@@ -236,7 +235,7 @@ implementation {
 
 	tx_buf = m_tx_buf;
 	tx_len = m_tx_len;
-        m_tx_buf = 0;
+        m_tx_buf = NULL;
         signal UartStream.sendDone(tx_buf, tx_len, SUCCESS);
       }
     }
@@ -439,7 +438,7 @@ implementation {
           if (m_rx_len == m_rx_pos) {
             rx_buf = m_rx_buf;
             rx_len = m_rx_len;
-            m_rx_buf = 0;
+            m_rx_buf = NULL;
             signal UartStream.receiveDone(rx_buf, rx_len, SUCCESS);
           }
         } else
