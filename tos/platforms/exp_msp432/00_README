@@ -9,7 +9,7 @@ Exceptions:
 -------------
 
 All exceptions go through the exception/interrupt table that starts by
-default at the beginning of Flash at 0x2000_0000.  This table can be moved
+default at the beginning of Flash at 0x0000_0000.  This table can be moved
 by changing the contents of SCB->VTOR (Vector Table Offset Register).
 
 All handlers take the form <exception>_Handler and the initial set of these
