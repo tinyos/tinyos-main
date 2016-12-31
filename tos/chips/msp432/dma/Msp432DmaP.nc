@@ -121,6 +121,7 @@ implementation {
 
   async command void Dma.dma_stop_channel[uint8_t chan]() {
     DMA_Control->ENACLR = 1 << chan;
+    __DMB();
   }
 
 
