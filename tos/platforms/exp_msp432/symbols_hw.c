@@ -78,6 +78,8 @@ RSTCTL_Type                 *__rstctl;
 SYSCTL_Type                 *__sysctl;
 SYSCTL_Boot_Type            *__sysboot;
 CS_Type                     *__cs;
+DIO_PORT_Odd_Interruptable_Type  *__p_odd;
+DIO_PORT_Even_Interruptable_Type *__p_even;
 PSS_Type                    *__pss;
 PCM_Type                    *__pcm;
 FLCTL_Type                  *__flctl;
