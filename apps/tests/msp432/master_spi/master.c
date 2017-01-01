@@ -274,7 +274,6 @@ int main(void) {
     BITBAND_PERI(P1->DIR, 5) = 1;
     P1->SEL0 |=  (BIT7 | BIT6 | BIT5);                          /* give 1.[5-7] to module */
     P1->SEL1 &= ~(BIT7 | BIT6 | BIT5);
-    MAP_SPI_initMaster(EUSCI_B0_BASE, &spiMasterConfig);
     initSPI(EUSCI_B0, &spiMasterCfg, 1);
 
     /* take out of reset */
