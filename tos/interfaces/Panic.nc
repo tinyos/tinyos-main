@@ -96,9 +96,9 @@
  */
 
 interface Panic {
-  async command void panic(uint8_t pcode, uint8_t where, uint16_t arg0,
-			   uint16_t arg1, uint16_t arg2, uint16_t arg3);
-  async command void  warn(uint8_t pcode, uint8_t where, uint16_t arg0,
-			   uint16_t arg1, uint16_t arg2, uint16_t arg3);
+  async command void panic(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3);
+  async command void  warn(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3);
   async event   void  hook();
 }

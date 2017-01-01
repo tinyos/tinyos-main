@@ -275,9 +275,9 @@ implementation {
   async event void Panic.hook() { }
 
 #ifndef REQUIRE_PANIC
-  default async command void Panic.panic(uint8_t pcode, uint8_t where, uint16_t arg0,
-					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
-  default async command void  Panic.warn(uint8_t pcode, uint8_t where, uint16_t arg0,
-					 uint16_t arg1, uint16_t arg2, uint16_t arg3) { }
+  default async command void Panic.panic(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3) { }
+  default async command void  Panic.warn(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3) { }
 #endif
 }

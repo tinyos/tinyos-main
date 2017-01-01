@@ -22,6 +22,10 @@
  * Pcodes can be defined automatically using unique or
  * can be hard coded.   To avoid collisions, hard coded
  * pcodes start at PANIC_HC_START.
+ *
+ * Automatic pcodes start at 0 and got to 15 (0xf).  There is
+ * no checking for overrun with PANIC_HC_START.  Automatics
+ * are generated using unique(UQ_PANIC_SUBSYS).
  */
 #define PANIC_HC_START 16
 
@@ -30,5 +34,8 @@
  */
 
 #define PANIC_KERN 0x70
+
+/* the argument type for panics */
+typedef unsigned int parg_t;
 
 #endif /* __PANIC_H__ */

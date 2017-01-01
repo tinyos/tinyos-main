@@ -40,22 +40,23 @@ module PanicP {
 }
 
 implementation {
-  uint16_t save_sr;
+  parg_t save_sr;
   bool save_sr_free;
   norace uint8_t _p, _w;
-  norace uint16_t _a0, _a1, _a2, _a3, _arg;
+  norace parg_t _a0, _a1, _a2, _a3, _arg;
 
   /* if a double panic, high order bit is set */
   norace bool m_in_panic;               /* initialized to 0 */
 
-  void debug_break(uint16_t arg)  __attribute__ ((noinline)) {
+  void debug_break(parg_t arg)  __attribute__ ((noinline)) {
     _arg = arg;
     bkpt();
   }
 
 
-  async command void Panic.warn(uint8_t pcode, uint8_t where, uint16_t arg0, uint16_t arg1,
-				uint16_t arg2, uint16_t arg3) __attribute__ ((noinline)) {
+  async command void Panic.warn(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3)
+        __attribute__ ((noinline)) {
 
     pcode |= PANIC_WARN_FLAG;
 
@@ -73,8 +74,9 @@ implementation {
    * Simple version.   Do nothing allow debug break.
    */
 
-  async command void Panic.panic(uint8_t pcode, uint8_t where, uint16_t arg0, uint16_t arg1,
-				 uint16_t arg2, uint16_t arg3) __attribute__ ((noinline)) {
+  async command void Panic.panic(uint8_t pcode, uint8_t where,
+        parg_t arg0, parg_t arg1, parg_t arg2, parg_t arg3)
+        __attribute__ ((noinline)) {
     _p = pcode; _w = where;
     _a0 = arg0; _a1 = arg1;
     _a2 = arg2; _a3 = arg3;
