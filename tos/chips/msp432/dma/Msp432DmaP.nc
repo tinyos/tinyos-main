@@ -78,6 +78,10 @@ implementation {
     uint32_t nm1, mod;
 
     if (chan >= 8) return;
+    if (DMA_Control->ENASET & (1 << chan)) {
+      /* panic */
+      bkpt();                   /* inlue of panic  */
+    }
 
     dst_inc = (control & UDMA_CHCTL_DSTINC_M);
     src_inc = (control & UDMA_CHCTL_SRCINC_M);
@@ -160,5 +164,4 @@ implementation {
       working_flags >>= 1;
     }
   }
-
 }
