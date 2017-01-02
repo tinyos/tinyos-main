@@ -131,8 +131,12 @@ implementation {
    * See system_init -> __core_clk_init -> __ta_init (startup.c)
    */
   command error_t Init.init() {
-    NVIC_EnableIRQ(irqn);
-    NVIC_EnableIRQ(irqn + 1);
+    if ((irqn >> 5) == ((irqn + 1) >> 5)) {
+      NVIC->ISER[irqn >> 5] = 1 << (irqn & 0x1f) | 1 << ((irqn +1) & 0x1f);
+    } else {
+      NVIC_EnableIRQ(irqn);
+      NVIC_EnableIRQ(irqn + 1);
+    }
     call Timer.enableEvents();
     return SUCCESS;
   }
