@@ -69,7 +69,6 @@ set $p9 =(DIO_PORT_Odd_Interruptable_Type  *)  $p9b
 set $p10=(DIO_PORT_Even_Interruptable_Type  *) $p9b
 
 # PMAP
-mem 0x40005000 0x40005040 rw 16 nocache
 set $pmap=(PMAP_COMMON_Type*)($periph +0x00005000)
 set $p1map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0008))
 set $p2map=((PMAP_REGISTER_Type*) ((uint32_t)$pmap + 0x0010))
