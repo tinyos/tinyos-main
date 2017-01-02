@@ -57,6 +57,17 @@ set $p7b=$diob+0x60
 set $p9b=$diob+0x80
 set $pjb=$diob+0x120
 
+set $p1 =(DIO_PORT_Odd_Interruptable_Type  *)  $p1b
+set $p2 =(DIO_PORT_Even_Interruptable_Type  *) $p1b
+set $p3 =(DIO_PORT_Odd_Interruptable_Type  *)  $p3b
+set $p4 =(DIO_PORT_Even_Interruptable_Type  *) $p3b
+set $p5 =(DIO_PORT_Odd_Interruptable_Type  *)  $p5b
+set $p6 =(DIO_PORT_Even_Interruptable_Type  *) $p5b
+set $p7 =(DIO_PORT_Odd_Interruptable_Type  *)  $p7b
+set $p8 =(DIO_PORT_Even_Interruptable_Type  *) $p7b
+set $p9 =(DIO_PORT_Odd_Interruptable_Type  *)  $p9b
+set $p10=(DIO_PORT_Even_Interruptable_Type  *) $p9b
+
 # PMAP
 mem 0x40005000 0x40005040 rw 16 nocache
 set $pmap=(PMAP_COMMON_Type*)($periph +0x00005000)
