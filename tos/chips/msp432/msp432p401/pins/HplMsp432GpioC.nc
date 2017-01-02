@@ -257,6 +257,13 @@ configuration HplMsp432GpioC {
   provides interface HplMsp432Gpio as UCB3STE;
   provides interface HplMsp432Gpio as UCB3SDA;
   provides interface HplMsp432Gpio as UCB3SCL;
+
+  provides interface HplMsp432Gpio as UCB3SIMO_10;
+  provides interface HplMsp432Gpio as UCB3SOMI_10;
+  provides interface HplMsp432Gpio as UCB3CLK_10;
+  provides interface HplMsp432Gpio as UCB3STE_10;
+  provides interface HplMsp432Gpio as UCB3SDA_10;
+  provides interface HplMsp432Gpio as UCB3SCL_10;
 }
 
 implementation {
@@ -464,12 +471,12 @@ implementation {
   Port104       = xPort10.Pin[4];
   Port105       = xPort10.Pin[5];
 
-//UCB3STE       = xPort10.Pin[0];         /* duplicate */
-//UCB3CLK       = xPort10.Pin[1];         /* duplicate */
-//UCB3SIMO      = xPort10.Pin[2];         /* duplicate */
-//UCB3SDA       = xPort10.Pin[2];         /* duplicate */
-//UCB3SOMI      = xPort10.Pin[3];         /* duplicate */
-//UCB3SCL       = xPort10.Pin[3];         /* duplicate */
+  UCB3STE_10    = xPort10.Pin[0];         /* duplicate */
+  UCB3CLK_10    = xPort10.Pin[1];         /* duplicate */
+  UCB3SIMO_10   = xPort10.Pin[2];         /* duplicate */
+  UCB3SDA_10    = xPort10.Pin[2];         /* duplicate */
+  UCB3SOMI_10   = xPort10.Pin[3];         /* duplicate */
+  UCB3SCL_10    = xPort10.Pin[3];         /* duplicate */
   TA3CC0        = xPort10.Pin[4];
   TA3CC1        = xPort10.Pin[5];
 }
