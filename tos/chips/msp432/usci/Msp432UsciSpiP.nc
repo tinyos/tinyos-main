@@ -172,11 +172,8 @@ implementation {
 
     /* going into reset, clears all interrupt enables */
     call Usci.enterResetMode_();
-    call SIMO.makeOutput();
     call SIMO.setFunction(MSP432_GPIO_IO);
-    call SOMI.makeOutput();
     call SOMI.setFunction(MSP432_GPIO_IO);
-    call CLK.makeOutput();
     call CLK.setFunction(MSP432_GPIO_IO);
   }
 
@@ -203,11 +200,8 @@ implementation {
      */
     atomic {
       call Usci.configure(config, TRUE);
-      call SIMO.makeOutput();
       call SIMO.setFunction(MSP432_GPIO_MOD);
-      call SOMI.makeInput();
       call SOMI.setFunction(MSP432_GPIO_MOD);
-      call CLK.makeOutput();
       call CLK.setFunction(MSP432_GPIO_MOD);
 
       /*

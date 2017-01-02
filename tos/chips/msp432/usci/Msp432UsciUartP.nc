@@ -161,9 +161,7 @@ implementation {
      * but kicking reset turns off the interrupt enables.
      */
     call Usci.enterResetMode_();
-    call RXD.makeInput();
     call RXD.setFunction(MSP432_GPIO_IO);
-    call TXD.makeOutput();
     call TXD.setFunction(MSP432_GPIO_IO);
   }
 
@@ -188,9 +186,7 @@ implementation {
      */
     atomic {
       call Usci.configure(config, TRUE);
-      call RXD.makeInput();
       call TXD.setFunction(MSP432_GPIO_MOD);
-      call TXD.makeOutput();
       call TXD.setFunction(MSP432_GPIO_MOD);
 
       /*
