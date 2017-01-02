@@ -186,7 +186,7 @@ implementation {
      */
     atomic {
       call Usci.configure(config, TRUE);
-      call TXD.setFunction(MSP432_GPIO_MOD);
+      call RXD.setFunction(MSP432_GPIO_MOD);
       call TXD.setFunction(MSP432_GPIO_MOD);
 
       /*
