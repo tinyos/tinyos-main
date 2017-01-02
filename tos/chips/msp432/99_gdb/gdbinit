@@ -1,3 +1,10 @@
+# /dev/ttyACM0, mm5a, 2331
+# /dev/ttyACM1, mm5 (exp5438_gps), 2431
+
+# to launch msp432-gdb
+# M-x gdb
+# arm-none-eabi-gdb-py -i=mi -nx -ex "target remote localhost:2331" -x .gdbinit -x .gdb_mm   build/exp_msp432/main.exe
+# arm-none-eabi-gdb-py -i=mi -nx -ex "target remote localhost:2431" -x .gdbinit -x .gdb_mm5a build/exp_msp432/main.exe
 
 set remoteaddresssize 32
 set remotetimeout 999999
