@@ -116,14 +116,14 @@ implementation {
       }break;
       case S_READ_PRESSURE_CMD:
       case S_READ_PRESSURE:{
-        uint32_t measurment=(*((nx_uint32_t*)i2cBuffer))>>8;//conversion from big-endian
+        uint32_t measurment=((uint32_t)i2cBuffer[0] << 16) | ((uint32_t)i2cBuffer[1] << 8) | i2cBuffer[2];
         state=S_IDLE;
         call BusPowerManager.releasePower();
         signal ReadPressure.readDone(lastError, measurment);
       }break;
       case S_READ_TEMP_CMD:
       case S_READ_TEMP:{
-	uint32_t measurment=(*((nx_uint32_t*)i2cBuffer))>>8;
+        uint32_t measurment=((uint32_t)i2cBuffer[0] << 16) | ((uint32_t)i2cBuffer[1] << 8) | i2cBuffer[2];
         state=S_IDLE;
         call BusPowerManager.releasePower();
         signal ReadTemperature.readDone(lastError, measurment);
