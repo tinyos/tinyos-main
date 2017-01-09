@@ -162,7 +162,7 @@ implementation
 		{
 			oldError = err;
 			if( oldError == SUCCESS )
-				oldTempData =  *((nx_uint16_t*)buffer);
+				oldTempData = ((uint16_t)buffer[0] << 8) | buffer[1];
 		}
 		
 		state = S_IDLE;
