@@ -46,6 +46,11 @@ interface Msp432Dma {
         uint32_t trigger, uint32_t length,
         void * dst, void * src, uint32_t control);
 
+  /* priority for the channel.  The msp432 provides for
+   * only two, normal and high.  0 is normal, 1 is high.
+   */
+  async command void dma_set_priority(uint32_t pri);
+
   async command bool dma_complete();
   async command void dma_stop_channel();
   async command bool dma_enabled();
