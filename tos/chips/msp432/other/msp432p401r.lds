@@ -132,7 +132,7 @@ SECTIONS {
 
     __etext = .;
 
-    .data : {
+    .data : ALIGN(4) {
         . = ALIGN (4);
         __data_load__  = LOADADDR (.data);
         __data_start__ = .;
