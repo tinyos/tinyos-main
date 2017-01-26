@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2016-2017 Eric B. Decker
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -162,7 +162,7 @@ implementation {
   }
 
 
-  void DMA_INT0_Handler(void) __attribute__((interrupt)) {
+  void DMA_INT0_Handler(void) @C() @hwevent() __attribute__((interrupt)) {
     uint32_t working_flags, which, mask;
 
     which  = 0;
@@ -178,4 +178,6 @@ implementation {
       working_flags >>= 1;
     }
   }
+
+  default async event void Dma.dma_interrupted[uint8_t chan]() { bkpt(); }
 }
