@@ -141,7 +141,15 @@ implementation {
 
 
   async command void Dma.dma_stop_channel[uint8_t chan]() {
-    DMA_Control->ENACLR = 1 << chan;
+    DMA_Control->ENACLR = (1 << chan);
+    DMA_Channel->INT0_CLRFLG = (1 << chan);
+    atomic {
+      if (DMA_Channel->INT0_SRCFLG == 0) {
+        NVIC_ClearPendingIRQ(DMA_INT0_IRQn);
+        if (DMA_Channel->INT0_SRCFLG)
+          NVIC_SetPendingIRQ(DMA_INT0_IRQn);
+      }
+    }
     __DMB();
   }
 
@@ -173,12 +181,19 @@ implementation {
   async command void Dma.dma_clear_int[uint8_t chan]() {
     if (chan < 8) {
       DMA_Channel->INT0_CLRFLG = (1 << chan);
+      atomic {
+        if (DMA_Channel->INT0_SRCFLG == 0) {
+          NVIC_ClearPendingIRQ(DMA_INT0_IRQn);
+          if (DMA_Channel->INT0_SRCFLG)
+            NVIC_SetPendingIRQ(DMA_INT0_IRQn);
+        }
+      }
     }
   }
 
 
   void DMA_INT0_Handler(void) @C() @hwevent() __attribute__((interrupt)) {
-    uint32_t working_flags, which, mask;
+    uint32_t working_flags, which;
 
     which  = 0;
     working_flags = DMA_Channel->INT0_SRCFLG; /* which channels went? */
@@ -192,6 +207,12 @@ implementation {
       which++;
       working_flags >>= 1;
     }
+    if (DMA_Channel->INT0_SRCFLG == 0) {
+      NVIC_ClearPendingIRQ(DMA_INT0_IRQn);
+      if (DMA_Channel->INT0_SRCFLG)
+        NVIC_SetPendingIRQ(DMA_INT0_IRQn);
+    }
+  }
   }
 
   default async event void Dma.dma_interrupted[uint8_t chan]() { bkpt(); }
