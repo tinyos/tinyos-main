@@ -48,7 +48,15 @@ module Msp432DmaP {
 }
 implementation {
 
-  uint8_t m_dma_IE;
+  /*
+   * m_dma_signal_enable is a bit mask per channel.  If a 1 any dma
+   * channel completion interrupt will be signalled through to its
+   * end point.
+   *
+   * The signal_enable will be set when the client calls dma_enable_int
+   * and is disabled when dma_disable_int is called.
+   */
+  uint8_t m_dma_signal_enable;
 
   /*
    * 8 channels, each control block is 16 bytes * 8 * 2
@@ -147,7 +155,7 @@ implementation {
 
   async command void Dma.dma_enable_int[uint8_t chan]() {
     if (chan < 8) {
-      BITBAND_SRAM(m_dma_IE, chan) = 1;
+      BITBAND_SRAM(m_dma_signal_enable, chan) = 1;
       NVIC_EnableIRQ(DMA_INT0_IRQn);
     }
   }
@@ -155,9 +163,11 @@ implementation {
 
   async command void Dma.dma_disable_int[uint8_t chan]() {
     if (chan < 8) {
-      BITBAND_SRAM(m_dma_IE, chan) = 0;
-    if (m_dma_IE == 0)
-      NVIC_DisableIRQ(DMA_INT0_IRQn);
+      BITBAND_SRAM(m_dma_signal_enable, chan) = 0;
+      if (m_dma_signal_enable == 0)
+        NVIC_DisableIRQ(DMA_INT0_IRQn);
+    }
+  }
 
 
   async command void Dma.dma_clear_int[uint8_t chan]() {
@@ -175,8 +185,8 @@ implementation {
     while (working_flags) {
       if (working_flags & 1) {
         /* got one */
-        DMA_Channel->INT0_CLRFLG = 1 << which;
-        if (m_dma_IE && 1 << which)
+        DMA_Channel->INT0_CLRFLG = (1 << which);
+        if (m_dma_signal_enable & (1 << which))
           signal Dma.dma_interrupted[which]();
       }
       which++;
