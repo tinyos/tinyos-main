@@ -48,4 +48,7 @@ implementation {
   components Msp432DmaP;
   Init = Msp432DmaP; 
   Dma  = Msp432DmaP;
+
+  components PanicC;
+  Msp432DmaP.Panic -> PanicC;
 }

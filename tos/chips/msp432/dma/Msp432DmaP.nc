@@ -38,13 +38,15 @@
  * Core implementation for the MSP432 DMA hardware.
  */
 
-#include "msp432dma.h"
+#include <msp432dma.h>
+#include <panic.h>
 
 module Msp432DmaP {
   provides {
     interface Init;
     interface Msp432Dma as Dma[uint8_t chan];
   }
+  uses interface Panic;
 }
 implementation {
 
@@ -85,10 +87,15 @@ implementation {
     uint32_t src_inc, dst_inc;
     uint32_t nm1, mod;
 
-    if (chan >= 8) return;
-    if (DMA_Control->ENASET & (1 << chan)) {
-      /* panic */
-      bkpt();                   /* inlue of panic  */
+    /*
+     * check chan in range
+     * chan already enabled ... bad
+     * chan has pending interrupt ... bad
+     */
+    if ((chan >= 8) ||
+        (DMA_Control->ENASET & (1 << chan)) ||
+        (DMA_Channel->INT0_SRCFLG & (1 << chan))) {
+      call Panic.panic(PANIC_DVR, 1, chan, 0, 0, 0);
     }
 
     dst_inc = (control & UDMA_CHCTL_DSTINC_M);
@@ -213,7 +220,10 @@ implementation {
         NVIC_SetPendingIRQ(DMA_INT0_IRQn);
     }
   }
+
+  default async event void Dma.dma_interrupted[uint8_t chan]() {
+    call Panic.panic(PANIC_DVR, 2, chan, 0, 0, 0);
   }
 
-  default async event void Dma.dma_interrupted[uint8_t chan]() { bkpt(); }
+  async event void Panic.hook() { }
 }
