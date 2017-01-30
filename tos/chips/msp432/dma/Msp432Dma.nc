@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Eric B. Decker
+ * Copyright (c) 2016-2017 Eric B. Decker
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,34 @@ interface Msp432Dma {
   async command void dma_stop_channel();
   async command bool dma_enabled();
 
+  /*
+   * dma_enable_int: enable dma interrupts for this channel
+   *
+   * If first channel to be enabled, also turns on the NVIC
+   * entry for DMA_INT0.
+   *
+   * enables the signal from DMA completion.
+   *
+   * should be called prior to call dma_start_channel to avoid
+   * potential race condition.
+   */
   async command void dma_enable_int();
+
+  /*
+   * dma_disable_int: disable dma interrupts for this channel
+   *
+   * If last channel enabled, will also turn off NVIC entry for
+   * DMA_INT0
+   *
+   * disables signal from DMA completion
+   */
   async command void dma_disable_int();
 
+  /*
+   * signal from the DMA interrupt handler to the client.
+   *
+   * only occurs if the client has explicitly asked for dma interrupts
+   * via dma_enable_int().
+   */
   async event void dma_interrupted();
 }
