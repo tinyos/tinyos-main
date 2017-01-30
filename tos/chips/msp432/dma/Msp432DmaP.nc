@@ -139,11 +139,6 @@ implementation {
 
   async command bool Dma.dma_complete[uint8_t chan]() {
     return !call Dma.dma_enabled[chan]();
-    /*
-     * cb = ControlTable[chan];
-     * control = cb->control;
-     * return ((control & 7) == 0);
-     */
   }
 
 
