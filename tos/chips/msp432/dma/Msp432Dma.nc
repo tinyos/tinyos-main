@@ -79,6 +79,12 @@ interface Msp432Dma {
   async command void dma_disable_int();
 
   /*
+   * clears any pending DMA_INT0 interrupt for this channel
+   */
+  async command void dma_clear_int();
+
+
+  /*
    * signal from the DMA interrupt handler to the client.
    *
    * only occurs if the client has explicitly asked for dma interrupts

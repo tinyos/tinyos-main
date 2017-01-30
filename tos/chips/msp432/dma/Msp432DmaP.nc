@@ -158,6 +158,11 @@ implementation {
       BITBAND_SRAM(m_dma_IE, chan) = 0;
     if (m_dma_IE == 0)
       NVIC_DisableIRQ(DMA_INT0_IRQn);
+
+
+  async command void Dma.dma_clear_int[uint8_t chan]() {
+    if (chan < 8) {
+      DMA_Channel->INT0_CLRFLG = (1 << chan);
     }
   }
 
