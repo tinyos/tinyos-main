@@ -38,4 +38,5 @@ implementation {
     NVIC->ISER[nvic_index] = nvic_bitmask;
 
     return SUCCESS;
+  }
 }
