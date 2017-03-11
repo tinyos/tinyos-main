@@ -51,6 +51,7 @@ module PlatformP {
   provides {
     interface Init;
     interface Platform;
+    interface StdControl;
   }
   uses {
     interface Init as PlatformPins;
@@ -68,6 +69,18 @@ implementation {
 
     call PlatformLeds.init();   // Initializes the Leds
     call PeripheralInit.init();
+    return SUCCESS;
+  }
+
+
+  /*
+   * dummy StdControl for PlatformSerial.
+   */
+  command error_t StdControl.start() {
+    return SUCCESS;
+  }
+
+  command error_t StdControl.stop() {
     return SUCCESS;
   }
 
