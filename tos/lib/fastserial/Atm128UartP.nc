@@ -199,6 +199,10 @@ implementation{
     return SUCCESS;
   }
   
+  async command bool UartByte.sendAvail() {
+    return call HplUart.isTxEmpty();
+  }
+
   async command error_t UartByte.receive( uint8_t * byte, uint8_t timeout){
 
     uint16_t timeout_micro = m_byte_time * timeout + 1;
@@ -218,6 +222,11 @@ implementation{
     
   }
   
+  async command bool UartByte.receiveAvail() {
+    return !call HplUart.isRxEmpty();
+  }
+
+
   async event void Counter.overflow() {}
 
   default async event void UartStream.sendDone( uint8_t* buf, uint16_t len, error_t error ){}

@@ -30,8 +30,16 @@ implementation {
     return SUCCESS;
   }
 
+  async command bool UartByte.sendAvail() {
+    return FALSE;
+  }
+
   async command error_t UartByte.receive( uint8_t* byte, uint8_t timeout ) {
     return SUCCESS;
+  }
+
+  async command bool UartByte.receiveAvail() {
+    return FALSE;
   }
 
   async command error_t UartStream.send( uint8_t* buf, uint16_t len ) {

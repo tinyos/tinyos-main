@@ -93,9 +93,27 @@ implementation {
     return SUCCESS;
   }
 
+  /*
+   * Check to see if space is available for another transmit byte to go out.
+   */
+  async command bool UartByte.sendAvail() {
+    return FALSE;
+  }
+
+
   async command error_t UartByte.receive(uint8_t* byte, uint8_t timeout) {
     return FAIL;
   }
+
+
+  /*
+   * Check to see if another Rx byte is available.
+   */
+  async command bool UartByte.receiveAvail() {
+    return FALSE;
+  }
+
+
 /*
   extern int lowlevel_putc(int c) {
     vAHI_UartWriteData(uart, (uint8_t)c);

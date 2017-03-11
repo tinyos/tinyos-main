@@ -145,6 +145,16 @@ implementation
     return SUCCESS;
   }
 
+  /*
+   * Check to see if space is available for another transmit byte to go out.
+   */
+  async command bool UartByte.sendAvail() {
+    if (call UART.getLSR() & LSR_TEMT)
+      return TRUE;
+    return FALSE;
+  }
+
+
   async command error_t UartByte.receive( uint8_t *data, uint8_t timeout) {
     error_t error = FAIL;
     uint8_t t;
@@ -157,6 +167,17 @@ implementation
     }
     return error;
   }
+
+
+  /*
+   * Check to see if another Rx byte is available.
+   */
+  async command bool UartByte.receiveAvail() {
+    if (call UART.getLSR() & LSR_DR)
+      return TRUE;
+    return FALSE;
+  }
+
 
   async command error_t UartStream.send( uint8_t* buf, uint16_t len ) {
     error_t error;

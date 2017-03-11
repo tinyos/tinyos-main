@@ -85,9 +85,25 @@ implementation {
     return FAIL;
   }
 
+  /*
+   * Check to see if space is available for another transmit byte to go out.
+   */
+  async command bool UartByte.sendAvail() {
+    return FALSE;
+  }
+
+
   async command error_t UartByte.receive( uint8_t* byte, uint8_t timeout ) {
     return FAIL;
   }
+
+  /*
+   * Check to see if another Rx byte is available.
+   */
+  async command bool UartByte.receiveAvail() {
+    return FALSE;
+  }
+
 
   // Take a look in HdlcTranslateC to understand the logic here
   // on determining whether this is the last byte or not
