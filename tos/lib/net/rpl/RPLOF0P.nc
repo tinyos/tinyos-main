@@ -88,7 +88,7 @@ implementation{
   }
 
   command uint16_t RPLOF.getObjectValue() {
-    return nodeEtx;
+    return (call RPLRankInfo.isRoot() == TRUE) ? 0 : nodeEtx;
   }
 
   /* Current parent */
