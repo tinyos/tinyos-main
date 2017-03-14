@@ -111,7 +111,7 @@ implementation{
     }
 
     // printf("RPLOF: OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
-    nodeEtx = parentNode->etx_hop;
+    nodeEtx = parentNode->etx_hop + parentNode->etx;
     nodeRank = parentNode->rank + min_hop_rank_inc;
 
     if (nodeRank < min_hop_rank_inc)
