@@ -115,7 +115,7 @@ implementation {
   event void B.fired() {
     check('B', bStart, bTime);
     call B.stop();
-    bTime = 1 + (call Random.rand32() & 0x3fff);
+    bTime = 1 + (call Random.rand32() & 0x3ff);
     call B.startPeriodic(bTime);
     bStart = sim_time();
   }
