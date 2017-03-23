@@ -48,7 +48,7 @@
 extern "C" {
 #endif
 
-typedef long long int sim_time_t;
+typedef unsigned long long int sim_time_t;
   
 void sim_init();
 void sim_start();
