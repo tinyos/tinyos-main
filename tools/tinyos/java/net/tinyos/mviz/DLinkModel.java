@@ -86,7 +86,7 @@ implements Serializable {
     }
 
     /**
-     * Get the link flag（startNode+“ ”+endNode）
+     * Get the link flag(startNode+“ ”+endNode)
      * @return 
      */
     public String getLinkFlag(){
