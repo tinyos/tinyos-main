@@ -393,7 +393,7 @@ sub chk_graphviz {
 	while (<GRAPHVIZ>) {
 	    if (/version/) {
 		print "\t$_";
-		$versionok = 1 if /1\.10/;
+		$versionok = 1 if /2\./;
 	    }
 	}
 	close GRAPHVIZ;
