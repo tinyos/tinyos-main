@@ -385,6 +385,7 @@ sub chk_rpms {
 
 sub chk_graphviz {
     my $found;
+    my $version = "2.0";
     my $versionok = 0;
     print "graphviz:\n";
     $found = which("dot", 1);
@@ -393,12 +394,12 @@ sub chk_graphviz {
 	while (<GRAPHVIZ>) {
 	    if (/version/) {
 		print "\t$_";
-		$versionok = 1 if /2\./;
+		$versionok = 1 if /version 2\./;
 	    }
 	}
 	close GRAPHVIZ;
 	if (!$versionok) {
-	    $warning = "--> WARNING: The graphviz (dot) version found by $program is not 1.10. " .
+	    $warning = "--> WARNING: The graphviz (dot) version found by $program is not $version or later. " .
 		"Please update your graphviz version if you'd like to use the nescdoc " .
 		"documentation generator.\n";
 	    print "\n$warning";
@@ -407,7 +408,7 @@ sub chk_graphviz {
 	}
     } else {
 	$warning = "--> WARNING: $program could not find the 'dot' executable which is part " .
-	    "of the AT&T Graphviz package. Please install version 1.1.0 of Graphviz if you'd " .
+	    "of the AT&T Graphviz package. Please install version $version or later of Graphviz if you'd " .
 	    "like to use the nescdoc documentation generator. If Graphviz is already installed, ".
 	     "then dot may not be in your PATH.\n";
 	print "\n$warning";
