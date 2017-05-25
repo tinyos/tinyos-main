@@ -285,6 +285,7 @@ implementation {
    */
   bool finishSplitControlRequests() {
     if(call SplitControlState.isState(S_TURNING_OFF)) {
+      call OnTimer.stop();
       call SplitControlState.forceState(S_OFF);
       signal SplitControl.stopDone(SUCCESS);
       return TRUE;
