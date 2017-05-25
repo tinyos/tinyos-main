@@ -88,7 +88,7 @@ implementation{
   }
 
   command uint16_t RPLOF.getObjectValue() {
-    return nodeEtx;
+    return (call RPLRankInfo.isRoot() == TRUE) ? 0 : nodeEtx;
   }
 
   /* Current parent */
@@ -111,7 +111,7 @@ implementation{
     }
 
     // printf("RPLOF: OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
-    nodeEtx = parentNode->etx_hop;
+    nodeEtx = parentNode->etx_hop + parentNode->etx;
     nodeRank = parentNode->rank + min_hop_rank_inc;
 
     if (nodeRank < min_hop_rank_inc)
