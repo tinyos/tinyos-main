@@ -7,7 +7,7 @@ LIBS = -lm -lstdc++
 PFLAGS += -DTOSSIM -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber='sim_node\(\)' -fnesc-gcc=$(GCC)
 PFLAGS += -I%T/lib/tossim
 WFLAGS = -Wno-nesc-data-race
-PYTHON_VERSION ?= $(shell python --version 2>&1 | sed 's/Python 2\.\([0-9]\)\.[0-9]+\{0,1\}/2.\1/')
+PYTHON_VERSION ?= $(shell python --version 2>&1 | sed 's/Python \([23]\)\.\([0-9]\)\.[0-9]+\{0,1\}.*/\1.\2/')
 
 TOSMAKE_BUILD_DIR = simbuild/$(PLATFORM)
 TOSSIMPY_DIR      = $(TINYOS_OS_DIR)/lib/tossim
