@@ -60,7 +60,7 @@ package net.tinyos.packet;
 public interface PhoenixError {
     /**
      * This method is called to signal a problem with a packet source
-     * @param e The IOExcpetion that occured
+     * @param e The IOExcpetion that occurred
      */
     public void error(java.io.IOException e);
 }
