@@ -11,8 +11,8 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ -x /bin/cygwin1.dll ]; then
-  java=`tos-locate-jre --java`
   bits=32
+  java=`tos-locate-jre --java`
   if [ $? -ne 0 ]; then
     echo "java command not found - assuming 32 bits"
   elif file -L "$java/java" | grep -qe '64-bit\|x86-64'; then #java7 on windows7 only prints x86-64
