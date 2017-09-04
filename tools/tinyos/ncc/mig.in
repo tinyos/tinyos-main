@@ -10,7 +10,7 @@
 
 prefix="@prefix@";
 exec_prefix="@exec_prefix@";
-exec "nescc-mig" "-nescc=$exec_prefix/bin/ncc" "$@"
+"nescc-mig" "-nescc=$exec_prefix/bin/ncc" "$@"
 err=$?
 echo "Couldn't execute nescc-mig" >&2
 exit $err
