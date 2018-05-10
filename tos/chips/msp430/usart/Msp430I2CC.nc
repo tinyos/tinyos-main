@@ -50,7 +50,7 @@ generic configuration Msp430I2CC() {
 implementation {
   
   enum {
-    CLIENT_ID = unique( MSP430_I2CO_BUS ),
+    CLIENT_ID = unique( MSP430_I2C0_BUS ),
   };
   
   components Msp430I2C0P as I2CP;
