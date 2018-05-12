@@ -38,8 +38,8 @@
 #include "msp430usci.h"
 
 /*
- * Implementation of USCIB0 lowlevel functionality - stateless.
- * Setting a mode will by default disable USCIB0 interrupts.
+ * Implementation of Usci_B0 (spi or i2c) lowlevel functionality - stateless.
+ * Setting a mode will by default disable USCI-Interrupts.
  *
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * @author: Jonathan Hui <jhui@archedrock.com>
@@ -65,6 +65,8 @@ module HplMsp430UsciB0P @safe() {
     interface HplMsp430GeneralIO as SIMO;
     interface HplMsp430GeneralIO as SOMI;
     interface HplMsp430GeneralIO as UCLK;
+    interface HplMsp430GeneralIO as USDA;
+    interface HplMsp430GeneralIO as USCL;
     interface HplMsp430UsciRawInterrupts as UsciRawInterrupts;
   }
 }
@@ -264,17 +266,15 @@ implementation {
 
   async command void Usci.enableI2C() {
     atomic {
-      call SIMO.selectModuleFunc(); 
-      call SOMI.selectModuleFunc();
-      call UCLK.selectModuleFunc();
+      call USDA.selectModuleFunc();
+      call USCL.selectModuleFunc();
     }  
   }
 
   async command void Usci.disableI2C() {
     atomic {
-      call SIMO.selectIOFunc();
-      call SOMI.selectIOFunc();
-      call UCLK.selectIOFunc();
+      call USDA.selectIOFunc();
+      call USCL.selectIOFunc();
     }  
   }
 
