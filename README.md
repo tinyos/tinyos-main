@@ -2,55 +2,32 @@
 TinyOS
 ======
 
-**Warning**: The main development tree (tinyos/tinyos-main) has been converted
-over to the new version 3 make system (issue #190 has been merged).   (see below).
-
 [TinyOS](http://tinyos.net) is an open source, BSD-licensed operating system
 designed for low-power wireless devices, such as those used in sensor networks,
 ubiquitous computing, personal area networks, smart buildings, and smart meters.
-A worldwide community from academia and industry use, develop, and support the
-operating system as well as its associated tools, averaging 35,000 downloads a
-year.
 
+---
 
-============================================================================
+- TinyProd
+> The main Tinyos-Main tree has seen less activity over the years.  That doesn't
+> mean TinyOS is dead, rather most new work has been concentrated on the ```tinyprod```
+> repository.  See [tinyprod/prod](https://github.com/tinyprod/prod)
+> and its working development repository [tp-freeforall/prod](https://github.com/tp-freeforall/prod)
 
-**Note**: New Make system and tinyos-tools
-------------------------------------------
+- Make 3
+> The main TinyOS trees have been converted to using the new *Make3* build system.
+> See the *(Make Version 3)* section below.
 
-The TinyOS make system has been upgraded to version 3. This brings many new
-improvements (see `support/make/README.md` for details) but also requires
-the `tools` to be rebuilt. To use TinyOS make version 3:
-
-    cd tools
-    ./Bootstrap
-    ./configure
-    make
-    sudo make install
-
-alternatively you can use the tinyos-tools-devel package from tinyprod.net/
-repos/debian.   See the Readme at the top level (http://tinyprod.net/repos/debian).
-You need to modify /etc/apt/sources.list.d/tinyprod-debian.list.  Change "squeeze"
-to "wheezy".
-
-    sudo -s
-    apt-get update
-    apt-get purge tinyos-tools
-    apt-get install tinyos-tools-devel
-
-
-============================================================================
-
-
+----
 
 Where to Begin
 --------------
- 
+
 - `doc/00a_Getting_Started_w_Git`: Overview of getting started using git, github.
 
 - `doc/00c_Setting_Up_Debian_Development`: Setting up development on Debian
   based Linux machines. Debian and Ubuntu.
-
+  
 - `doc/00d_MacOSX_Development`: Setting up development on Mac OS X.
 
 
@@ -79,9 +56,6 @@ developers. Pull requests are welcome and will be reviewed by the core
 developer most familiar with the relevant code.
 
 
-
-
-
 Repo Structure
 --------------
 
@@ -102,3 +76,30 @@ by github repository settings.   gh:tinyos/tinyos-main refers to the repository 
 if that repository is pulled it will reference the default branch.
 
 Local repositories are referenced using local(branch).
+
+
+## (Make Version 3)
+TinyOS development repositories (tinyos/tinyos-main, tinyprod/prod) use the Version
+3 make build system (issue #190).  (see below).
+
+Version 3 Make system and tinyos-tools
+------------------------------------------
+The TinyOS make system has been upgraded to version 3. This brings many new
+improvements (see `support/make/README.md` for details) but also requires
+the `tools` to be rebuilt. To use TinyOS make version 3:
+
+    cd tools
+    ./Bootstrap
+    ./configure
+    make
+    sudo make install
+
+alternatively you can use the tinyos-tools-devel package from tinyprod.net/
+repos/debian.   See the Readme at the top level (http://tinyprod.net/repos/debian).
+You need to modify /etc/apt/sources.list.d/tinyprod-debian.list.  Change "squeeze"
+to "wheezy".
+
+    sudo -s
+    apt-get update
+    apt-get purge tinyos-tools
+    apt-get install tinyos-tools-devel
