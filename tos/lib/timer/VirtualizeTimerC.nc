@@ -117,7 +117,17 @@ implementation
 	if (timer->isrunning)
 	  {
 	    uint32_t elapsed = now - timer->t0;
-	    int32_t remaining = timer->dt - elapsed;
+        int32_t remaining;
+        
+        /* If the value of timer's destination greater than max int32_t, 
+           then the highest bit is ignored to avoid overflow during type 
+           conversiion. Otherwise other tasks cannot to be performed and
+           the system will crash. */
+        if(timer->dt > min_remaining) {
+          dbg("Timer error", "The timer's destination value is too high\n");
+          timer->dt = timer->dt & 0x7fffffff;
+        }
+        remaining = timer->dt - elapsed;        
 
 	    if (remaining < min_remaining)
 	      {
