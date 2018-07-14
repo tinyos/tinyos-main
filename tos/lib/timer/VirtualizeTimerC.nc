@@ -118,7 +118,7 @@ implementation
 	if (timer->isrunning)
 	  {
 	    uint32_t elapsed = now - timer->t0;
-	    int32_t remaining = timer->dt - elapsed;        ;
+	    int32_t remaining = timer->dt - elapsed;
 
 	    /* If the value of timer's destination greater than max int32_t, 
 	       then the virtual timer is ignored to avoid the fact that all 
