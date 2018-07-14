@@ -118,16 +118,16 @@ implementation
 	if (timer->isrunning)
 	  {
 	    uint32_t elapsed = now - timer->t0;
-        int32_t remaining = timer->dt - elapsed;        ;
-        
-        /* If the value of timer's destination greater than max int32_t, 
-           then the virtual timer is ignored to avoid the fact that all 
-           of other tasks is hard to get runing time and the battery is
-           quickly exhausted. And the system may crash.*/
-        if(timer->dt > max_int32) {
-          dbg("Value error", "The timer's destination value is too high\n");
-          continue;
-        }
+	    int32_t remaining = timer->dt - elapsed;        ;
+
+	    /* If the value of timer's destination greater than max int32_t, 
+	       then the virtual timer is ignored to avoid the fact that all 
+	       of other tasks is hard to get runing time and the battery is
+	       quickly exhausted. And the system may crash.*/
+	    if(timer->dt > max_int32) {
+	      dbg("Value error", "The timer's destination value is too high\n");
+	      continue;
+	    }
 
 	    if (remaining < min_remaining)
 	      {
