@@ -105,6 +105,7 @@ implementation
        runtime cost). */
     uint32_t now = call TimerFrom.getNow();
     int32_t min_remaining = (1UL << 31) - 1; /* max int32_t */
+    int32_t max_int32 = min_remaining;
     bool min_remaining_isset = FALSE;
     uint16_t num;
 
@@ -117,17 +118,16 @@ implementation
 	if (timer->isrunning)
 	  {
 	    uint32_t elapsed = now - timer->t0;
-        int32_t remaining;
+        int32_t remaining = timer->dt - elapsed;        ;
         
         /* If the value of timer's destination greater than max int32_t, 
-           then the highest bit is ignored to avoid overflow during type 
-           conversiion. Otherwise other tasks cannot to be performed and
-           the system will crash. */
-        if(timer->dt > min_remaining) {
-          dbg("Timer error", "The timer's destination value is too high\n");
-          timer->dt = timer->dt & 0x7fffffff;
+           then the virtual timer is ignored to avoid the fact that all 
+           of other tasks is hard to get runing time and the battery is
+           quickly exhausted. And the system may crash. */
+        if(timer->dt > max_int32) {
+          dbg("Value error", "The timer's destination value is too high\n");
+          continue;
         }
-        remaining = timer->dt - elapsed;        
 
 	    if (remaining < min_remaining)
 	      {
