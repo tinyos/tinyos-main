@@ -123,7 +123,7 @@ implementation
         /* If the value of timer's destination greater than max int32_t, 
            then the virtual timer is ignored to avoid the fact that all 
            of other tasks is hard to get runing time and the battery is
-           quickly exhausted. And the system may crash. */
+           quickly exhausted. And the system may crash.*/
         if(timer->dt > max_int32) {
           dbg("Value error", "The timer's destination value is too high\n");
           continue;
