@@ -52,7 +52,7 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 
 BUILD_ROOT=$(pwd)
-CODENAME=wheezy
+CODENAME=stretch
 TINYOSVERSION=2_1_2
 SOURCEFILENAME=release_tinyos_${TINYOSVERSION}.tar.gz
 TARBALLDIR=tinyos-release-release_tinyos_${TINYOSVERSION}

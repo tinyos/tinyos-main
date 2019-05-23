@@ -31,7 +31,7 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 
 BUILD_ROOT=$(pwd)
-CODENAME=wheezy
+CODENAME=stretch
 
 SOURCENAME=tinyos-tools-devel
 SOURCEVERSION=1.5.0

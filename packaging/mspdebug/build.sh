@@ -20,7 +20,7 @@ BUILD_ROOT=$(pwd)
 : ${POST_VER:=-tinyos}
 
 DEB_DEST=usr
-CODENAME=wheezy
+CODENAME=stretch
 MAKE_J=-j8
 
 if [[ -z "${TINYOS_ROOT_DIR}" ]]; then

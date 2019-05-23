@@ -27,7 +27,7 @@ Where to Begin
 
 - `doc/00c_Setting_Up_Debian_Development`: Setting up development on Debian
   based Linux machines. Debian and Ubuntu.
-  
+
 - `doc/00d_MacOSX_Development`: Setting up development on Mac OS X.
 
 
@@ -96,8 +96,6 @@ the `tools` to be rebuilt. To use TinyOS make version 3:
 
 alternatively you can use the tinyos-tools-devel package from tinyprod.net/
 repos/debian.   See the Readme at the top level (http://tinyprod.net/repos/debian).
-You need to modify /etc/apt/sources.list.d/tinyprod-debian.list.  Change "squeeze"
-to "wheezy".
 
     sudo -s
     apt-get update

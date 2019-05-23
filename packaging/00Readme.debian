@@ -5,12 +5,12 @@ These are instructions for building Debian archives and a corresponding
 repository from TinyOS packaging.
 
 Build environment: packages are built on i386 (32 bit) and amd64 (64 bit)
-machines running Debian 7.5 (wheezy).
+machines running Debian 7.5 (wheezy).  Currently published via stretch.
 
 Following codenames exist:
 
-  squeeze:   generic packages built on squeeze (debian 6).
   wheezy:    generic packages built on wheezy  (debian 7).
+  stretch:   generic packages hosted via stretch (debian 9)
   msp430-46: holds the msp430 mainline compiler (4.6.3).
   msp430-47: experimental 4.7 (20 bit support).
 
@@ -46,9 +46,9 @@ This is controlled by a build script at the top level, "build.sh".
 3) By default, repo/conf/distributions has "SignWith: yes" which means the
    repository will be signed with your default key (~/.gnupg/gpg.conf).  You
    want to change this to a known signature.  For example to use the TinyProd
-   signing key one can use "SignWith: A9B913B9" or "SignWith: TinyProd".  You
+   signing key one can use "SignWith: F6ECE923" or "SignWith: TinyProd".  You
    have to have the key on your secret keyring.
-   
+
 4) set environment variables.
 
    export TINYOS_ROOT_DIR=${HOME}/top/t2_cur/tinyos-2.x

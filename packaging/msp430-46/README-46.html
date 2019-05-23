@@ -11,6 +11,10 @@ MSPGCC 4.6.3 LTS20120406 Release
 <br>Long Term Support (LTS)
 </b></p>
 
+An alternative source for the msp430-46 packages is stanford:
+
+    "deb http://tinyos.stanford.edu/tinyos/dists/ubuntu natty main"
+
 This release is the primary MSP430 toolchain for the TinyOS T2.1.2 release.  It also can be used
 for the TinyOS development trunk.
 
@@ -18,7 +22,7 @@ for the TinyOS development trunk.
 normal distribution channels for your distribution.</b></p>
 
 
-<p>Last update: 20121019, cire</p>
+<p>Last update: 20190522, cire</p>
 <p>(Changelog at end)</p>
 
 
@@ -43,13 +47,13 @@ Release Notes 46</a>
 <ol>
 <li>Add the following lines to /etc/apt/sources.list.d/tinyprod-debian.list:
 <pre>
-  deb http://tinyprod.net/repos/debian wheezy    main
+  deb http://tinyprod.net/repos/debian stretch   main
   deb http://tinyprod.net/repos/debian msp430-46 main
 </pre>
 <pre>
 
   $ cd /etc/apt/sources.list.d
-  $ sudo echo "deb http://tinyprod.net/repos/debian wheezy    main" >> tinyprod-debian.list
+  $ sudo echo "deb http://tinyprod.net/repos/debian stretch   main" >> tinyprod-debian.list
   $ sudo echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> tinyprod-debian.list
 
 </pre>
@@ -73,7 +77,7 @@ Release Notes 46</a>
 <p>
 <ol>
 <li>
-Other packages from the main tinyprod debian repository (<b>wheezy</b>) are needed to make a functioning nesc
+Other packages from the main tinyprod debian repository (<b>stretch</b>) are needed to make a functioning nesc
 development sytem.  In particular, you will need <b>nesc</b> and <b>tinyos-tools</b>.  These have been included
 in the instructions above.
 <br><br>
@@ -95,10 +99,12 @@ the msp430 cpus for tinyos 2.1.2.  It installs into the /usr heirarchy.
 
 <p>This repository is signed with the following key:</p>
 <pre>
-  pub   2048R/A9B913B9 2014-05-09
-        Key fingerprint = 481E 5089 F39D 2A53 F6BB  E071 DBCA 24B8 A9B9 13B9
-  uid   TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
-</pre>
+  sec   rsa4096/F6ECE923 2019-04-04 [SC]
+        8353BDF9145D1ADA4CA36E75EC5A7CD2F6ECE923
+  uid         [ultimate] TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
+  ssb   rsa4096/EF125D9B 2019-04-04 [E]
+  ssb   rsa4096/D503DFFA 2019-05-20 [S] [expires: 2022-05-19]
+
 
 <p>A public copy of the key can be found in repos/debian/tinyprod.key.  It can
 be installed by the following:</p>
@@ -110,13 +116,13 @@ be installed by the following:</p>
 <p>Alternatively, the key can be added from the ubuntu keyserver via:</p>
 
 <pre>
-  $ gpg --keyserver keyserver.ubuntu.com --recv-keys A9B913B9
-  $ gpg -a --export A9B913B9 | sudo apt-key add -
+  $ gpg --keyserver keyserver.ubuntu.com --recv-keys F6ECE923
+  $ gpg -a --export F6ECE923 | sudo apt-key add -
 </pre>
 
 </div>
 
-<p>-- cire (May 22, 2014)</p>
+<p>-- cire (May 22, 2019)</p>
 
 
 <pre>
@@ -126,6 +132,7 @@ be installed by the following:</p>
 
 <p><b>Changelog:</b></p>
 <pre>
+  20190522, cire: revise signing key (4096), use stretch as release.
   20140522, cire: convert to using the TinyProd signing key
   20121019, cire: move 4.6.3 toolchain to /usr
   20120716, cire: rebuild tinyprod repository

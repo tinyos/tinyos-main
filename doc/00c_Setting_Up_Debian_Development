@@ -2,14 +2,19 @@
 Installing a development environment on Debian based distributions.
 
 Focuses on installing a msp430 based development environment but can
-easily be adapted to other cpus by changing what toolchain gets 
+easily be adapted to other cpus by changing what toolchain gets
 installed.
 
-Linux only.  In particular, Debian based (wheezy 7.5) or Ubuntu (12.04 and
-later).
+Linux only.  In particular, Debian based (wheezy 7.5, stretch 9) or Ubuntu
+(16.04 and later).
 
 
 State:
+
+2019-05-22:
+    Migrated to Debian 9 (stretch).  Copy wheezy repo for stretch.  New packages
+    will be built on stretch.  Migrated to Ubuntu 16.04 and 18.04.  Tested on
+    16.04 and 18.04.
 
 2014-05-26:
     Migrated to Debian 7 (wheezy) and Ubuntu 12.04 through 14.04.  Tested
@@ -94,7 +99,7 @@ wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
 # teach dpkg/apt-get/aptitude about where to find the tinyprod tools repository
 #
 sudo -s
-echo "deb http://tinyprod.net/repos/debian squeeze main"   >> /etc/apt/sources.list.d/tinyprod-debian.list
+echo "deb http://tinyprod.net/repos/debian stretch   main" >> /etc/apt/sources.list.d/tinyprod-debian.list
 echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> /etc/apt/sources.list.d/tinyprod-debian.list
 apt-get update
 apt-get install nesc tinyos-tools msp430-46 mspdebug
