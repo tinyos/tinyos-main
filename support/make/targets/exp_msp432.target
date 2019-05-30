@@ -15,11 +15,15 @@ PFLAGS += -D_BUILD=$(BUILD_NUM)
 include $(PLATFORM_DIR)/Makefile.platform
 $(call TOSMake_include_platform,exp_msp432)
 $(call TOSMake_include_make_platform,msp432)
+UPSTAIRS ?= ../..
 
 build_num: FORCE
 	@if [ ! -f $(BUILD_NUM_FILE) ] ; then echo -1 > $(BUILD_NUM_FILE); fi
 	@echo $$(($$(cat $(BUILD_NUM_FILE)) + 1)) > $(BUILD_NUM_FILE)
 	@echo BUILD: $(BUILD_NUM)
 
-exp_msp432: build_num $(BUILD_DEPS)
+$(TARGET): build_num $(BUILD_DEPS)
+	ln -nfs $(UPSTAIRS) $(TOSMAKE_BUILD_DIR)/.gdb
+	ln -nfs .gdb/.gdbinit  $(TOSMAKE_BUILD_DIR)/.gdbinit
+	ln -nfs .gdb/.gdb_$(TARGET)  $(TOSMAKE_BUILD_DIR)/.gdb_target
         @:
