@@ -1,9 +1,9 @@
-Summary: TinyOS tools 
+Summary: TinyOS tools
 Name: tinyos-tools-devel
 Version: %{version}
 Release: %{release}
 License: GNU GPL Version 2
-Packager: Andras Biro
+Packager: Eric B. Decker
 Group: Development/Tools
 URL: http://www.tinyos.net
 Source0: %{name}-%{version}.tar.gz

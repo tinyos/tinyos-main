@@ -13,6 +13,7 @@ Architectures: i386 amd64
 Components: main
 Description: Wheezy based TinyOS Debian/Ubuntu repository
 SignWith: yes
+#SignWith: D503DFFA
 
 Origin: tinyos
 Label: tinyos-stretch-tinyos
@@ -21,6 +22,7 @@ Architectures: i386 amd64
 Components: main
 Description: Stretch based TinyOS Debian/Ubuntu repository
 SignWith: yes
+#SignWith: D503DFFA
 
 Origin: tinyos
 Label: tinyos-msp430-46
@@ -29,6 +31,7 @@ Architectures: i386 amd64
 Components: main
 Description: mspgcc 4.6.3 toolchain (debian/ubuntu)
 SignWith: yes
+#SignWith: D503DFFA
 
 Origin: tinyos
 Label: tinyos-msp430-47
@@ -37,3 +40,4 @@ Architectures: i386 amd64
 Components: main
 Description: mspgcc 4.7 toolchain EXPERIMENTAL (debian/ubuntu)
 SignWith: yes
+#SignWith: D503DFFA
