@@ -3,7 +3,7 @@
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
 # mspgcc development branch: 4.7.0 (non-20 bit)
-# needs nesc 1.3.5 (in wheezy)
+# needs nesc 1.3.5 or later (in stretch)
 #
 # mspgcc:	4.7.0
 # binutils	2.22
@@ -123,7 +123,7 @@ download()
     [[ -a ${GMP}.tar.bz2 ]] \
 	|| wget http://ftp.gnu.org/gnu/gmp/${GMP}.tar.bz2
     [[ -a ${MPC}.tar.gz ]] \
-	|| wget http://www.multiprecision.org/mpc/download/${MPC}.tar.gz
+	|| wget http://www.multiprecision.org/downloads/${MPC}.tar.gz
 
     echo "  ... ${MSPGCC} patches"
     [[ -a ${MSPGCC}.tar.bz2 ]] \
