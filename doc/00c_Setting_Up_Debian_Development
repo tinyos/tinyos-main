@@ -74,7 +74,7 @@ are available from Stanford and tinyprod.net.   The toolchain at tinyprod.net as
 We want the following packages:
 
            nesc
-	   tinyos-tools
+	   tinyos-tools-devel
 
         dependent on what toolchain you are using:
 	   mspdebug
