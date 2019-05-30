@@ -143,7 +143,7 @@ remove()
     if [[ -a ${f} ]]
     then
       echo Removing ${f}
-      rm -rf $f
+      /bin/rm -rf $f
     fi
   done
 }
