@@ -179,7 +179,7 @@ patch_dirs()
     set -e
     (
 	cd ${BINUTILS}
-	echo -e "\n***" mspgcc ${BINUTILS} patch
+	echo -e "\n***" mspgcc ${BINUTILS} patch: ../${MSPGCC}/msp430-binutils-${BINUTILS_VER}a-*.patch
 	cat ../${MSPGCC}/msp430-binutils-${BINUTILS_VER}a-*.patch | patch -p1
 #	echo -e "\n***" LTS binutils bugfix patches...
 #	cat ../msp430-binutils-*.patch | patch -p1
@@ -252,6 +252,7 @@ build_binutils()
     (
 	cd ${BINUTILS}
 	../${BINUTILS}/configure \
+            --disable-werror   \
 	    --prefix=${PREFIX} \
 	    --target=msp430
 	make ${MAKE_J}
