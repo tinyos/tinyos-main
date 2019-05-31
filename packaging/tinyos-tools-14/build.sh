@@ -11,7 +11,7 @@
 # This version of tinyos-tools builds a package against the 2.1.2
 # release tree.  This is gh:tinyos/tinyos-release.  As of 12/2/2012,
 # the 2.1.2/2.1.2.0 release has the SHA a2d4e21.  The tarball can
-# be found at 
+# be found at
 #
 # https://github.com/tinyos/tinyos-release/archive/release_tinyos_2_1_2.tar.gz
 #
@@ -79,8 +79,8 @@ unpack()
   mkdir -p ${SOURCEDIRNAME}
   cp -R ${TARBALLDIR}/tools ${SOURCEDIRNAME}
   cp -R ${TARBALLDIR}/licenses ${SOURCEDIRNAME}
-  
-# The TinyOS 2.1.2 release of tinyos-tools (1.4.2) needs the disable_cross_compiler patch 
+
+# The TinyOS 2.1.2 release of tinyos-tools (1.4.2) needs the disable_cross_compiler patch
 # Post 1.4.2 versions of tinyos-tools won't need this patch.  Remove for the TinyOS 2.2 release. Remove the patch file as well 10/07/2014
 # Without the patch, the make system tries to compile for x86 and x86_64 on every host architecture (even on arm for example)
 # With the patch, it only builds for the host architecture
@@ -143,8 +143,8 @@ case $1 in
   download)
     download
     ;;
-	
-	
+
+
   clean)
     cleanbuild
     ;;
@@ -201,7 +201,7 @@ case $1 in
     build
     installto
     ;;
-    
+
   tarball)
     download
     tar -cjf ${SOURCEDIRNAME}.tar.bz2 ${SOURCEDIRNAME}

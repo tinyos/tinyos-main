@@ -66,7 +66,7 @@ Branches are very inexpensive and are encouraged for any significant development
 Typically, a feature will be implemented on a topic branch, ie. <feature>-int.
 where <int> stands for integration.
 
-For the immediate future, branching should be done in private user repositories
+For the immediate future, branching should be done in private user repositories.
 until the community gets used to how they work.
 
 The general form for a repository/branch reference is: <github_context>/<repo>(branch)

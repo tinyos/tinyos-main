@@ -4,7 +4,7 @@ Building a Debian Repository
 These are instructions for building Debian archives and a corresponding
 repository from TinyOS packaging.
 
-Build environment: packages are built on i386 (32 bit) and amd64 (64 bit)
+Build environment: packages were built on i386 (32 bit) and amd64 (64 bit)
 machines running Debian 7.5 (wheezy).  Currently published via stretch.
 
 Following codenames exist:
@@ -98,7 +98,7 @@ Note, to build the tinyos-tools package one needs to have "nesc" installed.
 
 
 
-Typically, one will set REPO_DEST to the locatio of the repository being built
+Typically, one will set REPO_DEST to the location of the repository being built
 or updated.  POST_VER and PACKAGES_DIR will be unset.  The build scripts will
 install fresh packages into ${BUILD_DIR}/packages by default, local to the
 package being built.  These new packages then are used to update the

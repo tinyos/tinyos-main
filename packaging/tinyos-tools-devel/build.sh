@@ -99,8 +99,8 @@ case $1 in
   download)
     download
     ;;
-	
-	
+
+
   clean)
     cleanbuild
     ;;
@@ -154,7 +154,7 @@ case $1 in
     build
     installto
     ;;
-    
+
   tarball)
     download
     tar -cjf ${SOURCEDIRNAME}.tar.bz2 ${SOURCEDIRNAME}
