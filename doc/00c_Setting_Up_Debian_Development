@@ -1,17 +1,17 @@
 
 Installing a development environment on Debian based distributions.
 
-Focuses on installing a msp430 based development environment but can
-easily be adapted to other cpus by changing what toolchain gets
-installed.
+Focuses on installing TI msp432p401r (ARM Cortex-M4F) and TI msp430 based
+development environments but can easily be adapted to other cpus by
+changing what mcu toolchain gets installed.
 
-Linux only.  In particular, Debian based (wheezy 7.5, stretch 9) or Ubuntu
-(16.04 and later).
+Linux only.  In particular, Debian based (stretch 9) or Ubuntu 16.04 and
+later.
 
 
 State:
 
-2019-05-22:
+2019-05-29:
     Migrated to Debian 9 (stretch).  Copy wheezy repo for stretch.  New packages
     will be built on stretch.  Migrated to Ubuntu 16.04 and 18.04.  Tested on
     16.04 and 18.04.
@@ -34,14 +34,14 @@ Most commands are entered from a terminal window.
 
 **************************************************************************************
 
-1) OS Install.
+1) Host OS Install.
 
 Development is only supported on Linux hosts, in particular the Ubuntu and/or Debian
-strains.  Ubuntu 13.10 has been directly tested (on ASUS i7 quad core).
+strains.  Ubuntu 16.04 and 18.04 have been directly tested (on ASUS i7 quad core).
 
 Obtain an ISO image from releases/ubuntu.com or alternatively from tinyprod.net/downloads.
-Put the iso on to a bootable media (dvd or usb stick).  You can also use grub loopback 
-for installation on an exiting Linux installation.  (Actual how to is beyond the scope
+Put the iso on to a bootable media (dvd or usb stick).  You can also use grub loopback
+for installation on an exiting Linux installation.  (How to do this is beyond the scope
 of this document).  A simple install is fine and will take less time.
 
 When the install is complete, boot the system, and use "apt-get" to install the following
@@ -65,7 +65,39 @@ exit
 
 **************************************************************************************
 
-2) Install the TinyOS toolset (msp430) (or other appropriate toolchain)
+Debian packages for the TinyOS toolsets are available from Stanford and
+TinyProd.net.  Stanford is no longer maintained.  The toolchain at
+TinyProd.Net as of (May 29, 2019) is more up to date.
+
+**************************************************************************************
+
+2) TinyOS toolchain installation.
+
+2a) Set up repository access.
+    Tell dpkg and apt where to find the tinyprod tool repository.
+    instructions at http://tinyprod.net/repos/debian.
+
+    #
+    # add the repositories signing key to APT's keyring.  Needed to verify the repository
+    #
+    wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+
+
+    #
+    # teach dpkg/apt-get/aptitude about where to find the tinyprod toolchain repository
+    #
+    sudo -s
+    echo "deb http://tinyprod.net/repos/debian stretch   main" >> /etc/apt/sources.list.d/tinyprod-debian.list
+    apt-get update
+    exit
+
+
+2b) basic tool installation
+
+    sudo apt-get install nesc tinyos-tools-devel
+
+
+2b) TI msp430 toolchain install.
 
 We want the tinyos toolset for msp430 based motes (ie, telosb, msp430f1611). Debian packages
 are available from Stanford and tinyprod.net.   The toolchain at tinyprod.net as of
@@ -85,25 +117,52 @@ We want the following packages:
            msp430-libc-46
 	   msp430mcu-46
 
-You want to follow the instructions at: http://tinyprod.net/repos/debian.
 
-The following should be equivilent.
+# for msp430 based development
 
-#
-# add the repositories signing key to APT's keyring.  Needed to verify the repository
-#
-wget -O - http://tinyprod.net/repos/debian/tinyprod.key | sudo apt-key add -
+    sudo -s
+    echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> /etc/apt/sources.list.d/tinyprod-debian.list
+    apt-get update
+    apt-get install nesc tinyos-tools-devel msp430-46 mspdebug
+    exit
 
 
-#
-# teach dpkg/apt-get/aptitude about where to find the tinyprod tools repository
-#
-sudo -s
-echo "deb http://tinyprod.net/repos/debian stretch   main" >> /etc/apt/sources.list.d/tinyprod-debian.list
-echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> /etc/apt/sources.list.d/tinyprod-debian.list
-apt-get update
-apt-get install nesc tinyos-tools msp430-46 mspdebug
-exit
+2c) Manual installation of ARM toolchain, for ARM based platforms.
+    TI MSP432P401R, ARM Cortex-M4F based platforms.
+
+
+    TinyOS for the msp432 requires the gcc-arm-none-eabi-4_9-2015q3 toolchain.
+    Later toolchains have the nesc restrict issue.
+
+    ARM_TOOLS_BASE=https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download
+    ARM_TOOLS_TAR=gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+    wget -nv -O gcc-arm-none-eabi.tar.bz2 $ARM_TOOLS_BASE/$ARM_TOOLS_TAR
+
+    echo "*** Installing ARM toolchain"
+    sudo tar xf gcc-arm-none-eabi.tar.bz2 -C /usr
+
+    this will install the arm toolchain into /usr/gcc-arm-none-eabi-4_9-2015q3.  Your path
+    should include /usr/gcc-arm-none-eabi-4_9-2015q3/bin
+
+
+2d) Install 32 bit libraries for the ARM toolchain
+
+    apt-get install -qy -V libc6:i386 libx11-6:i386 libasound2:i386         \
+        libatk1.0-0:i386 libcairo2:i386 libcups2:i386 libdbus-glib-1-2:i386 \
+        libgconf-2-4:i386 libgdk-pixbuf2.0-0:i386 libgtk-3-0:i386           \
+        libice6:i386 libncurses5:i386 libsm6:i386 liborbit2:i386            \
+        libudev1:i386 libusb-0.1-4:i386 libstdc++6:i386 libxt6:i386         \
+        libxtst6:i386 libgnomeui-0:i386 libusb-1.0-0-dev:i386               \
+        libcanberra-gtk-module:i386 gtk2-engines-murrine:i386 unzip         \
+        libpython2.7:i386
+
+2e) Install Segger Jlink.
+
+    SUPPORT_ARCHIVE=http://tinyprod.net/dev-archive
+    JLINK_DEB=${SUPPORT_ARCHIVE}/JLink_Linux_V616j_x86_64.deb
+    wget -nv -O jlink.deb ${JLINK_DEB}
+    dpkg -i jlink.deb
+
 
 **************************************************************************************
 
@@ -119,9 +178,9 @@ repositories are all related and pains have been taken to track appropriately.
 gh:tinyos/tinyos-main(master): This is the main development repository.
 While typically stable it should be considered bleeding edge.
 
-gh:tinyos/tinyos-release.git: This repository contains release points for the
-main tinyos releases.  It is always stable.  The current default branch will
-always point at the most current release.
+gh:tinyos/tinyos-release(tinyos-2_1_2): This is the main tinyos release
+repository.  Its default branch (currently tinyos-2_1_2) will always point
+at the current release.
 
 gh:tinyprod/prod(tp-master): This repository is a superset of the main tinyos
 repository.  It has stable additions that have not as of yet been integrated
@@ -129,9 +188,10 @@ into the main tinyos development threads.  Its current primary feature is
 additional support for more modern TI MSP430 processors.  See 00a_Repo_Notes
 for details.  It actively tracks the main tinyos development repository.
 
-gh:tp-freeforall/prod(tp-master): This repository tracks gh:tinyprod/prod and
-is essentiall the tip of tinyprod development.  It actively tracks the main
-tinyos development repository.
+gh:tp-freeforall/prod(tp-master): This repository tracks gh:tinyprod/prod
+and is the tip of tinyprod development.  It actively tracks the main tinyos
+development repositories, tinyos-main and tinyprod See 00a_Repo_Notes for
+details.
 
 
 
@@ -139,7 +199,7 @@ For example, below we check out of the tip of the main development repository,
 gh:tinyos/tinyos-main(master).
 
 This gives you a read-only copy of the master branch of the tinyos/tinyos-main
-repository.   It is a fully functional local repository that can be commited 
+repository.   It is a fully functional local repository that can be commited
 into (locally only).
 
     cd ~/top
@@ -187,27 +247,16 @@ To set up for contibuting to the main repository, see 00b_Using the Repo.
 
 The following environment variables must be set to build.
 
-    TOSROOT
-    TOSDIR
-    MAKERULES
-    CLASSPATH
+    working dir ~/top
 
-    for example:  working dir ~/top
-  
-  	#!/bin/sh
-  
-  	MOTECOM="serial@/dev/ttyUSB0:telosb"
-  
-  	TOSROOT=~/top/t2_cur/tinyos-2.x
-  	TOSDIR=$TOSROOT/tos
-  
-  	MAKERULES=$TOSROOT/support/make/Makerules
-  	CLASSPATH=.:$TOSROOT/support/sdk/java/tinyos.jar
-  
-  	PYTHONPATH=$TOSROOT/support/sdk/python:$PYTHONPATH
-  
-  	export MAKERULES TOSDIR TOSROOT CLASSPATH PYTHONPATH
-  	export MOTECOM
+        #!/bin/sh
+        export TINYOS_ROOT_DIR=~/top/tinyos-main/tinyos-2.x
+        export TR=${TINYOS_ROOT_DIR}
+
+        export CLASSPATH=.:$TR/support/sdk/java/tinyos.jar
+        export PYTHONPATH=$TR/support/sdk/python:$PYTHONPATH
+
+        export MOTECOM="serial@/dev/ttyUSB0:telosb"
 
 
 **************************************************************************************
@@ -216,24 +265,27 @@ The following environment variables must be set to build.
 
     For telosb hardware:  (assumes pluged in to a USB port)
 
-    cd ~/top/t2_cur/tinyos-2.x/apps/Blink
+    cd ~/top/tinyos-main/tinyos-2.x/apps/Blink
     make telosb install
 
     The Leds should start to blink.
+
+
+    For msp432 launchpad hardware (MSP-EXP432P401R):
+    exp_msp432 platform.
+
+    cd ~/top/tinyos-main/tinyos-2.x/apps/Blink
+    make exp_msp432
 
 
 **************************************************************************************
 
 6) Build SerialForwarder and libmote library.   (optional)
 
-WARNING:  This should get replaced with libmotenet.   Superset of the SF but also
-allows using AM sockets or IPv6 sockets for connections.  Note: currently libmotenet
-is a work in progress and should be considered experimental.
+    Build the serial forwarder and associated library (also includes direct
+    serial access)
 
-
-    Build the serial forwarder and associated library (also includes direct serial access)
-
-      cd $TOSROOT/support/sdk/c/sf
+      cd $TR/support/sdk/c/sf
       ./bootstrap
       ./configure --prefix=/opt/stow/sf_c
       make
@@ -241,14 +293,94 @@ is a work in progress and should be considered experimental.
       sudo -s
       make install
 
-      ("sudo make install" for some reason doesn't pick up the value of $TOSROOT properly so
-      the make install doesn't work write unless you are root first)
+      ("sudo make install" for some reason doesn't pick up the value of
+      $TINYOS_ROOT_DIR properly so the make install doesn't work write
+      unless you are root first)
 
-      This will install bin/{sf, sflisten, sfsend, seriallisten, serialsend}, include/{message.h,
-      serialsource.h, sfsource.h}, and lib/libmote.a.  These will be installed into /opt/stow/sf_c.
+      This will install bin/{sf, sflisten, sfsend, seriallisten,
+      serialsend}, include/{message.h, serialsource.h, sfsource.h}, and
+      lib/libmote.a.  These will be installed into /opt/stow/sf_c.
 
 
    Install into /opt/{bin,include,lib} using stow.
 
       cd /opt/stow
       stow sf_c
+
+
+**************************************************************************************
+
+7) We use GIT as the SCM.  Here are some pointers to get you started:
+
+   Start here:   http://book.git-scm.com/2_setup_and_initialization.html
+   Everyday GIT: http://www.kernel.org/pub/software/scm/git/docs/everyday.html
+   Cheat Sheet:  http://zrusin.blogspot.com/2007/09/git-cheat-sheet.html
+   SVN to GIT:   http://git-scm.com/course/svn.html
+   GIT Book:     http://book.git-scm.com/
+   Another Book: http://progit.org/book/
+
+
+**************************************************************************************
+
+9) Using the serialforwarder/seriallistener
+
+    a) make sure that tinyos.jar has been built.  It should live in $TINYOS_ROOT_DIR/support/sdk/java/tinyos.jar
+    b) to rebuild:
+
+       cd $TINYOS_ROOT_DIR/support/sdk/java/
+       make tinyos.jar
+
+    c) Install TOSComm JNI support if needed.  Did java bitch about not finding TOSComm JNI support?
+
+       assuming tinyos-tools is installed run:
+
+       tos-install-jni
+
+    d) To watch raw bytes coming from the serial port
+
+       Make sure CLASSPATH includes $TINYOS_ROOT_DIR/support/sdk/java/tinyos.jar, ie:
+
+           CLASSPATH=.:/home/joe/mm/t2_cur/tinyos-2.x/support/sdk/java/tinyos.jar
+
+execute:
+
+       java net.tinyos.tools.Listen -comm serial@/dev/ttyUSB0:telosb
+
+
+And you should see packets that look something like this:  (depends on what the mote is sending)
+
+            00 FF FF 00 00 12 00 A1 00 12 07 09 00 0C 9E 23 00 0C 9E 30 F6 2C FF D7 FF FF
+            00 FF FF 00 00 12 00 A1 00 12 07 05 00 0C 9E 24 00 0C 9E 3F E5 AF B1 6F 9E D4
+            00 FF FF 00 00 0E 00 A1 00 0E 07 06 00 0C 9E 33 00 0C 9E 46 78 80
+            00 FF FF 00 00 0E 00 A1 00 0E 07 07 00 0C 9E 33 00 0C 9E 52 FF FF
+            00 FF FF 00 00 10 00 A1 00 10 07 08 00 0C 9E 33 00 0C 9E 61 FF FF FF FF
+
+            00 FF FF 00 00 10 00 A1 00 10 07 08 00 0C 9E 33 00 0C 9E 61 FF FF FF FF
+            ^  ^     ^     ^  ^  ^  ^     ^  ^  | -- sensor 8 data
+            |  |     |     |  |  |  |     |  |- sensor id
+            |  |     |     |  |  |  |     |- sensor data type
+            |  |     |     |  |  |  |-- length of data block
+            |  |     |     |  |  |-- AM type MM_DT (data, typed)
+            |  |     |     |  |-- AM group
+            |  |     |     |-- serial length
+            |  |     |-- src addr
+            |  |-- dest addr
+            |-- dispatch byte - 0 says AM
+
+If you define MOTECOM you won't need to specify the -comm parameter.  ie:
+
+       MOTECOM=serial@/dev/ttyUSB1:telosb
+
+
+
+
+**************************************************************************************
+
+10) Repos:
+
+See $(TINYOS_ROOT_DIR)/00a_Repo_Notes for details about how the rpositories
+are organized.
+
+TinyOS release trees can be found at gh:tinyos/tinyos-release, development
+trees at gh:tinyos/tinyos-main.  TinyProd release trees can be found at
+gh:tinyprod/prod and development trees at gh:tp-freeforall/prod.
