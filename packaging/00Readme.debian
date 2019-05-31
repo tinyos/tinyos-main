@@ -79,7 +79,11 @@ For each package in ${TINYOS_ROOT_DIR}/packaging:
    that get packaged.  These packages will be placed in ${BUILD_DIR}/packages
    which is local to the package being built.
 
-2) Sign package
+2) Sign package  [Optional]
+   Currently we do not sign individual packages.
+
+   Ubuntu and Debian have package signature verification turned off by default.
+   So signing doesn't hurt and lets one verify the package later if needed.
 
    dpkg-sig -s builder -k <key sig> packaging/*.deb
 
