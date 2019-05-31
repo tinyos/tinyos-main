@@ -98,6 +98,11 @@ For each package in ${TINYOS_ROOT_DIR}/packaging:
    ${REPO_DEST}.
 
 
+4) clean up - will remove source directories
+
+   ./build.sh clean
+
+
 Note, to build the tinyos-tools package one needs to have "nesc" installed.
 
 
