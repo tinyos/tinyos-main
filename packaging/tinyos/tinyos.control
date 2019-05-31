@@ -3,9 +3,9 @@ Version: %{version}
 Section: devel
 Priority: optional
 Architecture: all
-Depends: tinyos-required-all|tinyos-required-msp430|tinyos-required-avr
+Depends:
 Provides: tinyos
-Maintainer: Philip Levis <pal@ahoy.stanford.edu>
+Maintainer: Philip Levis <pal@stanford.edu>
 Description: An event-based operating environment designed for use with
  embedded networked sensors.  TinyOS is an event based operating environment
  designed for use with embedded networked sensors.  It is designed to support
