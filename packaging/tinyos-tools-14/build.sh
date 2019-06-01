@@ -1,12 +1,11 @@
 #!/bin/bash
 #
 # This build script builds the tinyos-tools-14 package intended to
-# be made available for people who insist on using the TinyOS 2.1
+# be made available for people who insist on using the TinyOS 2.1.2
 # release after 2.2 has come out.
 #
 # TinyOS 2.2 uses the new tinyos-tools (version 2.2) that no longer
-# requires setting up the old environment variables.  Uses the new
-# tinyos make version 3 build system.
+# requires setting up the old environment variables.
 #
 # This version of tinyos-tools builds a package against the 2.1.2
 # release tree.  This is gh:tinyos/tinyos-release.  As of 12/2/2012,
@@ -30,26 +29,28 @@
 #
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
-# set TOSROOT to the head of the tinyos source tree root.
-# used to find default PACKAGES_DIR.
-#
+# To properly build against the release version of TinyOS, we have to set the
+# old environment variables TOSROOT and TOSDIR.  TOSROOT gets set to the head
+# of the release_tinyos_2_1_2 source and TOSDIR is ${TOSROOT}/tos.
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
+# TINYOS_ROOT_DIR head of the tinyos source tree root.  Used for base of default repo
 # PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
 # REPO_DEST	Where the repository is being built (${TOSROOT}/packaging/repo)
 # DEB_DEST	final home once installed.
-# CODENAME	which part of the repository to place this build in.
+# CODENAME	which part of the repository to place this package.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
 #		properly.   Examples of reprepo configuration can be found in
 #               ${TOSROOT}/packaging/repo/conf.
 #
+# TOSROOT	old TINYOS_ROOT_DIR, used when building old packages that support pre-v3
+#               build system.  (like tinyos-tools-14).
+# TOSDIR        ${TOSROOT}/tos
 
 COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
-
 
 BUILD_ROOT=$(pwd)
 CODENAME=stretch
@@ -58,12 +59,22 @@ SOURCEFILENAME=release_tinyos_${TINYOSVERSION}.tar.gz
 TARBALLDIR=tinyos-release-release_tinyos_${TINYOSVERSION}
 SOURCEURL=https://github.com/tinyos/tinyos-release/archive/${SOURCEFILENAME}
 
+TOSROOT=${BUILD_ROOT}/${TARBALLDIR}
+TOSDIR=${TOSROOT}/tos
+export TOSROOT TOSDIR
+
 SOURCENAME=tinyos-tools-14
-SOURCEVERSION=1.4.2
+SOURCEVERSION=1.4.3
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 #PACKAGE_RELEASE=1
 PREFIX=/usr
 MAKE="make -j8"
+
+echo -e   ""
+echo -e   "*** WARNING: using old tinyos release:"
+echo -e   "***   TOSROOT:       ${TOSROOT}"
+echo -e   "***   TOSDIR:        ${TOSDIR}\n"
+
 
 download()
 {
@@ -87,7 +98,7 @@ unpack()
   cd ${SOURCEDIRNAME}/tools
   patch -p1 < ../../disable_cross_compiler.patch
   cd ../..
-# End of pathcing
+# End of patching
 }
 
 build()
@@ -136,7 +147,18 @@ cleaninstall(){
 #main function
 case $1 in
   test)
-    installto
+    echo ""
+    echo -e   "*** BUILD_ROOT:    ${BUILD_ROOT}"
+    echo -e   "*** PREFIX:        ${PREFIX}"
+    echo -e   "*** SOURCEDIRNAME: ${SOURCEDIRNAME}"
+    echo -e   "*** TARBALLDIR:    ${TARBALLDIR}\n"
+    echo -e   "*** TOSROOT:       ${TOSROOT}"
+    echo -e   "*** TOSDIR:        ${TOSDIR}\n"
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    download
+    unpack
+    build
+#   installto
 #   package_deb
     ;;
 
@@ -187,7 +209,7 @@ case $1 in
   repo)
     setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
     if [[ -z "${REPO_DEST}" ]]; then
-      REPO_DEST=${TOSROOT}/packaging/repo
+      REPO_DEST=${TINYOS_ROOT_DIR}/packaging/repo
     fi
     echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
     echo -e   "*** Using packages from ${PACKAGES_DIR}\n"
