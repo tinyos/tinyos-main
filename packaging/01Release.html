@@ -66,8 +66,8 @@ vice-versa.
 
 <pre>
   $ sudo
-  $ apt-get purge tinyos-tools
-  $ apt-get install tinyos-tools-devel
+  $ apt purge tinyos-tools
+  $ apt install tinyos-tools-devel
 </pre>
 
 <br>
@@ -78,7 +78,7 @@ vice-versa.
 
 <pre>
   $ sudo dpkg -P `dpkg -l nesc '*tinyos*' | grep ^ii | awk '{ print $2 }' | xargs`
-  $ sudo apt-get clean
+  $ sudo apt clean
 </pre>
 
 </ul>
@@ -111,8 +111,8 @@ vice-versa.
 
 <li>Install the new packages:
 <pre>
-  $ sudo apt-get update
-  $ sudo apt-get install nesc tinyos-tools-devel msp430-46 avr-tinyos
+  $ sudo apt update
+  $ sudo apt install nesc tinyos-tools-devel msp430-46 avr-tinyos
 
 </pre>
 
@@ -121,7 +121,7 @@ vice-versa.
 <p>If you want to uninstall the packages you can do it like this:</p>
 
 <pre>
-  $ sudo apt-get autoremove --purge nesc tinyos-tools-devel msp430-46 avr-tinyos
+  $ sudo apt autoremove --purge nesc tinyos-tools-devel msp430-46 avr-tinyos
 </pre>
 
 <br><br>

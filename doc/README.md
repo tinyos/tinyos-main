@@ -67,7 +67,7 @@ Debian
 The Docutils are packaged in the python-docutils DEB package and can
 be installed using:
 
-    sudo apt-get install python-docutils
+    sudo apt install python-docutils
 
 Alternatively, the Docutils DEB package can be download (for Debian
 stable) from::

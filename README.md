@@ -100,9 +100,9 @@ repository (see doc/00c_Setting_Up_Debian_Development).  See the repository
 Readme at http://tinyprod.net/repos/debian/README.html).
 
     sudo -s
-    apt-get update
-    apt-get purge tinyos-tools          # remove earlier incompatible version
-    apt-get install tinyos-tools-devel
+    apt update
+    apt purge tinyos-tools              # remove earlier incompatible version
+    apt install tinyos-tools-devel
 
 
 Alternatively, one can build the tools manually:

@@ -44,7 +44,7 @@ Put the iso on to a bootable media (dvd or usb stick).  You can also use grub lo
 for installation on an exiting Linux installation.  (How to do this is beyond the scope
 of this document).  A simple install is fine and will take less time.
 
-When the install is complete, boot the system, and use "apt-get" to install the following
+When the install is complete, boot the system, and use "apt(8)" to install the following
 packages:
 
     build-essential stow automake autoconf libtool libc6-dev
@@ -56,10 +56,10 @@ packages:
 The following will do the trick:
 
 sudo -s
-apt-get install build-essential stow automake autoconf libtool libc6-dev
-apt-get install git-core git-daemon-run git-doc git-email git-gui gitk gitmagic
-apt-get install openssh-client openssh-server graphviz
-apt-get install python3 python3-serial python python-serial
+apt install build-essential stow automake autoconf libtool libc6-dev
+apt install git-core git-daemon-run git-doc git-email git-gui gitk gitmagic
+apt install openssh-client openssh-server graphviz
+apt install python3 python3-serial python python-serial
 exit
 
 
@@ -84,17 +84,17 @@ TinyProd.Net as of (May 29, 2019) is more up to date.
 
 
     #
-    # teach dpkg/apt-get/aptitude about where to find the tinyprod toolchain repository
+    # teach dpkg/apt/aptitude about where to find the tinyprod toolchain repository
     #
     sudo -s
     echo "deb http://tinyprod.net/repos/debian stretch   main" >> /etc/apt/sources.list.d/tinyprod-debian.list
-    apt-get update
+    apt update
     exit
 
 
 2b) basic tool installation
 
-    sudo apt-get install nesc tinyos-tools-devel
+    sudo apt install nesc tinyos-tools-devel
 
 
 2b) TI msp430 toolchain install.
@@ -122,8 +122,8 @@ We want the following packages:
 
     sudo -s
     echo "deb http://tinyprod.net/repos/debian msp430-46 main" >> /etc/apt/sources.list.d/tinyprod-debian.list
-    apt-get update
-    apt-get install nesc tinyos-tools-devel msp430-46 mspdebug
+    apt update
+    apt install nesc tinyos-tools-devel msp430-46 mspdebug
     exit
 
 
@@ -147,7 +147,7 @@ We want the following packages:
 
 2d) Install 32 bit libraries for the ARM toolchain
 
-    apt-get install -qy -V libc6:i386 libx11-6:i386 libasound2:i386         \
+    apt install -qy -V libc6:i386 libx11-6:i386 libasound2:i386             \
         libatk1.0-0:i386 libcairo2:i386 libcups2:i386 libdbus-glib-1-2:i386 \
         libgconf-2-4:i386 libgdk-pixbuf2.0-0:i386 libgtk-3-0:i386           \
         libice6:i386 libncurses5:i386 libsm6:i386 liborbit2:i386            \
