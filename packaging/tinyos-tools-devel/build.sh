@@ -29,15 +29,15 @@
 COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
 
-
 BUILD_ROOT=$(pwd)
 CODENAME=stretch
 
 SOURCENAME=tinyos-tools-devel
-SOURCEVERSION=1.5.0
+SOURCEVERSION=1.5.1
 SOURCEDIRNAME=${SOURCENAME}_${SOURCEVERSION}
 TIP=`git rev-parse --short HEAD`
 PACKAGE_RELEASE=${TIP}
+#PACKAGE_RELEASE=1
 PREFIX=/usr
 MAKE="make -j1"
 
@@ -46,7 +46,7 @@ download()
   mkdir -p ${SOURCEDIRNAME}
   cp -R ${TINYOS_ROOT_DIR}/tools ${SOURCEDIRNAME}
   cp -R ${TINYOS_ROOT_DIR}/licenses ${SOURCEDIRNAME}
-  ln -s ../../../tos ${SOURCEDIRNAME}/tos
+  ln -s ${TINYOS_ROOT_DIR}/tos ${SOURCEDIRNAME}/tos
 }
 
 build()
@@ -92,8 +92,10 @@ cleaninstall(){
 #main function
 case $1 in
   test)
-    installto
-#   package_deb
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    download
+#    installto
+#    package_deb
     ;;
 
   download)
