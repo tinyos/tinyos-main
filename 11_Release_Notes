@@ -1,2 +1,25 @@
 
 Development Trunk
+
+2019-05-31  cire  <cire@zot>
+
+- release tinyos-tools (1.4.2-tinyprod2)
+- release tinyos-tools-14 (1.4.2-tinyprod2)
+- release tinyos-tools-devel (1.5.0-tinyprod2)
+
+
+new tinyos-tools-{14, devel, stable} packages.  Incorporates $jhome/lib
+path in search for java location.  This lets tos-locate-jre function
+properly on more modern distributions.  Java moved some things around.
+
+Ubuntu 18 is Java 11 while Debian 9 is Java 8.  This probably has some
+other issues.
+
+tried to rebuild tinyos-tools-devel but ran into strange blocking erros
+when building tinyos-tools-devel on a debian9-32 vm.
+
+So took the packages, modified tos-locate-jre and rebuilt the repository
+using the new -1 packages.
+
+Current builds of older tinyos-tools (ie. -14 and -stable) is also
+problematic because the world has moved on.
