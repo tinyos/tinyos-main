@@ -24,7 +24,7 @@ Prerequisites:
           dpkg-sig default-jdk
 
   install libusb-1.0-0-dev libusb-1.0-0 libusb-dev libreadline-dev
-          libreadline7 libreadline-dev
+          libreadline7
 
 Each packaging directory builds a package or a group of related packages.
 This is controlled by a build script at the top level, "build.sh".
