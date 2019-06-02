@@ -78,7 +78,7 @@ Release Notes 46</a>
 <ol>
 <li>
 Other packages from the main tinyprod debian repository (<b>stretch</b>) are needed to make a functioning nesc
-development sytem.  In particular, you will need <b>nesc</b> and <b>tinyos-tools-devel</b>.  These have been
+development system.  In particular, you will need <b>nesc</b> and <b>tinyos-tools-devel</b>.  These have been
 included in the instructions above.
 <br><br>
 <li>Experimental msp430 toolchains install into /opt/msp430-<ver>.  4.6.3 is the released default toolchain for
@@ -104,7 +104,7 @@ the msp430 cpus for tinyos 2.1.2.  It installs into the /usr heirarchy.
   uid         [ultimate] TinyProd Signing Key (tinyprod.net) <cire831@gmail.com>
   ssb   rsa4096/EF125D9B 2019-04-04 [E]
   ssb   rsa4096/D503DFFA 2019-05-20 [S] [expires: 2022-05-19]
-
+</pre>
 
 <p>A public copy of the key can be found in repos/debian/tinyprod.key.  It can
 be installed by the following:</p>
@@ -133,6 +133,8 @@ be installed by the following:</p>
 <p><b>Changelog:</b></p>
 <pre>
   20190522, cire: revise signing key (4096), use stretch as release.
+  20190501, cire: conversion to stretch and Ubuntu 16.04+
+                  new TinyProd signing key, 4096 bits
   20140522, cire: convert to using the TinyProd signing key
   20121019, cire: move 4.6.3 toolchain to /usr
   20120716, cire: rebuild tinyprod repository
