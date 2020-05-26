@@ -1,4 +1,19 @@
 
+****
+
+HI!  Hey, now that I've got your attention.  Current active development is
+occurring over at gh:tp-freefall/prod.git.
+
+Now the time has come to transition the tinyprod/tp-freeforall code to the main
+tinyos-main tree.  The plan is to archive the current tinyos-main tree as tinyos-old.
+
+SO.  If you are actively using tinyos-main please let me know.  I do not want to
+yank things out from underneath you or annoy anyone unnecessarily.
+
+(cire831@gmail.com)
+
+****
+
 TinyOS
 ======
 
@@ -33,6 +48,12 @@ Where to Begin
 
 TinyOS Wiki
 -----------
+
+***
+Sorry.  The wiki appears to be dead.  Sorry about that but I (we) don't have
+write access to the old TinyOS wiki at Stanford and haven't built a new one.
+(let me know if you want to put one together, cire831@gmail.com).
+***
 
 Much information about how to setup and use TinyOS can be found on the
 [wiki](http://tinyos.stanford.edu/tinyos-wiki/index.php/Main_Page).
