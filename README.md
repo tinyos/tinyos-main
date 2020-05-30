@@ -1,16 +1,52 @@
 
 ****
 
-HI!  Hey, now that I've got your attention.  Current active development is
-occurring over at gh:tp-freefall/prod.git.
+**HI!**  Hey, now that I've got your attention.  Active development is occurring
+at [https://github.com/tp-freeforall/prod](https://github.com/tp-freeforall/prod)
+aka [gh:tp-freeforall/prod](https://github.com/tp-freeforall/prod).
 
-Now the time has come to transition the tinyprod/tp-freeforall code to the main
-tinyos-main tree.  The plan is to archive the current tinyos-main tree as tinyos-old.
+We are transitioning the ```tinyprod/tp-freeforall``` code into a
+mainline ```tinyos/tinyos-<something>``` repository.  The plan is to archive the
+current ```tinyos-main``` tree as ```tinyos-archive```.  The new repo will be available
+under the tinyos organization with a tinyos-\* repository name.
 
-SO.  If you are actively using tinyos-main please let me know.  I do not want to
+**SO**.  If you are actively using ```tinyos-main``` please let me know.  I do not want to
 yank things out from underneath you or annoy anyone unnecessarily.
 
 (cire831@gmail.com)
+
+Transition plan:  (approximate plan)
+
+- Advance [gh:tp-freeforall/prod](https://github.com/tp-freeforall/prod)
+  from its upstream tracking repo
+  [gh:tinyos/tinyos-main](https://github.com/tinyos/tinyos-main)
+
+- Clean up current
+  [gh:tp-freeforall/prod](https://github.com/tp-freeforall/prod)
+  repository.  Inactive platforms will be deprecated.  These are platforms
+  that have been added to the tp-freeforall/prod repo but are no longer
+  active.  This will clean up the tp-freeforall/prod mainline.
+
+- The cleaned up tp-freeforall/prod repository will **REPLACE** the tinyprod/prod
+  repository outright.  This will establish the proposed replacement for the
+  existing tinyos/tinyos-main repository.  If you want to get a taste of
+  what the replacement will look like **BEFORE** the swap actually takes place,
+  this is the place to do it.
+
+- Verify proposed repository.  (new tinyprod/prod)
+
+- Move existing tinyos/tinyos-main to tinyos/tinyos-archive.
+
+- Install tinyprod/prod as new tinyos/tinyos-cur.  (note the name
+  tinyos/tinyos-main is being deprecated to avoid old references hitting
+  the new repository).
+
+- Establish updated release repository from tinyos/tinyos-cur.
+  tinyos/tinyos-rel.
+
+- Establish new working development repository, tinyos/tinyos-dev that is
+  forked from tinyos/tinyos-cur.
+
 
 ****
 
