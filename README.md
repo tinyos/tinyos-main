@@ -85,12 +85,6 @@ Where to Begin
 TinyOS Wiki
 -----------
 
-***
-Sorry.  The wiki appears to be dead.  Sorry about that but I (we) don't have
-write access to the old TinyOS wiki at Stanford and haven't built a new one.
-(let me know if you want to put one together, cire831@gmail.com).
-***
-
 Much information about how to setup and use TinyOS can be found on the
 [wiki](http://tinyos.stanford.edu/tinyos-wiki/index.php/Main_Page).
 It is also editable by the community if you have information to add or update.
