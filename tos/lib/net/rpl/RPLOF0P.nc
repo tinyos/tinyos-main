@@ -134,9 +134,8 @@ implementation{
 
     parentNode = call ParentTable.get(min);
 
-    while ((!parentNode->valid) &&
-           (min < MAX_PARENT) &&
-           (parentNode->rank != INFINITE_RANK)) {
+    while ((min < MAX_PARENT) &&
+			(!parentNode->valid || parentNode->rank >= nodeRank)) {
       min++;
       parentNode = call ParentTable.get(min);
     }

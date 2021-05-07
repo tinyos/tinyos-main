@@ -316,7 +316,7 @@ implementation {
       tempEtx_hop = parentSet[indexset].etx_hop;
       parentSet[indexset] = parent;
 
-      if (tempEtx_hop > INIT_ETX && tempEtx_hop < BLIP_L2_RETRIES) {
+      if (tempEtx_hop > INIT_ETX && tempEtx_hop < BLIP_L2_RETRIES*divideRank) {
         tempEtx_hop = tempEtx_hop-INIT_ETX;
         if (tempEtx_hop < divideRank)
           tempEtx_hop = INIT_ETX;
