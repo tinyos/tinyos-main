@@ -14,6 +14,10 @@ LED 1 every time it receives a message. If this application is
 working correctly (see caveat about timing below), you should see 
 both nodes toggling LED 1.
 
+By default broadcast packets are sent. In order to test unicast transmission
+with acknowledgements, uncomment the WITH_ACKS define in TestLplC.nc and
+assign node IDs 1 and 2.
+
 Its low-power-listening settings are as follows (repeating every 256s):
 
 0-32s:     receive: fully on
