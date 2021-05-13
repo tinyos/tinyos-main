@@ -189,9 +189,29 @@ implementation {
 	intAddr++; curAddr++;
 
 	if ( --secLength == 0 ) {
+		while (TRUE) {
 	  intAddr = extFlashReadAddr();
 	  secLength = extFlashReadAddr();
 	  curAddr = curAddr + 8;
+#if defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
+	  if (FALSE) {
+	  	// TODO: check of valid flash address range needed
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+	  if (intAddr > FLASHEND) {
+	  	// ram, eeprom, fuses ... programming not supported
+#elif defined(PLATFORM_MULLE)
+ 	  if (FALSE) {
+	  	// TODO: check of valid flash address range needed
+#else
+  #error "Target platform is not currently supported by Deluge T2"
+#endif
+	  	curAddr += secLength; // skip block
+	  	call ExtFlash.stopRead();
+	  	call ExtFlash.startRead(curAddr);
+	  	continue;
+	  	}
+	  	break;
+	  }
 	}
 
 	newPageAddr = intAddr / TOSBOOT_INT_PAGE_SIZE;
