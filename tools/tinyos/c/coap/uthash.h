@@ -67,8 +67,13 @@ typedef unsigned int uint32_t;
 #ifndef uthash_fatal
 #define uthash_fatal(msg) exit(-1)        /* fatal error (out of memory,etc) */
 #endif
-#define uthash_malloc(sz) malloc(sz)      /* malloc fcn                      */
-#define uthash_free(ptr,sz) free(ptr)     /* free fcn                        */
+
+#ifndef uthash_malloc
+#define uthash_malloc(sz) malloc(sz) /* malloc fcn */
+#endif
+#ifndef uthash_free
+#define uthash_free(ptr,sz) free(ptr) /* free fcn */
+#endif
 
 #define uthash_noexpand_fyi(tbl)          /* can be defined to log noexpand  */
 #define uthash_expand_fyi(tbl)            /* can be defined to log expands   */

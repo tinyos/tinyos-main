@@ -24,7 +24,9 @@
 #ifdef WITH_TINYOS
 #include <lib6lowpan/ip.h>
 #include <lib6lowpan/nwbyte.h> // for htons()
+#ifndef HAS_SSIZE_T
 typedef uint16_t ssize_t;
+#endif
 #ifdef PLATFORM_MICAZ
 typedef uint16_t in_port_t; //TODO: mab: move to TinyOS part
 #endif
