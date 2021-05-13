@@ -38,7 +38,7 @@
  *  @date   $Date: 2007-09-19 17:20:47 $
  */
 
-   
+
 generic module BigQueueC(typedef queue_t, uint16_t QUEUE_SIZE) {
   provides interface BigQueue<queue_t> as Queue;
 }
@@ -49,7 +49,7 @@ implementation {
   uint16_t head = 0;
   uint16_t tail = 0;
   uint16_t size = 0;
-  
+
   command bool Queue.empty() {
     return size == 0;
   }
@@ -77,21 +77,21 @@ implementation {
     for (i = head; i < head + size; i++) {
       dbg_clear("QueueC", "[");
       for (j = 0; j < sizeof(queue_t); j++) {
-	uint8_t v = ((uint8_t*)&queue[i % QUEUE_SIZE])[j];
-	dbg_clear("QueueC", "%0.2hhx", v);
+        uint8_t v = ((uint8_t*)&queue[i % QUEUE_SIZE])[j];
+        dbg_clear("QueueC", "%0.2hhx", v);
       }
       dbg_clear("QueueC", "] ");
     }
     dbg_clear("QueueC", "<- tail\n");
 #endif
   }
-  
+
   command queue_t Queue.dequeue() {
     queue_t t = call Queue.head();
     dbg("QueueC", "%s: size is %hhu\n", __FUNCTION__, size);
     if (!call Queue.empty()) {
       head++;
-      head %= QUEUE_SIZE;
+      if (head == QUEUE_SIZE) head = 0;
       size--;
       printQueue();
     }
@@ -103,7 +103,7 @@ implementation {
       dbg("QueueC", "%s: size is %hhu\n", __FUNCTION__, size);
       queue[tail] = newVal;
       tail++;
-      tail %= QUEUE_SIZE;
+      if (tail == QUEUE_SIZE) tail = 0;
       size++;
       printQueue();
       return SUCCESS;
@@ -112,11 +112,11 @@ implementation {
       return FAIL;
     }
   }
-  
+
   command queue_t Queue.element(uint16_t idx) {
     idx += head;
-    idx %= QUEUE_SIZE;
+    while (idx >= QUEUE_SIZE) idx -= QUEUE_SIZE;
     return queue[idx];
-  }  
+  }
 
 }
