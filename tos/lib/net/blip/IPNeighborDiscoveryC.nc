@@ -28,6 +28,9 @@ configuration IPNeighborDiscoveryC {
   IPForward = IPNeighborDiscoveryP.IPForward;
   StdControl = IPNeighborDiscoveryP.StdControl;
 
+  components NeighbrCacheC;
+  IPNeighborDiscoveryP.NeighbrCache -> NeighbrCacheC;
+
   IPNeighborDiscoveryP.IP_RS -> ICMP_RS.IP[ICMPV6_CODE_RS];
   IPNeighborDiscoveryP.IP_RA -> ICMP_RA.IP[ICMPV6_CODE_RA];
   IPNeighborDiscoveryP.IP_NS -> ICMP_NS.IP[ICMPV6_CODE_NS];
