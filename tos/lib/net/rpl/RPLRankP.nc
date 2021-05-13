@@ -110,7 +110,7 @@ implementation {
   uint8_t parentNum = 0;
   uint16_t VERSION = 0;
   uint16_t nodeEtx = divideRank;
-  uint16_t MAX_RANK_INCREASE = 1;
+  uint16_t MAX_RANK_INCREASE = 1792;//1;
   //uint16_t MIN_HOP_RANK_INCREASE = 1;
 
   uint8_t etxConstraint;

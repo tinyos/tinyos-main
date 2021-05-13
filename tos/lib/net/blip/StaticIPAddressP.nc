@@ -57,8 +57,8 @@ module StaticIPAddressP {
     call IPAddress.getLLAddr(&addr);
 
     inet_pton6(IN6_PREFIX, &addr);
-    call NeighborDiscovery.setPrefix(&addr, 64, IP6_INFINITE_LIFETIME,
-      IP6_INFINITE_LIFETIME);
+    call NeighborDiscovery.setPrefix(&addr, 64, 0, 0);/* IP6_INFINITE_LIFETIME,
+      IP6_INFINITE_LIFETIME);*/
 
     // Set the lower 64 bits as the link-local 64 bits
     ext = call LocalIeeeEui64.getId();

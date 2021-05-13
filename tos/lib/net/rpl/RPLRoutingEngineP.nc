@@ -95,8 +95,8 @@ implementation{
   uint8_t DIOIntDouble = 10;
   uint8_t DIOIntMin = 8;
   uint8_t DIORedun = 0xFF;
-  uint16_t MinHopRankInc = 1;
-  uint16_t MaxRankInc = 3;
+  uint16_t MinHopRankInc = 256;//1;
+  uint16_t MaxRankInc = 1792;//3;
 
   uint8_t DTSN = 2;
 
@@ -241,9 +241,9 @@ implementation{
       prefix.flags_reserved |= (0 << DIO_PREFIX_L_SHIFT);
       prefix.flags_reserved |= (1 << DIO_PREFIX_A_SHIFT);
       prefix.flags_reserved |= (0 << DIO_PREFIX_R_SHIFT);
-      prefix.valid_lifetime = IP6_INFINITE_LIFETIME;
-      prefix.preferred_lifetime = IP6_INFINITE_LIFETIME;
-      prefix.valid_lifetime = IP6_INFINITE_LIFETIME;
+      //prefix.valid_lifetime = IP6_INFINITE_LIFETIME;
+      prefix.preferred_lifetime = 0;//IP6_INFINITE_LIFETIME;
+      prefix.valid_lifetime = 0;//IP6_INFINITE_LIFETIME;
       prefix.reserved2 = 0;
       memcpy(&prefix.prefix,
              call NeighborDiscovery.getPrefix(),
@@ -383,8 +383,8 @@ implementation{
   command void RPLRouteInfo.setDODAGConfig(uint8_t IntDouble,
                                            uint8_t IntMin,
                                            uint8_t Redun,
-                                           uint8_t RankInc,
-                                           uint8_t HopRankInc) {
+                                           uint16_t RankInc,
+                                           uint16_t HopRankInc) {
     DIOIntDouble = IntDouble;
     DIOIntMin = IntMin;
     DIORedun = Redun;

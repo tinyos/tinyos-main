@@ -26,14 +26,25 @@
 #include <stdint.h>
 
 // align on this number of byte boundarie#s
+#ifdef USE_IP_MALLOC_32BIT
+#define IP_MALLOC_ALIGN   4
+#else
 #define IP_MALLOC_ALIGN   2
+#endif
+
 #define IP_MALLOC_LEN     0x0fff
 #define IP_MALLOC_FLAGS   0x7000
 #define IP_MALLOC_INUSE   0x8000
 #define IP_MALLOC_HEAP_SIZE 1500
 
 extern uint8_t heap[IP_MALLOC_HEAP_SIZE];
-typedef uint16_t bndrt_t;
+#ifdef USE_IP_MALLOC_32BIT
+  typedef uint32_t bndrt_t;
+#else
+  typedef uint16_t bndrt_t;
+#endif
+
+
 
 void ip_malloc_init();
 void *ip_malloc(uint16_t sz);

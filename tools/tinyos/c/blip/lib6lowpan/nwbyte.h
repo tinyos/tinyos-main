@@ -2,9 +2,15 @@
 #define _NWBYTE_H
 
 #if !defined(PC)
-// if we're not on a pc, assume little endian for now
-#define __LITTLE_ENDIAN 1234
-#define __BYTE_ORDER __LITTLE_ENDIAN
+#ifndef TOS_LITTLE_ENDIAN
+#define TOS_LITTLE_ENDIAN 1234
+#endif
+#ifndef TOS_BIG_ENDIAN
+#define TOS_BIG_ENDIAN 4321
+#endif
+#ifndef TOS_BYTE_ORDER
+#define TOS_BYTE_ORDER TOS_LITTLE_ENDIAN
+#endif
 #endif
 
 /* define normal network byte-orders routines  */
@@ -12,7 +18,7 @@
 // use library versions if on linux
 #include <stdlib.h>
 #else
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if TOS_BYTE_ORDER == TOS_LITTLE_ENDIAN
 // otherwise have to provide our own 
 
 #ifndef WITH_OSHAN
@@ -27,6 +33,12 @@ uint32_t ntohl(uint32_t i);
 #include <arpa/inet.h>
 #endif
 
+#elif TOS_BYTE_ORDER == TOS_BIG_ENDIAN
+
+#define ntohs(X) (X)
+#define htons(X) (X)
+#define htonl(X) (X)
+#define ntohl(X) (X)
 
 #else 
 #error "No byte-order conversions defined!"
@@ -35,19 +47,21 @@ uint32_t ntohl(uint32_t i);
 
 /* little-endian conversion routines */
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if TOS_BYTE_ORDER == TOS_LITTLE_ENDIAN
 #define leton16(X)  htons(X)
 #ifndef htole16
 #define htole16(X)  (X)
 #endif
 #define letohs(X) (X)
 
-#else
+#elif TOS_BYTE_ORDER == TOS_BIG_ENDIAN
 // assume big-endian byte-order
 #define leton16(X) (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 #define htole16(X) (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
+#define letohs(X) (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 
-
+#else
+#error "No byte-order conversions defined!"
 #endif
 
 #endif
