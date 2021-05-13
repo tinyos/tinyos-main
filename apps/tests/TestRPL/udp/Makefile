@@ -80,14 +80,14 @@ CFLAGS+=-DPACKET_INTERVAL=5120UL
 
 CFLAGS+=-DRPL_ROOT_ADDR=11
 
-<<<<<<< HEAD
-# enable printf
-CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED -DPRINTF_BUFFER_SIZE=1024
-=======
+
+
+
+
 
 
 GOALS += blip rpl
 
->>>>>>> BLIP+RPL: updating /apps
+
 TINYOS_ROOT_DIR?=../../../..
 include $(TINYOS_ROOT_DIR)/Makefile.include

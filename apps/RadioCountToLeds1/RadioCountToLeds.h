@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Washington University in St. Louis.
+ * Copyright (c) 2004-2005 The Regents of the University  of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,48 +28,25 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Copyright (c) 2002-2003 Intel Corporation
+ * All rights reserved.
+ *
+ * This file is distributed under the terms in the attached INTEL-LICENSE
+ * file. If you do not find these files, copies can be found by writing to
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
+ * 94704.  Attention:  Intel License Inquiry.
  */
 
-/**
- *
- * This application is used to test the basic functionality of the printf service.
- * Calls to the standard c-style printf command are made to print various strings
- * of text over the serial line.  Only upon calling printfflush() does the
- * data actually get sent out over the serial line.
- *
- * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.11 $
- * @date $Date: 2010-06-29 22:07:25 $
- */
+#ifndef RADIO_COUNT_TO_LEDS_H
+#define RADIO_COUNT_TO_LEDS_H
 
-#include "printf.h"
-module TestPrintfC @safe() {
-  uses {
-    interface Boot;
-    interface Timer<TMilli>;
-  }
-}
-implementation {
+typedef nx_struct radio_count_msg {
+  nx_uint16_t counter;
+} radio_count_msg_t;
 
-  uint8_t dummyVar1 = 123;
-  uint16_t dummyVar2 = 12345;
-  uint32_t dummyVar3 = 1234567890;
+enum {
+  AM_RADIO_COUNT_MSG = 6,
+};
 
-  event void Boot.booted() {
-	call Timer.startPeriodic(1000);
-  }
-
-  event void Timer.fired() {
-    int i=32;
-    
-    pr_emergency("Emergency value:%d\n",i);
-    pr_alert("Alert value:%d\n",i);
-    pr_critical("Critical value:%d\n",i);
-    pr_error("Error value:%d\n",i);
-    pr_warning("Warning value:%d\n",i);
-    pr_info("Info value:%d\n",i);
-    pr_debug("Debug value:%d\n",i);
-    printfflush();
-  }
-}
-
+#endif
