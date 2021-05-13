@@ -1,0 +1,2 @@
+PFLAGS := -I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/blip \
+	$(PFLAGS)

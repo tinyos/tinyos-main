@@ -1,0 +1,12 @@
+#-*-Makefile-*- vim:syntax=make
+
+#$(info $(shell echo -e '$(INFO_STRING) Running extra blip_tsch'))
+
+TOSMAKE_FIRST_FLAGS+=-I$(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/blip/
+
+# include the tkntsch extra
+$(call TOSMake_include,extras/tkntsch.extra)
+
+# include the blip extra
+$(call TOSMake_include,extras/blip.extra)
+

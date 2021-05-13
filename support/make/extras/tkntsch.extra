@@ -1,0 +1,18 @@
+#-*-Makefile-*- vim:syntax=make
+
+#$(info $(shell echo -e '$(INFO_STRING) Running extra tkntsch'))
+
+# catch parallel use of blip or blip_tkn
+$(eval BLIP_EXTRAS = $(filter blip, $(filter $(call names,$(VALID_EXTRAS)),$(GOALS))))
+ifneq ($(BLIP_EXTRAS),)
+  $(info $(shell echo -e '$(ERROR_STRING) To enable BLIP over TKN-TSCH, please use blip_tsch instead of tkntsch and blip together.'))
+  $(error Giving up...)
+endif
+
+# For now set the max. data length to the worst case without security
+# 127 - 2B FCF - 1B DSN - 2*8B ADDR - 2*2B PANID - 2B CRC = 102B
+BLIP_L2_MTU = 102
+
+NEED_TKNTSCH_PLATFORM_SUPPORT = 1
+include $(TINYOS_OS_DIR)/lib/mac/tkn154e-tsch/Makefile.include
+
