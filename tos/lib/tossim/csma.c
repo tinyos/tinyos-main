@@ -67,5 +67,3 @@ void Csma::setMaxIterations(int val) {sim_csma_set_max_iterations(val);}
 void Csma::setMinFreeSamples(int val) {sim_csma_set_min_free_samples(val);}
 void Csma::setRxtxDelay(int val) {sim_csma_set_rxtx_delay(val);}
 void Csma::setAckTime(int val); {sim_csma_set_ack_time(val);}
-
-#endif
