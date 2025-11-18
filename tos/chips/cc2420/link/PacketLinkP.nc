@@ -138,6 +138,9 @@ implementation {
       if(call PacketLink.getRetries(msg) > 0) {
         call PacketAcknowledgements.requestAck(msg);
       }
+      else {
+        call PacketAcknowledgements.noAck(msg);
+      }
      
       if((error = call SubSend.send(msg, len)) != SUCCESS) {
         call SendState.toIdle();
