@@ -34,6 +34,10 @@ configuration PppRouterC {
   PppDaemonC.HdlcUart -> HdlcUartC;
   PppDaemonC.UartControl -> HdlcUartC;
 
+#if defined(PRINTFUART_ENABLED)
+  components PrintfC,SerialStartC;
+#endif
+
   // SDH : don't bother including the PppPrintfC by default
   // components PppPrintfC, PppC;;
   // PppPrintfC.Ppp -> PppDaemonC;

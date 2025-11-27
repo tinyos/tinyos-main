@@ -69,6 +69,7 @@
 #undef putchar
 
 #include "message.h"
+#include "debug.h"
 int printfflush();
 
 #ifndef PRINTF_MSG_LENGTH
@@ -81,6 +82,9 @@ typedef nx_struct printf_msg {
 enum {
   AM_PRINTF_MSG = 100,
 };
+
+
+
 
 #endif //PRINTF_H
 

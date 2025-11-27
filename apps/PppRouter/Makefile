@@ -79,7 +79,7 @@ PFLAGS += -DPPP_HDLC_TX_FRAME_LIMIT=8
 ### Configure printf() output
 ################################################################################
 
-PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
+#PFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 
 ################################################################################
 ### Configure this application

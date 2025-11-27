@@ -1,5 +1,5 @@
 
-#include <PrintfUART.h>
+#include "blip_printf.h"
 #include <lib6lowpan/ip.h>
 
 module TestLinkLocalC {
@@ -23,7 +23,6 @@ module TestLinkLocalC {
   };
 
   event void Boot.booted() {
-    printfUART_init();
     call SplitControl.start();
     m_data.seqno = 0;
   }
@@ -51,16 +50,16 @@ module TestLinkLocalC {
   event void Sock.recvfrom(struct sockaddr_in6 *src, void *payload,                                                               
                            uint16_t len, struct ip6_metadata *meta) {
     nx_struct echo_state *cmd = payload;
-    printfUART("TestLinkLocalC: recv from: ");
-    printfUART_in6addr(&src->sin6_addr);
-    printfUART("\n");
+    printf("TestLinkLocalC: recv from: ");
+    printf_in6addr(&src->sin6_addr);
+    printf("\n");
 
     if (cmd->cmd == CMD_ECHO) {
       cmd->cmd = CMD_REPLY;
       call Sock.sendto(src, payload, len);
       call Leds.led1Toggle();
     } else {
-      printfUART("TestLinkLocalC: reply seqno: %li\n", cmd->seqno);
+      printf("TestLinkLocalC: reply seqno: %li\n", cmd->seqno);
       call Leds.led2Toggle();
     }
   }
