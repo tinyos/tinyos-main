@@ -367,6 +367,7 @@ generic module RPLDAORoutingEngineP() {
         if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr,
                        (uint8_t*)iph->ip6_src.s6_addr, 16) == TRUE) {
           // same old destination with same DTSN
+		  new_key = entry->key;
         } else {
           // new next hop for an existing downswards node
           call RPLRouteInfo.setDTSN((call RPLRouteInfo.getDTSN()) + 1);
