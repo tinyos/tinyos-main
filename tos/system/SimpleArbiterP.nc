@@ -76,7 +76,8 @@ implementation {
         post grantedTask();
         return SUCCESS;
       }
-      return call Queue.enqueue(id);
+      if ((state == RES_GRANTING) && (resId == id)) return EBUSY;
+      else return call Queue.enqueue(id);
     }
   }
 
