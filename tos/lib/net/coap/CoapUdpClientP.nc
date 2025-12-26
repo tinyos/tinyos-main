@@ -167,7 +167,7 @@ module CoapUdpClientP {
 
 	coap_get_data(received, &len, &databuf);
 	signal CoAPClient.request_done(received->hdr->code,
-				       (uint16_t)len, &databuf);
+				       (uint16_t)len, databuf);
 
 	//TODO: actually use the code from client.c:
 
