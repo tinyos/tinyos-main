@@ -69,6 +69,7 @@ ERROR_FAIL    = 1   # T2-compatible
 DELUGE_MAX_PAGES    = 128
 DELUGE_IDENT_OFFSET = 0
 DELUGE_IDENT_SIZE   = 128
+DELUGE_IDENT_UID_SIZE = 4
 
 class FMReqPacket(tos.Packet):
     def __init__(self, packet = None):
@@ -201,8 +202,8 @@ def erase(imgNum):
 
     print 'Attempt the workaround for AT45DB...'
     sreqpkt = FMReqPacket((FM_CMD_WRITE, imgNum, 0, 0, []))
-    sreqpkt.data = [0xFF] * DELUGE_IDENT_SIZE
-    sreqpkt.length = DELUGE_IDENT_SIZE
+    sreqpkt.data = [0xFF] * DELUGE_IDENT_UID_SIZE
+    sreqpkt.length = DELUGE_IDENT_UID_SIZE
     success = am.write(sreqpkt, FM_AMID)
     result = handleResponse(success, "ERROR: Unable to erase the flash volume")
     if not result: return False;
