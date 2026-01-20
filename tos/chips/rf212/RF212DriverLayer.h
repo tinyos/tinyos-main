@@ -144,7 +144,9 @@ enum rf212_trx_data_modes
 	RF212_DATA_MODE_OQPSK_RC_1000_SCR = 0x3E,
 	RF212_DATA_MODE_OQPSK_RC_1000 = 0x1E,
 
-	RF212_DATA_MODE_DEFAULT = 0x00, // BPSK_20
+	//register default is PHY mode BPSK-40
+	//with OQPSK_SCRAM_EN set to 1
+	RF212_DATA_MODE_DEFAULT = 0x24,
 };
 
 enum rf212_phy_rssi_enums
