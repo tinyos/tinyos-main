@@ -60,6 +60,7 @@ implementation {
   App.Receive -> ActiveMessageC.Receive[240];
   App.AMSend -> ActiveMessageC.AMSend[240];
   App.SplitControl -> ActiveMessageC;
+  App.PacketAcknowledgements -> ActiveMessageC;
   App.Leds -> LedsC;
   App.MilliTimer -> TimerMilliC;
   App.LowPowerListening -> LplRadio;

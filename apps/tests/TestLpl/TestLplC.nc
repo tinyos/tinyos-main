@@ -1,6 +1,6 @@
 // $Id: TestLplC.nc,v 1.2 2009-10-21 19:11:51 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -40,6 +40,10 @@
  *  @date   Oct 27 2006
  */
 
+
+//#define WITH_ACKS
+
+
 module TestLplC {
   uses {
     interface Leds;
@@ -49,6 +53,7 @@ module TestLplC {
     interface Timer<TMilli> as MilliTimer;
     interface SplitControl;
     interface LowPowerListening;
+    interface PacketAcknowledgements;
   }
 }
 implementation 
@@ -74,43 +79,51 @@ implementation
       sendInterval = 100; /* Send to sleepy listener */
       break;
     case 2:
-      sendInterval = -1; /* Send to listener like us */
-      call LowPowerListening.setLocalWakeupInterval(250);
+      sendInterval = 250; /* Send to listener like us */
+      call LowPowerListening.setLocalWakeupInterval(sendInterval);
       break;
     case 3:
       sendInterval = 0; /* Send to awake listener */
       break;
     case 4:
-      sendInterval = -1; /* Send to listener like us */
-      call LowPowerListening.setLocalWakeupInterval(10);
+      sendInterval = 10; /* Send to listener like us */
+      call LowPowerListening.setLocalWakeupInterval(sendInterval);
       break;
     case 5:
       sendSkip = 7; /* Send every 7s */
-      call LowPowerListening.setLocalWakeupInterval(2000);
+      sendInterval = 2000; /* Send to listener like us */
+      call LowPowerListening.setLocalWakeupInterval(sendInterval);
       break;
     }
   }
-  
+
   event void MilliTimer.fired()
   {
+    am_addr_t dst;
     counter++;
     if (!(counter & 31))
       nextLplState();
 
     if (!locked && ((counter & sendSkip) == sendSkip))
+    {
+      if (sendInterval >= 0)
+        call LowPowerListening.setRemoteWakeupInterval(&packet, sendInterval);
+
+#ifdef WITH_ACKS
+      call PacketAcknowledgements.requestAck(&packet);
+      dst = TOS_NODE_ID == 1 ? 2 : 1;
+#endif
+
+      if (call AMSend.send(dst, &packet, 0) == SUCCESS)
       {
-	if (sendInterval >= 0)
-	  call LowPowerListening.setRemoteWakeupInterval(&packet, sendInterval);
-	if (call AMSend.send(AM_BROADCAST_ADDR, &packet, 0) == SUCCESS)
-	  {
-	    call Leds.led0On();
-	    locked = TRUE;
-	  }
+        call Leds.led0On();
+        locked = TRUE;
       }
+    }
   }
 
   event message_t* Receive.receive(message_t* bufPtr, 
-				   void* payload, uint8_t len)
+                   void* payload, uint8_t len)
   {
     call Leds.led1Toggle();
     return bufPtr;
@@ -119,15 +132,15 @@ implementation
   event void AMSend.sendDone(message_t* bufPtr, error_t error)
   {
     if (&packet == bufPtr)
-      {
-	locked = FALSE;
-	call Leds.led0Off();
-      }
+    {
+      locked = FALSE;
+      call Leds.led0Off();
+    }
   }
 
   event void SplitControl.startDone(error_t err)
   {
-    call MilliTimer.startPeriodic(1000);
+    call MilliTimer.startPeriodic(1024);
   }
 
   event void SplitControl.stopDone(error_t err) { }
