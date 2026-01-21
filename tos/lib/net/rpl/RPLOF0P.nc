@@ -134,14 +134,11 @@ implementation{
 
     parentNode = call ParentTable.get(min);
 
-    while ((!parentNode->valid) &&
-           (min < MAX_PARENT) &&
-           (parentNode->rank != INFINITE_RANK)) {
-      min++;
+    while ((min < MAX_PARENT) &&
+           ((!parentNode->valid) || (parentNode->rank == INFINITE_RANK))) {
+      min++; // skipping invalid entries and nodes with infinite rank
       parentNode = call ParentTable.get(min);
     }
-
-    minDesired = parentNode->etx_hop + (parentNode->rank * divideRank);
 
     if (min == MAX_PARENT) {
       call RPLOF.resetRank();
@@ -150,6 +147,8 @@ implementation{
       route_key = ROUTE_INVAL_KEY;
       return FALSE;
     }
+
+    minDesired = parentNode->etx_hop + (parentNode->rank * divideRank);
 
 //     printf("RPLOF: Start Compare %d %d: %d %d %d \n",
 //            htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]),
