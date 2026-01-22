@@ -79,6 +79,11 @@ configuration IPStackC {
   FwdP.IPPacket -> IPPacketC.IPPacket;
   IPProtocolsP.IPPacket -> IPPacketC.IPPacket;
   IPStackControlP.IPAddress -> IPAddressC.IPAddress;
+  
+  components NeighbrCacheC;
+  FwdP.RouterList->NeighbrCacheC;
+  FwdP.NeighbrCache->NeighbrCacheC;
+
 
   components new PoolC(struct in6_iid, N_CONCURRENT_SENDS) as FwdAddrPoolC;
   FwdP.Pool -> FwdAddrPoolC;

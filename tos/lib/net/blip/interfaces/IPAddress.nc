@@ -51,6 +51,10 @@ interface IPAddress {
 
   command error_t removeAddress();
 
+  /* Get the link-local Address of the node with the interface identifier be taken from the EUI-64 */
+
+  command bool getEUILLAddress(struct in6_addr *addr);
+
   event void changed(bool valid);
 
 }
